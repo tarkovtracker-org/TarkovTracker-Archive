@@ -58,7 +58,7 @@
   const userStore = useUserStore();
   const progressStore = useProgressStore();
   const tarkovStore = useTarkovStore();
-  const { tasks, hideoutStations } = useTarkovData();
+  const { tasks, hideoutStations, alternativeTasks } = useTarkovData();
   // Helper functions and data to calculate if the item should be shown based
   // on the user's/team's progress and the user's filters
   const filterString = inject('itemFilterName');
@@ -296,11 +296,13 @@
   });
   const selfCompletedNeed = computed(() => {
     if (props.need.needType == 'taskObjective') {
+      const alternativeTaskCompleted = alternativeTasks.value[props.need.taskId]?.some(
+        (altTaskId) => progressStore.tasksCompletions?.[altTaskId]?.['self']
+      );
       return (
         progressStore.tasksCompletions?.[props.need.taskId]?.['self'] ||
-        progressStore.objectiveCompletions?.[props.need.id]?.['self'] ||
-        (relatedTask.value.factionName != 'Any' &&
-          relatedTask.value.factionName != tarkovStore.getPMCFaction)
+        alternativeTaskCompleted ||
+        progressStore.objectiveCompletions?.[props.need.id]?.['self']
       );
     } else if (props.need.needType == 'hideoutModule') {
       return (
