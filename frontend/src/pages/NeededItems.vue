@@ -219,7 +219,7 @@
     }
     try {
       // Use the captured, validated arrays
-      return JSON.parse(JSON.stringify(objectives)).sort(
+      return objectives.slice().sort(
         // Use objectives
         (a, b) => {
           let aCount = 0;
@@ -261,7 +261,8 @@
     }
     try {
       // Use the captured, validated arrays
-      let hideoutNeeds = JSON.parse(JSON.stringify(modulesNeeded))
+      let hideoutNeeds = modulesNeeded
+        .slice()
         .filter((need) => {
           const moduleInstanceId = need.hideoutModule?.id;
           const moduleStationId = need.hideoutModule?.stationId;
