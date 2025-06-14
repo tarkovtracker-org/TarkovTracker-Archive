@@ -63,6 +63,7 @@
         statuscomplete: 'Marcado {name} como completo',
         statusuncomplete: 'Marcado {name} como no completado',
         statusavailable: 'Marcados todos los requisitos previos para {name} como completados',
+        statusundoing: 'Deshaciendo completado de {name}...',
         nonkappa: 'No se requiere Kappa',
         keysneeded: '{keys} necesaria en {map} | {keys} necesarias en {map}',
         objectiveshidden: '{count} objetivos no están en este mapa ({uncompleted} sin completar)',

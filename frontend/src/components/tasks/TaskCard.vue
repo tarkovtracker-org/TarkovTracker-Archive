@@ -285,6 +285,7 @@
     <v-snackbar v-model="taskStatusUpdated" :timeout="4000" color="secondary">
       {{ taskStatus }}
       <template #actions>
+        <v-btn color="warning" variant="text" @click="undoTaskCompletion"> Undo </v-btn>
         <v-btn color="white" variant="text" @click="taskStatusUpdated = false"> Close </v-btn>
       </template>
     </v-snackbar>
@@ -454,6 +455,11 @@
       name: props.task.name,
     });
     taskStatusUpdated.value = true;
+  };
+  const undoTaskCompletion = () => {
+    taskStatus.value = t('page.tasks.questcard.statusundoing', { name: props.task.name });
+    markTaskUncomplete();
+    taskStatusUpdated.value = false;
   };
   const markTaskAvailable = () => {
     // Go through all the predecessors and mark them as complete

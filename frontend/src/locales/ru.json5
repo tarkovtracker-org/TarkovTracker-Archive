@@ -66,6 +66,7 @@
         statuscomplete: 'Отмеченно {name} как завершено',
         statusuncomplete: 'Отмечено {name} как не завершено',
         statusavailable: 'Все предварительные условия для {name} отмечены как завершенные',
+        statusundoing: 'Отмена выполнения {name}...',
         nonkappa: 'Не требуются для Каппа',
         keysneeded: '{keys} нужны на {map} | Один из {keys} нужен на {map}',
         objectiveshidden: '{count} целей не на этой карте ({uncompleted} не завершено)',

@@ -66,6 +66,7 @@
         statuscomplete: 'Marked {name} as complete',
         statusuncomplete: 'Marked {name} as uncompleted',
         statusavailable: 'Marked all prerequisites for {name} as complete',
+        statusundoing: 'Undoing completion of {name}...',
         nonkappa: 'Not Kappa Required',
         keysneeded: '{keys} needed on {map} | One of {keys} needed on {map}',
         objectiveshidden: '{count} objectives not on this map ({uncompleted} uncompleted)',

@@ -66,6 +66,7 @@
         statuscomplete: 'Marquer {name} comme terminé',
         statusuncomplete: 'Marquer {name} comme non terminé',
         statusavailable: 'Marquer tous les pre-requis de {name} comme terminés',
+        statusundoing: 'Annulation de la complétion de {name}...',
         nonkappa: 'Non requis pour la Kappa',
         keysneeded: '{keys} requis sur {map} | Une des {keys} requis sur {map}',
         objectiveshidden: '{count} objectifs non présent sur la carte ({uncompleted} non terminés)',
