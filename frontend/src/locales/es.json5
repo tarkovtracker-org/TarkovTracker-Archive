@@ -11,6 +11,8 @@
   },
   common: {
     refreshbutton: 'Intentar de nuevo',
+    undo: 'Deshacer',
+    close: 'Cerrar',
   },
   menu: {
     language: 'Idioma',

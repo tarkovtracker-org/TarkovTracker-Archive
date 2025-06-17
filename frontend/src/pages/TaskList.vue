@@ -181,9 +181,11 @@
           variant="text"
           @click="undoCompletion"
         >
-          Undo
+          {{ t('common.undo') }}
         </v-btn>
-        <v-btn color="white" variant="text" @click="snackbarVisible = false"> Close </v-btn>
+        <v-btn color="white" variant="text" @click="snackbarVisible = false">
+          {{ t('common.close') }}
+        </v-btn>
       </template>
     </v-snackbar>
   </v-container>

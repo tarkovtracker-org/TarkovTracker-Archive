@@ -10,6 +10,8 @@
   },
   common: {
     refreshbutton: 'Try again',
+    undo: 'Undo',
+    close: 'Close',
   },
   menu: {
     language: 'Language',
