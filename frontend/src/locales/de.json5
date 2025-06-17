@@ -68,7 +68,7 @@
         statuscomplete: 'Markiere {name} als abgeschlossen',
         statusuncomplete: 'Markiere {name} als unvollständig',
         statusavailable: 'Markiere alle Vorraussetzungen für {name} als abgeschlossen',
-        statusundoing: 'Mache Abschluss von {name} rückgängig...',
+        statusundoing: 'Mache Abschluss von den {name} rückgängig...',
         nonkappa: 'Nicht für Kappa benötigt',
         keysneeded: '{keys} wird gebraucht auf {map} | eine {keys} wird gebraucht auf {map}',
         objectiveshidden: '{count} Teilaufgaben nicht auf dieser Karte ({uncompleted} uncompleted)',

@@ -38,7 +38,7 @@
     "eslint": "^9.28.0",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-vue": "^10.2.0",
-    "firebase-tools": "^14.6.0",
+    "firebase-tools": "^14.7.0",
     "globals": "^16.2.0",
     "taze": "^19.1.0",
     "typescript": "^5.8.3",

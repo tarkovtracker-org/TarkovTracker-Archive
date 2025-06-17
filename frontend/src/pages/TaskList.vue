@@ -172,18 +172,29 @@
         </v-lazy>
       </v-col>
     </v-row>
-    <v-snackbar v-model="snackbarVisible" :timeout="4000" color="secondary">
+    <v-snackbar
+      v-model="snackbarVisible"
+      :timeout="4000"
+      color="secondary"
+      @update:model-value="onSnackbarVisibilityChange"
+    >
       {{ snackbarText }}
       <template #actions>
         <v-btn
           v-if="lastAction === 'complete'"
           color="warning"
           variant="text"
+          :aria-label="t('common.undo')"
           @click="undoCompletion"
         >
           {{ t('common.undo') }}
         </v-btn>
-        <v-btn color="white" variant="text" @click="snackbarVisible = false">
+        <v-btn
+          color="white"
+          variant="text"
+          :aria-label="t('common.close')"
+          @click="snackbarVisible = false"
+        >
           {{ t('common.close') }}
         </v-btn>
       </template>
@@ -540,6 +551,17 @@
     lastAction.value = 'available';
     snackbarText.value = t('page.tasks.questcard.statusavailable', { name: task.name });
     snackbarVisible.value = true;
+  };
+
+  const onSnackbarVisibilityChange = (value) => {
+    if (!value) {
+      // When snackbar is hidden (either by timeout or close button), reset the state
+      // to prevent stale data on next snackbar appearance.
+      if (lastAction.value !== 'undone') {
+        lastTaskAction.value = null;
+        lastAction.value = '';
+      }
+    }
   };
 
   const undoCompletion = () => {
