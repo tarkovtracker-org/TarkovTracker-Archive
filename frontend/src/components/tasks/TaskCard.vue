@@ -282,17 +282,10 @@
         </v-col>
       </v-row>
     </v-container>
-    <v-snackbar v-model="taskStatusUpdated" :timeout="4000" color="secondary">
-      {{ taskStatus }}
-      <template #actions>
-        <v-btn color="warning" variant="text" @click="undoTaskCompletion"> Undo </v-btn>
-        <v-btn color="white" variant="text" @click="taskStatusUpdated = false"> Close </v-btn>
-      </template>
-    </v-snackbar>
   </v-sheet>
 </template>
 <script setup>
-  import { defineAsyncComponent, computed, ref } from 'vue';
+  import { defineAsyncComponent, computed, defineEmits } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useDisplay } from 'vuetify';
   import { useTarkovStore } from '@/stores/tarkov';
@@ -315,6 +308,8 @@
       default: () => [],
     },
   });
+
+  const emit = defineEmits(['task-completed', 'task-uncompleted', 'task-available']);
   const { t } = useI18n({ useScope: 'global' });
   const tarkovStore = useTarkovStore();
   const progressStore = useProgressStore();
@@ -428,10 +423,7 @@
     if (tarkovStore.playerLevel < props.task.minPlayerLevel) {
       tarkovStore.setLevel(props.task.minPlayerLevel);
     }
-    taskStatus.value = t('page.tasks.questcard.statuscomplete', {
-      name: props.task.name,
-    });
-    taskStatusUpdated.value = true;
+    emit('task-completed', props.task);
   };
   const markTaskUncomplete = () => {
     tarkovStore.setTaskUncompleted(props.task.id);
@@ -451,15 +443,7 @@
         }
       });
     }
-    taskStatus.value = t('page.tasks.questcard.statusuncomplete', {
-      name: props.task.name,
-    });
-    taskStatusUpdated.value = true;
-  };
-  const undoTaskCompletion = () => {
-    taskStatus.value = t('page.tasks.questcard.statusundoing', { name: props.task.name });
-    markTaskUncomplete();
-    taskStatusUpdated.value = false;
+    emit('task-uncompleted', props.task);
   };
   const markTaskAvailable = () => {
     // Go through all the predecessors and mark them as complete
@@ -475,13 +459,8 @@
     if (tarkovStore.playerLevel < props.task.minPlayerLevel) {
       tarkovStore.setLevel(props.task.minPlayerLevel);
     }
-    taskStatus.value = t('page.tasks.questcard.statusavailable', {
-      name: props.task.name,
-    });
-    taskStatusUpdated.value = true;
+    emit('task-available', props.task);
   };
-  const taskStatusUpdated = ref(false);
-  const taskStatus = ref('');
 </script>
 <style lang="scss" scoped>
   .taskContainer {

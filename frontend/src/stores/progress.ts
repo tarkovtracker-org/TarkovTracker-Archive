@@ -83,8 +83,8 @@ export const useProgressStore = defineStore('progress', {
         completions[task.id] = {};
         for (const teamId of Object.keys(this.visibleTeamStores)) {
           const store = this.visibleTeamStores[teamId];
-          completions[task.id][teamId] =
-            store?.$state.taskCompletions?.[task.id]?.complete ?? false;
+          // Use the store's getter instead of directly accessing $state for reactivity
+          completions[task.id][teamId] = store?.isTaskComplete?.(task.id) ?? false;
         }
       }
       return completions;
@@ -108,7 +108,7 @@ export const useProgressStore = defineStore('progress', {
       const faction: FactionMap = {};
       for (const teamId of Object.keys(this.visibleTeamStores)) {
         const store = this.visibleTeamStores[teamId];
-        faction[teamId] = store?.$state.pmcFaction ?? 'Unknown';
+        faction[teamId] = store?.getPMCFaction?.() ?? 'Unknown';
       }
       return faction;
     },
@@ -122,7 +122,7 @@ export const useProgressStore = defineStore('progress', {
         available[task.id] = {};
         for (const teamId of Object.keys(this.visibleTeamStores)) {
           const store = this.visibleTeamStores[teamId];
-          const playerLevel = store?.$state.level ?? 0;
+          const playerLevel = store?.playerLevel?.() ?? 0;
           const playerFaction = this.playerFaction[teamId];
           const isTaskComplete = this.tasksCompletions[task.id]?.[teamId] ?? false;
           if (isTaskComplete) {
@@ -132,7 +132,7 @@ export const useProgressStore = defineStore('progress', {
           let failedReqsMet = true;
           if (task.failedRequirements) {
             for (const req of task.failedRequirements) {
-              const failed = store?.$state.taskCompletions?.[req.task.id]?.failed ?? false;
+              const failed = store?.isTaskFailed?.(req.task.id) ?? false;
               if (failed) {
                 failedReqsMet = false;
                 break;
@@ -196,7 +196,7 @@ export const useProgressStore = defineStore('progress', {
         for (const teamId of Object.keys(this.visibleTeamStores)) {
           const store = this.visibleTeamStores[teamId];
           completions[objective.id][teamId] =
-            store?.$state.taskObjectives?.[objective.id]?.complete ?? false;
+            store?.isTaskObjectiveComplete?.(objective.id) ?? false;
         }
       }
       return completions;

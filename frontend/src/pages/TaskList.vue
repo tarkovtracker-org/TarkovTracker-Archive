@@ -165,14 +165,31 @@
             :active-user-view="activeUserView"
             :needed-by="task.neededBy || []"
             class="my-1"
+            @task-completed="handleTaskCompleted"
+            @task-uncompleted="handleTaskUncompleted"
+            @task-available="handleTaskAvailable"
           />
         </v-lazy>
       </v-col>
     </v-row>
+    <v-snackbar v-model="snackbarVisible" :timeout="4000" color="secondary">
+      {{ snackbarText }}
+      <template #actions>
+        <v-btn
+          v-if="lastAction === 'complete'"
+          color="warning"
+          variant="text"
+          @click="undoCompletion"
+        >
+          Undo
+        </v-btn>
+        <v-btn color="white" variant="text" @click="snackbarVisible = false"> Close </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 <script setup>
-  import { defineAsyncComponent, computed, watch, ref, shallowRef, watchEffect } from 'vue';
+  import { defineAsyncComponent, computed, ref, shallowRef, watchEffect } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
   import { useTarkovData } from '@/composables/tarkovdata';
@@ -497,6 +514,59 @@
     return mapTaskCounts;
   });
 
+  const snackbarVisible = ref(false);
+  const snackbarText = ref('');
+  const lastTaskAction = ref(null);
+  const lastAction = ref('');
+
+  const handleTaskCompleted = (task) => {
+    lastTaskAction.value = task;
+    lastAction.value = 'complete';
+    snackbarText.value = t('page.tasks.questcard.statuscomplete', { name: task.name });
+    snackbarVisible.value = true;
+  };
+
+  const handleTaskUncompleted = (task) => {
+    lastTaskAction.value = task;
+    lastAction.value = 'uncomplete';
+    snackbarText.value = t('page.tasks.questcard.statusuncomplete', { name: task.name });
+    snackbarVisible.value = true;
+  };
+
+  const handleTaskAvailable = (task) => {
+    lastTaskAction.value = null; // No undo for this one.
+    lastAction.value = 'available';
+    snackbarText.value = t('page.tasks.questcard.statusavailable', { name: task.name });
+    snackbarVisible.value = true;
+  };
+
+  const undoCompletion = () => {
+    if (!lastTaskAction.value) return;
+
+    const taskToUndo = lastTaskAction.value;
+
+    // Logic from markTaskUncomplete in TaskCard.vue
+    tarkovStore.setTaskUncompleted(taskToUndo.id);
+    taskToUndo.objectives.forEach((o) => {
+      tarkovStore.setTaskObjectiveUncomplete(o.id);
+    });
+    if (Array.isArray(taskToUndo.alternatives)) {
+      taskToUndo.alternatives.forEach((a) => {
+        tarkovStore.setTaskUncompleted(a);
+        const alternativeTask = tasks.value.find((task) => task.id == a);
+        if (alternativeTask && Array.isArray(alternativeTask.objectives)) {
+          alternativeTask.objectives.forEach((o) => {
+            tarkovStore.setTaskObjectiveUncomplete(o.id);
+          });
+        }
+      });
+    }
+
+    snackbarText.value = t('page.tasks.questcard.statusundoing', { name: taskToUndo.name });
+    lastTaskAction.value = null;
+    lastAction.value = 'undone';
+  };
+
   const mapObjectiveTypes = [
     'mark',
     'zone',
@@ -510,39 +580,17 @@
   ];
   const updateVisibleTasks = async function () {
     // Guard clause: Wait until necessary data is loaded/available
-    if (tasksLoading.value) {
-      console.warn('updateVisibleTasks: TarkovData (tasks) still loading, deferring update.');
-      return; // Exit if core task data isn't loaded
-    }
-    // Guard clause: Ensure userStore getter is available
-    // (should always return boolean due to || false)
-    // Accessing the computed ref here might trigger dependencies prematurely,
-    // check the source directly if possible.
-    // We already define `hideNonKappaTasks = computed(...)`,
-    // let's trust it exists but check its value source's readiness indirectly
-    if (!tasks.value) {
-      console.warn('updateVisibleTasks: tasks.value is not ready, deferring update.');
-      return;
-    }
-    // Guard clause: Ensure disabledTasks ref exists AND its value is an array
-    if (!disabledTasks || !Array.isArray(disabledTasks)) {
-      console.warn(
-        'updateVisibleTasks: disabledTasks ref or its value is not ready, deferring update.'
-      );
-      return; // Exit if disabledTasks ref or its value isn't ready
-    }
-    // Guard clause: Check critical progressStore computed properties are ready
-    // These depend on tasks.value and store state, which might have their own timings.
     if (
+      tasksLoading.value ||
+      !tasks.value ||
+      !disabledTasks ||
       !progressStore.unlockedTasks ||
       !progressStore.tasksCompletions ||
       !progressStore.playerFaction
     ) {
-      console.warn(
-        'updateVisibleTasks: Progress store computed values not ready, deferring update.'
-      );
-      return; // Exit if progress store data isn't ready
+      return; // Exit if core data isn't ready
     }
+
     reloadingTasks.value = true; // Indicate we are starting the actual processing
     let visibleTaskList = JSON.parse(JSON.stringify(tasks.value));
     if (activePrimaryView.value == 'maps') {
@@ -615,7 +663,10 @@
       if (activeSecondaryView.value == 'available') {
         visibleTaskList = visibleTaskList.filter((task) => {
           const unlockedTasks = progressStore.unlockedTasks?.[task.id];
-          return unlockedTasks?.[activeUserView.value] === true;
+          const isUnlocked = unlockedTasks?.[activeUserView.value] === true;
+          const isCompleted =
+            progressStore.tasksCompletions?.[task.id]?.[activeUserView.value] === true;
+          return isUnlocked && !isCompleted;
         });
       } else if (activeSecondaryView.value == 'locked') {
         visibleTaskList = visibleTaskList.filter((task) => {
@@ -681,28 +732,8 @@
       return;
     }
     // All checks passed, now it's safe to run the full update.
-    reloadingTasks.value = true;
     await updateVisibleTasks();
-    // reloadingTasks.value = false; // This is handled inside updateVisibleTasks
   });
-  // Watch for changes to all of the views, and update the visible tasks
-  watch(
-    [
-      activePrimaryView,
-      activeMapView,
-      activeTraderView,
-      activeSecondaryView,
-      activeUserView,
-      tasks,
-      hideGlobalTasks,
-      hideNonKappaTasks,
-      () => tarkovStore.playerLevel,
-    ],
-    async () => {
-      await updateVisibleTasks();
-    },
-    { immediate: true }
-  );
   const traderOrder = [
     'Prapor',
     'Therapist',
