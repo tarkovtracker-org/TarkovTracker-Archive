@@ -565,6 +565,9 @@
     snackbarText.value = t('page.tasks.questcard.statusundoing', { name: taskToUndo.name });
     lastTaskAction.value = null;
     lastAction.value = 'undone';
+    setTimeout(() => {
+      snackbarVisible.value = false;
+    }, 2000);
   };
 
   const mapObjectiveTypes = [
@@ -583,7 +586,7 @@
     if (
       tasksLoading.value ||
       !tasks.value ||
-      !disabledTasks ||
+      !Array.isArray(disabledTasks) ||
       !progressStore.unlockedTasks ||
       !progressStore.tasksCompletions ||
       !progressStore.playerFaction
@@ -720,8 +723,7 @@
     if (
       tasksLoading.value || // Check if tasks are still loading
       !tasks.value || // Check if tasks data structure exists
-      !disabledTasks ||
-      !Array.isArray(disabledTasks) || // Corrected: Check the array directly, not .value
+      !Array.isArray(disabledTasks) ||
       !progressStore.unlockedTasks || // Check progressStore readiness
       !progressStore.tasksCompletions ||
       !progressStore.playerFaction
