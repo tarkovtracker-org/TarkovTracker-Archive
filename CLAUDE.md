@@ -1,4 +1,4 @@
-# CLAUDE.md
+# CLAUDE
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -86,13 +86,13 @@ Progress data is stored in Pinia stores that automatically sync with:
 
 - Functions use Vitest with Firebase emulator integration
 - Test Firebase rules with `firebase.rules.json`
-- Run `npm run test` in functions directory
+- Run `npm run test` in the functions directory
 
 ### API Documentation
 
-- Auto-generated Swagger docs at `/docs` endpoint
+- Auto-generated Swagger docs at the `/docs` endpoint
 - OpenAPI spec generated from TypeScript interfaces
-- Update via `npm run swagger` in functions directory
+- Update via `npm run swagger` in the functions directory
 
 ### Internationalization
 
