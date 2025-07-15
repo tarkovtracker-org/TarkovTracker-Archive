@@ -14,4 +14,4 @@ RUN apt-get update \
 
 # Set working dir
 WORKDIR $ROOT
-CMD ["/usr/bin/zsh", "-c", "while :; do sleep 1; done"]
+CMD ["/usr/bin/zsh", "-c", "npm run container & ; while :; do sleep 1; done"]

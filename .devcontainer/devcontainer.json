@@ -23,10 +23,11 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "octref.vetur",
-        "Firebase.vscode-firestore"
+        "Firebase.vscode-firestore",
+        "Vue.volar",
+        "GoogleCloudTools.firebase-dataconnect-vscode"
       ]
     }
   },
-  "postCreateCommand": "bash -c 'npm install'",
-  "postStartCommand": "bash -c 'npm run container 2>&1 >> /dev/null &'"
+  "postCreateCommand": "bash -c 'npm install'"
 }
