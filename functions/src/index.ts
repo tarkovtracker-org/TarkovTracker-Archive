@@ -61,6 +61,36 @@ type AuthenticatedHandler = (_req: AuthenticatedRequest, _res: Response) => void
 app.get('/api/token', tokenHandler.getTokenInfo as AuthenticatedHandler);
 app.get('/api/progress', progressHandler.getPlayerProgress as AuthenticatedHandler);
 app.get('/api/team/progress', progressHandler.getTeamProgress as AuthenticatedHandler);
+app.post('/api/team/create', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    
+    // Create a mock callable request
+    const callableRequest: CallableRequest<CreateTeamData> = {
+      auth: {
+        uid: req.user.id,
+        token: req.user as any
+      },
+      data: req.body,
+      rawRequest: req as any,
+      acceptsStreaming: false
+    };
+    
+    // Call the existing logic
+    const result = await _createTeamLogic(callableRequest);
+    res.status(200).json(result);
+  } catch (error) {
+    logger.error('Error in /api/team/create:', error);
+    if (error instanceof HttpsError) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+});
 app.post('/api/progress/level/:levelValue', progressHandler.setPlayerLevel as AuthenticatedHandler);
 app.post('/api/progress/task/:taskId', progressHandler.updateSingleTask as AuthenticatedHandler);
 app.post('/api/progress/tasks', progressHandler.updateMultipleTasks as AuthenticatedHandler);
@@ -488,346 +518,63 @@ async function _kickTeamMemberLogic(
     throw new HttpsError('internal', 'Error kicking member', message);
   }
 }
-const corsHandler = cors({
-  origin: ['https://tarkov-tracker-dev.web.app', 'https://tarkovtracker.org'],
-});
-function getStatusFromHttpsErrorCode(code: FunctionsErrorCode): number {
-  switch (code) {
-    case 'ok':
-      return 200;
-    case 'cancelled':
-      return 499;
-    case 'unknown':
-      return 500;
-    case 'invalid-argument':
-      return 400;
-    case 'deadline-exceeded':
-      return 504;
-    case 'not-found':
-      return 404;
-    case 'already-exists':
-      return 409;
-    case 'permission-denied':
-      return 403;
-    case 'resource-exhausted':
-      return 429;
-    case 'failed-precondition':
-      return 400;
-    case 'aborted':
-      return 409;
-    case 'out-of-range':
-      return 400;
-    case 'unauthenticated':
-      return 401;
-    case 'internal':
-      return 500;
-    case 'unavailable':
-      return 503;
-    case 'data-loss':
-      return 500;
-    default:
-      logger.warn('Unknown HttpsError code received:', code);
-      return 500;
+export const createTeam = functions.https.onCall(_createTeamLogic);
+
+// Alternative HTTPS endpoint for createTeam with explicit CORS handling
+export const createTeamHttp = functions.https.onRequest(async (req, res) => {
+  // Set CORS headers
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.status(200).send('');
+    return;
   }
-}
-export const createTeam = functions.https.onRequest((req, res) => {
-  corsHandler(req, res, async () => {
-    try {
-      const authHeader = req.headers.authorization || '';
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
-        return;
-      }
-      const idToken = match[1];
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
-      } catch (err: unknown) {
-        logger.warn('Token verification failed for createTeam', {
-          error: err,
-          tokenUsed: idToken ? idToken.substring(0, 10) + '...' : 'null',
-        });
-        const message = err instanceof Error ? err.message : 'Invalid or expired token';
-        res.status(401).json({ error: message });
-        return;
-      }
-      const userUid = decodedToken.uid;
-      const data = req.body;
-      const request = {
-        auth: { uid: userUid, token: decodedToken },
-        data,
-        rawRequest: req,
-        acceptsStreaming: false,
-      } as CallableRequest<CreateTeamData>;
-      try {
-        const result = await _createTeamLogic(request);
-        res.status(200).json({ data: result });
-      } catch (e: unknown) {
-        let messageToSend = 'Error processing team creation.';
-        let httpStatus = 500;
-        let errorCode: FunctionsErrorCode | undefined = undefined;
-        let errorMessage: string | undefined = undefined;
-        let errorDetails: unknown = undefined;
-        if (e instanceof HttpsError) {
-          httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          errorCode = e.code as FunctionsErrorCode;
-          errorMessage = e.message;
-          errorDetails = e.details;
-          if (e.code === 'internal' && e.message === 'Error during team creation' && e.details) {
-            messageToSend =
-              typeof e.details === 'string'
-                ? e.details.substring(0, 500)
-                : String(e.details).substring(0, 500);
-          } else {
-            messageToSend = e.message || messageToSend;
-          }
-        } else if (e instanceof Error) {
-          errorMessage = e.message;
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-          errorMessage = e;
-        }
-        logger.error('Error from _createTeamLogic in createTeam handler', {
-          uid: userUid,
-          originalError: e,
-          errorCode: errorCode,
-          errorMessage: errorMessage,
-          errorDetails: errorDetails,
-          messageSent: messageToSend,
-          httpStatusSet: httpStatus,
-        });
-        res.status(httpStatus).json({ error: messageToSend });
-      }
-    } catch (e: unknown) {
-      if (!res.headersSent) {
-        let messageToSend = 'Server error during team creation request.';
-        if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Outer error in createTeam request handler', {
-          originalError: e,
-          errorMessage: e instanceof Error ? e.message : String(e),
-          messageSent: messageToSend,
-        });
-        res.status(500).json({ error: messageToSend });
-      }
-    }
-  });
-});
-export const joinTeam = functions.https.onRequest((req, res) => {
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed' });
+  
+  if (req.method !== 'POST') {
+    res.status(405).send('Method Not Allowed');
+    return;
+  }
+  
+  try {
+    // Extract auth token from Authorization header
+    const authToken = req.headers.authorization?.replace('Bearer ', '');
+    if (!authToken) {
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
-    try {
-      const authHeader = req.headers.authorization || '';
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
-        return;
-      }
-      const idToken = match[1];
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
-      } catch (err) {
-        logger.error('Token verification failed in joinTeam', { error: err });
-        res.status(401).json({ error: 'Invalid or expired token' });
-        return;
-      }
-      const userUid = decodedToken.uid;
-      const data = req.body;
-      const request = {
-        auth: { uid: userUid, token: decodedToken },
-        data,
-        rawRequest: req,
-        acceptsStreaming: false,
-      } as CallableRequest<JoinTeamData>;
-      try {
-        const result = await _joinTeamLogic(request);
-        res.status(200).json(result);
-      } catch (e: unknown) {
-        let messageToSend = 'Error processing join team request.';
-        let httpStatus = 500;
-        if (e instanceof HttpsError) {
-          httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          messageToSend = e.message || messageToSend;
-        } else if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Error from _joinTeamLogic in joinTeam handler', {
-          uid: userUid,
-          originalError: e,
-          messageSent: messageToSend,
-          httpStatusSet: httpStatus,
-        });
-        res.status(httpStatus).json({ error: messageToSend });
-      }
-    } catch (e: unknown) {
-      if (!res.headersSent) {
-        let messageToSend = 'Server error during join team request.';
-        if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Outer error in joinTeam request handler', {
-          originalError: e,
-          errorMessage: e instanceof Error ? e.message : String(e),
-          messageSent: messageToSend,
-        });
-        res.status(500).json({ error: messageToSend });
-      }
+    
+    // Verify the token
+    const decodedToken = await admin.auth().verifyIdToken(authToken);
+    
+    // Create a mock callable request
+    const callableRequest: CallableRequest<CreateTeamData> = {
+      auth: {
+        uid: decodedToken.uid,
+        token: decodedToken
+      },
+      data: req.body,
+      rawRequest: req as any,
+      acceptsStreaming: false
+    };
+    
+    // Call the existing logic
+    const result = await _createTeamLogic(callableRequest);
+    res.status(200).json(result);
+  } catch (error) {
+    logger.error('Error in createTeamHttp:', error);
+    if (error instanceof HttpsError) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
     }
-  });
+  }
 });
-export const leaveTeam = functions.https.onRequest((req, res) => {
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed' });
-      return;
-    }
-    try {
-      const authHeader = req.headers.authorization || '';
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
-        return;
-      }
-      const idToken = match[1];
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
-      } catch (err) {
-        logger.error('Token verification failed in leaveTeam', { error: err });
-        res.status(401).json({ error: 'Invalid or expired token' });
-        return;
-      }
-      const userUid = decodedToken.uid;
-      const data = req.body;
-      const request = {
-        auth: { uid: userUid, token: decodedToken },
-        data,
-        rawRequest: req,
-        acceptsStreaming: false,
-      } as CallableRequest<void>;
-      try {
-        await _leaveTeamLogic(request);
-        res.status(200).json({ data: { left: true } });
-      } catch (e: unknown) {
-        let messageToSend = 'Error processing leave team request.';
-        let httpStatus = 500;
-        if (e instanceof HttpsError) {
-          httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          messageToSend = e.message || messageToSend;
-        } else if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Error from _leaveTeamLogic in leaveTeam handler', {
-          uid: userUid,
-          originalError: e,
-          messageSent: messageToSend,
-          httpStatusSet: httpStatus,
-        });
-        res.status(httpStatus).json({ error: messageToSend });
-      }
-    } catch (e: unknown) {
-      if (!res.headersSent) {
-        let messageToSend = 'Server error during leave team request.';
-        if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Outer error in leaveTeam request handler', {
-          originalError: e,
-          errorMessage: e instanceof Error ? e.message : String(e),
-          messageSent: messageToSend,
-        });
-        res.status(500).json({ error: messageToSend });
-      }
-    }
-  });
-});
-export const kickTeamMember = functions.https.onRequest((req, res) => {
-  corsHandler(req, res, async () => {
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed' });
-      return;
-    }
-    try {
-      const authHeader = req.headers.authorization || '';
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
-        return;
-      }
-      const idToken = match[1];
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
-      } catch (err) {
-        logger.error('Token verification failed in kickTeamMember', { error: err });
-        res.status(401).json({ error: 'Invalid or expired token' });
-        return;
-      }
-      const userUid = decodedToken.uid;
-      const data = req.body;
-      const request = {
-        auth: { uid: userUid, token: decodedToken },
-        data,
-        rawRequest: req,
-        acceptsStreaming: false,
-      } as CallableRequest<KickTeamMemberData>;
-      try {
-        const result = await _kickTeamMemberLogic(request);
-        res.status(200).json(result);
-      } catch (e: unknown) {
-        let messageToSend = 'Error processing kick member request.';
-        let httpStatus = 500;
-        if (e instanceof HttpsError) {
-          httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          messageToSend = e.message || messageToSend;
-        } else if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Error from _kickTeamMemberLogic in kickTeamMember handler', {
-          uid: userUid,
-          originalError: e,
-          messageSent: messageToSend,
-          httpStatusSet: httpStatus,
-        });
-        res.status(httpStatus).json({ error: messageToSend });
-      }
-    } catch (e: unknown) {
-      if (!res.headersSent) {
-        let messageToSend = 'Server error during team member kick request.';
-        if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
-        } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
-        }
-        logger.error('Outer error in kickTeamMember request handler', {
-          originalError: e,
-          errorMessage: e instanceof Error ? e.message : String(e),
-          messageSent: messageToSend,
-        });
-        res.status(500).json({ error: messageToSend });
-      }
-    }
-  });
-});
+export const joinTeam = functions.https.onCall(_joinTeamLogic);
+export const leaveTeam = functions.https.onCall(_leaveTeamLogic);
+export const kickTeamMember = functions.https.onCall(_kickTeamMemberLogic);
 interface TarkovItem {
   id: string;
   name?: string;

@@ -27,10 +27,10 @@
   const TeamMembers = defineAsyncComponent(() => import('@/components/teams/TeamMembers'));
   const TeamOptions = defineAsyncComponent(() => import('@/components/teams/TeamOptions'));
   const MyTeam = defineAsyncComponent(() => import('@/components/teams/MyTeam'));
-  const TrackerTip = defineAsyncComponent(() => import('@/components/TrackerTip'));
+  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
   const TeamInvite = defineAsyncComponent(() => import('@/components/teams/TeamInvite'));
   const { useSystemStore } = useLiveData();
-  const systemStore = useSystemStore();
+  const { systemStore } = useSystemStore();
   const route = useRoute();
 </script>
 <style lang="scss" scoped></style>

@@ -12,7 +12,6 @@ const getPinia = () => {
   pinia.use(PiniaFireswap);
   setTimeout(() => {
     markInitialized();
-    console.debug('Pinia store system marked as initialized');
   }, 100);
   piniaInstance = pinia;
   return pinia;

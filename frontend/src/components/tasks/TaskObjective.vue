@@ -70,7 +70,7 @@
       required: true,
     },
   });
-  const TarkovItem = defineAsyncComponent(() => import('@/components/TarkovItem'));
+  const TarkovItem = defineAsyncComponent(() => import('@/components/game/TarkovItem'));
   const { objectives } = useTarkovData();
   const tarkovStore = useTarkovStore();
   const progressStore = useProgressStore();

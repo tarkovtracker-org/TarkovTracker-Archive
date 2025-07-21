@@ -94,18 +94,12 @@ watch(
           }
         } else {
           if (typeof extendedStore.firebindAll === 'function') {
-            console.debug('Binding remoteTarkov store');
             extendedStore.firebindAll();
-          } else {
-            console.debug('No remoteTarkov store to bind');
           }
         }
       } else {
         if (typeof extendedStore.fireunbindAll === 'function') {
-          console.debug('Unbinding remoteTarkov store');
           extendedStore.fireunbindAll();
-        } else {
-          console.debug('No remoteTarkov store to unbind');
         }
       }
     } catch (error) {
@@ -118,7 +112,6 @@ watch(
 );
 setTimeout(async () => {
   try {
-    console.debug('Starting delayed initialization of tarkovStore');
     const tarkovStore = await getSafeStoreInstance();
     if (!tarkovStore) {
       throw new Error('Failed to get tarkovStore in delayed initialization');

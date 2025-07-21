@@ -6,9 +6,10 @@ import i18n from './plugins/i18n';
 import vuetify from './plugins/vuetify';
 import pinia from './plugins/pinia';
 import apolloClient from './plugins/apollo';
-import { VueFire, VueFireAuth } from 'vuefire';
+import { VueFire } from 'vuefire';
 import { app as fireapp } from './plugins/firebase';
 import { markInitialized, forceInitialize } from './plugins/store-initializer';
+import { markI18nReady } from '@/composables/utils/i18nHelpers';
 // Base app component
 import App from './App.vue';
 
@@ -33,6 +34,9 @@ app.config.errorHandler = (err: unknown, vm: ComponentPublicInstance | null, inf
 
 // Configure app with plugins in the correct order
 app.use(i18n);
+// Mark i18n as ready for our composables
+markI18nReady();
+
 // Initialize Pinia first
 app.use(pinia);
 // Delay to ensure Pinia is fully initialized
@@ -46,10 +50,11 @@ setTimeout(() => {
     .use(vuetify)
     .use(VueFire, {
       firebaseApp: fireapp,
-      modules: [VueFireAuth()],
+      modules: [],
     })
     .provide(DefaultApolloClient, apolloClient)
     .mount('#app');
+  
   // Ensure the store system is marked as initialized
   markInitialized();
 }, 100);

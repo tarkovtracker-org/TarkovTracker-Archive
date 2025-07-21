@@ -59,7 +59,7 @@
 <script setup>
   import { computed } from 'vue';
   import { useUserStore } from '@/stores/user';
-  import FittedCard from '@/components/FittedCard';
+  import FittedCard from '@/components/ui/FittedCard';
 
   const userStore = useUserStore();
   const hideGlobalTasks = computed({

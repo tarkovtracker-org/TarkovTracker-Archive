@@ -1,7 +1,12 @@
 <template>
   <KeepAlive>
-    <v-lazy :options="{ threshold: 0.5 }" min-height="150" class="fill-height">
-      <v-sheet rounded style="position: relative" class="fill-height" @click="smallDialog = false">
+    <v-sheet
+      ref="cardRef"
+      rounded
+      style="position: relative"
+      class="fill-height"
+      @click="smallDialog = false"
+    >
         <div style="position: absolute; left: 0px; top: 0px; z-index: 2">
           <v-sheet
             class="d-flex align-center item-count-sheet py-1 px-2 elevation-2"
@@ -18,9 +23,11 @@
           <!-- Item image -->
           <div class="d-flex align-self-stretch item-panel fill-height">
             <v-img
+              v-if="isVisible"
               :src="imageItem.image512pxLink"
               :lazy-src="imageItem.baseImageLink"
               :class="itemImageClasses"
+              lazy
             >
               <template #placeholder>
                 <v-row class="fill-height ma-0" align="center" justify="center">
@@ -28,6 +35,11 @@
                 </v-row>
               </template>
             </v-img>
+            <div v-else :class="[itemImageClasses, 'image-placeholder']">
+              <v-row class="fill-height ma-0" align="center" justify="center">
+                <v-progress-circular indeterminate color="grey-lighten-5"></v-progress-circular>
+              </v-row>
+            </div>
           </div>
         </div>
         <v-dialog
@@ -178,11 +190,10 @@
           </v-sheet>
         </v-dialog>
       </v-sheet>
-    </v-lazy>
   </KeepAlive>
 </template>
 <script setup>
-  import { defineAsyncComponent, computed, inject, ref } from 'vue';
+  import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
@@ -221,6 +232,33 @@
     teamNeeds,
     imageItem,
   } = inject('neededitem');
+
+  // Intersection observer for lazy loading
+  const cardRef = ref(null);
+  const isVisible = ref(false);
+  let observer = null;
+
+  onMounted(() => {
+    if (cardRef.value?.$el) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            isVisible.value = true;
+            observer?.disconnect();
+          }
+        },
+        {
+          rootMargin: '50px',
+          threshold: 0.1,
+        }
+      );
+      observer.observe(cardRef.value.$el);
+    }
+  });
+
+  onUnmounted(() => {
+    observer?.disconnect();
+  });
   const itemImageClasses = computed(() => {
     return {
       [`item-bg-${item.value.backgroundColor}`]: true,
@@ -298,5 +336,11 @@
   }
   .item-bg-blue {
     background-color: #202d32;
+  }
+  .image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--v-theme-surface-variant), 0.5);
   }
 </style>

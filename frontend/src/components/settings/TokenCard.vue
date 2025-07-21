@@ -1,12 +1,19 @@
 <template>
-  <v-sheet class="pa-2" color="primary" :rounded="true">
+  <v-sheet v-if="tokenDataRef && !tokenDataRef.error" class="pa-2" color="primary" :rounded="true">
     <div>
       <b>{{ $t('page.settings.card.apitokens.note_column') }}:</b>
       {{ tokenDataRef?.note }}
     </div>
     <div>
       <b>{{ $t('page.settings.card.apitokens.token_column') }}:</b>
-      {{ tokenHidden }}
+      <span
+        :class="{ 'token-visible': tokenVisible, 'token-hidden': !tokenVisible }"
+        :title="tokenVisible ? 'Click to hide token' : 'Click to reveal token'"
+        class="token-display"
+        @click="toggleTokenVisibility"
+      >
+        {{ tokenVisible ? props.token : tokenHidden }}
+      </span>
     </div>
     <div>
       <b>{{ $t('page.settings.card.apitokens.permissions_column') }}: </b>
@@ -27,9 +34,9 @@
     <div class="mt-1">
       <v-btn
         variant="outlined"
-        icon="mdi-content-copy"
+        :icon="copied ? 'mdi-check' : 'mdi-content-copy'"
         class="mx-1"
-        color="secondary"
+        :color="copied ? 'success' : 'secondary'"
         size="x-small"
         @click="copyToken"
       ></v-btn>
@@ -39,7 +46,7 @@
         class="mx-1"
         color="secondary"
         size="x-small"
-        @click="showQR = !showQR"
+        @click="toggleQR"
       ></v-btn>
       <v-btn
         variant="outlined"
@@ -53,12 +60,24 @@
       ></v-btn>
     </div>
   </v-sheet>
+  <v-sheet
+    v-else-if="tokenDataRef && tokenDataRef.error"
+    class="pa-2"
+    color="error"
+    :rounded="true"
+  >
+    <div>Error loading token: {{ tokenDataRef.error }}</div>
+    <div>Token ID: {{ props.token }}</div>
+  </v-sheet>
+  <v-sheet v-else class="pa-2" color="primary" :rounded="true">
+    <v-skeleton-loader type="paragraph"></v-skeleton-loader>
+  </v-sheet>
 </template>
 <script setup>
   import { firestore, functions } from '@/plugins/firebase';
   import { doc, getDoc } from 'firebase/firestore';
   import { httpsCallable } from 'firebase/functions';
-  import { computed, onMounted, ref } from 'vue';
+  import { computed, nextTick, ref } from 'vue';
   import QRCode from 'qrcode';
   import { useUserStore } from '@/stores/user';
   import { useI18n } from 'vue-i18n';
@@ -71,7 +90,6 @@
       required: true,
     },
   });
-  console.log(`TokenCard instance created for token ID: ${props.token}`);
   const userStore = useUserStore();
   // Ref to store tokenData when retrieved from Firestore
   const tokenDataRef = ref(null);
@@ -80,53 +98,38 @@
   getDoc(tokenDoc)
     .then((docSnap) => {
       if (docSnap.exists()) {
-        console.log(
-          `TokenCard (${props.token}): Document data:`,
-          JSON.parse(JSON.stringify(docSnap.data()))
-        );
         tokenDataRef.value = docSnap.data();
-        console.log(
-          `TokenCard (${props.token}): tokenDataRef set:`,
-          JSON.parse(JSON.stringify(tokenDataRef.value))
-        );
       } else {
-        console.error(`TokenCard (${props.token}): No such document!`);
+        // Set a fallback value to prevent infinite loading
+        tokenDataRef.value = { error: 'Document not found' };
       }
     })
-    .catch((error) => {
-      console.error(`TokenCard (${props.token}): Error getting document:`, error);
+    .catch((_error) => {
+      // Set a fallback value to prevent infinite loading
+      tokenDataRef.value = { error: 'Failed to load token data' };
     });
   // Computed property to retrieve the timestamp of the token creation
   const tokenCreated = computed(() => {
-    if (!tokenDataRef.value?.created) return Date.now();
-    return tokenDataRef.value.created.toDate() || Date.now();
+    if (!tokenDataRef.value?.createdAt) return Date.now();
+    return tokenDataRef.value.createdAt.toDate() || Date.now();
   });
   // Computed property to display the permissions of the token
   const tokenPermissions = computed(() => {
     if (!tokenDataRef.value?.permissions) {
-      console.log(
-        `TokenCard (${props.token}): tokenPermissions computed - no permissions data yet.`
-      );
       return [];
     }
-    console.log(
-      `TokenCard (${props.token}): tokenPermissions computed:`,
-      tokenDataRef.value.permissions
-    );
     return tokenDataRef.value.permissions;
   });
   // Calculate the relative days since the token was created using Intl.RelativeTimeFormat
   const relativeDays = computed(() => {
-    if (!tokenDataRef.value?.created) {
-      console.log(`TokenCard (${props.token}): relativeDays computed - no creation data yet.`);
+    if (!tokenDataRef.value?.createdAt) {
       return 'N/A';
     }
     const relativeTimeFormat = new Intl.RelativeTimeFormat(locale.value, {
       numeric: 'auto',
     });
     const days = Math.floor((Date.now() - tokenCreated.value) / 86400000);
-    const formattedDays = relativeTimeFormat.format(days, 'day');
-    console.log(`TokenCard (${props.token}): relativeDays computed: ${formattedDays}`);
+    const formattedDays = relativeTimeFormat.format(-days, 'day');
     return formattedDays;
   });
   const tokenHidden = computed(() => {
@@ -136,8 +139,18 @@
       return props.token.replace(/.(?=.{5})/g, '*');
     }
   });
-  const copyToken = () => {
-    navigator.clipboard.writeText(props.token);
+  const copied = ref(false);
+  const copyToken = async () => {
+    try {
+      await navigator.clipboard.writeText(props.token);
+      copied.value = true;
+      // Reset the copied state after 2 seconds
+      setTimeout(() => {
+        copied.value = false;
+      }, 2000);
+    } catch {
+      // Ignore clipboard errors
+    }
   };
   const deleting = ref(false);
   const deleteToken = async () => {
@@ -146,30 +159,75 @@
     try {
       const result = await revokeTokenFn({ token: props.token });
       if (result.data.error) {
-        console.error(result.data.error);
+        console.error('Token revocation failed:', result.data.error);
       }
-    } catch (error) {
-      console.error('Error revoking token:', error);
+    } catch {
+      console.error('Failed to revoke token');
     } finally {
       deleting.value = false;
     }
   };
   const showQR = ref(false);
-  onMounted(() => {
-    console.log(`TokenCard (${props.token}): Component mounted.`);
-    if (document.getElementById(props.token + '-tc')) {
-      QRCode.toCanvas(
-        document.getElementById(props.token + '-tc'),
-        props.token,
-        {},
-        function (error) {
-          if (error) console.error(`TokenCard (${props.token}): QR Code error:`, error);
-          else console.log(`TokenCard (${props.token}): QR Code generated.`);
+  const qrGenerated = ref(false);
+  const tokenVisible = ref(false);
+
+  const generateQR = () => {
+    const canvasId = props.token + '-tc';
+    const canvasElement = document.getElementById(canvasId);
+
+    if (canvasElement && !qrGenerated.value) {
+      QRCode.toCanvas(canvasElement, props.token, {}, function (_error) {
+        if (_error) {
+          console.error('QR code generation failed');
+        } else {
+          qrGenerated.value = true;
         }
-      );
-    } else {
-      console.warn(`TokenCard (${props.token}): Canvas element for QR code not found on mount.`);
+      });
     }
-  });
+  };
+
+  const toggleQR = () => {
+    showQR.value = !showQR.value;
+    if (showQR.value) {
+      // Use nextTick to ensure the canvas is rendered before generating QR
+      nextTick(() => {
+        generateQR();
+      });
+    }
+  };
+
+  const toggleTokenVisibility = () => {
+    tokenVisible.value = !tokenVisible.value;
+  };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .token-display {
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-family: 'Courier New', monospace;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.token-hidden {
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+
+    &.token-visible {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+
+      &:hover {
+        background-color: rgba(76, 175, 80, 0.2);
+      }
+    }
+  }
+</style>

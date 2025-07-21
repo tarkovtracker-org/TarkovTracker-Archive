@@ -1,7 +1,6 @@
 <template>
   <KeepAlive>
-    <v-lazy :options="{ threshold: 0.5 }" min-height="64">
-      <v-sheet rounded :class="itemRowClasses">
+    <v-sheet ref="cardRef" rounded :class="itemRowClasses">
         <v-container fluid class="my-n1 pa-0">
           <v-row no-gutters>
             <v-col
@@ -15,7 +14,12 @@
               style="overflow: -moz-hidden-unscrollable"
             >
               <span class="d-block">
-                <v-img :src="imageItem?.iconLink ?? ''" :class="itemImageClasses">
+                <v-img
+                  v-if="isVisible"
+                  :src="imageItem?.iconLink ?? ''"
+                  :class="itemImageClasses"
+                  lazy
+                >
                   <template #placeholder>
                     <v-row class="fill-height ma-0" align="center" justify="center">
                       <v-progress-circular
@@ -25,6 +29,11 @@
                     </v-row>
                   </template>
                 </v-img>
+                <div v-else :class="[itemImageClasses, 'image-placeholder']">
+                  <v-row class="fill-height ma-0" align="center" justify="center">
+                    <v-progress-circular indeterminate color="grey-lighten-5"></v-progress-circular>
+                  </v-row>
+                </div>
               </span>
               <span
                 class="ml-2 d-flex flex-column"
@@ -336,11 +345,10 @@
           </v-row>
         </v-container>
       </v-sheet>
-    </v-lazy>
   </KeepAlive>
 </template>
 <script setup>
-  import { defineAsyncComponent, computed, inject, ref } from 'vue';
+  import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
   import { useProgressStore } from '@/stores/progress';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
@@ -370,6 +378,33 @@
     teamNeeds,
     imageItem,
   } = inject('neededitem');
+
+  // Intersection observer for lazy loading
+  const cardRef = ref(null);
+  const isVisible = ref(false);
+  let observer = null;
+
+  onMounted(() => {
+    if (cardRef.value?.$el) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            isVisible.value = true;
+            observer?.disconnect();
+          }
+        },
+        {
+          rootMargin: '50px',
+          threshold: 0.1,
+        }
+      );
+      observer.observe(cardRef.value.$el);
+    }
+  });
+
+  onUnmounted(() => {
+    observer?.disconnect();
+  });
   const itemImageClasses = computed(() => {
     return {
       [`item-bg-${item.value.backgroundColor}`]: true,
@@ -445,5 +480,11 @@
     margin-bottom: 0.5rem;
     margin-left: 0.5rem;
     margin-right: 0.5rem;
+  }
+  .image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(var(--v-theme-surface-variant), 0.5);
   }
 </style>

@@ -4,10 +4,25 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
+import { execSync } from 'child_process';
 
 // Get the directory name in an ESM context
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Get git commit hash and build time
+const getCommitHash = () => {
+  try {
+    return execSync('git rev-parse HEAD').toString().trim();
+  } catch (error) {
+    console.warn('Could not get git commit hash:', error);
+    return 'unknown';
+  }
+};
+
+const getBuildTime = () => {
+  return new Date().toISOString();
+};
 
 export default defineConfig({
   resolve: {
@@ -20,15 +35,11 @@ export default defineConfig({
     __VUE_OPTIONS_API__: 'true',
     __VUE_PROD_DEVTOOLS__: 'false',
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
+    'import.meta.env.VITE_COMMIT_HASH': JSON.stringify(getCommitHash()),
+    'import.meta.env.VITE_BUILD_TIME': JSON.stringify(getBuildTime()),
   },
   build: {
     sourcemap: true,
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
     rollupOptions: {
       output: {
         manualChunks(id) {

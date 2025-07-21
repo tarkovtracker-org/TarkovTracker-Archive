@@ -22,10 +22,10 @@
       </span>
     </div>
     <div v-if="currentLevel" class="text-center text-caption mt-4 mb-2 mx-2">
-      {{ currentLevel.description }}
+      {{ getStashAdjustedDescription(currentLevel.description) }}
     </div>
     <div v-else-if="nextLevel" class="text-center text-caption mt-4 mb-2 mx-2">
-      {{ nextLevel.description }}
+      {{ getStashAdjustedDescription(nextLevel.description) }}
     </div>
     <v-sheet v-if="props.station.id == STASH_STATION_ID" class="text-center pa-2" color="secondary">
       <div>
@@ -173,10 +173,10 @@
 </template>
 <script setup>
   import { computed, defineAsyncComponent, ref } from 'vue';
-  import { useProgressStore, STASH_STATION_ID } from '@/stores/progress';
+  import { useProgressStore, STASH_STATION_ID, CULTIST_CIRCLE_STATION_ID } from '@/stores/progress';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useI18n } from 'vue-i18n';
-  const TarkovItem = defineAsyncComponent(() => import('@/components/TarkovItem'));
+  const TarkovItem = defineAsyncComponent(() => import('@/components/game/TarkovItem'));
   const props = defineProps({
     station: {
       type: Object,
@@ -186,7 +186,6 @@
   const progressStore = useProgressStore();
   const tarkovStore = useTarkovStore();
   const { t } = useI18n({ useScope: 'global' });
-
   const highlightClasses = computed(() => {
     let classes = {};
     if (progressStore.hideoutLevels?.[props.station.id]?.self > 0) {
@@ -206,6 +205,11 @@
       const editionData = progressStore.gameEditionData.find((e) => e.version === editionId);
       const defaultStash = editionData?.defaultStashLevel ?? 0;
       return currentStash <= defaultStash;
+    }
+    if (props.station.id === CULTIST_CIRCLE_STATION_ID) {
+      const editionId = tarkovStore.getGameEdition();
+      // If Unheard Edition (5) or Unheard+EOD Edition (6), disable downgrade
+      return editionId === 5 || editionId === 6;
     }
     return false;
   });
@@ -254,8 +258,22 @@
     );
   });
   const stationAvatar = computed(() => {
-    return `/img/hideout/${props.station.id}.png`;
+    return `/img/hideout/${props.station.id}.avif`;
   });
+  const getStashAdjustedDescription = (description) => {
+    // Only modify description for stash station
+    if (props.station.id !== STASH_STATION_ID) {
+      return description;
+    }
+    // Check if user has Unheard Edition (5) or Unheard + EOD Edition (6)
+    const editionId = tarkovStore.getGameEdition();
+    const isUnheardEdition = editionId === 5 || editionId === 6;
+    // For Unheard editions, show static description with 10x72
+    if (isUnheardEdition) {
+      return 'Maximum size stash (10x72)';
+    }
+    return description;
+  };
 </script>
 <style lang="scss" scoped>
   .corner-highlight {

@@ -7,8 +7,9 @@
       padding-bottom: 0 !important;
     "
   >
-    <v-row justify="center">
-      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="12" lg="12" xl="12">
+    <!-- API Tokens Section - Full width when logged in, centered when not -->
+    <v-row justify="center" class="mb-6">
+      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="10" lg="8" xl="8">
         <fitted-card icon="mdi-key-chain" icon-color="white">
           <template #title>
             {{ $t('page.settings.card.apitokens.title') }}
@@ -32,7 +33,7 @@
           </template>
         </fitted-card>
       </v-col>
-      <v-col v-else cols="12" sm="12" md="12" lg="12" xl="12">
+      <v-col v-else cols="12" sm="10" md="8" lg="6" xl="6">
         <fitted-card icon="mdi-key-chain" icon-color="white">
           <template #title>
             {{ $t('page.settings.card.apitokens.title') }}
@@ -62,8 +63,23 @@
           </template>
         </fitted-card>
       </v-col>
-      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="6" lg="4" xl="4">
-        <fitted-card icon="mdi-eye" icon-color="white">
+    </v-row>
+
+    <!-- Settings Cards Grid -->
+    <v-row justify="center" class="mb-6">
+      <!-- Quest Filters -->
+      <v-col cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <quest-filter class="flex-grow-1" />
+      </v-col>
+
+      <!-- PMC Faction -->
+      <v-col cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <faction-select class="flex-grow-1" />
+      </v-col>
+
+      <!-- Streamer Mode -->
+      <v-col v-if="fireuser.loggedIn" cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <fitted-card icon="mdi-eye" icon-color="white" class="flex-grow-1">
           <template #title>
             {{ $t('page.settings.card.streamermode.title') }}
           </template>
@@ -101,14 +117,10 @@
           </template>
         </fitted-card>
       </v-col>
-      <v-col cols="12" sm="12" md="6" lg="4" xl="4">
-        <quest-filter />
-      </v-col>
-      <v-col cols="12" sm="12" md="6" lg="4" xl="4">
-        <faction-select />
-      </v-col>
-      <v-col cols="12" sm="12" md="6" lg="4" xl="4">
-        <fitted-card icon="mdi-gift-open" icon-color="white">
+
+      <!-- Game Edition -->
+      <v-col cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <fitted-card icon="mdi-gift-open" icon-color="white" class="flex-grow-1">
           <template #title>
             {{ $t('page.settings.card.gameedition.title') }}
           </template>
@@ -131,12 +143,15 @@
           </template>
         </fitted-card>
       </v-col>
-      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="6" lg="4" xl="4">
-        <data-migration-card />
+
+      <!-- Data Migration -->
+      <v-col v-if="fireuser.loggedIn" cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <data-migration-card class="flex-grow-1" />
       </v-col>
     </v-row>
-    <!-- Reset section in a separate row at the bottom -->
-    <v-row justify="center" class="mt-4">
+
+    <!-- Reset Section - Separate row at bottom -->
+    <v-row justify="center" class="mt-8">
       <v-col cols="12" sm="8" md="6" lg="4" xl="4">
         <fitted-card icon="mdi-restart-alert" icon-color="white" class="reset-card">
           <template #title>
@@ -208,7 +223,7 @@
   import FactionSelect from '@/components/settings/FactionSelect';
   import ApiTokens from '@/components/settings/ApiTokens';
   import DataMigrationCard from '@/components/settings/DataMigrationCard';
-  import FittedCard from '@/components/FittedCard';
+  import FittedCard from '@/components/ui/FittedCard';
 
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
@@ -219,6 +234,7 @@
     { title: 'Prepare for Escape Edition', value: 3 },
     { title: 'Edge of Darkness (Limited Edition)', value: 4 },
     { title: 'Unheard Edition', value: 5 },
+    { title: 'Unheard + Edge Of Darkness (EOD) Edition', value: 6 },
   ];
   const currentGameEdition = computed({
     get() {

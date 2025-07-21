@@ -12,14 +12,14 @@ interface ObjectiveItem {
   invalid?: boolean;
   failed?: boolean;
 }
-// Raw Progress Data (from Firestore or initial processing)
+// Raw Progress Data (from Firestore or initial processing) - Legacy Format
 interface RawObjectiveData {
   [key: string]: {
     complete?: boolean;
-    st?: string; // Status for tasks: 'uncompleted', 'completed', 'failed'
     count?: number;
     invalid?: boolean;
     failed?: boolean;
+    timestamp?: number;
   };
 }
 interface TaskRequirement {
@@ -55,7 +55,7 @@ interface HideoutStation {
 interface HideoutData {
   hideoutStations?: HideoutStation[];
 }
-// User Progress Data (from Firestore)
+// User Progress Data (from Firestore) - Legacy Format
 interface UserProgressData {
   taskCompletions?: RawObjectiveData;
   taskObjectives?: RawObjectiveData;
@@ -95,12 +95,8 @@ const formatObjective = (
     let isComplete = false;
     let isFailed = objectiveValue?.failed ?? false; // Default based on an explicit 'failed' field
 
-    // Check if this item uses 'st' field (likely a task)
-    if (typeof objectiveValue?.st === 'string') {
-      isComplete = objectiveValue.st === 'completed';
-      isFailed = objectiveValue.st === 'failed' || isFailed;
-    } else if (typeof objectiveValue?.complete === 'boolean') {
-      // Otherwise, use the 'complete' boolean field (likely for objectives, hideout items)
+    // Use the 'complete' boolean field (legacy format)
+    if (typeof objectiveValue?.complete === 'boolean') {
       isComplete = objectiveValue.complete;
     }
 
@@ -246,8 +242,8 @@ const _processHideoutStations = (
         updateStationLevelForProgress(level, currentProgress);
       }
     });
-    // Special case: If Unheard Edition (5), mark Cultist Circle as maxed
-    if (gameEdition === 5) {
+    // Special case: If Unheard Edition (5) or Unheard+EOD Edition (6), mark Cultist Circle as maxed
+    if (gameEdition === 5 || gameEdition === 6) {
       const cultistCircleStation = hideoutData.hideoutStations.find(
         (station) => station.id === CULTIST_CIRCLE_STATION_ID
       );
@@ -363,7 +359,7 @@ const _updateDependentTasks = async (
   taskData: TaskData, // Assuming taskData and tasks are non-null by this point
   db: Firestore,
   progressUpdate: ProgressUpdate,
-  updateTime: FieldValue
+  updateTime: number
 ): Promise<void> => {
   for (const dependentTask of taskData.tasks!) {
     for (const req of dependentTask.taskRequirements || []) {
@@ -383,12 +379,16 @@ const _updateDependentTasks = async (
           shouldLock = true;
         }
         if (shouldUnlock) {
-          progressUpdate[`tasks.${dependentTask.id}.st`] = 'uncompleted'; // Set to unlocked/active
-          progressUpdate[`tasks.${dependentTask.id}.cAt`] = updateTime;
+          // Use legacy format: taskCompletions.${taskId}.complete = false (unlocked/active)
+          progressUpdate[`taskCompletions.${dependentTask.id}.complete`] = false;
+          progressUpdate[`taskCompletions.${dependentTask.id}.failed`] = false;
+          progressUpdate[`taskCompletions.${dependentTask.id}.timestamp`] = updateTime;
         }
         if (shouldLock) {
-          progressUpdate[`tasks.${dependentTask.id}.st`] = 'uncompleted'; // Set to locked (no separate locked state)
-          progressUpdate[`tasks.${dependentTask.id}.cAt`] = updateTime;
+          // Use legacy format: taskCompletions.${taskId}.complete = false (locked, but no separate locked state)
+          progressUpdate[`taskCompletions.${dependentTask.id}.complete`] = false;
+          progressUpdate[`taskCompletions.${dependentTask.id}.failed`] = false;
+          progressUpdate[`taskCompletions.${dependentTask.id}.timestamp`] = updateTime;
         }
       }
     }
@@ -400,22 +400,21 @@ const _updateAlternativeTasks = (
   changedTask: Task, // Assuming changedTask is non-null
   newState: string,
   progressUpdate: ProgressUpdate,
-  updateTime: FieldValue
+  updateTime: number
 ): void => {
   changedTask.alternatives?.forEach((altTaskId) => {
     if (newState === 'completed') {
       // Current task COMPLETED
-      // Mark alternative as failed
-      progressUpdate[`tasks.${altTaskId}.st`] = 'failed';
-      progressUpdate[`tasks.${altTaskId}.failed`] = true;
-      progressUpdate[`tasks.${altTaskId}.cAt`] = updateTime;
+      // Mark alternative as failed using legacy format
+      progressUpdate[`taskCompletions.${altTaskId}.complete`] = true;
+      progressUpdate[`taskCompletions.${altTaskId}.failed`] = true;
+      progressUpdate[`taskCompletions.${altTaskId}.timestamp`] = updateTime;
     } else if (newState !== 'failed') {
       // Current task is NOT FAILED (i.e., it's active or was un-completed from completed)
-      // Mark alternative as active
-      // and remove any 'failed' status that might have been set due to this task's prior completion.
-      progressUpdate[`tasks.${altTaskId}.st`] = 'uncompleted'; // Set to active (unlocked)
-      progressUpdate[`tasks.${altTaskId}.failed`] = FieldValue.delete(); // Remove the 'failed' flag
-      progressUpdate[`tasks.${altTaskId}.cAt`] = updateTime;
+      // Mark alternative as active using legacy format
+      progressUpdate[`taskCompletions.${altTaskId}.complete`] = false;
+      progressUpdate[`taskCompletions.${altTaskId}.failed`] = false;
+      progressUpdate[`taskCompletions.${altTaskId}.timestamp`] = updateTime;
     }
     // If newState === 'failed', the current logic intentionally does nothing to its alternatives.
   });
@@ -430,7 +429,7 @@ const updateTaskState = async (
   if (!taskData?.tasks) return;
   const db: Firestore = admin.firestore();
   const progressRef: DocumentReference = db.collection('progress').doc(userId);
-  const updateTime = FieldValue.serverTimestamp();
+  const updateTime = Date.now();
   const progressUpdate: ProgressUpdate = {};
 
   const changedTask = taskData.tasks.find((t) => t.id === taskId);
@@ -485,7 +484,7 @@ const checkAllRequirementsMet = async (
     const progressRef: DocumentReference = db.collection('progress').doc(userId);
     const progressDoc = await progressRef.get();
     const progressData = progressDoc.data() || {};
-    const taskCompletions = progressData.tasks || {};
+    const taskCompletions = progressData.taskCompletions || {};
     // Check if ALL requirements for this dependent task are satisfied
     const allReqsMet = dependentTask.taskRequirements?.every((innerReq) => {
       if (!innerReq.task?.id) return true; // Skip if requirement has no task id
@@ -503,18 +502,18 @@ const checkAllRequirementsMet = async (
           return true;
         return false;
       }
-      // For other task requirements, check if they're satisfied based on current progress
-      const otherTaskState = taskCompletions[reqTaskId]?.st;
-      if (reqStatus.includes('complete') && otherTaskState === 'completed') {
+      // For other task requirements, check if they're satisfied based on current progress (legacy format)
+      const otherTaskData = taskCompletions[reqTaskId];
+      if (reqStatus.includes('complete') && otherTaskData?.complete && !otherTaskData?.failed) {
         return true; // Requirement needs completion and task is complete
       }
       if (
         reqStatus.includes('active') &&
-        (otherTaskState === 'uncompleted' || otherTaskState === 'completed')
+        (otherTaskData?.complete === false || (otherTaskData?.complete && !otherTaskData?.failed))
       ) {
         return true; // Requirement needs activation and task is active or complete
       }
-      if (reqStatus.includes('failed') && otherTaskState === 'failed') {
+      if (reqStatus.includes('failed') && otherTaskData?.failed) {
         return true; // Requirement needs failure and task is failed
       }
       return false; // Requirement not met

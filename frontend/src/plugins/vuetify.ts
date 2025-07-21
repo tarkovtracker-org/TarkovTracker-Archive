@@ -1,6 +1,6 @@
 import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
-import colors from 'vuetify/lib/util/colors';
+import colors from 'vuetify/util/colors';
 import { useI18n } from 'vue-i18n';
 import { createVueI18nAdapter } from 'vuetify/locale/adapters/vue-i18n';
 import { mdi } from 'vuetify/iconsets/mdi';

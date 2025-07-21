@@ -8,7 +8,7 @@
       <v-row justify="center" style="font-size: 12px">
         <v-col cols="12" md="4" align-self="center">
           <div>
-            <i18n-t keypath="footer.call_to_action.discord_phrase">
+            <i18n-t keypath="footer.call_to_action.discord_phrase" scope="global">
               <template #discord>
                 <a href="https://discord.gg/zeAP4Ng" target="_blank" class="info-link">
                   <div

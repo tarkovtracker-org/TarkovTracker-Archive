@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" id="svg176" width="130.81831" height="141.23242" version="1.1" viewBox="0 0 130.81831 141.23242">
+  <style id="style_common">
+    .trees { fill:#144043 }
+    .cement { fill:#c6c2c2 }
+    .land { fill:#1f5054 }
+    .rock { fill:#dcd5b6 }
+    .water { fill:#4a6b96 }
+    .wood { fill:#593700 }
+    .tarmac { fill:#768089 }
+    .gravel { fill:#946d3e }
+    .building { fill:#1a2632 }
+    .floor { fill:#70777f }
+    .locked { fill:#37414c }
+    .map_border { fill:none;stroke:#000;stroke-width:2 }
+    .fence { fill:none;stroke:#c4e3c3;stroke-width:1 }
+    .road_tarmac { fill:none;stroke:#888 }
+    .road_gravel { fill:none;stroke:#946d3e }
+    .road_small { stroke-width:5 }
+    .road_medium { stroke-width:8 }
+    .road_large { stroke-width:12 }
+    .railroad { fill:none;stroke:#914833;stroke-dasharray:6;stroke-width:3 }
+    .powerline { fill:none;stroke:#ffce00;stroke-width:2;stroke-miterlimit:10;stroke-dasharray:6,6 }
+    .danger { fill:red;fill-opacity:.4;stroke:red;stroke-dasharray:4,2;stroke-width:2 }
+    .danger_small { fill:red;fill-opacity:.4;stroke:red;stroke-dasharray:2,1;stroke-width:1 }
+    .task { fill:#000 }
+    .stairs { fill:#FFD700 }
+    .shadow { filter:drop-shadow(0 0 2px #000) }
+  </style>
+  <style id="style_factory">
+    .wall { fill:none;stroke:#000;stroke-width:0.2; }
+  </style>
+  <defs id="defs1">
+    <path id="stair-1" d="M39.1426 95.2973V106.58h3.0521V95.2973Z"></path>
+    <path id="stair-2" d="M30.1617 114.287h-6.5965v3.006h6.5965Z"></path>
+    <path id="stair-3" d="M23.7935 120.316h2.8739v1.517h-2.8739Z"></path>
+    <path id="stair-4" d="M28.3251 75.1428v3.0709h1.4402v-3.0709Z"></path>
+    <path id="stair-7" d="m75.1892 95.2502 9.07.0157-.008 2.9515-9.07-.0157Z"></path>
+    <path id="stair-8" d="M87.0874 63.3964v8.3085h2.9758v-8.3085Z"></path>
+    <path id="stair-220" d="M86.1828 49.887V39.5518h4.9597V49.887Z"></path>
+    <path id="stair-221" d="M98.587 39.1456h2.931v-1.2648h-2.931Z"></path>
+    <path id="stair-222" d="M98.4578 9.62181v1.42359H101.4V9.62181Z"></path>
+    <path id="stair-223" d="M45.8568 62.7733h1.3624v4.8857h-1.3624Z"></path>
+    <path id="stair-224" d="M54.4139 60.0327h1.3622v4.8857h-1.3622Z"></path>
+    <path id="stair-69" d="M18.2137 111.316v6.069H20.95v-6.069Zm1.3028 1.166h.1308v3.735h-.1308Z"></path>
+    <path id="stair-96" d="M14.176 69.4637v5.8536h2.7363v-5.8536Zm1.3027 1.125h.1308v3.6016h-.1308Z"></path>
+    <path id="stair-97" d="M52.0882 93.4709v6.0459h2.7363v-6.0459Zm1.3027 1.162h.1309v3.7202h-.1309Z"></path>
+    <path id="stair-100" d="M70.3349 93.4707v6.0463h2.7363v-6.0463Zm1.3027 1.162h.1309v3.7202h-.1309Z"></path>
+    <path id="stair-101" d="M96.7289 21.8536h-5.8535V24.59h5.8535Zm-1.125 1.3028v.1308h-3.6016v-.1308Z"></path>
+    <path id="stair-129" d="M46.6849 43.5374v6.0547h2.7364v-6.0547Zm1.3028 1.1637h.1308v3.7253h-.1308Z"></path>
+    <path id="stair-62" d="M28.0307 29.732h-2.7258v-4.1555h2.7258"></path>
+    <path id="stair-127" d="M30.3351 39.7077h-6.3573v3.2048h6.3573Zm-1.5627 1.5258v.1533h-3.3123v-.1533Z"></path>
+    <path id="stair-128" d="M30.3351 65.8672h-6.3573v3.2048h6.3573Zm-1.5628 1.5258v.1532H25.46v-.1532Z"></path>
+    <path id="stair-63" d="M24.7291 87.3812h2.9143v1.2792h-2.9143"></path>
+    <path id="stair-130" d="M24.7418 72.3192h2.9143v1.2792h-2.9143"></path>
+    <path id="stair-131" d="m84.0534 42.6737-1.4406.0027.0125 3.7271 1.4405-.0027Z"></path>
+    <path id="stair-132" d="M83.3833 39.4151h1.2252v-5.4587h-1.2252Z"></path>
+    <path id="stair-140" d="M33.3318 94.6163h-1.2787v2.9043h1.2787Z"></path>
+    <path id="stair-141" d="M47.7275 94.6592h-1.2787v2.9043h1.2787Z"></path>
+    <path id="stair-155" d="M52.5058 20.887v-3.4477h-1.1721v3.4477Z"></path>
+    <path id="stair-226" d="M70.98 25.5491V21.945h-1.1722v3.6041Z"></path>
+    <path id="stair-134" d="M92.2973 42.9477v5.8536h3.1411v-5.8536Zm1.4954 1.125h.1502v3.6016h-.1502Z"></path>
+    <path id="stair-135" d="M12.0115 65.0487h3.2275v1.3764h-3.2275Z"></path>
+    <path id="stair-136" d="M53.6835 6.40033h2.9323v1.32034h-2.9323Z"></path>
+    <path id="stair-138" d="M53.1803 30.0761h2.9557v-1.229h-2.9557Z"></path>
+    <path id="stair-139" d="M78.1769 37.6569H75.299v1.3571h2.8779Z"></path>
+    <path id="stair-143" d="M.147886 74.7243v-2.9255H1.55806v2.9255Z"></path>
+  </defs>
+  
+  
+  
+  <g id="Third_Floor" class="shadow">
+    <g id="Floor-3" class="floor">
+      <path d="M25.293 10.2363v.9102h5.0957v12.0371H25.293v.8769h59.6738v-.8769H34.3145V11.1465h62.5293v-.9102zm69.5273 14.3106v.2343l-69.5273-.006v.9063l25.1484.002v12.2052l-13.1641-.002v.9063h3.2071l-.0625 1.709h-7.041v-1.0313h-4.6114l-.0117.1426-.0117.1445h-4.1777v3.2344h6.5058v3.6328h-.168v-3.377h-4.9257v6.1036h4.9257v-1.8301h.168v4.0058h-.168v-1.832h-4.9257v4.6172l4.9257-.1914v-1.832h.168v4.0644h-.168v-2.0039l-4.9257.2109v11.0059h4.9257v-3.5098h.168v3.7579l-3.2539-.0039-3.2519-.0039v3.2324h6.914v.3047H3.89648l-.00586 48.0452H18.3105v-2.024h-.3027l.0059-43.8689H33.959l-.002 27.9609h.9063l.002-10.0976h14.7422l-.002 10.0976h.9062l.0059-54.1152h.6406l-.0059 54.1152h16.5528l.0059-56.0664h1.4726l-.0059 56.0664h16.5547l.0059-47.8965h.5528l-.0039 47.8965h.9062l.002-15.0742h14.7406l-.002 15.0742h.906l.006-47.8965h.516V39.6992H84.0566v.8086l-16.3457-.002v-.4961h-.3105l.1348-.2031-.5938-.3965.334-.5-.1719-.1152 29.8379.0039V24.5469Zm-40.4941 1.1367 40.4941.004v12.205l-40.4941-.0039ZM41.4551 38.793l24.8828.002-.1973.2949.2696.1797-.3653.5488.3535.2344.0489-.0723.3574.2363v.2891l-24.5723-.0039h-.8398zm-8.0742 4.5918h.582l-.002 25.9589h-.58V56.3535Zm1.4882 0h7.3633l6.3321.0059v.2558h-1.8536v1.6953h2.9004l-.0039 39.4512H34.8652Zm14.961.0059h1.3281v.2558h-1.3281zm2.2344 0h14.7402l-.002 9.6777H52.0625Zm18.0253 0h13.9668v8.1699h.7754l-.002 20.5312H70.0879Zm17.1075 8.1699h14.7417l-.002 28.2539H87.1953Zm-34.4668 3.6348h13.375v.5019h-13.375zm-21.8243 1.9394h.168v4.1211h-.168v-2.0605zm21.1563.6895h14.7402l-.0039 39.6698H52.0586ZM13.8066 71.4961h3.3008v3.043h-.3027v2.0723h.3027l-.0039 22.3711H4.79883l.00391-25.4805h9.00386zm56.2813 5.1641h14.7422l-.0039 20.6758H70.084v-.0821h.1914v-1.8945h-.1914ZM4.79883 102.836H17.1035l-.002 12.529H4.79688Z"></path>
+    </g>
+    <g id="Wall-3" class="wall">
+      <path d="M33.4632 43.3852v-.5087"></path>
+      <path d="M33.4632 41.1808v-.6782"></path>
+      <path d="M11.0866 72.0362h.926V69.344"></path>
+      <path d="M9.54317 72.0362H4.56644v-2.6921"></path>
+      <path d="M30.906 60.4972h-2.1865"></path>
+    </g>
+    <g id="Stairs-3" class="stairs">
+      <g id="Stairs-3-down">
+        <use xlink:href="#stair-127"></use>
+        <use xlink:href="#stair-128"></use>
+        <use xlink:href="#stair-69"></use>
+        <use xlink:href="#stair-96"></use>
+        <use xlink:href="#stair-97"></use>
+        <use xlink:href="#stair-100"></use>
+        <use xlink:href="#stair-101"></use>
+        <use xlink:href="#stair-129"></use>
+      </g>
+    </g>
+  </g>
+</svg>

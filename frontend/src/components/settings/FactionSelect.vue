@@ -48,7 +48,7 @@
   import { useI18n } from 'vue-i18n';
   import { defineAsyncComponent, computed, ref } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
-  const FittedCard = defineAsyncComponent(() => import('@/components/FittedCard'));
+  const FittedCard = defineAsyncComponent(() => import('@/components/ui/FittedCard'));
   const { t } = useI18n({ useScope: 'global' });
   const tarkovStore = useTarkovStore();
   const PMCFactions = [
