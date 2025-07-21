@@ -9,6 +9,7 @@ import apolloClient from './plugins/apollo';
 import { VueFire } from 'vuefire';
 import { app as fireapp } from './plugins/firebase';
 import { markInitialized, forceInitialize } from './plugins/store-initializer';
+import { markI18nReady } from '@/composables/utils/i18nHelpers';
 // Base app component
 import App from './App.vue';
 
@@ -33,6 +34,9 @@ app.config.errorHandler = (err: unknown, vm: ComponentPublicInstance | null, inf
 
 // Configure app with plugins in the correct order
 app.use(i18n);
+// Mark i18n as ready for our composables
+markI18nReady();
+
 // Initialize Pinia first
 app.use(pinia);
 // Delay to ensure Pinia is fully initialized
@@ -50,6 +54,7 @@ setTimeout(() => {
     })
     .provide(DefaultApolloClient, apolloClient)
     .mount('#app');
+  
   // Ensure the store system is marked as initialized
   markInitialized();
 }, 100);

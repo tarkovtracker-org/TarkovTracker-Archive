@@ -39,15 +39,12 @@
 </template>
 <script setup>
   import { defineAsyncComponent } from 'vue';
-
-  // Define the prop
   const props = defineProps({
     isCollapsed: {
       type: Boolean,
       required: true,
     },
   });
-
   const DrawerItem = defineAsyncComponent(() => import('@/components/drawer/DrawerItem'));
 </script>
 <style lang="scss" scoped></style>

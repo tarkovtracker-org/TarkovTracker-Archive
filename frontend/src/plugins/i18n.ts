@@ -56,5 +56,9 @@ const i18n: I18n<
   locale: languageCode, // Use detected language code
   fallbackLocale: 'en', // Fallback locale
   messages: typedMessages, // Use the typed and merged messages
+  silentTranslationWarn: true, // Suppress translation warnings
+  silentFallbackWarn: true, // Suppress fallback warnings
+  missingWarn: false, // Disable missing key warnings
+  fallbackWarn: false, // Disable fallback warnings
 });
 export default i18n;

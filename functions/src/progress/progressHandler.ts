@@ -8,7 +8,7 @@ import {
   WriteBatch,
 } from 'firebase-admin/firestore';
 
-// Update: dataLoaders and progressUtils is now TS, keep .js extension for import
+// Import from TypeScript files with .js extension for module resolution
 import { getTaskData, getHideoutData } from '../utils/dataLoaders.js';
 import { formatProgress, updateTaskState } from './progressUtils.js';
 
@@ -44,22 +44,38 @@ interface ObjectiveItem {
   failed?: boolean;
 }
 
-// Firestore Document Data Interfaces
+// Firestore Document Data Interfaces (Legacy Format)
 interface ProgressDocData {
-  // Define fields based on actual progress document structure
+  // Define fields based on actual progress document structure (legacy format)
   level?: number;
-  tasks?: { [taskId: string]: TaskProgressData };
-  hideout?: { [moduleId: string]: HideoutProgressData };
+  displayName?: string;
+  gameEdition?: number;
+  pmcFaction?: string;
+  taskCompletions?: { [taskId: string]: TaskCompletionData };
+  taskObjectives?: { [objectiveId: string]: TaskObjectiveData };
+  hideoutParts?: { [partId: string]: HideoutPartData };
+  hideoutModules?: { [moduleId: string]: HideoutModuleData };
 }
 
-interface TaskProgressData {
-  st?: string; // Status
-  obj?: { [objectiveId: string]: number | boolean }; // Objectives
+interface TaskCompletionData {
+  complete?: boolean;
+  failed?: boolean;
+  timestamp?: number;
 }
 
-interface HideoutProgressData {
-  level?: number;
-  objectives?: { [objectiveId: string]: boolean };
+interface TaskObjectiveData {
+  complete?: boolean;
+  count?: number;
+  timestamp?: number;
+}
+
+interface HideoutPartData {
+  complete?: boolean;
+  count?: number;
+}
+
+interface HideoutModuleData {
+  complete?: boolean;
 }
 
 interface SystemDocData {
@@ -429,19 +445,30 @@ const updateSingleTask = async (req: AuthenticatedRequest, res: Response): Promi
       return;
     }
     try {
-      // Fetch existing task data to preserve objectives if needed
-      const progressDoc = await progressRef.get();
-      const existingTaskData = progressDoc.data()?.tasks?.[taskId] ?? {}; // Get existing or empty object
-      const updateData: { [key: `tasks.${string}`]: TaskProgressData } = {};
-      // Use dot notation for specific field update
-      updateData[`tasks.${taskId}`] = {
-        ...existingTaskData, // Preserve existing fields (like objectives)
-        st: state, // Use the string state directly
-      };
+      // Use legacy format for compatibility
+      const updateTime = Date.now();
+      const updateData: { [key: string]: boolean | number } = {};
+      
+      // Update task completion status using legacy format
+      if (state === 'completed') {
+        updateData[`taskCompletions.${taskId}.complete`] = true;
+        updateData[`taskCompletions.${taskId}.failed`] = false;
+        updateData[`taskCompletions.${taskId}.timestamp`] = updateTime;
+      } else if (state === 'failed') {
+        updateData[`taskCompletions.${taskId}.complete`] = true;
+        updateData[`taskCompletions.${taskId}.failed`] = true;
+        updateData[`taskCompletions.${taskId}.timestamp`] = updateTime;
+      } else if (state === 'uncompleted') {
+        updateData[`taskCompletions.${taskId}.complete`] = false;
+        updateData[`taskCompletions.${taskId}.failed`] = false;
+        // Use FieldValue.delete() for timestamp removal
+        updateData[`taskCompletions.${taskId}.timestamp`] = admin.firestore.FieldValue.delete() as any;
+      }
+
       await progressRef.update(updateData);
+      
       // Implement task dependency updates using updateTaskState
       try {
-        const { getTaskData } = await import('../utils/dataLoaders.js');
         const taskData = await getTaskData();
         // Use the top-level imported updateTaskState instead of dynamic import
         await updateTaskState(taskId, state, ownerId, taskData);
@@ -516,13 +543,13 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
       res.status(400).send({ error: 'Invalid request body format.' });
       return;
     }
-    const batch: WriteBatch = db.batch();
     let invalidStatusFound = false;
     const updatePromises: Promise<void>[] = [];
     try {
-      // Fetch existing progress data once
-      const progressDoc = await progressRef.get();
-      const existingTasksData = progressDoc.data()?.tasks ?? {};
+      const updateTime = Date.now();
+      const batchUpdateData: { [key: string]: boolean | number | any } = {};
+      
+      // Process each task update
       for (const taskId in taskUpdates) {
         if (Object.prototype.hasOwnProperty.call(taskUpdates, taskId)) {
           const status = taskUpdates[taskId];
@@ -535,20 +562,26 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
             });
             break;
           }
-          const existingTaskData = existingTasksData[taskId] ?? {};
-          // Prepare update data for this specific task using dot notation
-          const updateData: { [key: `tasks.${string}`]: TaskProgressData } = {};
-          updateData[`tasks.${taskId}`] = {
-            ...existingTaskData, // Preserve existing fields
-            st: status,
-          };
-          // Add update operation to the batch
-          batch.update(progressRef, updateData);
+          
+          // Update task completion status using legacy format
+          if (status === 'completed') {
+            batchUpdateData[`taskCompletions.${taskId}.complete`] = true;
+            batchUpdateData[`taskCompletions.${taskId}.failed`] = false;
+            batchUpdateData[`taskCompletions.${taskId}.timestamp`] = updateTime;
+          } else if (status === 'failed') {
+            batchUpdateData[`taskCompletions.${taskId}.complete`] = true;
+            batchUpdateData[`taskCompletions.${taskId}.failed`] = true;
+            batchUpdateData[`taskCompletions.${taskId}.timestamp`] = updateTime;
+          } else if (status === 'uncompleted') {
+            batchUpdateData[`taskCompletions.${taskId}.complete`] = false;
+            batchUpdateData[`taskCompletions.${taskId}.failed`] = false;
+            batchUpdateData[`taskCompletions.${taskId}.timestamp`] = admin.firestore.FieldValue.delete();
+          }
+          
           // Collect task updates for dependency checks
           updatePromises.push(
             (async () => {
               try {
-                const { getTaskData } = await import('../utils/dataLoaders.js');
                 const taskData = await getTaskData();
                 await updateTaskState(taskId, status, ownerId, taskData);
               } catch (error) {
@@ -563,12 +596,15 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
           );
         }
       }
+      
       if (invalidStatusFound) {
         res.status(400).send({ error: 'Invalid status value found in batch update.' });
         return;
       }
-      // Commit the batch write
-      await batch.commit();
+      
+      // Commit all updates in a single batch
+      await progressRef.update(batchUpdateData);
+      
       // Process task dependency updates
       await Promise.all(updatePromises);
       res.status(200).send({ message: 'Tasks updated successfully.' });
@@ -637,37 +673,54 @@ const updateTaskObjective = async (req: AuthenticatedRequest, res: Response): Pr
       .collection('progress')
       .doc(ownerId) as DocumentReference<ProgressDocData>;
     const objectiveId: string = req.params.objectiveId;
-    const status = req.body.status; // Can be boolean or number
-    if (!objectiveId || !objectiveId.includes('-')) {
-      res.status(400).send({ error: 'Invalid objective ID format.' });
+    const { state, count } = req.body;
+    
+    if (!objectiveId) {
+      res.status(400).send({ error: 'Objective ID is required.' });
       return;
     }
-    if (typeof status !== 'boolean' && typeof status !== 'number') {
-      res.status(400).send({ error: 'Invalid status value.' });
+    
+    if (!state && count == null) {
+      res.status(400).send({ error: 'Either state or count must be provided.' });
       return;
     }
-    const [taskId, objIndex] = objectiveId.split('-');
-    if (!taskId || !objIndex) {
-      res.status(400).send({ error: 'Malformed objective ID.' });
-      return;
-    }
+    
     try {
-      // Prepare update using dot notation for nested map field
-      const updatePath = `tasks.${taskId}.obj.${objIndex}`;
-      const updateData = { [updatePath]: status };
-      // Use update for nested field
+      const updateTime = Date.now();
+      const updateData: { [key: string]: boolean | number | any } = {};
+      
+      // Update objective using legacy format
+      if (state) {
+        if (state === 'completed') {
+          updateData[`taskObjectives.${objectiveId}.complete`] = true;
+          updateData[`taskObjectives.${objectiveId}.timestamp`] = updateTime;
+        } else if (state === 'uncompleted') {
+          updateData[`taskObjectives.${objectiveId}.complete`] = false;
+          updateData[`taskObjectives.${objectiveId}.timestamp`] = admin.firestore.FieldValue.delete();
+        } else {
+          res.status(400).send({ error: 'Invalid state. Must be "completed" or "uncompleted".' });
+          return;
+        }
+      }
+      
+      if (count != null) {
+        if (typeof count !== 'number' || count < 0) {
+          res.status(400).send({ error: 'Count must be a non-negative number.' });
+          return;
+        }
+        updateData[`taskObjectives.${objectiveId}.count`] = count;
+      }
+      
       await progressRef.update(updateData);
-      // TODO: Optionally re-evaluate task status based on objective completion
       res.status(200).send({ message: 'Task objective updated successfully.' });
     } catch (error: unknown) {
       functions.logger.error('Error updating task objective:', {
         error: error instanceof Error ? error.message : String(error),
         userId: ownerId,
         objectiveId: objectiveId,
-        status: status,
+        state: state,
+        count: count,
       });
-      // Firestore update might fail if the path doesn't exist (e.g., task doesn't exist)
-      // Consider checking if task exists first or handle specific errors
       res.status(500).send({ error: 'Failed to update task objective.' });
     }
   } else {

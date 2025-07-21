@@ -26,7 +26,7 @@
       </v-row>
     </div>
     <div class="flex-grow-1">
-      <v-row v-if="hideoutLoading" justify="center">
+      <v-row v-if="hideoutLoading || isStoreLoading" justify="center">
         <v-col cols="12" align="center">
           <v-progress-circular indeterminate color="secondary" class="mx-2"></v-progress-circular>
           {{ $t('page.hideout.loading') }} <refresh-button />
@@ -45,7 +45,7 @@
           <hideout-card :station="hStation" class="ma-2" />
         </v-col>
       </v-row>
-      <v-row v-if="!hideoutLoading && visibleStations.length == 0">
+      <v-row v-if="!hideoutLoading && !isStoreLoading && visibleStations.length == 0">
         <v-col cols="12">
           <v-alert icon="mdi-clipboard-search"> {{ $t('page.hideout.nostationsfound') }}</v-alert>
         </v-col>
@@ -60,9 +60,9 @@
   import { useProgressStore } from '@/stores/progress';
   import { useUserStore } from '@/stores/user';
   import { defineAsyncComponent } from 'vue';
-  const TrackerTip = defineAsyncComponent(() => import('@/components/TrackerTip'));
+  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
   const HideoutCard = defineAsyncComponent(() => import('@/components/hideout/HideoutCard'));
-  const RefreshButton = defineAsyncComponent(() => import('@/components/RefreshButton'));
+  const RefreshButton = defineAsyncComponent(() => import('@/components/ui/RefreshButton'));
   const { t } = useI18n({ useScope: 'global' });
   const { hideoutStations, hideoutLoading } = useTarkovData();
   const progressStore = useProgressStore();
@@ -93,7 +93,35 @@
     get: () => userStore.getTaskPrimaryView,
     set: (value) => userStore.setTaskPrimaryView(value),
   });
+  
+  const isStoreLoading = computed(() => {
+    // Check if hideout data is still loading
+    if (hideoutLoading.value) return true;
+    
+    // Check if we have hideout stations data
+    if (!hideoutStations.value || hideoutStations.value.length === 0) {
+      return true;
+    }
+    
+    // Check if progress store team data is ready
+    if (!progressStore.visibleTeamStores || Object.keys(progressStore.visibleTeamStores).length === 0) {
+      return true;
+    }
+    
+    // Check if hideout levels have been computed - this is the key check
+    // The hideoutLevels computation depends on both hideout stations AND team stores
+    if (!progressStore.hideoutLevels || Object.keys(progressStore.hideoutLevels).length === 0) {
+      return true;
+    }
+    
+    return false;
+  });
   const visibleStations = computed(() => {
+    // Use the comprehensive loading check - don't render until everything is ready
+    if (isStoreLoading.value) {
+      return [];
+    }
+    
     let hideoutStationList = JSON.parse(JSON.stringify(hideoutStations.value));
     //Display all upgradeable stations
     if (activePrimaryView.value === 'available')

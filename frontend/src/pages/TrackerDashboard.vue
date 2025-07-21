@@ -4,17 +4,38 @@
       density="compact"
       color="green-darken-4"
       title="Project Status"
-      class="mb-6"
+      class="mb-4"
       style="flex: 0 0 auto"
+      closable
     >
-      This is a community-maintained fork of the original TarkovTracker.io project. Updated data
-      will be automatically pulled from
-      <a href="http://tarkov.dev/" target="_blank">tarkov.dev</a> as changes are discovered and
-      confirmed. Contributions and bug reports are welcome on the
-      <a href="https://github.com/tarkovtracker-org/TarkovTracker" target="_blank"
-        >GitHub repo fork</a
-      >
-      to help keep the project up to date.
+      <div class="text-body-2">
+        <div class="mb-2">
+          Community-maintained fork of TarkovTracker.io with automatic data updates from
+          <a href="http://tarkov.dev/" target="_blank" class="text-green-lighten-2">tarkov.dev</a>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-center">
+          <div class="d-flex align-center">
+            <v-icon icon="mdi-source-branch" size="small" class="mr-2"></v-icon>
+            <a :href="commitUrl" target="_blank" class="text-green-lighten-2">
+              {{ commitId.slice(0, 7) }}
+            </a>
+          </div>
+          <div class="d-flex align-center ml-4">
+            <v-icon icon="mdi-clock-outline" size="small" class="mr-2"></v-icon>
+            <span class="text-caption">{{ lastUpdated }}</span>
+          </div>
+          <div class="d-flex align-center ml-4">
+            <v-icon icon="mdi-github" size="small" class="mr-2"></v-icon>
+            <a
+              href="https://github.com/tarkovtracker-org/TarkovTracker"
+              target="_blank"
+              class="text-green-lighten-2"
+            >
+              Contribute
+            </a>
+          </div>
+        </div>
+      </div>
     </v-alert>
     <v-row justify="center">
       <v-col cols="12" sm="8" md="6" lg="4" xl="3">
@@ -73,7 +94,9 @@
           <template #value> {{ completedKappaTasks }}/{{ totalKappaTasks }} </template>
           <template #percentage>
             {{
-              totalKappaTasks > 0 ? ((completedKappaTasks / totalKappaTasks) * 100).toFixed(1) : '0.0'
+              totalKappaTasks > 0
+                ? ((completedKappaTasks / totalKappaTasks) * 100).toFixed(1)
+                : '0.0'
             }}%
           </template>
           <template #details>
@@ -91,7 +114,7 @@
   import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n({ useScope: 'global' });
-  const TrackerStat = defineAsyncComponent(() => import('@/components/TrackerStat'));
+  const TrackerStat = defineAsyncComponent(() => import('@/components/dashboard/TrackerStat'));
   const { tasks, objectives } = useTarkovData();
   const progressStore = useProgressStore();
   const tarkovStore = useTarkovStore();
@@ -307,6 +330,22 @@
         progressStore.tasksCompletions[task.id] &&
         progressStore.tasksCompletions[task.id].self === true
     ).length;
+  });
+
+  const commitId = computed(() => {
+    return import.meta.env.VITE_COMMIT_HASH || 'unknown';
+  });
+
+  const commitUrl = computed(() => {
+    return `https://github.com/tarkovtracker-org/TarkovTracker/commit/${commitId.value}`;
+  });
+
+  const lastUpdated = computed(() => {
+    const buildTime = import.meta.env.VITE_BUILD_TIME;
+    if (!buildTime) return 'Unknown';
+    
+    const date = new Date(buildTime);
+    return date.toLocaleString();
   });
 </script>
 <style lang="scss" scoped></style>

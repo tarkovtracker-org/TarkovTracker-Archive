@@ -159,8 +159,8 @@
   import { debounce } from 'lodash-es';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
-  const TrackerTip = defineAsyncComponent(() => import('@/components/TrackerTip'));
-  const RefreshButton = defineAsyncComponent(() => import('@/components/RefreshButton'));
+  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
+  const RefreshButton = defineAsyncComponent(() => import('@/components/ui/RefreshButton'));
   const NeededItem = defineAsyncComponent(() => import('@/components/neededitems/NeededItem'));
   const { t } = useI18n({ useScope: 'global' });
   const {

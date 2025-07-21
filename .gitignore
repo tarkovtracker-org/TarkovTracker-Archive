@@ -36,3 +36,21 @@ frontend/.DS_Store
 frontend/.env.development
 frontend/.env.production
 local_data/
+
+# Logs
+logs
+*.log
+dev-debug.log
+# Dependency directories
+# Environment variables
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+# tasks.json
+# tasks/ 

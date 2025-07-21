@@ -9,7 +9,7 @@
   </router-link>
 </template>
 <script setup>
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   // Define the props for the component
   const props = defineProps({
     station: {
@@ -18,7 +18,7 @@
     },
   });
   const stationIcon = computed(() => {
-    return `/img/hideout/${props.station.id}.png`;
+    return `/img/hideout/${props.station.id}.avif`;
   });
 </script>
 <style lang="scss" scoped>

@@ -2,7 +2,7 @@ import { firestore } from '@/plugins/firebase';
 import { doc, getDoc, setDoc, DocumentData } from 'firebase/firestore';
 
 // Define a basic interface for the progress data structure
-interface ProgressData {
+export interface ProgressData {
   level: number;
   gameEdition?: string; // Optional fields can be marked with ?
   pmcFaction?: string;

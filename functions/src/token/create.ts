@@ -136,4 +136,4 @@ async function _createTokenLogic(
     }
   }
 }
-export const createToken = onCall(_createTokenLogic);
+export const createToken = onCall({ cors: true }, _createTokenLogic);

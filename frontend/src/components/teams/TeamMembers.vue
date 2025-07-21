@@ -4,12 +4,12 @@
       {{ $t('page.team.card.manageteam.title') }}
     </template>
     <template #content>
-      <template v-if="teamStore.$state.members && teamStore.$state.members.length > 0">
+      <template v-if="teamMembers.length > 0">
         <tracker-tip tip="teammembers" class="text-left"></tracker-tip>
         <v-container>
           <v-row>
             <v-col
-              v-for="teammate in teamStore.$state.members || []"
+              v-for="teammate in teamMembers"
               :key="teammate"
               cols="12"
               sm="12"
@@ -25,7 +25,7 @@
           </v-row>
         </v-container>
       </template>
-      <template v-else-if="teamStore.$state.members">
+      <template v-else-if="teamMembers.length === 0">
         <v-container>
           <v-row>
             <v-col cols="12" class="text-center">
@@ -44,22 +44,30 @@
     defineAsyncComponent,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     defineProps,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    watch,
+    ref,
   } from 'vue';
   import { useLiveData } from '@/composables/livedata';
   import { fireuser } from '@/plugins/firebase';
-  const IconCard = defineAsyncComponent(() => import('@/components/IconCard'));
+  const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard'));
   const TeammemberCard = defineAsyncComponent(() => import('@/components/teams/TeammemberCard'));
-  const TrackerTip = defineAsyncComponent(() => import('@/components/TrackerTip'));
-  const { useTeamStore } = useLiveData();
-  const teamStore = useTeamStore();
+  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
+  const { useTeamStore: useTeamStoreFunction } = useLiveData();
+  const { teamStore } = useTeamStoreFunction();
+  const teamMembers = ref([]);
+
+  teamStore.$subscribe((mutation, state) => {
+    if (state.members) {
+      teamMembers.value = state.members;
+    } else {
+      teamMembers.value = [];
+    }
+  });
+
   const isCurrentUserTeamOwner = computed(() => {
-    const currentTeamOwner = teamStore.$state.owner;
+    const currentTeamOwner = teamStore.owner;
     const currentFireUID = fireuser.uid;
-    console.log(
-      `[TeamMembers.vue] isCurrentUserTeamOwner computed. ` +
-        `teamStore.$state.owner: ${currentTeamOwner}, ` +
-        `fireuser.uid: ${currentFireUID}, result: ${currentTeamOwner === currentFireUID}`
-    );
     return currentTeamOwner === currentFireUID;
   });
 </script>
