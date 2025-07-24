@@ -69,7 +69,6 @@
             </div>
           </div>
         </v-col>
-
         <!-- Support Development Section -->
         <v-col cols="12" sm="4" class="footer-section text-center">
           <div class="support-section">
@@ -88,13 +87,11 @@
               >
                 <path
                   d="
-                    M23.881 8.948c
-                    -.773-4.085-4.859-4.593-4.859-4.593H.723c
-                    -.604 0-.679.798-.679.798s-.082 7.324-.033 11.414c
-                    .049 4.271 3.468 7.433 8.33 7.433s8.245-3.129 8.245-3.129c
-                    .508-.637.411-1.492.411-1.492s-.193-2.951-.193-2.951H23.881zm
-                    -4.859 4.593H.723V8.948s4.859 0 4.859 0v4.593h4.859V8.948s4
-                    .859 0 4.859 0v4.593z
+                    M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604
+                    0-.679.798-.679.798s-.082 7.324-.033 11.414c.049
+                    4.271 3.468 7.433 8.33 7.433s8.245-3.129
+                    8.245-3.129c.508-.637.411-1.492.411-1.492s-.193-2.951-.193-2.951H23.881zm
+                    -4.859 4.593H.723V8.948s4.859 0 4.859 0v4.593h4.859V8.948s4.859 0 4.859 0v4.593z
                   "
                 />
               </svg>
@@ -116,7 +113,6 @@
           </div>
         </v-col>
       </v-row>
-
       <!-- Footer Bottom Section -->
       <v-container
         class="text-center"
@@ -144,41 +140,33 @@
     padding: 8px 16px;
     margin-bottom: 0 !important;
   }
-
   // Ensure the footer sits flush at bottom
   :deep(.v-footer) {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
   }
-
   :deep(.v-container) {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
   }
-
   // Force footer to bottom with no gaps
   :deep(.v-footer__extension) {
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
   }
-
   :deep(.v-row) {
     margin-bottom: 0 !important;
   }
-
   :deep(.v-col) {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
   }
-
   .footer-section {
     margin-bottom: 8px;
   }
-
   .footer-links {
     gap: 4px;
   }
-
   .footer-link {
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
@@ -186,28 +174,23 @@
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-
     &:hover {
       color: rgba(var(--v-theme-primary), 1);
       text-decoration: none;
     }
-
     &:link,
     &:active,
     &:visited {
       color: rgba(255, 255, 255, 0.7);
     }
-
     &:hover {
       color: rgba(var(--v-theme-primary), 1);
     }
   }
-
   .footer-icon {
     color: currentColor;
     opacity: 0.8;
   }
-
   .kofi-link {
     background: linear-gradient(135deg, #ff5f5f 0%, #ff9500 100%);
     color: white !important;
@@ -218,50 +201,42 @@
     text-decoration: none;
     transition: all 0.2s ease;
     box-shadow: 0 1px 4px rgba(255, 95, 95, 0.3);
-
     &:hover {
       transform: translateY(-1px);
       box-shadow: 0 2px 8px rgba(255, 95, 95, 0.4);
       color: white !important;
     }
   }
-
   .support-section {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
   }
-
   .support-text {
     font-size: 9px;
     color: rgba(255, 255, 255, 0.5);
     font-style: italic;
     line-height: 1.2;
   }
-
   .copyright-notice {
     line-height: 1.3;
     margin-bottom: 4px;
     color: rgba(255, 255, 255, 0.6);
   }
-
   .brand-copyright {
     font-weight: 500;
     color: rgba(255, 255, 255, 0.7);
   }
-
   // Icon specific styling
   :deep(.mdi-github) {
     color: #ffffff !important;
   }
-
   // Mobile responsive adjustments
   @media (max-width: 600px) {
     .footer-section {
       margin-bottom: 12px;
     }
-
     .kofi-link {
       margin-bottom: 4px;
     }
