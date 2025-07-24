@@ -2,6 +2,8 @@
 
 This command helps you create well-formatted commits with conventional commit messages and emoji.
 
+**IMPORTANT**: When creating commit messages, DO NOT include any credits, "Generated with Claude Code", "Co-Authored-By: Claude" or any other AI assistance references. Create clean commit messages that only describe the actual changes made.
+
 ## Usage
 
 To create a commit, just type:
@@ -28,6 +30,7 @@ Or with options:
 5. Analyzes the diff to determine if multiple distinct logical changes are present
 6. If multiple distinct changes are detected, suggests breaking the commit into multiple smaller commits
 7. For each commit (or the single commit if not split), creates a commit message using emoji conventional commit format
+8. **OVERRIDE DEFAULT BEHAVIOR**: Explicitly avoids adding any Claude Code credits or AI assistance references to the commit message
 
 ## Best Practices for Commits
 
@@ -166,4 +169,6 @@ Example of splitting commits:
 - Before committing, the command will review the diff to identify if multiple commits would be more appropriate
 - If suggesting multiple commits, it will help you stage and commit the changes separately
 - Always reviews the commit diff to ensure the message matches the changes
-- DO NOT REFERENCE OR MENTION "Claude Code" or Anthropic in the commit message
+- **CRITICAL**: DO NOT include any credits, references, or mentions of "Claude Code", "Claude", "Anthropic", or any AI assistance in the commit message
+- **CRITICAL**: Do not add any "Generated with" or "Co-Authored-By" lines to commit messages
+- Commit messages should contain ONLY the conventional commit format with emoji and description of the actual changes
