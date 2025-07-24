@@ -67,15 +67,19 @@
   const MapZone = defineAsyncComponent(() => import('@/components/maps/MapZone.vue'));
   const selectedFloor = ref<
     string | undefined // Changed from string | null
-  >(props.map?.svg?.defaultFloor ?? props.map?.svg?.floors?.[props.map.svg.floors.length - 1] ?? undefined);
-  
+  >(
+    props.map?.svg?.defaultFloor ??
+      props.map?.svg?.floors?.[props.map.svg.floors.length - 1] ??
+      undefined
+  );
+
   // Cache for Factory floors to avoid refetching
   const factoryFloorsCache = ref<Map<string, Document>>(new Map());
   const isFactoryLoaded = ref(false);
-  
+
   const setFloor = (floor: string) => {
     selectedFloor.value = floor;
-    
+
     // For Factory, just toggle visibility instead of full redraw
     if (props.map.name?.toLowerCase() === 'factory' && isFactoryLoaded.value) {
       updateFactoryFloorVisibility();
@@ -89,7 +93,7 @@
       // Reset cache when map changes
       factoryFloorsCache.value.clear();
       isFactoryLoaded.value = false;
-      
+
       draw();
       // Safely update selectedFloor only if floors exist, prioritize defaultFloor
       const floors = newMap?.svg?.floors;
@@ -123,7 +127,10 @@
   const drawFactoryFloors = async (mapContainer: HTMLElement) => {
     const floors = props.map?.svg?.floors;
     if (!floors || !selectedFloor.value) {
-      console.log('Factory floors debug: missing floors or selectedFloor', { floors, selectedFloor: selectedFloor.value });
+      console.log('Factory floors debug: missing floors or selectedFloor', {
+        floors,
+        selectedFloor: selectedFloor.value,
+      });
       return;
     }
 
@@ -134,15 +141,15 @@
     mainSvg.style.width = '100%';
     mainSvg.style.height = '100%';
     mainSvg.id = 'factory-main-svg';
-    
+
     // Load all floors if not cached, or use cached versions
     let viewBoxSet = false;
-    
+
     for (let i = 0; i < floors.length; i++) {
       const floor = floors[i];
       try {
         let floorSvg;
-        
+
         // Check cache first
         if (factoryFloorsCache.value.has(floor)) {
           floorSvg = factoryFloorsCache.value.get(floor);
@@ -153,25 +160,28 @@
           factoryFloorsCache.value.set(floor, floorSvg);
           console.log(`Factory floors debug: loaded and cached floor ${i} (${floor})`);
         }
-        
+
         if (floorSvg && floorSvg.documentElement) {
           // Set the viewBox from the first floor SVG to ensure proper scaling
           if (!viewBoxSet && floorSvg.documentElement.getAttribute('viewBox')) {
             mainSvg.setAttribute('viewBox', floorSvg.documentElement.getAttribute('viewBox'));
             viewBoxSet = true;
-            console.log(`Factory floors debug: set viewBox from ${floor}:`, floorSvg.documentElement.getAttribute('viewBox'));
+            console.log(
+              `Factory floors debug: set viewBox from ${floor}:`,
+              floorSvg.documentElement.getAttribute('viewBox')
+            );
           }
-          
+
           // Create a group for this floor
           const floorGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           floorGroup.id = floor;
-          
+
           // Copy all children from the loaded SVG to our group
           const svgChildren = Array.from(floorSvg.documentElement.children);
-          svgChildren.forEach(child => {
+          svgChildren.forEach((child) => {
             floorGroup.appendChild(child.cloneNode(true));
           });
-          
+
           // Append the group to our main SVG
           mainSvg.appendChild(floorGroup);
           console.log(`Factory floors debug: appended floor ${i} (${floor}) as group`);
@@ -182,15 +192,18 @@
         console.error(`Failed to load Factory floor: ${floor}`, error);
       }
     }
-    
+
     // Append the main SVG to the container
     mapContainer.appendChild(mainSvg);
     isFactoryLoaded.value = true;
-    
+
     // Apply initial floor visibility
     updateFactoryFloorVisibility();
-    
-    console.log(`Factory floors debug: finished loading all ${floors.length} floors into single SVG with caching`);
+
+    console.log(
+      `Factory floors debug: finished loading all ${floors.length} floors ` +
+      `into single SVG with caching`
+    );
   };
 
   const updateFactoryFloorVisibility = () => {
@@ -206,7 +219,10 @@
     const svg = mapContainer.querySelector('#factory-main-svg');
     if (!svg) return;
 
-    console.log(`Factory floors debug: updating visibility for floor ${selectedFloor.value} (index ${selectedFloorIndex})`);
+    console.log(
+      `Factory floors debug: updating visibility for floor ${selectedFloor.value} ` +
+      `(index ${selectedFloorIndex})`
+    );
 
     // Show floors from basement up to selected floor, hide floors above
     floors.forEach((floor: string, index: number) => {
@@ -225,7 +241,7 @@
   const drawStandardMap = async (mapContainer: HTMLElement) => {
     // Use remote SVG files for other maps
     const svgUrl = `https://tarkovtracker.github.io/tarkovdata/maps/${props.map.svg.file}`;
-    
+
     const svg = await d3.svg(svgUrl);
     mapContainer.appendChild(svg.documentElement);
     d3.select(mapContainer).select('svg').style('width', '100%');
@@ -238,10 +254,7 @@
       if (selectedFloorIndex !== -1) {
         floors.forEach((floor: string, index: number) => {
           if (index > selectedFloorIndex) {
-            d3.select(mapContainer)
-              .select('svg')
-              .select(`#${floor}`)
-              .style('opacity', 0.02);
+            d3.select(mapContainer).select('svg').select(`#${floor}`).style('opacity', 0.02);
           }
         });
       }

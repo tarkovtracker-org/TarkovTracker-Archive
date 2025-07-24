@@ -5,7 +5,6 @@ import {
   Firestore,
   DocumentReference,
   DocumentSnapshot,
-  WriteBatch,
 } from 'firebase-admin/firestore';
 
 // Import from TypeScript files with .js extension for module resolution
@@ -447,8 +446,8 @@ const updateSingleTask = async (req: AuthenticatedRequest, res: Response): Promi
     try {
       // Use legacy format for compatibility
       const updateTime = Date.now();
-      const updateData: { [key: string]: boolean | number } = {};
-      
+      const updateData: { [key: string]: boolean | number | admin.firestore.FieldValue } = {};
+
       // Update task completion status using legacy format
       if (state === 'completed') {
         updateData[`taskCompletions.${taskId}.complete`] = true;
@@ -462,11 +461,12 @@ const updateSingleTask = async (req: AuthenticatedRequest, res: Response): Promi
         updateData[`taskCompletions.${taskId}.complete`] = false;
         updateData[`taskCompletions.${taskId}.failed`] = false;
         // Use FieldValue.delete() for timestamp removal
-        updateData[`taskCompletions.${taskId}.timestamp`] = admin.firestore.FieldValue.delete() as any;
+        updateData[`taskCompletions.${taskId}.timestamp`] =
+          admin.firestore.FieldValue.delete();
       }
 
       await progressRef.update(updateData);
-      
+
       // Implement task dependency updates using updateTaskState
       try {
         const taskData = await getTaskData();
@@ -547,8 +547,8 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
     const updatePromises: Promise<void>[] = [];
     try {
       const updateTime = Date.now();
-      const batchUpdateData: { [key: string]: boolean | number | any } = {};
-      
+      const batchUpdateData: { [key: string]: boolean | number | admin.firestore.FieldValue } = {};
+
       // Process each task update
       for (const taskId in taskUpdates) {
         if (Object.prototype.hasOwnProperty.call(taskUpdates, taskId)) {
@@ -562,7 +562,7 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
             });
             break;
           }
-          
+
           // Update task completion status using legacy format
           if (status === 'completed') {
             batchUpdateData[`taskCompletions.${taskId}.complete`] = true;
@@ -575,9 +575,10 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
           } else if (status === 'uncompleted') {
             batchUpdateData[`taskCompletions.${taskId}.complete`] = false;
             batchUpdateData[`taskCompletions.${taskId}.failed`] = false;
-            batchUpdateData[`taskCompletions.${taskId}.timestamp`] = admin.firestore.FieldValue.delete();
+            batchUpdateData[`taskCompletions.${taskId}.timestamp`] =
+              admin.firestore.FieldValue.delete();
           }
-          
+
           // Collect task updates for dependency checks
           updatePromises.push(
             (async () => {
@@ -596,15 +597,15 @@ const updateMultipleTasks = async (req: AuthenticatedRequest, res: Response): Pr
           );
         }
       }
-      
+
       if (invalidStatusFound) {
         res.status(400).send({ error: 'Invalid status value found in batch update.' });
         return;
       }
-      
+
       // Commit all updates in a single batch
       await progressRef.update(batchUpdateData);
-      
+
       // Process task dependency updates
       await Promise.all(updatePromises);
       res.status(200).send({ message: 'Tasks updated successfully.' });
@@ -674,21 +675,21 @@ const updateTaskObjective = async (req: AuthenticatedRequest, res: Response): Pr
       .doc(ownerId) as DocumentReference<ProgressDocData>;
     const objectiveId: string = req.params.objectiveId;
     const { state, count } = req.body;
-    
+
     if (!objectiveId) {
       res.status(400).send({ error: 'Objective ID is required.' });
       return;
     }
-    
+
     if (!state && count == null) {
       res.status(400).send({ error: 'Either state or count must be provided.' });
       return;
     }
-    
+
     try {
       const updateTime = Date.now();
-      const updateData: { [key: string]: boolean | number | any } = {};
-      
+      const updateData: { [key: string]: boolean | number | admin.firestore.FieldValue } = {};
+
       // Update objective using legacy format
       if (state) {
         if (state === 'completed') {
@@ -696,13 +697,14 @@ const updateTaskObjective = async (req: AuthenticatedRequest, res: Response): Pr
           updateData[`taskObjectives.${objectiveId}.timestamp`] = updateTime;
         } else if (state === 'uncompleted') {
           updateData[`taskObjectives.${objectiveId}.complete`] = false;
-          updateData[`taskObjectives.${objectiveId}.timestamp`] = admin.firestore.FieldValue.delete();
+          updateData[`taskObjectives.${objectiveId}.timestamp`] =
+            admin.firestore.FieldValue.delete();
         } else {
           res.status(400).send({ error: 'Invalid state. Must be "completed" or "uncompleted".' });
           return;
         }
       }
-      
+
       if (count != null) {
         if (typeof count !== 'number' || count < 0) {
           res.status(400).send({ error: 'Count must be a non-negative number.' });
@@ -710,7 +712,7 @@ const updateTaskObjective = async (req: AuthenticatedRequest, res: Response): Pr
         }
         updateData[`taskObjectives.${objectiveId}.count`] = count;
       }
-      
+
       await progressRef.update(updateData);
       res.status(200).send({ message: 'Task objective updated successfully.' });
     } catch (error: unknown) {

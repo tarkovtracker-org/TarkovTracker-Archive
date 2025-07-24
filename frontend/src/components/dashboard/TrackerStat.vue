@@ -18,7 +18,8 @@
     </div>
     <div v-if="$slots.details" class="text-left px-3 pb-2 text-grey" style="font-size: 0.75em">
       <v-divider class="mb-2" />
-      <v-icon class="mr-1" color="secondary" size="small">mdi-help-circle</v-icon><slot name="details"></slot>
+      <v-icon class="mr-1" color="secondary" size="small">mdi-help-circle</v-icon
+      ><slot name="details"></slot>
     </div>
   </v-sheet>
 </template>
@@ -32,29 +33,29 @@
   });
 </script>
 <style lang="scss" scoped>
-.stat-card {
-  // Remove height constraints to prevent text cutoff
-  height: auto;
-}
-
-// Ensure compact layout on mobile
-@media (max-width: 600px) {
   .stat-card {
-    // Remove max-height constraint on mobile too
+    // Remove height constraints to prevent text cutoff
     height: auto;
   }
-  
-  :deep(.v-avatar) {
-    width: 50px !important;
-    height: 50px !important;
-    
-    .v-icon {
-      font-size: 32px !important;
+
+  // Ensure compact layout on mobile
+  @media (max-width: 600px) {
+    .stat-card {
+      // Remove max-height constraint on mobile too
+      height: auto;
+    }
+
+    :deep(.v-avatar) {
+      width: 50px !important;
+      height: 50px !important;
+
+      .v-icon {
+        font-size: 32px !important;
+      }
+    }
+
+    .text-h5 {
+      font-size: 1.1rem !important;
     }
   }
-  
-  .text-h5 {
-    font-size: 1.1rem !important;
-  }
-}
 </style>

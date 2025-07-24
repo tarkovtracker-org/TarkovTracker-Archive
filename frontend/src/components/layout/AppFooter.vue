@@ -2,7 +2,13 @@
   <v-footer
     class="px-0 d-flex"
     color="transparent"
-    style="min-height: auto !important; height: auto !important; flex: 0 0 auto !important; margin-bottom: 0 !important; padding: 0 !important"
+    style="
+      min-height: auto !important;
+      height: auto !important;
+      flex: 0 0 auto !important;
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+    "
   >
     <v-container class="text-center footer-background mx-0">
       <v-row justify="center" align="center" class="mb-2" style="font-size: 12px">
@@ -33,7 +39,8 @@
                           c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26
                           c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09
                           c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65
-                          c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02
+                          c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95
+                          c-.01-.01-.02-.02-.04-.02
                           zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12
                           c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0
                           c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12
@@ -80,7 +87,15 @@
                 class="mr-1"
               >
                 <path
-                  d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.033 11.414c.049 4.271 3.468 7.433 8.33 7.433s8.245-3.129 8.245-3.129c.508-.637.411-1.492.411-1.492s-.193-2.951-.193-2.951H23.881zm-4.859 4.593H.723V8.948s4.859 0 4.859 0v4.593h4.859V8.948s4.859 0 4.859 0v4.593z"
+                  d="
+                    M23.881 8.948c
+                    -.773-4.085-4.859-4.593-4.859-4.593H.723c
+                    -.604 0-.679.798-.679.798s-.082 7.324-.033 11.414c
+                    .049 4.271 3.468 7.433 8.33 7.433s8.245-3.129 8.245-3.129c
+                    .508-.637.411-1.492.411-1.492s-.193-2.951-.193-2.951H23.881zm
+                    -4.859 4.593H.723V8.948s4.859 0 4.859 0v4.593h4.859V8.948s4
+                    .859 0 4.859 0v4.593z
+                  "
                 />
               </svg>
               Support on Ko-fi
@@ -103,12 +118,17 @@
       </v-row>
 
       <!-- Footer Bottom Section -->
-      <v-container class="text-center" style="font-size: 11px; margin-bottom: 0 !important; padding-bottom: 0 !important">
+      <v-container
+        class="text-center"
+        style="font-size: 11px; margin-bottom: 0 !important; padding-bottom: 0 !important"
+      >
         <div class="copyright-notice mb-1">
           Game content and materials are trademarks and copyrights of Battlestate Games and its
           licensors. All rights reserved.
         </div>
-        <div class="brand-copyright" style="margin-bottom: 0 !important">TarkovTracker &copy; 2020 - {{ new Date().getFullYear() }}</div>
+        <div class="brand-copyright" style="margin-bottom: 0 !important">
+          TarkovTracker &copy; 2020 - {{ new Date().getFullYear() }}
+        </div>
       </v-container>
     </v-container>
   </v-footer>
@@ -141,11 +161,11 @@
     margin-bottom: 0 !important;
     padding-bottom: 0 !important;
   }
-  
+
   :deep(.v-row) {
     margin-bottom: 0 !important;
   }
-  
+
   :deep(.v-col) {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
@@ -241,7 +261,7 @@
     .footer-section {
       margin-bottom: 12px;
     }
-    
+
     .kofi-link {
       margin-bottom: 4px;
     }

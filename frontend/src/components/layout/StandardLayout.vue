@@ -6,13 +6,26 @@
   <app-bar />
 
   <!-- Main View -->
-  <v-main style="min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 0 !important; margin-bottom: 0 !important">
+  <v-main
+    style="
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
+    "
+  >
     <!-- <div id="tracker-page-background"> -->
     <div id="tracker-page-background" style="flex: 1 1 auto; display: flex; flex-direction: column">
       <div
         id="tracker-page-background-blur"
         class="d-flex flex-column justify-space-between"
-        style="flex: 1 1 auto; min-height: 100%; margin-bottom: 0 !important; padding-bottom: 0 !important"
+        style="
+          flex: 1 1 auto;
+          min-height: 100%;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
+        "
       >
         <div class="flex-grow-1" style="padding: 8px 8px 0">
           <router-view />

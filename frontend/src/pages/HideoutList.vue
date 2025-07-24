@@ -93,27 +93,30 @@
     get: () => userStore.getTaskPrimaryView,
     set: (value) => userStore.setTaskPrimaryView(value),
   });
-  
+
   const isStoreLoading = computed(() => {
     // Check if hideout data is still loading
     if (hideoutLoading.value) return true;
-    
+
     // Check if we have hideout stations data
     if (!hideoutStations.value || hideoutStations.value.length === 0) {
       return true;
     }
-    
+
     // Check if progress store team data is ready
-    if (!progressStore.visibleTeamStores || Object.keys(progressStore.visibleTeamStores).length === 0) {
+    if (
+      !progressStore.visibleTeamStores ||
+      Object.keys(progressStore.visibleTeamStores).length === 0
+    ) {
       return true;
     }
-    
+
     // Check if hideout levels have been computed - this is the key check
     // The hideoutLevels computation depends on both hideout stations AND team stores
     if (!progressStore.hideoutLevels || Object.keys(progressStore.hideoutLevels).length === 0) {
       return true;
     }
-    
+
     return false;
   });
   const visibleStations = computed(() => {
@@ -121,7 +124,7 @@
     if (isStoreLoading.value) {
       return [];
     }
-    
+
     let hideoutStationList = JSON.parse(JSON.stringify(hideoutStations.value));
     //Display all upgradeable stations
     if (activePrimaryView.value === 'available')

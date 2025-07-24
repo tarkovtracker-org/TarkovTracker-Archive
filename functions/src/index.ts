@@ -1,7 +1,8 @@
 import admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { HttpsError, CallableRequest, FunctionsErrorCode } from 'firebase-functions/v2/https';
+import { HttpsError, CallableRequest, Request as FirebaseRequest } from 'firebase-functions/v2/https';
+import { DecodedIdToken } from 'firebase-admin/auth';
 import { request, gql } from 'graphql-request';
 import UIDGenerator from 'uid-generator';
 import {
@@ -67,18 +68,18 @@ app.post('/api/team/create', async (req: AuthenticatedRequest, res: Response) =>
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
-    
+
     // Create a mock callable request
     const callableRequest: CallableRequest<CreateTeamData> = {
       auth: {
         uid: req.user.id,
-        token: req.user as any
+        token: req.user as unknown as DecodedIdToken,
       },
       data: req.body,
-      rawRequest: req as any,
-      acceptsStreaming: false
+      rawRequest: req as unknown as FirebaseRequest,
+      acceptsStreaming: false,
     };
-    
+
     // Call the existing logic
     const result = await _createTeamLogic(callableRequest);
     res.status(200).json(result);
@@ -372,10 +373,7 @@ async function _createTeamLogic(
               teamPassword = 'DEBUG_PASS_123';
             }
           } catch (genError) {
-            logger.error(
-              '[createTeam] DEBUG: Error during password generation:',
-              genError
-            );
+            logger.error('[createTeam] DEBUG: Error during password generation:', genError);
             teamPassword = 'ERROR_PASS_456';
           }
         } else {
@@ -526,18 +524,18 @@ export const createTeamHttp = functions.https.onRequest(async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     res.status(200).send('');
     return;
   }
-  
+
   if (req.method !== 'POST') {
     res.status(405).send('Method Not Allowed');
     return;
   }
-  
+
   try {
     // Extract auth token from Authorization header
     const authToken = req.headers.authorization?.replace('Bearer ', '');
@@ -545,21 +543,21 @@ export const createTeamHttp = functions.https.onRequest(async (req, res) => {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
-    
+
     // Verify the token
     const decodedToken = await admin.auth().verifyIdToken(authToken);
-    
+
     // Create a mock callable request
     const callableRequest: CallableRequest<CreateTeamData> = {
       auth: {
         uid: decodedToken.uid,
-        token: decodedToken
+        token: decodedToken,
       },
       data: req.body,
-      rawRequest: req as any,
-      acceptsStreaming: false
+      rawRequest: req as unknown as FirebaseRequest,
+      acceptsStreaming: false,
     };
-    
+
     // Call the existing logic
     const result = await _createTeamLogic(callableRequest);
     res.status(200).json(result);

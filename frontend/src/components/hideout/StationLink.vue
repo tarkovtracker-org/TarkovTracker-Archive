@@ -9,7 +9,7 @@
   </router-link>
 </template>
 <script setup>
-  import { computed, ref } from 'vue';
+  import { computed } from 'vue';
   // Define the props for the component
   const props = defineProps({
     station: {

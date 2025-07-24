@@ -323,29 +323,39 @@
   const loadingTasks = computed(() => {
     // Basic API loading check
     if (tasksLoading.value) return true;
-    
+
     // Check if we have tasks data
     if (!tasks.value || tasks.value.length === 0) {
       return true;
     }
-    
+
     // Check if progress store team data is ready
-    if (!progressStore.visibleTeamStores || Object.keys(progressStore.visibleTeamStores).length === 0) {
+    if (
+      !progressStore.visibleTeamStores ||
+      Object.keys(progressStore.visibleTeamStores).length === 0
+    ) {
       return true;
     }
-    
+
     // Check if task-specific progress computations are ready
     // These are what TaskList actually uses to determine task availability
-    if (!progressStore.unlockedTasks || !progressStore.tasksCompletions || !progressStore.playerFaction) {
+    if (
+      !progressStore.unlockedTasks ||
+      !progressStore.tasksCompletions ||
+      !progressStore.playerFaction
+    ) {
       return true;
     }
-    
+
     // Check if the task computations have actually been calculated for some tasks
     // (empty objects mean computations haven't run yet)
-    if (Object.keys(progressStore.unlockedTasks).length === 0 || Object.keys(progressStore.tasksCompletions).length === 0) {
+    if (
+      Object.keys(progressStore.unlockedTasks).length === 0 ||
+      Object.keys(progressStore.tasksCompletions).length === 0
+    ) {
       return true;
     }
-    
+
     return false;
   });
   const reloadingTasks = ref(false);
@@ -655,27 +665,33 @@
   watchEffect(async () => {
     // Basic readiness checks
     if (
-      tasksLoading.value || 
-      !tasks.value || 
+      tasksLoading.value ||
+      !tasks.value ||
       !disabledTasks ||
       !Array.isArray(disabledTasks) ||
-      !progressStore.unlockedTasks || 
+      !progressStore.unlockedTasks ||
       !progressStore.tasksCompletions ||
       !progressStore.playerFaction
     ) {
       return;
     }
-    
+
     // Wait for task-specific progress computations to be ready (race condition fix)
     if (tasks.value.length > 0) {
-      if (!progressStore.visibleTeamStores || Object.keys(progressStore.visibleTeamStores).length === 0) {
+      if (
+        !progressStore.visibleTeamStores ||
+        Object.keys(progressStore.visibleTeamStores).length === 0
+      ) {
         return;
       }
-      if (Object.keys(progressStore.unlockedTasks).length === 0 || Object.keys(progressStore.tasksCompletions).length === 0) {
+      if (
+        Object.keys(progressStore.unlockedTasks).length === 0 ||
+        Object.keys(progressStore.tasksCompletions).length === 0
+      ) {
         return;
       }
     }
-    
+
     await updateVisibleTasks();
   });
   // Watch for changes to all of the views, and update the visible tasks
