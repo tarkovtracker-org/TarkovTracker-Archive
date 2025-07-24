@@ -37,7 +37,7 @@
   "devDependencies": {
     "@types/d3": "^7.4.3",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^24.1.0",
+    "@types/node": "^22.16.5",
     "concurrently": "^9.2.0",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.8",
