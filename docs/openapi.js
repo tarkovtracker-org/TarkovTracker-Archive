@@ -222,6 +222,22 @@ window.openapi = {
             "bearerAuth": []
           }
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to get progress for (pvp or pve)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Player progress retrieved successfully.",
@@ -280,6 +296,20 @@ window.openapi = {
               "type": "integer",
               "minimum": 1,
               "maximum": 79
+            }
+          },
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to update level for (pvp or pve)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
             }
           }
         ],
@@ -342,6 +372,20 @@ window.openapi = {
             "description": "The ID (usually UUID from tarkov.dev) of the task to update.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to update task for (pvp or pve)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
             }
           }
         ],
@@ -421,6 +465,22 @@ window.openapi = {
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to update tasks for (pvp or pve)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
+            }
           }
         ],
         "requestBody": {
@@ -508,6 +568,20 @@ window.openapi = {
             "description": "The ID (usually UUID from tarkov.dev) of the task objective to update.",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to update objective for (pvp or pve)",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
             }
           }
         ],

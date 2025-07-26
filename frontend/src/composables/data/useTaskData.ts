@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
+import { useTarkovStore } from '@/stores/tarkov';
 import {
   createGraph,
   getPredecessors,
@@ -32,7 +33,15 @@ const DISABLED_TASKS: string[] = [
  * Composable for managing task data, relationships, and derived information
  */
 export function useTaskData() {
-  const { result: queryResult, error, loading } = useTarkovDataQuery();
+  const store = useTarkovStore();
+
+  // Get current gamemode from store and convert to the format expected by API
+  const currentGameMode = computed(() => {
+    const mode = store.getCurrentGameMode();
+    return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
+  });
+
+  const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
 
   // Reactive state
   const tasks = ref<Task[]>([]);

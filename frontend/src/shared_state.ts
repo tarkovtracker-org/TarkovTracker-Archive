@@ -1,5 +1,7 @@
 import type { _GettersTree } from 'pinia';
 
+export type GameMode = 'pvp' | 'pve';
+
 // State interfaces
 interface TaskObjective {
   count?: number;
@@ -24,7 +26,7 @@ interface HideoutModule {
   timestamp?: number;
 }
 
-export interface UserState {
+export interface UserProgressData {
   level: number;
   gameEdition: number;
   pmcFaction: 'USEC' | 'BEAR';
@@ -35,7 +37,13 @@ export interface UserState {
   hideoutModules: { [hideoutId: string]: HideoutModule };
 }
 
-export const defaultState: UserState = {
+export interface UserState {
+  currentGameMode: GameMode;
+  pvp: UserProgressData;
+  pve: UserProgressData;
+}
+
+const defaultProgressData: UserProgressData = {
   level: 1,
   gameEdition: 1,
   pmcFaction: 'USEC',
@@ -46,37 +54,148 @@ export const defaultState: UserState = {
   hideoutModules: {},
 };
 
+export const defaultState: UserState = {
+  currentGameMode: 'pvp',
+  pvp: JSON.parse(JSON.stringify(defaultProgressData)),
+  pve: JSON.parse(JSON.stringify(defaultProgressData)),
+};
+
+// Migration function to convert legacy data structure to new gamemode-aware structure
+export function migrateToGameModeStructure(legacyData: unknown): UserState {
+  // If already in new format and properly structured, return as-is
+  if (
+    legacyData &&
+    typeof legacyData === 'object' &&
+    legacyData.currentGameMode &&
+    legacyData.pvp &&
+    legacyData.pve
+  ) {
+    // Ensure the structure is complete
+    const pvpData = {
+      ...defaultProgressData,
+      ...legacyData.pvp,
+    };
+    const pveData = {
+      ...defaultProgressData,
+      ...legacyData.pve,
+    };
+
+    return {
+      currentGameMode: legacyData.currentGameMode || 'pvp',
+      pvp: pvpData,
+      pve: pveData,
+    };
+  }
+
+  // Handle partial migration case - has currentGameMode but missing pvp/pve structure
+  if (legacyData && legacyData.currentGameMode && !legacyData.pvp && !legacyData.pve) {
+    // This is a partially migrated state, use the existing data as legacy format
+    const migratedProgressData: UserProgressData = {
+      level: legacyData?.level || defaultProgressData.level,
+      gameEdition: legacyData?.gameEdition || defaultProgressData.gameEdition,
+      pmcFaction: legacyData?.pmcFaction || defaultProgressData.pmcFaction,
+      displayName: legacyData?.displayName || defaultProgressData.displayName,
+      taskCompletions: legacyData?.taskCompletions || {},
+      taskObjectives: legacyData?.taskObjectives || {},
+      hideoutParts: legacyData?.hideoutParts || {},
+      hideoutModules: legacyData?.hideoutModules || {},
+    };
+
+    return {
+      currentGameMode: legacyData.currentGameMode,
+      pvp: migratedProgressData,
+      pve: JSON.parse(JSON.stringify(defaultProgressData)),
+    };
+  }
+
+  // Create new structure with migrated data from legacy format
+  const migratedProgressData: UserProgressData = {
+    level: legacyData?.level || defaultProgressData.level,
+    gameEdition: legacyData?.gameEdition || defaultProgressData.gameEdition,
+    pmcFaction: legacyData?.pmcFaction || defaultProgressData.pmcFaction,
+    displayName: legacyData?.displayName || defaultProgressData.displayName,
+    taskCompletions: legacyData?.taskCompletions || {},
+    taskObjectives: legacyData?.taskObjectives || {},
+    hideoutParts: legacyData?.hideoutParts || {},
+    hideoutModules: legacyData?.hideoutModules || {},
+  };
+
+  return {
+    currentGameMode: 'pvp', // Default to PvP for existing users
+    pvp: migratedProgressData,
+    pve: JSON.parse(JSON.stringify(defaultProgressData)), // Fresh PvE data
+  };
+}
+
+// Helper to get current gamemode data
+const getCurrentData = (state: UserState): UserProgressData => {
+  // Handle case where state might not be fully migrated yet
+  if (!state.currentGameMode || !state[state.currentGameMode]) {
+    // If we don't have gamemode structure, try to return legacy data
+    const legacyState = state as unknown as Record<string, unknown>;
+    if (
+      legacyState.level !== undefined ||
+      legacyState.taskCompletions ||
+      legacyState.taskObjectives
+    ) {
+      return legacyState; // Cast to UserProgressData for legacy compatibility
+    }
+    // Otherwise return default structure
+    return {
+      level: 1,
+      gameEdition: 1,
+      pmcFaction: 'USEC',
+      displayName: null,
+      taskCompletions: {},
+      taskObjectives: {},
+      hideoutParts: {},
+      hideoutModules: {},
+    };
+  }
+  return state[state.currentGameMode];
+};
+
 // Simplified getters using arrow functions
 export const getters = {
-  playerLevel: (state: UserState) => () => state.level ?? 1,
+  getCurrentGameMode: (state: UserState) => () => state.currentGameMode || 'pvp',
 
-  getGameEdition: (state: UserState) => () => state.gameEdition ?? 1,
+  playerLevel: (state: UserState) => () => getCurrentData(state).level ?? 1,
 
-  getPMCFaction: (state: UserState) => () => state.pmcFaction ?? 'USEC',
+  getGameEdition: (state: UserState) => () => getCurrentData(state).gameEdition ?? 1,
 
-  getDisplayName: (state: UserState) => () =>
-    state.displayName === '' ? null : (state.displayName ?? null),
+  getPMCFaction: (state: UserState) => () => getCurrentData(state).pmcFaction ?? 'USEC',
+
+  getDisplayName: (state: UserState) => () => {
+    const currentData = getCurrentData(state);
+    return currentData.displayName === '' ? null : (currentData.displayName ?? null);
+  },
 
   getObjectiveCount: (state: UserState) => (objectiveId: string) =>
-    state?.taskObjectives?.[objectiveId]?.count ?? 0,
+    getCurrentData(state)?.taskObjectives?.[objectiveId]?.count ?? 0,
 
   getHideoutPartCount: (state: UserState) => (objectiveId: string) =>
-    state?.hideoutParts?.[objectiveId]?.count ?? 0,
+    getCurrentData(state)?.hideoutParts?.[objectiveId]?.count ?? 0,
 
   isTaskComplete: (state: UserState) => (taskId: string) =>
-    state?.taskCompletions?.[taskId]?.complete ?? false,
+    getCurrentData(state)?.taskCompletions?.[taskId]?.complete ?? false,
 
   isTaskFailed: (state: UserState) => (taskId: string) =>
-    state?.taskCompletions?.[taskId]?.failed ?? false,
+    getCurrentData(state)?.taskCompletions?.[taskId]?.failed ?? false,
 
   isTaskObjectiveComplete: (state: UserState) => (objectiveId: string) =>
-    state?.taskObjectives?.[objectiveId]?.complete ?? false,
+    getCurrentData(state)?.taskObjectives?.[objectiveId]?.complete ?? false,
 
   isHideoutPartComplete: (state: UserState) => (objectiveId: string) =>
-    state?.hideoutParts?.[objectiveId]?.complete ?? false,
+    getCurrentData(state)?.hideoutParts?.[objectiveId]?.complete ?? false,
 
   isHideoutModuleComplete: (state: UserState) => (hideoutId: string) =>
-    state?.hideoutModules?.[hideoutId]?.complete ?? false,
+    getCurrentData(state)?.hideoutModules?.[hideoutId]?.complete ?? false,
+
+  getCurrentProgressData: (state: UserState) => () => getCurrentData(state),
+
+  getPvPProgressData: (state: UserState) => () => state.pvp,
+
+  getPvEProgressData: (state: UserState) => () => state.pve,
 } as const satisfies _GettersTree<UserState>;
 
 // Helper functions for common operations
@@ -88,15 +207,16 @@ const createCompletion = (complete: boolean, failed = false) => ({
 
 const updateObjective = (
   state: UserState,
-  key: keyof UserState,
+  key: keyof UserProgressData,
   objectiveId: string,
   updates: Record<string, unknown>
 ) => {
-  const stateValue = state[key];
+  const currentData = getCurrentData(state);
+  const stateValue = currentData[key];
   if (!stateValue || typeof stateValue !== 'object') {
-    (state[key] as Record<string, unknown>) = {};
+    (currentData[key] as Record<string, unknown>) = {};
   }
-  const stateObj = state[key] as Record<string, unknown>;
+  const stateObj = currentData[key] as Record<string, unknown>;
   stateObj[objectiveId] = {
     ...(stateObj[objectiveId] || {}),
     ...updates,
@@ -105,28 +225,38 @@ const updateObjective = (
 
 // Simplified actions
 export const actions = {
+  switchGameMode(this: UserState, mode: GameMode) {
+    this.currentGameMode = mode;
+  },
+
   incrementLevel(this: UserState) {
-    this.level = this.level ? this.level + 1 : 2;
+    const currentData = getCurrentData(this);
+    currentData.level = currentData.level ? currentData.level + 1 : 2;
   },
 
   decrementLevel(this: UserState) {
-    this.level = Math.max(1, (this.level || 1) - 1);
+    const currentData = getCurrentData(this);
+    currentData.level = Math.max(1, (currentData.level || 1) - 1);
   },
 
   setLevel(this: UserState, level: number) {
-    this.level = Math.max(1, level);
+    const currentData = getCurrentData(this);
+    currentData.level = Math.max(1, level);
   },
 
   setGameEdition(this: UserState, edition: number) {
-    this.gameEdition = edition;
+    const currentData = getCurrentData(this);
+    currentData.gameEdition = edition;
   },
 
   setPMCFaction(this: UserState, faction: 'USEC' | 'BEAR') {
-    this.pmcFaction = faction;
+    const currentData = getCurrentData(this);
+    currentData.pmcFaction = faction;
   },
 
   setDisplayName(this: UserState, name: string | null) {
-    this.displayName = typeof name === 'string' ? name : null;
+    const currentData = getCurrentData(this);
+    currentData.displayName = typeof name === 'string' ? name : null;
   },
 
   setObjectiveCount(this: UserState, objectiveId: string, count: number) {

@@ -51,18 +51,18 @@ src/
 ### Example Unit Test
 
 ```typescript
-import { describe, it, expect, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
-import MyComponent from '../MyComponent.vue'
+import { describe, it, expect, vi } from 'vitest';
+import { mount } from '@vue/test-utils';
+import MyComponent from '../MyComponent.vue';
 
 describe('MyComponent', () => {
   it('renders correctly', () => {
     const wrapper = mount(MyComponent, {
-      props: { title: 'Test' }
-    })
-    expect(wrapper.text()).toContain('Test')
-  })
-})
+      props: { title: 'Test' },
+    });
+    expect(wrapper.text()).toContain('Test');
+  });
+});
 ```
 
 ### Mocking
@@ -94,22 +94,22 @@ e2e/
 ### Example E2E Test
 
 ```typescript
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
 
 test('user can complete a task', async ({ page }) => {
-  await page.goto('/tasks')
-  
+  await page.goto('/tasks');
+
   // Find first incomplete task
-  const task = page.locator('.task-card').first()
-  await task.click()
-  
+  const task = page.locator('.task-card').first();
+  await task.click();
+
   // Mark as complete
-  const completeBtn = page.locator('[data-testid="complete-task"]')
-  await completeBtn.click()
-  
+  const completeBtn = page.locator('[data-testid="complete-task"]');
+  await completeBtn.click();
+
   // Verify completion
-  await expect(task).toHaveClass(/completed/)
-})
+  await expect(task).toHaveClass(/completed/);
+});
 ```
 
 ### Mocking External Services
@@ -117,13 +117,13 @@ test('user can complete a task', async ({ page }) => {
 E2E tests mock external APIs to ensure consistent results:
 
 ```typescript
-await page.route('**/*firebase*', route => {
+await page.route('**/*firebase*', (route) => {
   route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ authenticated: true })
-  })
-})
+    body: JSON.stringify({ authenticated: true }),
+  });
+});
 ```
 
 ## Test Commands Reference
@@ -166,6 +166,7 @@ npm run test:all
 ## Key Test Scenarios
 
 ### Authentication Flow
+
 - Login page displays correctly
 - Google/GitHub sign-in buttons work
 - Loading states show properly
@@ -173,6 +174,7 @@ npm run test:all
 - Privacy/Terms links present
 
 ### Task Management
+
 - Tasks load and display
 - Filtering works correctly
 - Task completion/status changes
@@ -180,6 +182,7 @@ npm run test:all
 - Responsive behavior
 
 ### Navigation & Layout
+
 - Main navigation works
 - Drawer opens/closes
 - Page routing functions
@@ -187,6 +190,7 @@ npm run test:all
 - No console errors
 
 ### Error Handling
+
 - Graceful API failure handling
 - Empty state displays
 - Network error recovery
@@ -239,15 +243,18 @@ The `.github/workflows/frontend-tests.yml` file defines three jobs:
 ### Common Issues
 
 **Unit tests failing with Vue component errors:**
+
 - Check that Vuetify is properly mocked in `src/test/setup.ts`
 - Ensure required props are provided in test
 
 **E2E tests timing out:**
+
 - Increase timeout in playwright.config.ts
 - Add explicit waits for dynamic content
 - Check network mocking is working
 
 **Tests pass locally but fail in CI:**
+
 - Check environment differences
 - Verify all dependencies are installed
 - Review CI logs for specific errors

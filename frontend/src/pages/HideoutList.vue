@@ -56,7 +56,7 @@
 <script setup>
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useTarkovData } from '@/composables/tarkovdata';
+  import { useHideoutData } from '@/composables/data/useHideoutData';
   import { useProgressStore } from '@/stores/progress';
   import { useUserStore } from '@/stores/user';
   import { defineAsyncComponent } from 'vue';
@@ -64,7 +64,7 @@
   const HideoutCard = defineAsyncComponent(() => import('@/features/hideout/HideoutCard'));
   const RefreshButton = defineAsyncComponent(() => import('@/features/ui/RefreshButton'));
   const { t } = useI18n({ useScope: 'global' });
-  const { hideoutStations, hideoutLoading } = useTarkovData();
+  const { hideoutStations, loading: hideoutLoading } = useHideoutData();
   const progressStore = useProgressStore();
   const userStore = useUserStore();
   const primaryViews = [

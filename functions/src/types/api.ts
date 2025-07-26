@@ -59,8 +59,27 @@ export interface HideoutPart {
   timestamp?: number;
 }
 
-// Main progress document structure (legacy format compatibility)
+// Game mode type
+export type GameMode = 'pvp' | 'pve';
+
+// Progress data for a specific gamemode
+export interface UserProgressData {
+  level?: number;
+  displayName?: string;
+  gameEdition?: number;
+  pmcFaction?: string;
+  taskCompletions?: Record<string, TaskCompletion>;
+  taskObjectives?: Record<string, TaskObjective>;
+  hideoutModules?: Record<string, HideoutModule>;
+  hideoutParts?: Record<string, HideoutPart>;
+}
+
+// Main progress document structure (new gamemode-aware format)
 export interface ProgressDocument {
+  currentGameMode?: GameMode;
+  pvp?: UserProgressData;
+  pve?: UserProgressData;
+  // Legacy fields for backward compatibility
   level?: number;
   displayName?: string;
   gameEdition?: number;

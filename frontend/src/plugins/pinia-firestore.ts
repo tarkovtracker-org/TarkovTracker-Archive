@@ -215,7 +215,10 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
             }
           }
         };
-        fireswapSetting.uploadDocument = debounce(uploadFunction as (...args: unknown[]) => unknown, debouncems) as ((state: StateTree) => void) & { cancel: () => void };
+        fireswapSetting.uploadDocument = debounce(
+          uploadFunction as (...args: unknown[]) => unknown,
+          debouncems
+        ) as ((state: StateTree) => void) & { cancel: () => void };
         store.$subscribe(
           (mutation: SubscriptionCallbackMutation<StateTree>, state: StateTree) => {
             if (fireswapSetting.lock) {

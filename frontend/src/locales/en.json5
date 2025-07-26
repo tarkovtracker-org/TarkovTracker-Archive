@@ -153,6 +153,11 @@
             BEAR: 'BEAR',
           },
         },
+        gamemode: {
+          title: 'Game Mode',
+          description: 'Select the game mode you are playing. Your progress is tracked separately for PvP and PvE.',
+          select: 'Select game mode',
+        },
         questfilter: {
           title: 'Quest Filters',
           description: 'Select which quests you want to see on the Tasks page.',

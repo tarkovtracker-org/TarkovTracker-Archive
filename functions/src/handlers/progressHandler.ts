@@ -22,6 +22,15 @@ interface AuthenticatedRequest extends Request {
  *       - "Progress"
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to get progress for (pvp or pve)"
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     responses:
  *       200:
  *         description: "Player progress retrieved successfully."
@@ -49,14 +58,15 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
   ValidationService.validatePermissions(req.apiToken, 'GP');
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
+  const gameMode = req.query.gameMode as string || 'pvp';
   const progressService = new ProgressService();
   
-  const progressData = await progressService.getUserProgress(userId);
+  const progressData = await progressService.getUserProgress(userId, gameMode);
   
   const response: ApiResponse = {
     success: true,
     data: progressData,
-    meta: { self: userId },
+    meta: { self: userId, gameMode },
   };
   
   res.status(200).json(response);
@@ -80,6 +90,14 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
  *           type: "integer"
  *           minimum: 1
  *           maximum: 79
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to update level for (pvp or pve)"
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     responses:
  *       200:
  *         description: "Player's level was updated successfully"
@@ -109,9 +127,10 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const level = ValidationService.validateLevel(req.params.levelValue);
+  const gameMode = req.query.gameMode as string || 'pvp';
   
   const progressService = new ProgressService();
-  await progressService.setPlayerLevel(userId, level);
+  await progressService.setPlayerLevel(userId, level, gameMode);
   
   const response: ApiResponse = {
     success: true,
@@ -141,6 +160,14 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
  *         description: "The ID (usually UUID from tarkov.dev) of the task to update."
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to update task for (pvp or pve)"
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     requestBody:
  *       required: true
  *       description: "The new state for the task."
@@ -187,9 +214,10 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskId = ValidationService.validateTaskId(req.params.taskId);
   const { state } = ValidationService.validateTaskUpdate(req.body);
+  const gameMode = req.query.gameMode as string || 'pvp';
   
   const progressService = new ProgressService();
-  await progressService.updateSingleTask(userId, taskId, state);
+  await progressService.updateSingleTask(userId, taskId, state, gameMode);
   
   const response: ApiResponse = {
     success: true,
@@ -212,6 +240,15 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
  *       - "Progress"
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to update tasks for (pvp or pve)"
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     requestBody:
  *       required: true
  *       content:
@@ -255,9 +292,10 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
+  const gameMode = req.query.gameMode as string || 'pvp';
   
   const progressService = new ProgressService();
-  await progressService.updateMultipleTasks(userId, taskUpdates);
+  await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
   
   const response: ApiResponse = {
     success: true,
@@ -287,6 +325,14 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
  *         description: "The ID (usually UUID from tarkov.dev) of the task objective to update."
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to update objective for (pvp or pve)"
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     requestBody:
  *       required: true
  *       description: "The objective properties to update. Provide at least one."
@@ -341,9 +387,10 @@ export const updateTaskObjective = asyncHandler(async (req: AuthenticatedRequest
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
   const updateData = ValidationService.validateObjectiveUpdate(req.body);
+  const gameMode = req.query.gameMode as string || 'pvp';
   
   const progressService = new ProgressService();
-  await progressService.updateTaskObjective(userId, objectiveId, updateData);
+  await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
   
   const response: ApiResponse = {
     success: true,

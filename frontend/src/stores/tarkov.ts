@@ -2,7 +2,15 @@ import { defineStore } from 'pinia';
 import { watch } from 'vue';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { doc, setDoc } from 'firebase/firestore';
-import { getters, actions, defaultState, type UserState, type UserActions } from '@/shared_state';
+import {
+  getters,
+  actions,
+  defaultState,
+  migrateToGameModeStructure,
+  type UserState,
+  type UserActions,
+  type GameMode,
+} from '@/shared_state';
 import { wasDataMigrated } from '@/plugins/store-initializer';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 
@@ -16,10 +24,74 @@ interface FireswapConfig {
 // Define the store, letting Pinia infer the type
 // Cast getters/actions to any for now due to JS import
 export const useTarkovStore = defineStore('swapTarkov', {
-  state: () => JSON.parse(JSON.stringify(defaultState)) as UserState,
-  getters: getters,
+  state: () => {
+    // Start with default state, migration will happen during Firestore binding
+    return JSON.parse(JSON.stringify(defaultState)) as UserState;
+  },
+  getters: {
+    ...getters,
+    // Override getters to trigger migration before data access
+    isTaskComplete: function (state) {
+      return (taskId: string) => {
+        (this as unknown as { migrateDataIfNeeded: () => void }).migrateDataIfNeeded();
+        return getters.isTaskComplete(state)(taskId);
+      };
+    },
+    isTaskFailed: function (state) {
+      return (taskId: string) => {
+        (this as unknown as { migrateDataIfNeeded: () => void }).migrateDataIfNeeded();
+        return getters.isTaskFailed(state)(taskId);
+      };
+    },
+    getCurrentGameMode: function (state) {
+      return () => {
+        (this as unknown as { migrateDataIfNeeded: () => void }).migrateDataIfNeeded();
+        return getters.getCurrentGameMode(state)();
+      };
+    },
+  },
   actions: {
     ...(actions as UserActions),
+    async switchGameMode(mode: GameMode) {
+      // Switch the current game mode using the base action
+      actions.switchGameMode.call(this, mode);
+
+      // If user is logged in, sync the gamemode change to backend
+      if (fireuser.uid) {
+        try {
+          const userProgressRef = doc(firestore, 'progress', fireuser.uid);
+          await setDoc(userProgressRef, { currentGameMode: mode }, { merge: true });
+        } catch (error) {
+          console.error('Error syncing gamemode to backend:', error);
+          // TODO: Show error notification to user
+        }
+      }
+    },
+    migrateDataIfNeeded() {
+      // Check if we need to migrate data - more comprehensive check
+      const needsMigration =
+        !this.currentGameMode ||
+        !this.pvp ||
+        !this.pve ||
+        ((this as unknown as Record<string, unknown>).level !== undefined && !this.pvp?.level); // Has legacy level but no pvp.level
+
+      if (needsMigration) {
+        console.log('Migrating legacy data structure to gamemode-aware structure');
+        const currentState = JSON.parse(JSON.stringify(this.$state));
+        const migratedData = migrateToGameModeStructure(currentState);
+        this.$patch(migratedData);
+
+        // If user is logged in, save the migrated structure to Firestore
+        if (fireuser.uid) {
+          try {
+            const userProgressRef = doc(firestore, 'progress', fireuser.uid);
+            setDoc(userProgressRef, migratedData);
+          } catch (error) {
+            console.error('Error saving migrated data to Firestore:', error);
+          }
+        }
+      }
+    },
     async resetOnlineProfile() {
       if (!fireuser.uid) {
         console.error('User not logged in. Cannot reset online profile.');
@@ -89,6 +161,13 @@ watch(
             extendedStore.firebindAll();
           }
         }
+
+        // Call migration after binding is complete
+        setTimeout(() => {
+          if (typeof tarkovStore.migrateDataIfNeeded === 'function') {
+            tarkovStore.migrateDataIfNeeded();
+          }
+        }, 1000);
       } else {
         if (typeof extendedStore.fireunbindAll === 'function') {
           extendedStore.fireunbindAll();
@@ -118,6 +197,13 @@ setTimeout(async () => {
     } else if (fireuser.loggedIn && typeof extendedStore.firebindAll === 'function') {
       extendedStore.firebindAll();
     }
+
+    // Call migration after binding is complete
+    setTimeout(() => {
+      if (typeof tarkovStore.migrateDataIfNeeded === 'function') {
+        tarkovStore.migrateDataIfNeeded();
+      }
+    }, 1000);
   } catch (error) {
     console.error('Error in delayed store initialization:', error);
   }

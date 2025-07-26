@@ -90,13 +90,7 @@
     },
     "svg": {
       "file": "Shoreline.svg",
-      "floors": [
-        "Ground_Level",
-        "Underground_Level",
-        "First_Floor",
-        "Second_Floor",
-        "Third_Floor"
-      ],
+      "floors": ["Ground_Level", "Underground_Level", "First_Floor", "Second_Floor", "Third_Floor"],
       "defaultFloor": "Ground_Level",
       "coordinateRotation": 0,
       "bounds": [
@@ -239,13 +233,7 @@
     },
     "svg": {
       "file": "GroundZero.svg",
-      "floors": [
-        "Ground_Level",
-        "Underground_Level",
-        "First_Floor",
-        "Second_Floor",
-        "Third_Floor"
-      ],
+      "floors": ["Ground_Level", "Underground_Level", "First_Floor", "Second_Floor", "Third_Floor"],
       "defaultFloor": "Ground_Level",
       "coordinateRotation": 0,
       "bounds": [

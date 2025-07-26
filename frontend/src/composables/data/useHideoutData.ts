@@ -1,5 +1,6 @@
 import { ref, computed, watch } from 'vue';
 import { useTarkovHideoutQuery } from '@/composables/api/useTarkovApi';
+import { useTarkovStore } from '@/stores/tarkov';
 import {
   createGraph,
   getPredecessors,
@@ -15,7 +16,15 @@ import type { AbstractGraph } from 'graphology-types';
  * Composable for managing hideout data, station relationships, and requirements
  */
 export function useHideoutData() {
-  const { result: queryResult, error, loading } = useTarkovHideoutQuery();
+  const store = useTarkovStore();
+
+  // Get current gamemode from store and convert to the format expected by API
+  const currentGameMode = computed(() => {
+    const mode = store.getCurrentGameMode();
+    return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
+  });
+
+  const { result: queryResult, error, loading } = useTarkovHideoutQuery(currentGameMode);
   // Reactive state
   const hideoutStations = ref<HideoutStation[]>([]);
   const hideoutModules = ref<HideoutModule[]>([]);

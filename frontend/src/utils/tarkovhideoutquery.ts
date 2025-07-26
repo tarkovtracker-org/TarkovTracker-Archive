@@ -1,8 +1,8 @@
 import gql from 'graphql-tag';
 
 export default gql`
-  query TarkovDataHideout {
-    hideoutStations {
+  query TarkovDataHideout($gameMode: GameMode) {
+    hideoutStations(gameMode: $gameMode) {
       id
       name
       normalizedName

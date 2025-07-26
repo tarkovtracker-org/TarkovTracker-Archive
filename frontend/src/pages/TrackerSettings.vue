@@ -77,6 +77,21 @@
         <faction-select class="flex-grow-1" />
       </v-col>
 
+      <!-- Game Mode -->
+      <v-col cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
+        <fitted-card icon="mdi-gamepad-variant" icon-color="white" class="flex-grow-1">
+          <template #title>
+            {{ $t('page.settings.card.gamemode.title') }}
+          </template>
+          <template #content>
+            <div style="text-align: left" class="pt-2 px-4">
+              {{ $t('page.settings.card.gamemode.description') }}
+            </div>
+            <game-mode-selector />
+          </template>
+        </fitted-card>
+      </v-col>
+
       <!-- Streamer Mode -->
       <v-col v-if="fireuser.loggedIn" cols="12" sm="6" md="6" lg="4" xl="4" class="d-flex">
         <fitted-card icon="mdi-eye" icon-color="white" class="flex-grow-1">
@@ -224,6 +239,7 @@
   import ApiTokens from '@/features/settings/ApiTokens';
   import DataMigrationCard from '@/features/settings/DataMigrationCard';
   import FittedCard from '@/features/ui/FittedCard';
+  import GameModeSelector from '@/features/ui/GameModeSelector.vue';
 
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();

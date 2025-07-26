@@ -33,30 +33,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+  import { computed } from 'vue';
 
-interface MapData {
-  id: string
-  name: string
-  mergedIds?: string[]
-}
+  interface MapData {
+    id: string;
+    name: string;
+    mergedIds?: string[];
+  }
 
-interface Props {
-  show: boolean
-  maps: MapData[]
-  taskTotals: Record<string, number>
-  activeMapView: string
-}
+  interface Props {
+    show: boolean;
+    maps: MapData[];
+    taskTotals: Record<string, number>;
+    activeMapView: string;
+  }
 
-interface Emits {
-  (e: 'update:activeMapView', value: string): void
-}
+  interface Emits {
+    (e: 'update:activeMapView', value: string): void;
+  }
 
-const props = defineProps<Props>()
-defineEmits<Emits>()
+  const props = defineProps<Props>();
+  defineEmits<Emits>();
 
-const getTaskTotal = (map: MapData): number => {
-  const mapId = map.mergedIds ? map.mergedIds[0] : map.id
-  return props.taskTotals[mapId] || 0
-}
+  const getTaskTotal = (map: MapData): number => {
+    const mapId = map.mergedIds ? map.mergedIds[0] : map.id;
+    return props.taskTotals[mapId] || 0;
+  };
 </script>

@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, type ComputedRef } from 'vue';
 import { useQuery, provideApolloClient } from '@vue/apollo-composable';
 import apolloClient from '@/plugins/apollo';
 import tarkovDataQuery from '@/utils/tarkovdataquery';
@@ -78,23 +78,22 @@ export function useTarkovApi() {
 /**
  * Composable for Tarkov main data queries (tasks, maps, traders, player levels)
  */
-export function useTarkovDataQuery() {
+export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   // Get language code from the API composable to ensure consistency
   const { languageCode: apiLanguageCode } = useTarkovApi();
-  const { result, error, loading, refetch } = useQuery<TarkovDataQueryResult, { lang: string }>(
-    tarkovDataQuery,
-    () => ({ lang: apiLanguageCode.value }),
-    {
-      fetchPolicy: 'cache-first',
-      notifyOnNetworkStatusChange: true,
-      errorPolicy: 'all',
-      enabled: computed(() => !!availableLanguages.value),
-    }
-  );
-  // Watch for language changes and refetch
-  watch(apiLanguageCode, (newLang, oldLang) => {
-    if (oldLang !== newLang && availableLanguages.value) {
-      refetch({ lang: newLang });
+  const { result, error, loading, refetch } = useQuery<
+    TarkovDataQueryResult,
+    { lang: string; gameMode: string }
+  >(tarkovDataQuery, () => ({ lang: apiLanguageCode.value, gameMode: gameMode.value }), {
+    fetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: true,
+    errorPolicy: 'all',
+    enabled: computed(() => !!availableLanguages.value),
+  });
+  // Watch for language and gameMode changes and refetch
+  watch([apiLanguageCode, gameMode], ([newLang, newGameMode], [oldLang, oldGameMode]) => {
+    if ((oldLang !== newLang || oldGameMode !== newGameMode) && availableLanguages.value) {
+      refetch({ lang: newLang, gameMode: newGameMode });
     }
   });
   return {
@@ -103,28 +102,28 @@ export function useTarkovDataQuery() {
     loading,
     refetch,
     languageCode: apiLanguageCode,
+    gameMode,
   };
 }
 /**
  * Composable for Tarkov hideout data queries
  */
-export function useTarkovHideoutQuery() {
+export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   // Get language code from the API composable to ensure consistency
   const { languageCode: apiLanguageCode } = useTarkovApi();
-  const { result, error, loading, refetch } = useQuery<TarkovHideoutQueryResult, { lang: string }>(
-    tarkovHideoutQuery,
-    () => ({ lang: apiLanguageCode.value }),
-    {
-      fetchPolicy: 'cache-first',
-      notifyOnNetworkStatusChange: true,
-      errorPolicy: 'all',
-      enabled: computed(() => !!availableLanguages.value),
-    }
-  );
-  // Watch for language changes and refetch
-  watch(apiLanguageCode, (newLang, oldLang) => {
-    if (oldLang !== newLang && availableLanguages.value) {
-      refetch({ lang: newLang });
+  const { result, error, loading, refetch } = useQuery<
+    TarkovHideoutQueryResult,
+    { lang: string; gameMode: string }
+  >(tarkovHideoutQuery, () => ({ lang: apiLanguageCode.value, gameMode: gameMode.value }), {
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+    errorPolicy: 'all',
+    enabled: computed(() => !!availableLanguages.value),
+  });
+  // Watch for language and gameMode changes and refetch
+  watch([apiLanguageCode, gameMode], ([newLang, newGameMode], [oldLang, oldGameMode]) => {
+    if ((oldLang !== newLang || oldGameMode !== newGameMode) && availableLanguages.value) {
+      refetch({ lang: newLang, gameMode: newGameMode });
     }
   });
   return {
@@ -133,5 +132,6 @@ export function useTarkovHideoutQuery() {
     loading,
     refetch,
     languageCode: apiLanguageCode,
+    gameMode,
   };
 }

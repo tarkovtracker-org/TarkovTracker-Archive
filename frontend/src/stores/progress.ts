@@ -88,8 +88,10 @@ export const useProgressStore = defineStore(
         completions[task.id] = {};
         for (const teamId of Object.keys(visibleTeamStores.value)) {
           const store = visibleTeamStores.value[teamId];
-          completions[task.id][teamId] =
-            store?.$state.taskCompletions?.[task.id]?.complete ?? false;
+          // Get current gamemode data, with fallback to legacy structure
+          const currentGameMode = store?.$state.currentGameMode || 'pvp';
+          const currentData = store?.$state[currentGameMode] || store?.$state;
+          completions[task.id][teamId] = currentData?.taskCompletions?.[task.id]?.complete ?? false;
         }
       }
       return completions;
@@ -102,7 +104,9 @@ export const useProgressStore = defineStore(
         levels[teamId] = {};
         const store = visibleTeamStores.value[teamId];
         for (const trader of traders.value) {
-          levels[teamId][trader.id] = store?.$state.level ?? 0;
+          const currentGameMode = store?.$state.currentGameMode || 'pvp';
+          const currentData = store?.$state[currentGameMode] || store?.$state;
+          levels[teamId][trader.id] = (currentData as UserProgressData)?.level ?? 0;
         }
       }
       return levels;
@@ -112,7 +116,10 @@ export const useProgressStore = defineStore(
       if (!visibleTeamStores.value) return {};
       for (const teamId of Object.keys(visibleTeamStores.value)) {
         const store = visibleTeamStores.value[teamId];
-        faction[teamId] = store?.$state.pmcFaction ?? 'Unknown';
+        // Get current gamemode data, with fallback to legacy structure
+        const currentGameMode = store?.$state.currentGameMode || 'pvp';
+        const currentData = store?.$state[currentGameMode] || store?.$state;
+        faction[teamId] = currentData?.pmcFaction ?? 'Unknown';
       }
       return faction;
     });
@@ -123,7 +130,10 @@ export const useProgressStore = defineStore(
         available[task.id] = {};
         for (const teamId of Object.keys(visibleTeamStores.value)) {
           const store = visibleTeamStores.value[teamId];
-          const playerLevel = store?.$state.level ?? 0;
+          // Get current gamemode data, with fallback to legacy structure
+          const currentGameMode = store?.$state.currentGameMode || 'pvp';
+          const currentData = store?.$state[currentGameMode] || store?.$state;
+          const playerLevel = currentData?.level ?? 0;
           const currentPlayerFaction = playerFaction.value[teamId];
           const isTaskComplete = tasksCompletions.value[task.id]?.[teamId] ?? false;
           if (isTaskComplete) {
@@ -133,7 +143,7 @@ export const useProgressStore = defineStore(
           let failedReqsMet = true;
           if (task.failedRequirements) {
             for (const req of task.failedRequirements) {
-              const failed = store?.$state.taskCompletions?.[req.task.id]?.failed ?? false;
+              const failed = currentData?.taskCompletions?.[req.task.id]?.failed ?? false;
               if (failed) {
                 failedReqsMet = false;
                 break;
@@ -196,8 +206,11 @@ export const useProgressStore = defineStore(
         completions[objective.id] = {};
         for (const teamId of Object.keys(visibleTeamStores.value)) {
           const store = visibleTeamStores.value[teamId];
+          // Get current gamemode data, with fallback to legacy structure
+          const currentGameMode = store?.$state.currentGameMode || 'pvp';
+          const currentData = store?.$state[currentGameMode] || store?.$state;
           completions[objective.id][teamId] =
-            store?.$state.taskObjectives?.[objective.id]?.complete ?? false;
+            currentData?.taskObjectives?.[objective.id]?.complete ?? false;
         }
       }
       return completions;
@@ -210,7 +223,10 @@ export const useProgressStore = defineStore(
         levels[station.id] = {};
         for (const teamId of Object.keys(visibleTeamStores.value)) {
           const store = visibleTeamStores.value[teamId];
-          const modulesState = store?.$state.hideoutModules ?? {};
+          // Get current gamemode data, with fallback to legacy structure
+          const currentGameMode = store?.$state.currentGameMode || 'pvp';
+          const currentData = store?.$state[currentGameMode] || store?.$state;
+          const modulesState = currentData?.hideoutModules ?? {};
           let maxManuallyCompletedLevel = 0;
           if (station.levels && Array.isArray(station.levels)) {
             for (const lvl of station.levels) {
@@ -226,7 +242,7 @@ export const useProgressStore = defineStore(
           }
           let currentStationDisplayLevel;
           if (station.id === STASH_STATION_ID) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
+            const gameEditionVersion = currentData?.gameEdition ?? 0;
             const edition = gameEditionData.value.find(
               (e: GameEdition) => e.version === gameEditionVersion
             );
@@ -239,7 +255,7 @@ export const useProgressStore = defineStore(
               currentStationDisplayLevel = Math.max(effectiveStashLevel, maxManuallyCompletedLevel);
             }
           } else if (station.id === CULTIST_CIRCLE_STATION_ID) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
+            const gameEditionVersion = currentData?.gameEdition ?? 0;
             if (
               (gameEditionVersion === 5 || gameEditionVersion === 6) &&
               station.levels &&
@@ -263,7 +279,9 @@ export const useProgressStore = defineStore(
     const getDisplayName = (teamId: string): string => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      const displayNameFromStore = store?.$state?.displayName;
+      const currentGameMode = store?.$state.currentGameMode || 'pvp';
+      const currentData = store?.$state[currentGameMode] || store?.$state;
+      const displayNameFromStore = (currentData as UserProgressData)?.displayName;
 
       if (!displayNameFromStore) {
         return teamId.substring(0, 6);
@@ -273,11 +291,17 @@ export const useProgressStore = defineStore(
     const getLevel = (teamId: string): number => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      return store?.$state?.level ?? 1;
+      // Get current gamemode data, with fallback to legacy structure
+      const currentGameMode = store?.$state.currentGameMode || 'pvp';
+      const currentData = store?.$state[currentGameMode] || store?.$state;
+      return currentData?.level ?? 1;
     };
     const getFaction = (teamId: string): string => {
       const store = visibleTeamStores.value[teamId];
-      return store?.$state.pmcFaction ?? 'Unknown';
+      // Get current gamemode data, with fallback to legacy structure
+      const currentGameMode = store?.$state.currentGameMode || 'pvp';
+      const currentData = store?.$state[currentGameMode] || store?.$state;
+      return currentData?.pmcFaction ?? 'Unknown';
     };
     const getTeammateStore = (teamId: string): Store<string, UserState> | null => {
       return teammateStores.value[teamId] || null;
@@ -286,7 +310,10 @@ export const useProgressStore = defineStore(
     const hasCompletedTask = (teamId: string, taskId: string): boolean => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      const taskCompletion = store?.$state?.taskCompletions?.[taskId];
+      // Get current gamemode data, with fallback to legacy structure
+      const currentGameMode = store?.$state.currentGameMode || 'pvp';
+      const currentData = store?.$state[currentGameMode] || store?.$state;
+      const taskCompletion = currentData?.taskCompletions?.[taskId];
       return taskCompletion?.complete === true;
     };
 
@@ -296,7 +323,10 @@ export const useProgressStore = defineStore(
     ): 'completed' | 'failed' | 'incomplete' => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      const taskCompletion = store?.$state?.taskCompletions?.[taskId];
+      // Get current gamemode data, with fallback to legacy structure
+      const currentGameMode = store?.$state.currentGameMode || 'pvp';
+      const currentData = store?.$state[currentGameMode] || store?.$state;
+      const taskCompletion = currentData?.taskCompletions?.[taskId];
 
       if (taskCompletion?.complete) return 'completed';
       if (taskCompletion?.failed) return 'failed';
@@ -309,20 +339,22 @@ export const useProgressStore = defineStore(
 
       if (!store?.$state) return 0;
 
-      const state = store.$state;
+      // Get current gamemode data, with fallback to legacy structure
+      const currentGameMode = store.$state.currentGameMode || 'pvp';
+      const currentData = store.$state[currentGameMode] || store.$state;
 
       switch (category) {
         case 'tasks': {
-          const totalTasks = Object.keys(state.taskCompletions || {}).length;
-          const completedTasks = Object.values(state.taskCompletions || {}).filter(
+          const totalTasks = Object.keys(currentData.taskCompletions || {}).length;
+          const completedTasks = Object.values(currentData.taskCompletions || {}).filter(
             (completion) => completion?.complete === true
           ).length;
           return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
         }
 
         case 'hideout': {
-          const totalModules = Object.keys(state.hideoutModules || {}).length;
-          const completedModules = Object.values(state.hideoutModules || {}).filter(
+          const totalModules = Object.keys(currentData.hideoutModules || {}).length;
+          const completedModules = Object.values(currentData.hideoutModules || {}).filter(
             (module) => module?.complete === true
           ).length;
           return totalModules > 0 ? (completedModules / totalModules) * 100 : 0;

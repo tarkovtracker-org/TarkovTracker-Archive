@@ -332,19 +332,40 @@ const _invalidateTasks = (
     });
   }
 };
+// Helper function to extract gamemode-specific data
+const extractGameModeData = (
+  progressData: unknown,
+  gameMode: string = 'pvp'
+): UserProgressData | null => {
+  if (!progressData) return null;
+  
+  // If the document has gamemode-specific data structure
+  if (progressData.currentGameMode && (progressData.pvp || progressData.pve)) {
+    const currentMode = gameMode || progressData.currentGameMode || 'pvp';
+    return progressData[currentMode] || null;
+  }
+  
+  // Legacy format - return the data as-is
+  return progressData;
+};
+
 const formatProgress = (
-  progressData: UserProgressData | undefined | null,
+  progressData: unknown,
   userId: string,
   hideoutData: HideoutData | null | undefined,
-  taskData: TaskData | null | undefined
+  taskData: TaskData | null | undefined,
+  gameMode: string = 'pvp'
 ): FormattedProgress => {
-  const baseProgress = _initializeBaseProgress(progressData, userId);
+  // Extract gamemode-specific data
+  const gameModeData = extractGameModeData(progressData, gameMode);
+  
+  const baseProgress = _initializeBaseProgress(gameModeData, userId);
   const progress: FormattedProgress = {
     ...baseProgress,
-    tasksProgress: formatObjective(progressData?.taskCompletions, false, true),
-    taskObjectivesProgress: formatObjective(progressData?.taskObjectives, true, true),
-    hideoutModulesProgress: formatObjective(progressData?.hideoutModules),
-    hideoutPartsProgress: formatObjective(progressData?.hideoutParts, true),
+    tasksProgress: formatObjective(gameModeData?.taskCompletions, false, true),
+    taskObjectivesProgress: formatObjective(gameModeData?.taskObjectives, true, true),
+    hideoutModulesProgress: formatObjective(gameModeData?.hideoutModules),
+    hideoutPartsProgress: formatObjective(gameModeData?.hideoutParts, true),
   };
   // --- Hideout Post-processing ---
   _processHideoutStations(progress, hideoutData, progress.gameEdition, userId);
