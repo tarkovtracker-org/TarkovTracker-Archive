@@ -1,35 +1,27 @@
 name: Claude Code Review
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
 jobs:
-  claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+  # Same-repo PRs (fast path)
+  claude-review-same-repo:
+    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
+      pull-requests: write
+      issues: write
+      actions: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
       - name: Run Claude Code Review
-        id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             Please review this pull request and provide feedback on:
@@ -38,8 +30,43 @@ jobs:
             - Performance considerations
             - Security concerns
             - Test coverage
-            Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
-            Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
-          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
-          # or https://docs.anthropic.com/en/docs/claude-code/sdk#command-line for available options
-          claude_args: '--allowed-tools "Bash(gh issue view:*),Bash(gh search:*),Bash(gh issue list:*),Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr list:*)"'
+            Use the repository's CLAUDE.md for guidance on style and conventions.
+            Post review comments using `gh pr comment`.
+          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr list:*),Bash(gh issue view:*),Bash(gh issue list:*)"'
+  # Fork PRs (hardened path)
+  claude-review-fork:
+    if: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.fork == true }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      actions: read
+    steps:
+      # 1) Checkout trusted base ref
+      - name: Checkout base repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          fetch-depth: 1
+      # 2) Materialize PR head in ./pr for read-only analysis (do NOT execute)
+      - name: Fetch PR HEAD (read-only)
+        run: |
+          mkdir pr
+          git fetch origin pull/${{ github.event.number }}/head:pr-head
+          git --work-tree=./pr checkout pr-head -- .
+      # 3) Run review against the read-only tree
+      - name: Run Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review this pull request from a fork with extra attention to security.
+            Do not execute code from the PR; analyze the diff/files only.
+            Provide feedback on code quality, potential bugs, performance, security, and tests.
+            Post comments using `gh pr comment`.
+          claude_args: '--allowed-tools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(gh pr list:*),Bash(gh issue view:*),Bash(gh issue list:*)"'
+        env:
+          # If the action supports a scan directory, point it at the read-only copy
+          CLAUDE_CODE_SCAN_DIR: ./pr
