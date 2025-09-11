@@ -4,6 +4,9 @@ import { TeamService } from '../services/TeamService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
+// Reuse a single service instance across requests
+const teamService = new TeamService();
+
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
   user?: {
@@ -53,8 +56,6 @@ export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, re
   ValidationService.validatePermissions(req.apiToken, 'TP');
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
   const result = await teamService.getTeamProgress(userId);
   
   const response: ApiResponse = {
@@ -118,8 +119,6 @@ export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, re
  */
 export const createTeam = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
   // Validate request body if provided
   const data: { password?: string; maximumMembers?: number } = {};
   

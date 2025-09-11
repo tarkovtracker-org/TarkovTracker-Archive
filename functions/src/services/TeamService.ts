@@ -3,8 +3,6 @@ import { logger } from 'firebase-functions/v2';
 import { 
   Firestore, 
   DocumentReference, 
-  // DocumentSnapshot, // Unused
-  // Transaction, // Unused
   FieldValue 
 } from 'firebase-admin/firestore';
 import UIDGenerator from 'uid-generator';
@@ -12,7 +10,6 @@ import {
   TeamDocument, 
   SystemDocument, 
   FormattedProgress
-  // ServiceOptions // Unused
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 import { formatProgress } from '../progress/progressUtils.js';

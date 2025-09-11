@@ -1,3 +1,5 @@
+// Cloud Functions entrypoint. Exposes callable and HTTP endpoints
+// and lazily builds an Express app to keep cold‑start memory low.
 import admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -18,18 +20,13 @@ import {
   Firestore,
   FieldValue,
 } from 'firebase-admin/firestore';
-import cors from 'cors';
-import express, { Express, Request, Response, NextFunction } from 'express';
-import bodyParser from 'body-parser';
-
-// Import new middleware and handlers
-import { verifyBearer } from './middleware/auth.js';
-import { requireRecentAuth } from './middleware/reauth.js';
-import { errorHandler, notFoundHandler, asyncHandler } from './middleware/errorHandler.js';
-import progressHandler from './handlers/progressHandler.js';
-import teamHandler from './handlers/teamHandler.js';
-import tokenHandler from './handlers/tokenHandler.js';
-import { deleteUserAccountHandler } from './handlers/userDeletionHandler.js';
+// Defer Express-related imports until the API endpoint is invoked
+import type {
+  Express,
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+  NextFunction,
+} from 'express';
 
 // Import legacy functions for backward compatibility
 import { createToken, _createTokenLogic } from './token/create.js';
@@ -37,132 +34,140 @@ import { revokeToken } from './token/revoke.js';
 
 admin.initializeApp();
 export { createToken, revokeToken };
-// Interfaces used by the application (commented to avoid unused warnings)
-// interface ApiToken {
-//   owner: string;
-//   note: string;
-//   permissions: string[];
-//   calls?: number;
-//   createdAt?: admin.firestore.Timestamp;
-//   token?: string;
-// }
 
-// interface UserContext {
-//   id: string;
-//   username?: string;
-//   roles?: string[];
-// }
+// Lazily construct and cache the Express app used by the `api` HTTP function
+let cachedApp: Express | undefined;
 
-const app: Express = express();
+// Reuse UID generators across invocations to avoid reallocation overhead
+const PASSWORD_UID_GEN = new UIDGenerator(48, UIDGenerator.BASE62);
+const TEAM_UID_GEN = new UIDGenerator(32);
 
-// Production-ready CORS configuration
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'https://tarkovtracker.org',
-    'https://www.tarkovtracker.org'
-  ],
-  credentials: true,
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
+// Hoist regex to avoid per-call compilation
+const ITEM_ID_SANITIZER_REGEX = /[/\\*?[\]]/g;
+async function getApiApp(): Promise<Express> {
+  if (cachedApp) return cachedApp;
+  const expressModule = await import('express');
+  const corsModule = await import('cors');
+  const bodyParserModule = await import('body-parser');
+  const { verifyBearer } = await import('./middleware/auth.js');
+  const { requireRecentAuth } = await import('./middleware/reauth.js');
+  const { errorHandler, notFoundHandler, asyncHandler } = await import(
+    './middleware/errorHandler.js'
+  );
+  const progressHandler = (await import('./handlers/progressHandler.js')).default;
+  const teamHandler = (await import('./handlers/teamHandler.js')).default;
+  const tokenHandler = (await import('./handlers/tokenHandler.js')).default;
+  const { deleteUserAccountHandler } = await import('./handlers/userDeletionHandler.js');
 
-// Lightweight body parsing - reduce limits for faster processing
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '1mb' }));
-
-// Conditional request logging (only in dev)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    logger.log(`API Request: ${req.method} ${req.originalUrl}`);
-    next();
+  const app = expressModule.default();
+  app.use(
+    corsModule.default({
+      // Reflect the request origin to support credentials across any origin
+      origin: true,
+      credentials: true,
+      optionsSuccessStatus: 200,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    })
+  );
+  // CORS is already handled globally above and by individual route handlers
+  app.use(bodyParserModule.default.json({ limit: '1mb' }));
+  app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
+  if (process.env.NODE_ENV !== 'production') {
+    app.use((req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => {
+      logger.log(`API Request: ${req.method} ${req.originalUrl}`);
+      next();
+    });
+  }
+  app.get(
+    '/api/user/test',
+    asyncHandler(async (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(200).json({ success: true, message: 'User deletion API is working' });
+    })
+  );
+  app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
+  app.use('/api', verifyBearer);
+  app.get('/api/token', tokenHandler.getTokenInfo);
+  app.get('/api/progress', progressHandler.getPlayerProgress);
+  app.get('/api/team/progress', teamHandler.getTeamProgress);
+  app.post('/api/progress/level/:levelValue', progressHandler.setPlayerLevel);
+  app.post('/api/progress/task/:taskId', progressHandler.updateSingleTask);
+  app.post('/api/progress/tasks', progressHandler.updateMultipleTasks);
+  app.post('/api/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
+  app.options('/api/team/create', (_req: ExpressRequest, res: ExpressResponse) => {
+    res.status(200).send();
   });
+  app.post('/api/team/create', teamHandler.createTeam);
+  app.options('/api/team/join', (_req: ExpressRequest, res: ExpressResponse) => {
+    res.status(200).send();
+  });
+  app.post('/api/team/join', teamHandler.joinTeam);
+  app.options('/api/team/leave', (_req: ExpressRequest, res: ExpressResponse) => {
+    res.status(200).send();
+  });
+  app.post('/api/team/leave', teamHandler.leaveTeam);
+  app.get('/api/v2/token', tokenHandler.getTokenInfo);
+  app.get('/api/v2/progress', progressHandler.getPlayerProgress);
+  app.get('/api/v2/team/progress', teamHandler.getTeamProgress);
+  app.post('/api/v2/progress/level/:levelValue', progressHandler.setPlayerLevel);
+  app.post('/api/v2/progress/task/:taskId', progressHandler.updateSingleTask);
+  app.post('/api/v2/progress/tasks', progressHandler.updateMultipleTasks);
+  app.post('/api/v2/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
+  app.get(
+    '/health',
+    asyncHandler(async (_req: ExpressRequest, res: ExpressResponse) => {
+      res.status(200).json({
+        success: true,
+        data: {
+          status: 'healthy',
+          timestamp: new Date().toISOString(),
+          version: '2.0.0',
+          service: 'tarkovtracker-api',
+          features: {
+            newErrorHandling: true,
+            newProgressService: true,
+            newTeamService: true,
+            newTokenService: true,
+          },
+        },
+      });
+    })
+  );
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  cachedApp = app;
+  return app;
 }
-
-// ===== USER ACCOUNT MANAGEMENT (NO BEARER AUTH) =====
-// Test endpoint for user deletion (temporary - no auth for testing)
-app.get('/api/user/test', asyncHandler(async (_req: Request, res: Response) => {
-  res.status(200).json({ success: true, message: 'User deletion API is working' });
-}));
-
-// User account deletion endpoint (requires recent authentication but not bearer)
-app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
-
-// Apply new authentication middleware to OTHER API routes
-app.use('/api', verifyBearer);
-
-// ===== NEW API ROUTES (IMPROVED) =====
-app.get('/api/token', tokenHandler.getTokenInfo);
-app.get('/api/progress', progressHandler.getPlayerProgress);
-app.get('/api/team/progress', teamHandler.getTeamProgress);
-// Progress routes
-app.post('/api/progress/level/:levelValue', progressHandler.setPlayerLevel);
-app.post('/api/progress/task/:taskId', progressHandler.updateSingleTask);
-app.post('/api/progress/tasks', progressHandler.updateMultipleTasks);
-app.post('/api/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
-
-// Team routes with CORS options
-app.options('/api/team/create', (_req: Request, res: Response) => {
-  res.status(200).send();
-});
-app.post('/api/team/create', teamHandler.createTeam);
-
-app.options('/api/team/join', (_req: Request, res: Response) => {
-  res.status(200).send();
-});
-app.post('/api/team/join', teamHandler.joinTeam);
-
-app.options('/api/team/leave', (_req: Request, res: Response) => {
-  res.status(200).send();
-});
-app.post('/api/team/leave', teamHandler.leaveTeam);
-
-// ===== BACKWARD COMPATIBILITY ROUTES (v2) =====
-// These ensure old /api/v2/ endpoints still work
-app.get('/api/v2/token', tokenHandler.getTokenInfo);
-app.get('/api/v2/progress', progressHandler.getPlayerProgress);
-app.get('/api/v2/team/progress', teamHandler.getTeamProgress);
-app.post('/api/v2/progress/level/:levelValue', progressHandler.setPlayerLevel);
-app.post('/api/v2/progress/task/:taskId', progressHandler.updateSingleTask);
-app.post('/api/v2/progress/tasks', progressHandler.updateMultipleTasks);
-app.post('/api/v2/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
-
-// ===== HEALTH CHECK ROUTE =====
-app.get('/health', asyncHandler(async (_req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      version: '2.0.0',
-      service: 'tarkovtracker-api',
-      features: {
-        newErrorHandling: true,
-        newProgressService: true,
-        newTeamService: true,
-        newTokenService: true,
-      },
-    },
-  });
-}));
-
-// ===== ERROR HANDLING =====
-// Handle 404 for unmatched routes
-app.use(notFoundHandler);
-
-// Centralized error handler (must be last)
-app.use(errorHandler);
 
 export const api = onRequest(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
     minInstances: 0,
     maxInstances: 3,
   },
-  app
+  async (req, res) => {
+    // Top-level CORS handling for preflight and safety-net for regular requests
+    const originHeader = req.headers.origin;
+    const origin = typeof originHeader === 'string' ? originHeader : undefined;
+    if (origin) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Vary', 'Origin');
+    }
+    res.set('Access-Control-Allow-Credentials', 'true');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (typeof req.headers['access-control-request-headers'] === 'string') {
+      res.set('Access-Control-Allow-Headers', req.headers['access-control-request-headers']);
+    } else {
+      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    }
+    if (req.method === 'OPTIONS') {
+      res.status(204).send('');
+      return;
+    }
+    const app = await getApiApp();
+    return (app as unknown as (req: unknown, res: unknown) => void)(req, res);
+  }
 );
 interface SystemDocData {
   team?: string | null;
@@ -200,8 +205,7 @@ function handleTeamError(
 
 async function generateSecurePassword(): Promise<string> {
   try {
-    const passGen = new UIDGenerator(48, UIDGenerator.BASE62);
-    const generated = await passGen.generate();
+    const generated = await PASSWORD_UID_GEN.generate();
     if (generated && generated.length >= 4) {
       return generated;
     }
@@ -360,8 +364,7 @@ async function _createTeamLogic(
           }
         }
 
-        const uidgen = new UIDGenerator(32);
-        const teamId = await uidgen.generate();
+        const teamId = await TEAM_UID_GEN.generate();
         const teamPassword = data.password || (await generateSecurePassword());
 
         finalTeamPassword = teamPassword;
@@ -456,200 +459,207 @@ async function _kickTeamMemberLogic(
 export const createTeam = onCall(
   {
     memory: '128MiB',
-    timeoutSeconds: 20,
+    timeoutSeconds: 15,
   },
   _createTeamLogic
 );
 
 // Alternative HTTPS endpoint for createTeam with explicit CORS handling
+// HTTP mirror for createTeam callable with explicit CORS handling
 export const createTeamHttp = onRequest(
   {
-    memory: '128MiB',
-    timeoutSeconds: 20,
+    memory: '256MiB',
+    timeoutSeconds: 15,
+    maxInstances: 1,
+    minInstances: 0,
   },
-  async (req: FirebaseRequest, res: any) => {
-  // Set CORS headers
-  res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  async (req, res) => {
+    // CORS headers aligned with Express middleware; reflect any origin for credentials support
+    const originHeader = req.headers.origin;
+    const origin = typeof originHeader === 'string' ? originHeader : undefined;
+    if (origin) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Vary', 'Origin');
+    }
 
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(200).send('');
-    return;
-  }
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.set('Access-Control-Allow-Credentials', 'true');
 
-  if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
-  }
-
-  try {
-    // Extract auth token from Authorization header
-    const authToken = req.headers.authorization?.replace('Bearer ', '');
-    if (!authToken) {
-      res.status(401).json({ error: 'Authentication required' });
+    // Preflight handling
+    if (req.method === 'OPTIONS') {
+      res.status(200).send('');
       return;
     }
 
-    // Verify the token
-    const decodedToken = await admin.auth().verifyIdToken(authToken);
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
 
-    // Create a mock callable request
-    const callableRequest: CallableRequest<CreateTeamData> = {
-      auth: {
-        uid: decodedToken.uid,
-        token: decodedToken,
-      },
-      data: req.body,
-      rawRequest: req as unknown as FirebaseRequest,
-      acceptsStreaming: false,
-    };
+    try {
+      // Verify Firebase ID token from Authorization header
+      const authToken = req.headers.authorization?.replace('Bearer ', '');
+      if (!authToken) {
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
 
-    // Call the existing logic
-    const result = await _createTeamLogic(callableRequest);
-    res.status(200).json(result);
-  } catch (error) {
-    logger.error('Error in createTeamHttp:', error);
-    if (error instanceof HttpsError) {
-      res.status(400).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
+      const decodedToken = await admin.auth().verifyIdToken(authToken);
+
+      // Reuse callable logic
+      const callableRequest: CallableRequest<CreateTeamData> = {
+        auth: {
+          uid: decodedToken.uid,
+          token: decodedToken,
+        },
+        data: req.body,
+        rawRequest: req as unknown as FirebaseRequest,
+        acceptsStreaming: false,
+      };
+      const result = await _createTeamLogic(callableRequest);
+      res.status(200).json(result);
+    } catch (error) {
+      logger.error('Error in createTeamHttp:', error);
+      if (error instanceof HttpsError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   }
-});
+);
 
-// Alternative HTTPS endpoint for createToken with explicit CORS handling
+// HTTP mirror for createToken callable with explicit CORS handling
 export const createTokenHttp = onRequest(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 20,
     cors: true,
+    maxInstances: 1,
+    minInstances: 0,
   },
-  async (req: FirebaseRequest, res: any) => {
-  // Set comprehensive CORS headers for production
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:8080', 
-    'https://tarkovtracker.org',
-    'https://www.tarkovtracker.org'
-  ];
-  
-  const originHeader = req.headers.origin;
-  const origin = typeof originHeader === 'string' ? originHeader : undefined;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.set('Access-Control-Allow-Origin', origin);
-  } else {
-    res.set('Access-Control-Allow-Origin', 'https://tarkovtracker.org');
-  }
-  
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.set('Access-Control-Allow-Credentials', 'true');
-  res.set('Access-Control-Max-Age', '3600');
+  async (req, res) => {
+    // CORS headers: reflect any origin for credentials support
+    const originHeader = req.headers.origin;
+    const origin = typeof originHeader === 'string' ? originHeader : undefined;
+    if (origin) {
+      res.set('Access-Control-Allow-Origin', origin);
+      res.set('Vary', 'Origin');
+    }
 
-  // Handle preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(200).send('');
-    return;
-  }
+    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.set('Access-Control-Allow-Credentials', 'true');
+    res.set('Access-Control-Max-Age', '3600');
 
-  if (req.method !== 'POST') {
-    res.status(405).send('Method Not Allowed');
-    return;
-  }
-
-  try {
-    // Log request details for debugging
-    logger.log('CreateTokenHttp request received', {
-      method: req.method,
-      origin: req.headers.origin,
-      contentType: req.headers['content-type'],
-      hasAuth: !!req.headers.authorization,
-      bodyKeys: req.body ? Object.keys(req.body) : 'no body'
-    });
-
-    // Extract auth token from Authorization header
-    const authToken = req.headers.authorization?.replace('Bearer ', '');
-    if (!authToken) {
-      logger.warn('No auth token provided in createTokenHttp');
-      res.status(401).json({ error: 'Authentication required' });
+    // Preflight handling
+    if (req.method === 'OPTIONS') {
+      res.status(200).send('');
       return;
     }
 
-    // Verify the token
-    const decodedToken = await admin.auth().verifyIdToken(authToken);
-    logger.log('Token verified for user', { uid: decodedToken.uid });
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
 
-    // Create a mock callable request
-    const callableRequest: CallableRequest<{ note: string; permissions: string[] }> = {
-      auth: {
-        uid: decodedToken.uid,
-        token: decodedToken,
-      },
-      data: req.body,
-      rawRequest: req as unknown as FirebaseRequest,
-      acceptsStreaming: false,
-    };
+    try {
+      // Minimal request diagnostics
+      logger.log('CreateTokenHttp request received', {
+        method: req.method,
+        origin: req.headers.origin,
+        contentType: req.headers['content-type'],
+        hasAuth: !!req.headers.authorization,
+        bodyKeys: req.body ? Object.keys(req.body) : 'no body',
+      });
 
-    // Call the existing logic
-    const result = await _createTokenLogic(callableRequest);
-    logger.log('Token created successfully via HTTP', { uid: decodedToken.uid });
-    res.status(200).json(result);
-  } catch (error) {
-    logger.error('Error in createTokenHttp:', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      type: error instanceof HttpsError ? 'HttpsError' : typeof error
-    });
-    
-    if (error instanceof HttpsError) {
-      const statusMap: Record<string, number> = {
-        'invalid-argument': 400,
-        'unauthenticated': 401,
-        'permission-denied': 403,
-        'not-found': 404,
-        'resource-exhausted': 429,
-        'internal': 500,
-        'ok': 200,
-        'cancelled': 499,
-        'unknown': 500,
-        'deadline-exceeded': 504,
-        'already-exists': 409,
-        'failed-precondition': 400,
-        'aborted': 409,
-        'out-of-range': 400,
-        'unavailable': 503,
-        'data-loss': 500
+      // Verify Firebase ID token
+      const authToken = req.headers.authorization?.replace('Bearer ', '');
+      if (!authToken) {
+        logger.warn('No auth token provided in createTokenHttp');
+        res.status(401).json({ error: 'Authentication required' });
+        return;
+      }
+
+      const decodedToken = await admin.auth().verifyIdToken(authToken);
+      logger.log('Token verified for user', { uid: decodedToken.uid });
+
+      // Reuse callable logic
+      const callableRequest: CallableRequest<{ note: string; permissions: string[] }> = {
+        auth: {
+          uid: decodedToken.uid,
+          token: decodedToken,
+        },
+        data: req.body,
+        rawRequest: req as unknown as FirebaseRequest,
+        acceptsStreaming: false,
       };
-      const status = statusMap[error.code] || 500;
-      res.status(status).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
+
+      const result = await _createTokenLogic(callableRequest);
+      logger.log('Token created successfully via HTTP', { uid: decodedToken.uid });
+      res.status(200).json(result);
+    } catch (error) {
+      logger.error('Error in createTokenHttp:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        type: error instanceof HttpsError ? 'HttpsError' : typeof error,
+      });
+
+      if (error instanceof HttpsError) {
+        const statusMap: Record<string, number> = {
+          'invalid-argument': 400,
+          unauthenticated: 401,
+          'permission-denied': 403,
+          'not-found': 404,
+          'resource-exhausted': 429,
+          internal: 500,
+          ok: 200,
+          cancelled: 499,
+          unknown: 500,
+          'deadline-exceeded': 504,
+          'already-exists': 409,
+          'failed-precondition': 400,
+          aborted: 409,
+          'out-of-range': 400,
+          unavailable: 503,
+          'data-loss': 500,
+        };
+        const status = statusMap[error.code] || 500;
+        res.status(status).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Internal server error' });
+      }
     }
   }
-});
+);
 
 export const joinTeam = onCall(
   {
-    memory: '128MiB',
-    timeoutSeconds: 20,
+    memory: '256MiB',
+    timeoutSeconds: 15,
+    maxInstances: 1,
+    minInstances: 0,
   },
   _joinTeamLogic
 );
 
 export const leaveTeam = onCall(
   {
-    memory: '128MiB',
-    timeoutSeconds: 20,
+    memory: '256MiB',
+    timeoutSeconds: 15,
+    maxInstances: 1,
+    minInstances: 0,
   },
   _leaveTeamLogic
 );
 
 export const kickTeamMember = onCall(
   {
-    memory: '128MiB',
-    timeoutSeconds: 20,
+    memory: '256MiB',
+    timeoutSeconds: 15,
+    maxInstances: 1,
+    minInstances: 0,
   },
   _kickTeamMemberLogic
 );
@@ -657,42 +667,42 @@ export const kickTeamMember = onCall(
 // Account deletion callable function
 export const deleteUserAccount = onCall(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 30,
+    maxInstances: 1,
+    minInstances: 0,
   },
   async (request: CallableRequest) => {
-    // Verify authentication
+    // Require authentication and explicit confirmation text
     if (!request.auth?.uid) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
 
     const { confirmationText } = request.data || {};
-    
+
     if (confirmationText !== 'DELETE MY ACCOUNT') {
       throw new HttpsError('invalid-argument', 'Invalid confirmation text');
     }
 
-    // Enhanced security: require both confirmation text and email verification
-    // Remove recent auth requirement since we have strong confirmation text
     logger.info('Account deletion requested', {
       userId: request.auth.uid,
-      email: request.auth.token.email
+      email: request.auth.token.email,
     });
 
     try {
       // Use the service directly instead of going through HTTP handler
       const { UserDeletionService } = await import('./handlers/userDeletionHandler.js');
       const userDeletionService = new UserDeletionService();
-      
+
       const result = await userDeletionService.deleteUserAccount(request.auth.uid, {
-        confirmationText
+        confirmationText,
       });
 
       return result;
     } catch (error) {
       logger.error('Account deletion error:', error);
-      
-      // Handle ApiError types properly
+
+      // Map ApiError-like shapes to HttpsError
       if (error instanceof Error && 'statusCode' in error) {
         const apiError = error as Error & { statusCode: number };
         if (apiError.statusCode === 400) {
@@ -703,8 +713,11 @@ export const deleteUserAccount = onCall(
           throw new HttpsError('permission-denied', apiError.message);
         }
       }
-      
-      throw new HttpsError('internal', error instanceof Error ? error.message : 'Account deletion failed');
+
+      throw new HttpsError(
+        'internal',
+        error instanceof Error ? error.message : 'Account deletion failed'
+      );
     }
   }
 );
@@ -751,51 +764,57 @@ interface TarkovItem {
 interface TarkovDataResponse {
   items: TarkovItem[];
 }
-async function retrieveTarkovdata(): Promise<TarkovDataResponse | undefined> {
-  const query = gql`
-    {
-      items {
-        id
-        name
-        shortName
-        basePrice
-        updated
-        width
-        height
-        iconLink
-        wikiLink
-        imageLink
-        types
-        avg24hPrice
-        traderPrices {
-          price
-          trader {
-            name
-          }
-        }
-        buyFor {
-          price
-          currency
-          requirements {
-            type
-            value
-          }
-          source
-        }
-        sellFor {
-          price
-          currency
-          requirements {
-            type
-            value
-          }
-          source
+
+// Hoist GraphQL query to avoid per-call allocation
+const TARKOV_ITEMS_QUERY = gql`
+  {
+    items {
+      id
+      name
+      shortName
+      basePrice
+      updated
+      width
+      height
+      iconLink
+      wikiLink
+      imageLink
+      types
+      avg24hPrice
+      traderPrices {
+        price
+        trader {
+          name
         }
       }
+      buyFor {
+        price
+        currency
+        requirements {
+          type
+          value
+        }
+        source
+      }
+      sellFor {
+        price
+        currency
+        requirements {
+          type
+          value
+        }
+        source
+      }
     }
-  `;
+  }
+`;
+
+async function retrieveTarkovdata(): Promise<TarkovDataResponse | undefined> {
   try {
-    const data: TarkovDataResponse = await request('https://api.tarkov.dev/graphql', query);
+    const data: TarkovDataResponse = await request(
+      'https://api.tarkov.dev/graphql',
+      TARKOV_ITEMS_QUERY
+    );
     return data;
   } catch (e: unknown) {
     logger.error(
@@ -811,16 +830,22 @@ async function saveTarkovData(data: TarkovDataResponse | undefined) {
     return;
   }
   const db: Firestore = admin.firestore();
-  const batch: WriteBatch = db.batch();
   const itemsCollection = db.collection('items');
-  data.items.forEach((item: TarkovItem) => {
-    const docId = item.id.replace(/[/\\*?[\]]/g, '_');
-    const docRef = itemsCollection.doc(docId);
-    batch.set(docRef, item);
-  });
+  const MAX_WRITES_PER_BATCH = 500;
+  let totalWritten = 0;
   try {
-    await batch.commit();
-    logger.log(`Successfully saved ${data.items.length} items to Firestore.`);
+    for (let i = 0; i < data.items.length; i += MAX_WRITES_PER_BATCH) {
+      const slice = data.items.slice(i, i + MAX_WRITES_PER_BATCH);
+      const batch: WriteBatch = db.batch();
+      slice.forEach((item: TarkovItem) => {
+        const docId = item.id.replace(ITEM_ID_SANITIZER_REGEX, '_');
+        const docRef = itemsCollection.doc(docId);
+        batch.set(docRef, item);
+      });
+      await batch.commit();
+      totalWritten += slice.length;
+    }
+    logger.log(`Successfully saved ${totalWritten} items to Firestore.`);
   } catch (e: unknown) {
     logger.error(
       'Failed to save Tarkov data to Firestore:',
@@ -828,8 +853,16 @@ async function saveTarkovData(data: TarkovDataResponse | undefined) {
     );
   }
 }
-export const scheduledTarkovDataFetch = onSchedule('every day 00:00', async () => {
-  logger.log('Running scheduled Tarkov data fetch...');
-  const data = await retrieveTarkovdata();
-  await saveTarkovData(data);
-});
+// Nightly data sync from Tarkov API -> Firestore
+export const scheduledTarkovDataFetch = onSchedule(
+  {
+    schedule: 'every day 00:00',
+    timeZone: 'UTC',
+    memory: '256MiB',
+  },
+  async () => {
+    logger.log('Running scheduled Tarkov data fetch...');
+    const data = await retrieveTarkovdata();
+    await saveTarkovData(data);
+  }
+);
