@@ -137,12 +137,7 @@ export async function _createTokenLogic(
   }
 }
 export const createToken = onCall({
-  cors: [
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'https://tarkovtracker.org',
-    'https://www.tarkovtracker.org'
-  ],
-  memory: '128MiB',
+  cors: true, // allow all origins; callable will handle credentials appropriately
+  memory: '256MiB',
   timeoutSeconds: 20,
 }, _createTokenLogic);

@@ -4,6 +4,9 @@ import { ProgressService } from '../services/ProgressService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
+// Reuse a single service instance across requests
+const progressService = new ProgressService();
+
 // Enhanced request interface
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
@@ -59,8 +62,6 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const gameMode = req.query.gameMode as string || 'pvp';
-  const progressService = new ProgressService();
-  
   const progressData = await progressService.getUserProgress(userId, gameMode);
   
   const response: ApiResponse = {
@@ -129,7 +130,6 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
   const level = ValidationService.validateLevel(req.params.levelValue);
   const gameMode = req.query.gameMode as string || 'pvp';
   
-  const progressService = new ProgressService();
   await progressService.setPlayerLevel(userId, level, gameMode);
   
   const response: ApiResponse = {
@@ -216,7 +216,6 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
   const { state } = ValidationService.validateTaskUpdate(req.body);
   const gameMode = req.query.gameMode as string || 'pvp';
   
-  const progressService = new ProgressService();
   await progressService.updateSingleTask(userId, taskId, state, gameMode);
   
   const response: ApiResponse = {
@@ -294,7 +293,6 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
   const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
   const gameMode = req.query.gameMode as string || 'pvp';
   
-  const progressService = new ProgressService();
   await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
   
   const response: ApiResponse = {
@@ -389,7 +387,6 @@ export const updateTaskObjective = asyncHandler(async (req: AuthenticatedRequest
   const updateData = ValidationService.validateObjectiveUpdate(req.body);
   const gameMode = req.query.gameMode as string || 'pvp';
   
-  const progressService = new ProgressService();
   await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
   
   const response: ApiResponse = {

@@ -18,17 +18,26 @@ interface AuthenticatedRequest extends Request {
  */
 export const verifyBearer = asyncHandler(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
-    const tokenService = new TokenService();
-    
-    // Validate and get token data
-    const token = await tokenService.validateToken(req.headers.authorization);
-    
-    // Attach token data to request
-    req.apiToken = token;
-    req.user = {
-      id: token.owner,
-    };
-    
-    next();
+    // Allow CORS preflight without auth
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+    try {
+      const tokenService = new TokenService();
+
+      // Validate and get token data
+      const token = await tokenService.validateToken(req.headers.authorization);
+
+      // Attach token data to request
+      req.apiToken = token;
+      req.user = { id: token.owner };
+
+      next();
+    } catch (err) {
+      // Respond with precise auth errors instead of bubbling to 500
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      // Default to 401 for auth errors
+      res.status(401).json({ success: false, error: message });
+    }
   }
 );

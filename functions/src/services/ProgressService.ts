@@ -3,8 +3,6 @@ import { logger } from 'firebase-functions/v2';
 import { 
   Firestore, 
   DocumentReference, 
-  // DocumentSnapshot, // Unused
-  // Transaction, // Unused
   FieldValue 
 } from 'firebase-admin/firestore';
 import { 
@@ -15,7 +13,6 @@ import {
   ObjectiveUpdateRequest,
   ServiceOptions,
   TaskCompletion
-  // TaskObjective // Unused
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 import { formatProgress, updateTaskState } from '../progress/progressUtils.js';
