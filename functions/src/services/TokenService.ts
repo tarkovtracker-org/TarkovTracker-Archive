@@ -8,6 +8,7 @@ interface TokenDocument {
   owner: string;
   note: string;
   permissions: string[];
+  gameMode?: string;
   calls?: number;
   createdAt?: admin.firestore.Timestamp;
 }
@@ -49,6 +50,7 @@ export class TokenService {
 
       return {
         ...tokenData,
+        gameMode: tokenData.gameMode || 'pvp', // Default to PvP for legacy tokens
         token: tokenString,
       };
     } catch (error) {
@@ -87,26 +89,38 @@ export class TokenService {
   async createToken(
     owner: string, 
     note: string, 
-    permissions: string[]
+    permissions: string[],
+    gameMode: string = 'pvp'
   ): Promise<{ token: string; created: boolean }> {
-    // Generate secure token
     const tokenString = this.generateSecureToken();
     const tokenRef = this.db.collection('token').doc(tokenString) as DocumentReference<TokenDocument>;
+    const systemRef = this.db.collection('system').doc(owner);
 
     try {
       const tokenData: TokenDocument = {
         owner,
         note: note.trim(),
         permissions,
+        gameMode,
         calls: 0,
         createdAt: admin.firestore.Timestamp.now(),
       };
 
-      await tokenRef.set(tokenData);
+      // Use transaction to ensure both operations succeed or fail together
+      await this.db.runTransaction(async (transaction) => {
+        // Create the token document
+        transaction.set(tokenRef, tokenData);
+        
+        // Add token ID to user's system document tokens array (merge: true creates document if needed)
+        transaction.set(systemRef, {
+          tokens: admin.firestore.FieldValue.arrayUnion(tokenString)
+        }, { merge: true });
+      });
 
       logger.log('API token created successfully', {
         owner,
         permissions,
+        gameMode,
         note: note.substring(0, 50), // Log truncated note for privacy
       });
 
@@ -116,6 +130,7 @@ export class TokenService {
         error: error instanceof Error ? error.message : String(error),
         owner,
         permissions,
+        gameMode,
       });
       throw errors.internal('Failed to create token');
     }
@@ -178,6 +193,7 @@ export class TokenService {
           owner: data.owner,
           note: data.note,
           permissions: data.permissions,
+          gameMode: data.gameMode || 'pvp',
           calls: data.calls || 0,
           createdAt: data.createdAt,
         };

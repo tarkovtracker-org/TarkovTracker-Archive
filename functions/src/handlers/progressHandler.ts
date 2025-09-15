@@ -61,7 +61,7 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
   ValidationService.validatePermissions(req.apiToken, 'GP');
   
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const gameMode = req.query.gameMode as string || 'pvp';
+  const gameMode = req.apiToken?.gameMode || 'pvp'; // Use token's game mode
   const progressData = await progressService.getUserProgress(userId, gameMode);
   
   const response: ApiResponse = {

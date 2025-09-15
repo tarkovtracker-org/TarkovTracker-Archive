@@ -12,6 +12,7 @@ import {
 interface CreateTokenData {
   note: string;
   permissions: string[];
+  gameMode?: string;
 }
 interface SystemDocData {
   tokens?: string[];
@@ -20,6 +21,7 @@ interface TokenDocData {
   owner: string;
   note: string;
   permissions: string[];
+  gameMode?: string;
   createdAt: admin.firestore.Timestamp | admin.firestore.FieldValue;
 }
 // Core logic extracted into a separate, testable function
@@ -85,6 +87,7 @@ export async function _createTokenLogic(
         owner: ownerUid,
         note: request.data.note,
         permissions: request.data.permissions,
+        gameMode: request.data.gameMode || 'pvp',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       transaction.set(potentialTokenRef!, newTokenData);
