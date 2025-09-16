@@ -9,7 +9,7 @@ import {
   Transaction,
   CollectionReference,
 } from 'firebase-admin/firestore';
-import { TokenGameMode } from '../types/api';
+import { TokenGameMode } from '../types/api.js';
 interface CreateTokenData {
   note: string;
   permissions: string[];

@@ -94,7 +94,7 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
  *       - in: query
  *         name: gameMode
  *         required: false
- *         description: "Game mode to update level for (pvp or pve)"
+ *         description: "Game mode to update level for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
  *         schema:
  *           type: string
  *           enum: [pvp, pve]
@@ -125,10 +125,15 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
  */
 export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'WP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const level = ValidationService.validateLevel(req.params.levelValue);
-  const gameMode = req.query.gameMode as string || 'pvp';
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
   
   await progressService.setPlayerLevel(userId, level, gameMode);
   
@@ -163,7 +168,7 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
  *       - in: query
  *         name: gameMode
  *         required: false
- *         description: "Game mode to update task for (pvp or pve)"
+ *         description: "Game mode to update task for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
  *         schema:
  *           type: string
  *           enum: [pvp, pve]
@@ -210,11 +215,16 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
  */
 export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'WP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskId = ValidationService.validateTaskId(req.params.taskId);
   const { state } = ValidationService.validateTaskUpdate(req.body);
-  const gameMode = req.query.gameMode as string || 'pvp';
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
   
   await progressService.updateSingleTask(userId, taskId, state, gameMode);
   
@@ -243,7 +253,7 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
  *       - in: query
  *         name: gameMode
  *         required: false
- *         description: "Game mode to update tasks for (pvp or pve)"
+ *         description: "Game mode to update tasks for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
  *         schema:
  *           type: string
  *           enum: [pvp, pve]
@@ -288,10 +298,15 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
  */
 export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'WP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
-  const gameMode = req.query.gameMode as string || 'pvp';
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
   
   await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
   
@@ -326,7 +341,7 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
  *       - in: query
  *         name: gameMode
  *         required: false
- *         description: "Game mode to update objective for (pvp or pve)"
+ *         description: "Game mode to update objective for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
  *         schema:
  *           type: string
  *           enum: [pvp, pve]
@@ -381,11 +396,16 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
  */
 export const updateTaskObjective = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'WP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
   const updateData = ValidationService.validateObjectiveUpdate(req.body);
-  const gameMode = req.query.gameMode as string || 'pvp';
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
   
   await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
   

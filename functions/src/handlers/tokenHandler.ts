@@ -49,6 +49,9 @@ interface AuthenticatedRequest extends Request {
  *                     calls:
  *                       type: integer
  *                       description: "Number of API calls made with this token."
+ *                     gameMode:
+ *                       type: string
+ *                       description: "Token game mode (pvp, pve, or dual)."
  *       401:
  *         description: "Unauthorized. Invalid or missing token."
  *       500:
@@ -66,6 +69,7 @@ export const getTokenInfo = asyncHandler(
       owner: token.owner,
       note: token.note,
       calls: token.calls || 0,
+      gameMode: token.gameMode || 'pvp',
     };
 
     res.status(200).json(response);

@@ -24,6 +24,15 @@ interface AuthenticatedRequest extends Request {
  *       - "Team"
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to get team progress for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     responses:
  *       200:
  *         description: "Team progress retrieved successfully."
@@ -54,9 +63,16 @@ interface AuthenticatedRequest extends Request {
  */
 export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'TP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const result = await teamService.getTeamProgress(userId);
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
+
+  const result = await teamService.getTeamProgress(userId, gameMode);
   
   const response: ApiResponse = {
     success: true,

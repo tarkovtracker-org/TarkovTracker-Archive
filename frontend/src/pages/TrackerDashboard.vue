@@ -2,24 +2,20 @@
   <v-container class="mt-2 d-flex flex-column" style="min-height: calc(100vh - 250px)">
     <v-alert
       density="compact"
-      color="orange-darken-3"
-      title="Important Announcement"
-      class="mb-3 announcement-alert"
+      color="green-darken-3"
+      title="API Update Complete"
+      class="mb-3 api-update-alert"
       style="flex: 0 0 auto"
       closable
     >
       <div class="text-body-2">
         <div class="mb-1">
-          <strong>PvP and PvE modes have been added!</strong> However, this update likely caused
-          progress loss.
-        </div>
-        <div class="mb-1">
-          Please update your game mode data using the settings in the top right of the site to
-          restore your progress.
+          <strong>API has been reworked and should now function properly</strong> with full support for PvP and PvE game modes!
         </div>
         <div>
-          <strong>Note:</strong> Due to breaking API changes, Tarkov Monitor and Rat Scanner
-          integrations will not work until the API is fully tested and those projects are updated.
+          Please report any issues in our
+          <a href="https://discord.gg/zeAP4Ng" target="_blank" class="text-green-lighten-2">Discord</a> or on
+          <a href="https://github.com/tarkovtracker-org/TarkovTracker/issues" target="_blank" class="text-green-lighten-2">GitHub</a>.
         </div>
       </div>
     </v-alert>

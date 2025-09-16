@@ -302,7 +302,7 @@
             "in": "query",
             "name": "gameMode",
             "required": false,
-            "description": "Game mode to update level for (pvp or pve)",
+            "description": "Game mode to update level for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode.",
             "schema": {
               "type": "string",
               "enum": [
@@ -378,7 +378,7 @@
             "in": "query",
             "name": "gameMode",
             "required": false,
-            "description": "Game mode to update task for (pvp or pve)",
+            "description": "Game mode to update task for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode.",
             "schema": {
               "type": "string",
               "enum": [
@@ -472,7 +472,7 @@
             "in": "query",
             "name": "gameMode",
             "required": false,
-            "description": "Game mode to update tasks for (pvp or pve)",
+            "description": "Game mode to update tasks for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode.",
             "schema": {
               "type": "string",
               "enum": [
@@ -575,7 +575,7 @@
             "in": "query",
             "name": "gameMode",
             "required": false,
-            "description": "Game mode to update objective for (pvp or pve)",
+            "description": "Game mode to update objective for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode.",
             "schema": {
               "type": "string",
               "enum": [
@@ -670,6 +670,22 @@
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "gameMode",
+            "required": false,
+            "description": "Game mode to get team progress for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pvp",
+                "pve"
+              ],
+              "default": "pvp"
+            }
           }
         ],
         "responses": {
@@ -964,6 +980,10 @@
                         "calls": {
                           "type": "integer",
                           "description": "Number of API calls made with this token."
+                        },
+                        "gameMode": {
+                          "type": "string",
+                          "description": "Token game mode (pvp, pve, or dual)."
                         }
                       }
                     },

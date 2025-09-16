@@ -242,7 +242,7 @@ export class TeamService {
   /**
    * Get team progress for all members
    */
-  async getTeamProgress(userId: string): Promise<{
+  async getTeamProgress(userId: string, gameMode: string = 'pvp'): Promise<{
     data: FormattedProgress[];
     meta: { self: string; hiddenTeammates: string[] };
   }> {
@@ -292,7 +292,7 @@ export class TeamService {
             logger.warn(`Progress document not found for member ${memberId}`);
             return null;
           }
-          return formatProgress(doc.data(), memberId, hideoutData, taskData);
+          return formatProgress(doc.data(), memberId, hideoutData, taskData, gameMode);
         })
         .filter((progress): progress is FormattedProgress => progress !== null);
 
