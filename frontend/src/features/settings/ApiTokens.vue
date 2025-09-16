@@ -19,7 +19,7 @@
     </template>
     <v-row no-gutters>
       <v-col
-        v-for="(token, index) in userTokens"
+        v-for="token in userTokens"
         :key="token"
         cols="12"
         sm="12"
@@ -186,8 +186,7 @@
                 color="white"
                 size="small"
                 variant="outlined"
-                class="white--text"
-                style="color: white !important; border-color: white !important;"
+                class="selected-permission-chip"
               >
                 {{ availablePermissions[perm]?.title || perm }}
               </v-chip>
@@ -396,9 +395,14 @@
 </script>
 <style lang="scss" scoped>
   .permission-checkbox {
-    .v-label {
-      opacity: 1 !important;
+    :deep(.v-label) {
+      opacity: 1;
     }
+  }
+
+  .selected-permission-chip {
+    color: white;
+    border-color: white;
   }
 
   .gap-2 {
