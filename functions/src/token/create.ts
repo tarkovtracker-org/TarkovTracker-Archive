@@ -9,10 +9,11 @@ import {
   Transaction,
   CollectionReference,
 } from 'firebase-admin/firestore';
+import { TokenGameMode } from '../types/api';
 interface CreateTokenData {
   note: string;
   permissions: string[];
-  gameMode?: string;
+  gameMode?: TokenGameMode;
 }
 interface SystemDocData {
   tokens?: string[];
@@ -21,7 +22,7 @@ interface TokenDocData {
   owner: string;
   note: string;
   permissions: string[];
-  gameMode?: string;
+  gameMode?: TokenGameMode;
   createdAt: admin.firestore.Timestamp | admin.firestore.FieldValue;
 }
 // Core logic extracted into a separate, testable function
@@ -47,6 +48,16 @@ export async function _createTokenLogic(
     throw new HttpsError(
       'invalid-argument',
       'Invalid token parameters: note and permissions array are required.'
+    );
+  }
+
+  // Validate gameMode if provided
+  const validGameModes: TokenGameMode[] = ['pvp', 'pve', 'dual'];
+  if (request.data.gameMode && !validGameModes.includes(request.data.gameMode as TokenGameMode)) {
+    logger.warn('Invalid gameMode received.', { gameMode: request.data.gameMode });
+    throw new HttpsError(
+      'invalid-argument',
+      `Invalid gameMode: must be one of ${validGameModes.join(', ')}.`
     );
   }
   const systemRef: DocumentReference<SystemDocData> = db
@@ -87,7 +98,7 @@ export async function _createTokenLogic(
         owner: ownerUid,
         note: request.data.note,
         permissions: request.data.permissions,
-        gameMode: request.data.gameMode || 'pvp',
+        gameMode: (request.data.gameMode as TokenGameMode) || 'pvp',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       transaction.set(potentialTokenRef!, newTokenData);
