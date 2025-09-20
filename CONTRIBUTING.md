@@ -1,94 +1,74 @@
+# Contributing to TarkovTracker
 
-# Contributor Guidelines
+🎉 Thank you for your interest in improving TarkovTracker! This project survives because of contributions from the Escape From Tarkov community. Whether you are fixing a typo, building new features, or triaging issues, your help is appreciated.
 
-## Process
+The guidelines below explain how to participate effectively and respectfully. If anything is unclear, please open a discussion or reach out to the maintainers.
 
-If you have a suggestion, or request that you aren't able to contribute yourself to the project, please search for an existing issue, then create your own if there are no current issues related.
+---
 
-If you are contributing via a Pull Request, please verify that the commit is
-working locally by running the Firebase Emulator and visiting a local version of
-the project. When making your pull request, please wait for sign-off from a core
-contributor, once sign-off is complete, you may merge your pull request yourself.
-As this is a new project, there will be limited core contributors for some time,
-so please be patient with responses!
+## Before you start
+- **Familiarize yourself with the project** – Read the [README](README.md) and explore the application so you understand what exists today.
+- **Search first** – Look for existing issues, pull requests, or discussions that relate to your idea. Commenting on an active thread helps consolidate effort.
+- **Talk to us** – For substantial changes (e.g., major refactors, architectural changes), start a [GitHub Discussion](https://github.com/TarkovTracker/tarkovtracker/discussions), chat in the [TarkovTracker Discord](https://discord.gg/zeAP4Ng), or open an issue to align with the maintainers before investing significant time.
+- **Be kind** – Participation in this community is covered by our [Code of Conduct](CODE_OF_CONDUCT.md). If you observe unacceptable behavior, email [report@tarkovtracker.org](mailto:report@tarkovtracker.org).
 
-Finally, as TarkovTracker has a production instance with personal accounts, all
-changes to the database, functions, or auth will need to be reviewed by Thaddeus
-to ensure privacy and security concerns are kept in mind. Most changes should
-not involve these things directly, so don't feel like that's a blocker for most
-contributions.
+## Ways to contribute
+- **Report bugs** – Provide detailed reproduction steps, screenshots, and environment info when filing issues.
+- **Improve documentation** – Clarify instructions, add examples, or document features in markdown or inline code comments.
+- **Suggest enhancements** – Describe the problem you are trying to solve and why the current experience falls short.
+- **Fix issues** – Pick up `good first issue` and `help wanted` tasks or propose your own fixes via pull requests.
+- **Test and review** – Help validate pull requests by testing branches locally or sharing feedback.
 
-## Our Pledge
+## Development workflow
+1. **Fork & clone** the repository (or create a feature branch if you have write access).
+2. **Install dependencies** by running `npm install` in the repository root. This bootstraps both the `frontend` and `functions` workspaces.
+3. **Run the local environment** with `npm run dev`. Refer to the [Getting started](README.md#getting-started) section for details and prerequisites.
+4. **Make your changes** in small, logically grouped commits. Keep unrelated changes in separate pull requests.
+5. **Write or update tests/docs** when applicable. Documentation updates are expected for user-facing changes.
+6. **Run quality checks** before submitting your pull request:
+   - `npm run lint`
+   - `npm run format` (if files need formatting)
+   - `npm run build`
+7. **Open a pull request** targeting the `main` branch and fill in the template completely. Reference related issues with `Fixes #<issue-number>` when appropriate.
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to make participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, sex characteristics, gender identity and expression,
-level of experience, education, socio-economic status, nationality, personal
-appearance, race, religion, or sexual identity and orientation.
+> **Note:** Changes that affect production data models, Firebase rules, or infrastructure must be reviewed by a core maintainer before merging. Coordinate in advance if you anticipate schema migrations or configuration changes.
 
-## Our Standards
+## Pull request checklist
+- [ ] Tests, linters, and builds pass locally.
+- [ ] Documentation or comments updated to reflect the change.
+- [ ] Added screenshots or recordings for UI-affecting changes when possible.
+- [ ] Linked relevant issues and provided a clear summary of the change.
+- [ ] Requested review from a maintainer (`@TarkovTracker/maintainers` on GitHub) once the PR is ready.
 
-Examples of behavior that contributes to creating a positive environment
-include:
+Maintainers will review submissions for correctness, accessibility, performance, and adherence to the project style. Expect constructive feedback and iterate as needed. Merge is performed by a maintainer after approval.
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+## Coding standards
+- **Language & stack** – TypeScript is preferred across both the Vue frontend and Firebase functions. Avoid introducing plain JavaScript unless necessary.
+- **Formatting** – Prettier is configured through `npm run format`. Do not reformat unrelated files.
+- **Linting** – Follow ESLint rules enforced via `npm run lint`. Address warnings unless explicitly waived by maintainers.
+- **Testing** – Add or update automated tests once they are available. Until then, include manual testing steps in the PR description.
+- **Dependencies** – Introduce new dependencies sparingly. Justify additions in the pull request and ensure licenses are compatible with GPLv3.
 
-Examples of unacceptable behavior by participants include:
+## Commit conventions
+- Use clear, present-tense commit messages (e.g., `Add hideout fuel timer component`).
+- Limit the first line to ~72 characters and include additional details in the body if necessary.
+- Reference issues in commit bodies when helpful but reserve `Fixes #123` for pull requests.
+- Avoid force-pushing to shared branches during review; instead, add follow-up commits and squash on merge if needed.
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
-  advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
-  address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+## Issue reporting guidelines
+- Include the TarkovTracker version (or commit SHA) and environment (OS, browser, device).
+- Detail the expected vs. actual behavior.
+- Attach logs or console output when relevant.
+- Use descriptive titles so future contributors can find related work easily.
 
-## Our Responsibilities
+## Documentation contributions
+- Place large guides or references in the [`docs/`](docs/) directory.
+- Keep the top-level `README.md` focused on quick discovery and link to deeper documentation where appropriate.
+- When adding diagrams or screenshots, include accessible text alternatives.
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+## Getting help
+- Ask implementation questions in [Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) under the `Q&A` category or in the development channels on the [TarkovTracker Discord](https://discord.gg/zeAP4Ng).
+- For sensitive or security-related topics, email [support@tarkovtracker.org](mailto:support@tarkovtracker.org) or [security@tarkovtracker.org](mailto:security@tarkovtracker.org).
+- Join playtesting or community events announced via Discussions to collaborate synchronously.
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
-
-## Scope
-
-This Code of Conduct applies within all project spaces, and it also applies when
-an individual is representing the project or its community in public spaces.
-Examples of representing a project or community include using an official
-project e-mail address, posting via an official social media account, or acting
-as an appointed representative at an online or offline event. Representation of
-a project may be further defined and clarified by project maintainers.
-
-## Enforcement
-
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project (Fork) maintainer via [report@TarkovTracker.org](mailto:report@TarkovTracker.org). All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
-
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
-
-## Attribution
-
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at <https://www.contributor-covenant.org/version/1/4/code-of-conduct.html>
-
-[homepage]: https://www.contributor-covenant.org
-
-For answers to common questions about this code of conduct, see
-<https://www.contributor-covenant.org/faq>
+We are grateful for every contribution—thank you for helping TarkovTracker grow! 🙌
