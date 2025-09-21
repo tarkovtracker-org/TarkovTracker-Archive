@@ -136,26 +136,268 @@
                   <v-container class="ma-0 pa-0">
                     <v-row dense>
                       <v-col cols="12">
+                        <p class="task-settings__section">
+                          {{ $t('page.tasks.filters.filter_section') }}
+                        </p>
                         <v-switch
-                          v-model="hideGlobalTasks"
-                          :label="$t(hideGlobalTasksLabel)"
+                          v-model="showGlobalTasks"
                           inset
-                          true-icon="mdi-eye-off"
-                          false-icon="mdi-eye"
-                          :color="hideGlobalTasksColor"
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
                           hide-details
                           density="compact"
-                        ></v-switch>
+                          :class="taskSwitchClasses(showGlobalTasks)"
+                          :color="switchColor(showGlobalTasks)"
+                          :base-color="switchColor(showGlobalTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(globalTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.tooltips.show_global_tasks') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
                         <v-switch
-                          v-model="hideNonKappaTasks"
-                          :label="$t(hideNonKappaTasksLabel)"
+                          v-model="showNonEndgameTasks"
                           inset
-                          true-icon="mdi-eye-off"
-                          false-icon="mdi-eye"
-                          :color="hideNonKappaTasksColor"
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
                           hide-details
                           density="compact"
-                        ></v-switch>
+                          :class="taskSwitchClasses(showNonEndgameTasks)"
+                          :color="switchColor(showNonEndgameTasks)"
+                          :base-color="switchColor(showNonEndgameTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(nonKappaTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.tooltips.show_non_endgame_tasks') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showKappaRequiredTasks"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showKappaRequiredTasks)"
+                          :color="switchColor(showKappaRequiredTasks)"
+                          :base-color="switchColor(showKappaRequiredTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(kappaRequiredTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.tooltips.show_kappa_required_tasks') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showLightkeeperRequiredTasks"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showLightkeeperRequiredTasks)"
+                          :color="switchColor(showLightkeeperRequiredTasks)"
+                          :base-color="switchColor(showLightkeeperRequiredTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(lightkeeperRequiredTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{
+                                  $t('page.tasks.filters.tooltips.show_lightkeeper_required_tasks')
+                                }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <p class="task-settings__section">
+                          {{ $t('page.tasks.filters.appearance_section') }}
+                        </p>
+                        <v-switch
+                          v-model="showRequiredRequirementLabels"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showRequiredRequirementLabels)"
+                          :color="switchColor(showRequiredRequirementLabels)"
+                          :base-color="switchColor(showRequiredRequirementLabels)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(requiredRequirementLabelsLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{
+                                  $t('page.tasks.filters.required_requirement_labels_tooltip')
+                                }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showOptionalRequirementLabels"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showOptionalRequirementLabels)"
+                          :color="switchColor(showOptionalRequirementLabels)"
+                          :base-color="switchColor(showOptionalRequirementLabels)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(optionalRequirementLabelsLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{
+                                  $t('page.tasks.filters.optional_requirement_labels_tooltip')
+                                }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showExperienceRewards"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showExperienceRewards)"
+                          :color="switchColor(showExperienceRewards)"
+                          :base-color="switchColor(showExperienceRewards)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(experienceRewardsLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.experience_rewards_tooltip') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showTaskIds"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showTaskIds)"
+                          :color="switchColor(showTaskIds)"
+                          :base-color="switchColor(showTaskIds)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(taskIdsLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.task_ids_tooltip') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showNextTasks"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showNextTasks)"
+                          :color="switchColor(showNextTasks)"
+                          :base-color="switchColor(showNextTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(nextTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.next_tasks_tooltip') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-model="showPreviousTasks"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showPreviousTasks)"
+                          :color="switchColor(showPreviousTasks)"
+                          :base-color="switchColor(showPreviousTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(previousTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t('page.tasks.filters.previous_tasks_tooltip') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
                       </v-col>
                     </v-row>
                     <v-row justify="end">
@@ -209,6 +451,8 @@
           :task="task"
           :active-user-view="activeUserView"
           :needed-by="task.neededBy || []"
+          :show-next-tasks="showNextTasks"
+          :show-previous-tasks="showPreviousTasks"
           class="my-1"
         />
       </v-col>
@@ -302,22 +546,99 @@
     get: () => userStore.getHideGlobalTasks,
     set: (value) => userStore.setHideGlobalTasks(value),
   });
+  const showGlobalTasks = computed({
+    get: () => !hideGlobalTasks.value,
+    set: (value) => {
+      hideGlobalTasks.value = !value;
+    },
+  });
   const hideNonKappaTasks = computed({
     get: () => userStore.getHideNonKappaTasks,
     set: (value) => userStore.setHideNonKappaTasks(value),
   });
-  const hideGlobalTasksLabel = computed(() =>
-    hideGlobalTasks.value
-      ? 'page.tasks.filters.hide_global_tasks'
-      : 'page.tasks.filters.show_global_tasks'
+  const showNonEndgameTasks = computed({
+    get: () => !hideNonKappaTasks.value,
+    set: (value) => {
+      hideNonKappaTasks.value = !value;
+    },
+  });
+  const hideKappaRequiredTasks = computed({
+    get: () => userStore.getHideKappaRequiredTasks,
+    set: (value) => userStore.setHideKappaRequiredTasks(value),
+  });
+  const hideLightkeeperRequiredTasks = computed({
+    get: () => userStore.getHideLightkeeperRequiredTasks,
+    set: (value) => userStore.setHideLightkeeperRequiredTasks(value),
+  });
+  const showKappaRequiredTasks = computed({
+    get: () => !hideKappaRequiredTasks.value,
+    set: (value) => {
+      hideKappaRequiredTasks.value = !value;
+    },
+  });
+  const showLightkeeperRequiredTasks = computed({
+    get: () => !hideLightkeeperRequiredTasks.value,
+    set: (value) => {
+      hideLightkeeperRequiredTasks.value = !value;
+    },
+  });
+  const showOptionalRequirementLabels = computed({
+    get: () => userStore.getShowOptionalTaskRequirementLabels,
+    set: (value) => userStore.setShowOptionalTaskRequirementLabels(value),
+  });
+  const showRequiredRequirementLabels = computed({
+    get: () => userStore.getShowRequiredTaskRequirementLabels,
+    set: (value) => userStore.setShowRequiredTaskRequirementLabels(value),
+  });
+  const showExperienceRewards = computed({
+    get: () => userStore.getShowExperienceRewards,
+    set: (value) => userStore.setShowExperienceRewards(value),
+  });
+  const showNextTasks = computed({
+    get: () => userStore.getShowNextTasks,
+    set: (value) => userStore.setShowNextTasks(value),
+  });
+  const showPreviousTasks = computed({
+    get: () => userStore.getShowPreviousTasks,
+    set: (value) => userStore.setShowPreviousTasks(value),
+  });
+  const showTaskIds = computed({
+    get: () => userStore.getShowTaskIds,
+    set: (value) => userStore.setShowTaskIds(value),
+  });
+  const globalTasksLabel = computed(
+    () => 'page.tasks.filters.show_global_tasks'
   );
-  const hideNonKappaTasksLabel = computed(() =>
-    hideNonKappaTasks.value
-      ? 'page.tasks.filters.hide_non_kappa_tasks'
-      : 'page.tasks.filters.show_non_kappa_tasks'
+  const nonKappaTasksLabel = computed(
+    () => 'page.tasks.filters.show_non_endgame_tasks'
   );
-  const hideGlobalTasksColor = computed(() => (hideGlobalTasks.value ? 'error' : 'success'));
-  const hideNonKappaTasksColor = computed(() => (hideNonKappaTasks.value ? 'error' : 'success'));
+  const kappaRequiredTasksLabel = computed(
+    () => 'page.tasks.filters.show_kappa_required_tasks'
+  );
+  const lightkeeperRequiredTasksLabel = computed(
+    () => 'page.tasks.filters.show_lightkeeper_required_tasks'
+  );
+  const optionalRequirementLabelsLabel = computed(
+    () => 'page.tasks.filters.show_optional_requirement_labels'
+  );
+  const requiredRequirementLabelsLabel = computed(
+    () => 'page.tasks.filters.show_required_requirement_labels'
+  );
+  const experienceRewardsLabel = computed(
+    () => 'page.tasks.filters.show_experience_rewards'
+  );
+  const nextTasksLabel = computed(() => 'page.tasks.filters.show_next_tasks');
+  const previousTasksLabel = computed(() => 'page.tasks.filters.show_previous_tasks');
+  const taskIdsLabel = computed(() => 'page.tasks.filters.show_task_ids');
+  const switchColor = (value) => (value ? 'success' : 'grey-darken-2');
+
+  const taskSwitchClasses = (isActive) => [
+    'task-filter-switch',
+    {
+      'task-filter-switch--active': Boolean(isActive),
+      'task-filter-switch--inactive': !isActive,
+    },
+  ];
   const activeUserView = computed({
     get: () => userStore.getTaskUserView,
     set: (value) => userStore.setTaskUserView(value),
@@ -529,7 +850,14 @@
       for (const task of tasks.value) {
         if (disabledTasks.includes(task.id)) continue;
         if (hideGlobalTasks.value && !task.map) continue;
-        if (hideNonKappaTasks?.value && task.kappaRequired !== true) continue;
+        if (hideKappaRequiredTasks?.value && task.kappaRequired === true) continue;
+        if (hideLightkeeperRequiredTasks?.value && task.lightkeeperRequired === true) continue;
+        if (
+          hideNonKappaTasks?.value &&
+          task.kappaRequired !== true &&
+          task.lightkeeperRequired !== true
+        )
+          continue;
         let taskLocations = Array.isArray(task.locations) ? task.locations : [];
         if (taskLocations.length === 0 && Array.isArray(task.objectives)) {
           for (const obj of task.objectives) {
@@ -716,8 +1044,15 @@
         // Check disabled tasks
         if (disabledTasks.includes(task.id)) return false;
         
-        // Check Kappa filter
-        if (hideNonKappaTasks?.value && task.kappaRequired !== true) return false;
+        // Check endgame filters
+        if (hideKappaRequiredTasks?.value && task.kappaRequired === true) return false;
+        if (hideLightkeeperRequiredTasks?.value && task.lightkeeperRequired === true) return false;
+        if (
+          hideNonKappaTasks?.value &&
+          task.kappaRequired !== true &&
+          task.lightkeeperRequired !== true
+        )
+          return false;
         
         return true;
       });
@@ -760,6 +1095,8 @@
       activeUserView,
       hideGlobalTasks,
       hideNonKappaTasks,
+      hideKappaRequiredTasks,
+      hideLightkeeperRequiredTasks,
       () => tarkovStore.playerLevel,
     ],
     async () => {
@@ -791,4 +1128,50 @@
     });
   });
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .task-filter-switch {
+    display: flex;
+    align-items: center;
+  }
+
+  .task-settings__section {
+    margin: 12px 0 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(var(--v-theme-on-surface), 0.7);
+  }
+
+  .task-filter-switch :deep(.v-selection-control__wrapper) {
+    margin-right: 12px;
+  }
+
+  .task-filter-switch :deep(.v-selection-control) {
+    width: 100%;
+  }
+
+  .task-filter-switch__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .task-filter-switch--active :deep(.v-switch__track) {
+    background-color: rgba(var(--v-theme-success), 0.35) !important;
+  }
+
+  .task-filter-switch--active :deep(.v-switch__thumb) {
+    background-color: rgb(var(--v-theme-success)) !important;
+    color: rgb(var(--v-theme-on-success));
+  }
+
+  .task-filter-switch--inactive :deep(.v-switch__track) {
+    background-color: rgba(var(--v-theme-error), 0.3) !important;
+  }
+
+  .task-filter-switch--inactive :deep(.v-switch__thumb) {
+    background-color: rgb(var(--v-theme-error)) !important;
+    color: rgb(var(--v-theme-on-error));
+  }
+</style>

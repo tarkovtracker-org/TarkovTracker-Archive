@@ -14,9 +14,17 @@
             :locked-before="lockedBefore"
             :locked-behind="lockedBehind"
             :faction-image="factionImage"
-            :non-kappa="nonKappa"
+            :show-kappa-status="showKappaStatus"
+            :kappa-required="kappaRequired"
+            :show-lightkeeper-status="showLightkeeperStatus"
+            :lightkeeper-required="lightkeeperRequired"
             :needed-by="neededBy"
             :active-user-view="activeUserView"
+            :show-next-tasks="showNextTasksSetting"
+            :next-tasks="nextTasks"
+            :show-previous-tasks="showPreviousTasksSetting"
+            :previous-tasks="previousTasks"
+            :show-task-ids="showTaskIds"
           />
         </v-col>
 
@@ -41,6 +49,8 @@
             :is-complete="isComplete"
             :is-locked="isLocked"
             :is-our-faction="isOurFaction"
+            :show-experience="showExperienceRewards"
+            :experience="task.experience || 0"
             @complete="markTaskComplete"
             @uncomplete="markTaskUncomplete"
             @unlock="markTaskAvailable"
@@ -79,6 +89,8 @@
     task: { type: Object, required: true },
     activeUserView: { type: String, required: true },
     neededBy: { type: Array, default: () => [] },
+    showNextTasks: { type: Boolean, default: false },
+    showPreviousTasks: { type: Boolean, default: false },
   });
 
   const { t } = useI18n({ useScope: 'global' });
@@ -123,7 +135,81 @@
   const lockedBefore = computed(
     () => props.task.predecessors?.filter((s) => !tarkovStore.isTaskComplete(s.id)).length || 0
   );
-  const nonKappa = computed(() => !props.task.kappaRequired);
+  const showOptionalRequirementLabels = computed(
+    () => userStore.getShowOptionalTaskRequirementLabels
+  );
+  const showRequiredRequirementLabels = computed(
+    () => userStore.getShowRequiredTaskRequirementLabels
+  );
+  const showExperienceRewards = computed(() => userStore.getShowExperienceRewards);
+  const showNextTasksSetting = computed(() => props.showNextTasks === true);
+  const nextTasks = computed(() => {
+    if (!showNextTasksSetting.value) return [];
+    const successors = props.task.children || [];
+    if (!Array.isArray(successors) || !successors.length) return [];
+    const allTasks = tasks.value || [];
+    return successors
+      .map((id) => allTasks.find((t) => t.id === id))
+      .filter((taskItem) => Boolean(taskItem && taskItem.name))
+      .map((taskItem) => ({
+        id: taskItem.id,
+        name: taskItem.name,
+        wikiLink: taskItem.wikiLink,
+      }));
+  });
+  const showTaskIds = computed(() => userStore.getShowTaskIds);
+  const showPreviousTasksSetting = computed(() => props.showPreviousTasks === true);
+  const previousTasks = computed(() => {
+    if (!showPreviousTasksSetting.value) return [];
+    const requirements = props.task.taskRequirements || [];
+    const allTasks = tasks.value || [];
+
+    const relevantRequirementIds = requirements
+      .filter((requirement) => {
+        const reqTaskId = requirement?.task?.id;
+        if (!reqTaskId) return false;
+        const statuses = requirement.status || [];
+        if (!statuses.length) return true;
+        return statuses.some((status) => {
+          const normalized = status?.toLowerCase();
+          if (!normalized) return false;
+          if (normalized.includes('accept')) return false;
+          return normalized.includes('complete') || normalized.includes('finish');
+        });
+      })
+      .map((requirement) => requirement.task.id);
+
+    if (!relevantRequirementIds.length) return [];
+
+    return relevantRequirementIds
+      .map((id) => allTasks.find((t) => t.id === id))
+      .filter((taskItem) => Boolean(taskItem && taskItem.name))
+      .map((taskItem) => ({
+        id: taskItem.id,
+        name: taskItem.name,
+        wikiLink: taskItem.wikiLink,
+      }));
+  });
+  const showKappaStatus = computed(() => {
+    if (props.task.kappaRequired === true) {
+      return showRequiredRequirementLabels.value;
+    }
+    if (props.task.kappaRequired === false) {
+      return showOptionalRequirementLabels.value;
+    }
+    return false;
+  });
+  const kappaRequired = computed(() => props.task.kappaRequired === true);
+  const showLightkeeperStatus = computed(() => {
+    if (props.task.lightkeeperRequired === true) {
+      return showRequiredRequirementLabels.value;
+    }
+    if (props.task.lightkeeperRequired === false) {
+      return showOptionalRequirementLabels.value;
+    }
+    return false;
+  });
+  const lightkeeperRequired = computed(() => props.task.lightkeeperRequired === true);
   const factionImage = computed(() => `/img/factions/${props.task.factionName}.webp`);
 
   const mapObjectiveTypes = [
