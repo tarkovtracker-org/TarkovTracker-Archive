@@ -61,18 +61,28 @@
         show_non_kappa_tasks: 'Afficher les quêtes sans exigence Lightkeeper ou Kappa',
         hide_non_endgame_tasks: 'Masquer les quêtes sans exigence Lightkeeper ou Kappa',
         show_non_endgame_tasks: 'Afficher les quêtes sans exigence Lightkeeper ou Kappa',
+        hide_non_endgame_tasks_eod:
+          'Masquer les quêtes sans exigence Lightkeeper, Kappa ou EOD',
+        show_non_endgame_tasks_eod:
+          'Afficher les quêtes sans exigence Lightkeeper, Kappa ou EOD',
         show_kappa_required_tasks: 'Afficher les quêtes "Requiert Kappa"',
         hide_kappa_required_tasks: 'Masquer les quêtes "Requiert Kappa"',
         show_lightkeeper_required_tasks: 'Afficher les quêtes "Requiert Lightkeeper"',
         hide_lightkeeper_required_tasks: 'Masquer les quêtes "Requiert Lightkeeper"',
+        show_eod_only_tasks: 'Afficher les quêtes exclusives EOD',
+        hide_eod_only_tasks: 'Masquer les quêtes exclusives EOD',
         tooltips: {
           show_global_tasks: 'Conserve les quêtes globales visibles dans la vue carte.',
           show_non_endgame_tasks:
             'Affiche les quêtes qui ne demandent ni Kappa ni Lightkeeper.',
+          show_non_endgame_tasks_eod:
+            'Affiche les quêtes qui ne demandent ni Kappa, ni Lightkeeper, ni EOD.',
           show_kappa_required_tasks:
             'Affiche les quêtes nécessaires pour obtenir le conteneur Kappa.',
           show_lightkeeper_required_tasks:
             'Affiche les quêtes nécessaires pour accéder au Lightkeeper.',
+          show_eod_only_tasks:
+            'Affiche les quêtes exclusives à l’édition Edge of Darkness.',
         },
         filter_section: 'Filtres de quêtes',
         appearance_section: 'Apparence',
@@ -136,6 +146,7 @@
         objectiveshidden: '{count} objectifs non présent sur la carte ({uncompleted} non terminés)',
         alternatives: 'Quêtes alternatives',
         alternativefailed: 'Les quêtes alternatives seront également réniitialisées',
+        eodonly: 'Réservé EOD',
         differentfaction: "Cette quête n'est pas disponible pour votre faction",
       },
     },

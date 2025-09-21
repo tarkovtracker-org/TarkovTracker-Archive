@@ -58,18 +58,28 @@
         show_non_kappa_tasks: 'Mostrar misiones sin requisito de Lightkeeper o Kappa',
         hide_non_endgame_tasks: 'Ocultar misiones sin requisito de Lightkeeper o Kappa',
         show_non_endgame_tasks: 'Mostrar misiones sin requisito de Lightkeeper o Kappa',
+        hide_non_endgame_tasks_eod:
+          'Ocultar misiones sin requisito de Lightkeeper, Kappa o EOD',
+        show_non_endgame_tasks_eod:
+          'Mostrar misiones sin requisito de Lightkeeper, Kappa o EOD',
         show_kappa_required_tasks: 'Mostrar misiones "Requiere Kappa"',
         hide_kappa_required_tasks: 'Ocultar misiones "Requiere Kappa"',
         show_lightkeeper_required_tasks: 'Mostrar misiones "Requiere Lightkeeper"',
         hide_lightkeeper_required_tasks: 'Ocultar misiones "Requiere Lightkeeper"',
+        show_eod_only_tasks: 'Mostrar misiones solo EOD',
+        hide_eod_only_tasks: 'Ocultar misiones solo EOD',
         tooltips: {
           show_global_tasks: 'Mantén visibles las misiones globales al filtrar por mapa.',
           show_non_endgame_tasks:
             'Muestra las misiones que no requieren Kappa ni Lightkeeper.',
+          show_non_endgame_tasks_eod:
+            'Muestra las misiones que no requieren Kappa, Lightkeeper ni EOD.',
           show_kappa_required_tasks:
             'Incluye las misiones necesarias para obtener el contenedor Kappa.',
           show_lightkeeper_required_tasks:
             'Incluye las misiones necesarias para acceder al Lightkeeper.',
+          show_eod_only_tasks:
+            'Muestra las misiones exclusivas de la edición Edge of Darkness.',
         },
         filter_section: 'Filtros de misiones',
         appearance_section: 'Apariencia',
@@ -131,6 +141,7 @@
         objectiveshidden: '{count} objetivos no están en este mapa ({uncompleted} sin completar)',
         alternatives: 'Misiones alternativas',
         alternativefailed: 'Las misiones alternativas también se reiniciarán',
+        eodonly: 'Solo EOD',
       },
     },
     hideout: {

@@ -25,6 +25,7 @@ interface UserState {
   hideNonKappaTasks: boolean;
   hideKappaRequiredTasks: boolean;
   hideLightkeeperRequiredTasks: boolean;
+  hideEodOnlyTasks: boolean;
   showOptionalTaskRequirementLabels: boolean;
   showRequiredTaskRequirementLabels: boolean;
   showExperienceRewards: boolean;
@@ -39,6 +40,7 @@ interface UserState {
     hideNonKappaTasks: boolean;
     hideKappaRequiredTasks: boolean;
     hideLightkeeperRequiredTasks: boolean;
+    hideEodOnlyTasks: boolean;
     itemsNeededHideNonFIR: boolean;
     showExperienceRewards: boolean;
     showNextTasks: boolean;
@@ -68,6 +70,7 @@ export const defaultState: UserState = {
   hideNonKappaTasks: false,
   hideKappaRequiredTasks: false,
   hideLightkeeperRequiredTasks: false,
+  hideEodOnlyTasks: false,
   showOptionalTaskRequirementLabels: true,
   showRequiredTaskRequirementLabels: true,
   showExperienceRewards: true,
@@ -82,6 +85,7 @@ export const defaultState: UserState = {
     hideNonKappaTasks: false,
     hideKappaRequiredTasks: false,
     hideLightkeeperRequiredTasks: false,
+    hideEodOnlyTasks: false,
     itemsNeededHideNonFIR: false,
     showExperienceRewards: false,
     showNextTasks: false,
@@ -96,6 +100,7 @@ const initialSavingState = {
   hideNonKappaTasks: false,
   hideKappaRequiredTasks: false,
   hideLightkeeperRequiredTasks: false,
+  hideEodOnlyTasks: false,
   itemsNeededHideNonFIR: false,
   showExperienceRewards: false,
   showNextTasks: false,
@@ -157,6 +162,7 @@ type UserActions = {
   setHideNonKappaTasks(hide: boolean): void;
   setHideKappaRequiredTasks(hide: boolean): void;
   setHideLightkeeperRequiredTasks(hide: boolean): void;
+  setHideEodOnlyTasks(hide: boolean): void;
   setShowOptionalTaskRequirementLabels(show: boolean): void;
   setShowRequiredTaskRequirementLabels(show: boolean): void;
   setShowExperienceRewards(show: boolean): void;
@@ -243,6 +249,9 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
     getHideLightkeeperRequiredTasks: (state) => {
       return state.hideLightkeeperRequiredTasks ?? false;
+    },
+    getHideEodOnlyTasks: (state) => {
+      return state.hideEodOnlyTasks ?? false;
     },
     getShowOptionalTaskRequirementLabels: (state) => {
       return state.showOptionalTaskRequirementLabels ?? true;
@@ -357,6 +366,12 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
       persistUserState(this.$state);
       this.saving = this.saving ?? { ...initialSavingState };
       this.saving.hideLightkeeperRequiredTasks = true;
+    },
+    setHideEodOnlyTasks(hide: boolean) {
+      this.hideEodOnlyTasks = hide;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.hideEodOnlyTasks = true;
     },
     setShowOptionalTaskRequirementLabels(show: boolean) {
       this.showOptionalTaskRequirementLabels = show;

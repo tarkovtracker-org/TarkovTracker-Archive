@@ -59,7 +59,7 @@
         </InfoRow>
 
         <v-row
-          v-if="showKappaStatus || showLightkeeperStatus"
+          v-if="showKappaStatus || showLightkeeperStatus || showEodChip"
           no-gutters
           class="mb-1 requirement-chips"
         >
@@ -97,6 +97,11 @@
                     : 'page.tasks.questcard.nonlightkeeper'
                 )
               }}
+            </v-chip>
+          </v-col>
+          <v-col v-if="showEodChip" cols="auto">
+            <v-chip size="x-small" :class="['status-chip', 'status-chip--eod']">
+              {{ t('page.tasks.questcard.eodonly') }}
             </v-chip>
           </v-col>
         </v-row>
@@ -188,13 +193,14 @@
 </template>
 
 <script setup>
-  import { defineAsyncComponent } from 'vue';
+  import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useTarkovStore } from '@/stores/tarkov';
 
   const TaskLink = defineAsyncComponent(() => import('./TaskLink'));
   const InfoRow = defineAsyncComponent(() => import('./InfoRow'));
 
-  defineProps({
+  const props = defineProps({
     task: { type: Object, required: true },
     xs: { type: Boolean, required: true },
     lockedBefore: { type: Number, required: true },
@@ -211,9 +217,27 @@
     showPreviousTasks: { type: Boolean, default: false },
     previousTasks: { type: Array, default: () => [] },
     showTaskIds: { type: Boolean, default: false },
+    showEodStatus: { type: Boolean, default: false },
   });
 
   const { t } = useI18n({ useScope: 'global' });
+
+  const tarkovStore = useTarkovStore();
+
+  const EOD_EDITIONS = new Set([4, 6]);
+
+  const showEodChip = computed(() => {
+    if (!props.showEodStatus || !props.task?.eodOnly) {
+      return false;
+    }
+
+    if (typeof tarkovStore.getGameEdition !== 'function') {
+      return false;
+    }
+
+    const edition = tarkovStore.getGameEdition();
+    return EOD_EDITIONS.has(edition ?? 0);
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -282,6 +306,10 @@
 
   .status-chip--optional.status-chip--lightkeeper {
     background-color: #b8860b;
+  }
+
+  .status-chip--eod {
+    background-color: #6b2dbf;
   }
 
   .task-id-row {

@@ -118,6 +118,7 @@ export interface Task {
   id: string;
   tarkovDataId?: number;
   name?: string;
+  eodOnly?: boolean;
   kappaRequired?: boolean;
   lightkeeperRequired?: boolean;
   experience?: number;
