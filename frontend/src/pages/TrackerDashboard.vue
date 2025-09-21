@@ -1,6 +1,7 @@
 <template>
   <v-container class="mt-2 d-flex flex-column" style="min-height: calc(100vh - 250px)">
     <v-alert
+      v-model="showAnnouncementAlert"
       density="compact"
       color="green-darken-3"
       title="API Update Complete"
@@ -20,6 +21,7 @@
       </div>
     </v-alert>
     <v-alert
+      v-model="showProjectStatusAlert"
       density="compact"
       color="green-darken-4"
       title="Project Status"
@@ -130,6 +132,7 @@
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useProgressStore } from '@/stores/progress';
   import { useTarkovStore } from '@/stores/tarkov';
+  import { useUserStore } from '@/stores/user';
   import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n({ useScope: 'global' });
@@ -137,6 +140,23 @@
   const { tasks, objectives } = useTarkovData();
   const progressStore = useProgressStore();
   const tarkovStore = useTarkovStore();
+  const userStore = useUserStore();
+  const showAnnouncementAlert = computed({
+    get: () => userStore.showTip('dashboard-announcement'),
+    set: (value) => {
+      if (!value) {
+        userStore.hideTip('dashboard-announcement');
+      }
+    },
+  });
+  const showProjectStatusAlert = computed({
+    get: () => userStore.showTip('dashboard-project-status'),
+    set: (value) => {
+      if (!value) {
+        userStore.hideTip('dashboard-project-status');
+      }
+    },
+  });
   const neededItemTaskObjectives = computed(() => {
     if (!objectives || !objectives.value) {
       return [];

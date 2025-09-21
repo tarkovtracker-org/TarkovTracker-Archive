@@ -218,7 +218,21 @@
   };
 
   const handleTaskObjectives = (objectives, action) => {
-    objectives.forEach((o) => tarkovStore[action](o.id));
+    objectives.forEach((objective) => {
+      if (action === 'setTaskObjectiveComplete') {
+        if (objective?.type === 'shoot' && objective?.shotType === 'kill' && objective?.count) {
+          tarkovStore.setObjectiveCount(objective.id, objective.count);
+        }
+        tarkovStore.setTaskObjectiveComplete(objective.id);
+      } else if (action === 'setTaskObjectiveUncomplete') {
+        if (objective?.type === 'shoot' && objective?.shotType === 'kill' && objective?.count) {
+          tarkovStore.setObjectiveCount(objective.id, 0);
+        }
+        tarkovStore.setTaskObjectiveUncomplete(objective.id);
+      } else if (typeof tarkovStore[action] === 'function') {
+        tarkovStore[action](objective.id);
+      }
+    });
   };
 
   const handleAlternatives = (alternatives, taskAction, objectiveAction) => {
