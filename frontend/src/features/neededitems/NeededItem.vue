@@ -97,7 +97,17 @@
         }
       }
     }
-    if (userStore.hideNonKappaTasks && !relatedTask.value.kappaRequired) {
+    if (userStore.hideKappaRequiredTasks && relatedTask.value.kappaRequired === true) {
+      return false;
+    }
+    if (userStore.hideLightkeeperRequiredTasks && relatedTask.value.lightkeeperRequired === true) {
+      return false;
+    }
+    if (
+      userStore.hideNonKappaTasks &&
+      relatedTask.value.kappaRequired !== true &&
+      relatedTask.value.lightkeeperRequired !== true
+    ) {
       return false;
     }
     if (userStore.itemsTeamAllHidden) {

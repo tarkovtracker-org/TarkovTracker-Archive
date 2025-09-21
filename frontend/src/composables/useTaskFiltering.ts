@@ -167,6 +167,8 @@ export function useTaskFiltering() {
     disabledTasks: string[],
     hideGlobalTasks: boolean,
     hideNonKappaTasks: boolean,
+    hideKappaRequiredTasks: boolean,
+    hideLightkeeperRequiredTasks: boolean,
     activeUserView: string
   ) => {
     const mapTaskCounts: Record<string, number> = {};
@@ -179,7 +181,14 @@ export function useTaskFiltering() {
       for (const task of tasks) {
         if (disabledTasks.includes(task.id)) continue;
         if (hideGlobalTasks && !task.map) continue;
-        if (hideNonKappaTasks && task.kappaRequired !== true) continue;
+        if (hideKappaRequiredTasks && task.kappaRequired === true) continue;
+        if (hideLightkeeperRequiredTasks && task.lightkeeperRequired === true) continue;
+        if (
+          hideNonKappaTasks &&
+          task.kappaRequired !== true &&
+          task.lightkeeperRequired !== true
+        )
+          continue;
 
         const taskLocations = Array.isArray(task.locations) ? task.locations : [];
 

@@ -119,6 +119,7 @@ export interface Task {
   tarkovDataId?: number;
   name?: string;
   kappaRequired?: boolean;
+  lightkeeperRequired?: boolean;
   experience?: number;
   map?: { id: string; name?: string };
   locations?: string[];
