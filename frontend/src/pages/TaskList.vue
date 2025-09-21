@@ -184,7 +184,7 @@
                                     mdi-help-circle-outline
                                   </v-icon>
                                 </template>
-                                {{ $t('page.tasks.filters.tooltips.show_non_endgame_tasks') }}
+                                {{ $t(nonKappaTooltipKey) }}
                               </v-tooltip>
                             </span>
                           </template>
@@ -210,6 +210,32 @@
                                   </v-icon>
                                 </template>
                                 {{ $t('page.tasks.filters.tooltips.show_kappa_required_tasks') }}
+                              </v-tooltip>
+                            </span>
+                          </template>
+                        </v-switch>
+                        <v-switch
+                          v-if="isSelfEod"
+                          v-model="showEodOnlyTasks"
+                          inset
+                          true-icon="mdi-eye"
+                          false-icon="mdi-eye-off"
+                          hide-details
+                          density="compact"
+                          :class="taskSwitchClasses(showEodOnlyTasks)"
+                          :color="switchColor(showEodOnlyTasks)"
+                          :base-color="switchColor(showEodOnlyTasks)"
+                        >
+                          <template #label>
+                            <span class="task-filter-switch__label">
+                              {{ $t(eodTasksLabel) }}
+                              <v-tooltip location="top">
+                                <template #activator="{ props }">
+                                  <v-icon v-bind="props" size="small" class="ml-1">
+                                    mdi-help-circle-outline
+                                  </v-icon>
+                                </template>
+                                {{ $t(eodTasksTooltipKey) }}
                               </v-tooltip>
                             </span>
                           </template>
@@ -570,6 +596,10 @@
     get: () => userStore.getHideLightkeeperRequiredTasks,
     set: (value) => userStore.setHideLightkeeperRequiredTasks(value),
   });
+  const hideEodOnlyTasks = computed({
+    get: () => userStore.getHideEodOnlyTasks,
+    set: (value) => userStore.setHideEodOnlyTasks(value),
+  });
   const showKappaRequiredTasks = computed({
     get: () => !hideKappaRequiredTasks.value,
     set: (value) => {
@@ -580,6 +610,12 @@
     get: () => !hideLightkeeperRequiredTasks.value,
     set: (value) => {
       hideLightkeeperRequiredTasks.value = !value;
+    },
+  });
+  const showEodOnlyTasks = computed({
+    get: () => !hideEodOnlyTasks.value,
+    set: (value) => {
+      hideEodOnlyTasks.value = !value;
     },
   });
   const showOptionalRequirementLabels = computed({
@@ -606,30 +642,6 @@
     get: () => userStore.getShowTaskIds,
     set: (value) => userStore.setShowTaskIds(value),
   });
-  const globalTasksLabel = computed(
-    () => 'page.tasks.filters.show_global_tasks'
-  );
-  const nonKappaTasksLabel = computed(
-    () => 'page.tasks.filters.show_non_endgame_tasks'
-  );
-  const kappaRequiredTasksLabel = computed(
-    () => 'page.tasks.filters.show_kappa_required_tasks'
-  );
-  const lightkeeperRequiredTasksLabel = computed(
-    () => 'page.tasks.filters.show_lightkeeper_required_tasks'
-  );
-  const optionalRequirementLabelsLabel = computed(
-    () => 'page.tasks.filters.show_optional_requirement_labels'
-  );
-  const requiredRequirementLabelsLabel = computed(
-    () => 'page.tasks.filters.show_required_requirement_labels'
-  );
-  const experienceRewardsLabel = computed(
-    () => 'page.tasks.filters.show_experience_rewards'
-  );
-  const nextTasksLabel = computed(() => 'page.tasks.filters.show_next_tasks');
-  const previousTasksLabel = computed(() => 'page.tasks.filters.show_previous_tasks');
-  const taskIdsLabel = computed(() => 'page.tasks.filters.show_task_ids');
   const switchColor = (value) => (value ? 'success' : 'grey-darken-2');
 
   const taskSwitchClasses = (isActive) => [
@@ -680,6 +692,69 @@
   const traderAvatar = (id) => {
     const trader = traders.value.find((t) => t.id === id);
     return trader?.imageLink;
+  };
+
+  const EOD_EDITIONS = new Set([4, 6]);
+
+  const getSelfGameEdition = () =>
+    typeof tarkovStore.getGameEdition === 'function' ? tarkovStore.getGameEdition() : 0;
+
+  const isEditionEod = (edition) => EOD_EDITIONS.has(edition ?? 0);
+
+  const selfGameEdition = computed(() => getSelfGameEdition());
+  const isSelfEod = computed(() => isEditionEod(selfGameEdition.value));
+
+  const globalTasksLabel = computed(
+    () => 'page.tasks.filters.show_global_tasks'
+  );
+  const nonKappaTasksLabel = computed(() =>
+    isSelfEod.value
+      ? 'page.tasks.filters.show_non_endgame_tasks_eod'
+      : 'page.tasks.filters.show_non_endgame_tasks'
+  );
+  const nonKappaTooltipKey = computed(() =>
+    isSelfEod.value
+      ? 'page.tasks.filters.tooltips.show_non_endgame_tasks_eod'
+      : 'page.tasks.filters.tooltips.show_non_endgame_tasks'
+  );
+  const kappaRequiredTasksLabel = computed(
+    () => 'page.tasks.filters.show_kappa_required_tasks'
+  );
+  const lightkeeperRequiredTasksLabel = computed(
+    () => 'page.tasks.filters.show_lightkeeper_required_tasks'
+  );
+  const eodTasksLabel = computed(
+    () => 'page.tasks.filters.show_eod_only_tasks'
+  );
+  const eodTasksTooltipKey = computed(
+    () => 'page.tasks.filters.tooltips.show_eod_only_tasks'
+  );
+  const optionalRequirementLabelsLabel = computed(
+    () => 'page.tasks.filters.show_optional_requirement_labels'
+  );
+  const requiredRequirementLabelsLabel = computed(
+    () => 'page.tasks.filters.show_required_requirement_labels'
+  );
+  const experienceRewardsLabel = computed(
+    () => 'page.tasks.filters.show_experience_rewards'
+  );
+  const nextTasksLabel = computed(() => 'page.tasks.filters.show_next_tasks');
+  const previousTasksLabel = computed(() => 'page.tasks.filters.show_previous_tasks');
+  const taskIdsLabel = computed(() => 'page.tasks.filters.show_task_ids');
+
+  const getEditionForView = (viewId) => {
+    if (viewId === 'all') return null;
+    if (viewId === 'self') {
+      return getSelfGameEdition();
+    }
+
+    const teamStores = progressStore.visibleTeamStores || {};
+    const teamStore = teamStores[viewId];
+    if (teamStore && teamStore.$state) {
+      return teamStore.$state.gameEdition ?? 0;
+    }
+
+    return 0;
   };
   const timeValue = ref('');
   setTimeout(() => {
@@ -1047,16 +1122,32 @@
         // Check endgame filters
         if (hideKappaRequiredTasks?.value && task.kappaRequired === true) return false;
         if (hideLightkeeperRequiredTasks?.value && task.lightkeeperRequired === true) return false;
-        if (
-          hideNonKappaTasks?.value &&
-          task.kappaRequired !== true &&
-          task.lightkeeperRequired !== true
-        )
-          return false;
-        
+        if (hideNonKappaTasks?.value) {
+          const isEndgameTask =
+            task.kappaRequired === true ||
+            task.lightkeeperRequired === true ||
+            (isSelfEod.value && task.eodOnly === true);
+          if (!isEndgameTask) {
+            return false;
+          }
+        }
+
+        if (task.eodOnly) {
+          if (hideEodOnlyTasks?.value) {
+            return false;
+          }
+
+          if (activeUserView.value !== 'all') {
+            const editionForView = getEditionForView(activeUserView.value);
+            if (!isEditionEod(editionForView)) {
+              return false;
+            }
+          }
+        }
+
         return true;
       });
-      
+
       // Sort the tasks by their count of successors
       visibleTaskList.sort((a, b) => b.successors.length - a.successors.length);
       

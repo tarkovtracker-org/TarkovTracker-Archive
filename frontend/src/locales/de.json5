@@ -62,18 +62,28 @@
         show_non_kappa_tasks: 'Aufgaben ohne Lightkeeper- oder Kappa-Pflicht anzeigen',
         hide_non_endgame_tasks: 'Aufgaben ohne Lightkeeper- oder Kappa-Pflicht ausblenden',
         show_non_endgame_tasks: 'Aufgaben ohne Lightkeeper- oder Kappa-Pflicht anzeigen',
+        hide_non_endgame_tasks_eod:
+          'Aufgaben ohne Lightkeeper-, Kappa- oder EOD-Pflicht ausblenden',
+        show_non_endgame_tasks_eod:
+          'Aufgaben ohne Lightkeeper-, Kappa- oder EOD-Pflicht anzeigen',
         show_kappa_required_tasks: '„Für Kappa benötigte Aufgaben“ anzeigen',
         hide_kappa_required_tasks: '„Für Kappa benötigte Aufgaben“ ausblenden',
         show_lightkeeper_required_tasks: '„Für Lightkeeper benötigte Aufgaben“ anzeigen',
         hide_lightkeeper_required_tasks: '„Für Lightkeeper benötigte Aufgaben“ ausblenden',
+        show_eod_only_tasks: 'EOD-exklusive Aufgaben anzeigen',
+        hide_eod_only_tasks: 'EOD-exklusive Aufgaben ausblenden',
         tooltips: {
           show_global_tasks: 'Zeigt globale Aufgaben weiterhin in der Kartenansicht.',
           show_non_endgame_tasks:
             'Zeigt Aufgaben, die weder Kappa noch Lightkeeper voraussetzen.',
+          show_non_endgame_tasks_eod:
+            'Zeigt Aufgaben, die weder Kappa, Lightkeeper noch EOD voraussetzen.',
           show_kappa_required_tasks:
             'Blendet Aufgaben ein, die für den Kappa-Container erforderlich sind.',
           show_lightkeeper_required_tasks:
             'Blendet Aufgaben ein, die für den Zugang zum Lightkeeper nötig sind.',
+          show_eod_only_tasks:
+            'Blendet Aufgaben ein, die exklusiv für Edge of Darkness verfügbar sind.',
         },
         filter_section: 'Aufgabenfilter',
         appearance_section: 'Darstellung',
@@ -136,6 +146,7 @@
         objectiveshidden: '{count} Teilaufgaben nicht auf dieser Karte ({uncompleted} uncompleted)',
         alternatives: 'Alternative Aufgaben',
         alternativefailed: 'Alternative Aufgaben werden auch zurückgesetzt',
+        eodonly: 'Nur EOD',
       },
     },
     hideout: {

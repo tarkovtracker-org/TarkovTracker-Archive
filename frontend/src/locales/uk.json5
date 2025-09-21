@@ -61,18 +61,28 @@
         show_non_kappa_tasks: 'Показати завдання без вимоги Лайткіпера або Каппи',
         hide_non_endgame_tasks: 'Приховати завдання без вимоги Лайткіпера або Каппи',
         show_non_endgame_tasks: 'Показати завдання без вимоги Лайткіпера або Каппи',
+        hide_non_endgame_tasks_eod:
+          'Приховати завдання без вимоги Лайткіпера, Каппи або EOD',
+        show_non_endgame_tasks_eod:
+          'Показати завдання без вимоги Лайткіпера, Каппи або EOD',
         show_kappa_required_tasks: 'Показувати "Потрібно для Каппи"',
         hide_kappa_required_tasks: 'Приховувати "Потрібно для Каппи"',
         show_lightkeeper_required_tasks: 'Показувати "Потрібно для Лайткіпера"',
         hide_lightkeeper_required_tasks: 'Приховувати "Потрібно для Лайткіпера"',
+        show_eod_only_tasks: 'Показувати завдання лише для EOD',
+        hide_eod_only_tasks: 'Приховувати завдання лише для EOD',
         tooltips: {
           show_global_tasks: 'Залишає глобальні завдання видимими у режимі карти.',
           show_non_endgame_tasks:
             'Показує завдання без вимоги Каппи чи Лайткіпера.',
+          show_non_endgame_tasks_eod:
+            'Показує завдання без вимоги Каппи, Лайткіпера або EOD.',
           show_kappa_required_tasks:
             'Показує завдання, необхідні для отримання контейнера Каппа.',
           show_lightkeeper_required_tasks:
             'Показує завдання, необхідні для доступу до Лайткіпера.',
+          show_eod_only_tasks:
+            'Показує завдання, доступні лише власникам Edge of Darkness.',
         },
         filter_section: 'Фільтри завдань',
         appearance_section: 'Вигляд',
@@ -136,6 +146,7 @@
         objectiveshidden: '{count} цілей не на цій карті ({uncompleted} не завершено)',
         alternatives: 'Альтернативні завдання',
         alternativefailed: 'Альтернативні завдання також будуть перезавантаженні',
+        eodonly: 'Лише для EOD',
       },
     },
     hideout: {

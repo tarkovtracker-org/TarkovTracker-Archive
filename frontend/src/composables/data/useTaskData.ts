@@ -29,6 +29,20 @@ const DISABLED_TASKS: string[] = [
   '61e6e60c5ca3b3783662be27',
 ];
 
+const EOD_ONLY_TASK_IDS = new Set<string>([
+  '666314b4d7f171c4c20226c3',
+  '666314b0acf8442f8b0531a1',
+  '666314b696a9349baa021bac',
+  '666314b8312343839d032d24',
+  '666314bafd5ca9577902e03a',
+  '666314bc1d3ec95634095e77',
+  '666314bd920800278d0f6748',
+  '666314bf1cd52e3d040a2e78',
+  '666314c10aa5c7436c00908c',
+  '666314c3acf8442f8b0531a3',
+  '666314c5a9290f9e0806cca5',
+]);
+
 /**
  * Composable for managing task data, relationships, and derived information
  */
@@ -200,6 +214,7 @@ export function useTaskData() {
   const enhanceTasksWithRelationships = (taskList: Task[], graph: Graph) => {
     return taskList.map((task) => ({
       ...task,
+      eodOnly: EOD_ONLY_TASK_IDS.has(task.id),
       traderIcon: task.trader?.imageLink,
       predecessors: getPredecessors(graph, task.id),
       successors: getSuccessors(graph, task.id),

@@ -61,18 +61,28 @@
         show_non_kappa_tasks: 'Показать задания без требований Лайткипера или Каппы',
         hide_non_endgame_tasks: 'Скрыть задания без требований Лайткипера или Каппы',
         show_non_endgame_tasks: 'Показать задания без требований Лайткипера или Каппы',
+        hide_non_endgame_tasks_eod:
+          'Скрыть задания без требований Лайткипера, Каппы или EOD',
+        show_non_endgame_tasks_eod:
+          'Показать задания без требований Лайткипера, Каппы или EOD',
         show_kappa_required_tasks: 'Показывать задания "Требуется Каппа"',
         hide_kappa_required_tasks: 'Скрывать задания "Требуется Каппа"',
         show_lightkeeper_required_tasks: 'Показывать задания "Требуется Лайткипер"',
         hide_lightkeeper_required_tasks: 'Скрывать задания "Требуется Лайткипер"',
+        show_eod_only_tasks: 'Показывать задания только для EOD',
+        hide_eod_only_tasks: 'Скрывать задания только для EOD',
         tooltips: {
           show_global_tasks: 'Оставляет глобальные задания видимыми в режиме карты.',
           show_non_endgame_tasks:
             'Показывает задания без требований Каппы или Лайткипера.',
+          show_non_endgame_tasks_eod:
+            'Показывает задания без требований Каппы, Лайткипера или EOD.',
           show_kappa_required_tasks:
             'Показывает задания, необходимые для получения контейнера Каппа.',
           show_lightkeeper_required_tasks:
             'Показывает задания, необходимые для доступа к Лайткиперу.',
+          show_eod_only_tasks:
+            'Показывает задания, доступные только владельцам Edge of Darkness.',
         },
         filter_section: 'Фильтры заданий',
         appearance_section: 'Внешний вид',
@@ -134,6 +144,7 @@
         objectiveshidden: '{count} целей не на этой карте ({uncompleted} не завершено)',
         alternatives: 'Альтернативные задания',
         alternativefailed: 'Альтернативные задания также будут сброшены',
+        eodonly: 'Только для EOD',
       },
     },
     hideout: {

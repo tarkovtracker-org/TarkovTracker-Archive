@@ -25,6 +25,7 @@
             :show-previous-tasks="showPreviousTasksSetting"
             :previous-tasks="previousTasks"
             :show-task-ids="showTaskIds"
+            :show-eod-status="showEodStatus"
           />
         </v-col>
 
@@ -210,6 +211,12 @@
     return false;
   });
   const lightkeeperRequired = computed(() => props.task.lightkeeperRequired === true);
+  const showEodStatus = computed(() => {
+    if (props.task.eodOnly === true) {
+      return showRequiredRequirementLabels.value;
+    }
+    return false;
+  });
   const factionImage = computed(() => `/img/factions/${props.task.factionName}.webp`);
 
   const mapObjectiveTypes = [

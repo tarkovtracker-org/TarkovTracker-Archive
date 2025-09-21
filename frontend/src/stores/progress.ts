@@ -23,6 +23,8 @@ const gameEditions: GameEdition[] = [
   { version: 5, value: 0.2, defaultStashLevel: 5 },
   { version: 6, value: 0.2, defaultStashLevel: 5 },
 ];
+
+const EOD_EDITIONS = new Set<number>([4, 6]);
 type TeamStoresMap = Record<string, Store<string, UserState>>;
 type CompletionsMap = Record<string, Record<string, boolean>>;
 type TraderLevelsMap = Record<string, Record<string, number>>;
@@ -126,77 +128,149 @@ export const useProgressStore = defineStore(
     const unlockedTasks = computed(() => {
       const available: TaskAvailabilityMap = {};
       if (!tasks.value || !visibleTeamStores.value) return {};
-      for (const task of tasks.value as Task[]) {
+
+      const taskMap = new Map<string, Task>();
+      (tasks.value as Task[]).forEach((task) => {
+        taskMap.set(task.id, task);
         available[task.id] = {};
+      });
+
+      const memo = new Map<string, boolean>();
+
+      const evaluateTaskAvailability = (
+        taskId: string,
+        teamId: string,
+        stack: Set<string> = new Set()
+      ): boolean => {
+        const memoKey = `${taskId}:${teamId}`;
+        if (memo.has(memoKey)) {
+          return memo.get(memoKey) as boolean;
+        }
+        if (stack.has(memoKey)) {
+          memo.set(memoKey, false);
+          return false;
+        }
+
+        const task = taskMap.get(taskId);
+        const store = visibleTeamStores.value[teamId];
+
+        if (!task || !store) {
+          memo.set(memoKey, false);
+          return false;
+        }
+
+        const gameEditionVersion = store?.$state.gameEdition ?? 0;
+        if (task.eodOnly && !EOD_EDITIONS.has(gameEditionVersion)) {
+          memo.set(memoKey, false);
+          return false;
+        }
+
+        const currentGameMode = store?.$state.currentGameMode || 'pvp';
+        const currentData = store?.$state[currentGameMode] || store?.$state;
+
+        const playerLevel = currentData?.level ?? 0;
+        const currentPlayerFaction = playerFaction.value[teamId];
+        const isTaskComplete = tasksCompletions.value[taskId]?.[teamId] ?? false;
+
+        if (isTaskComplete) {
+          memo.set(memoKey, false);
+          return false;
+        }
+
+        stack.add(memoKey);
+
+        let isAvailable = true;
+
+        if (task.failedRequirements) {
+          for (const req of task.failedRequirements) {
+            const failed = currentData?.taskCompletions?.[req.task.id]?.failed ?? false;
+            if (failed) {
+              isAvailable = false;
+              break;
+            }
+          }
+        }
+
+        if (isAvailable && task.minPlayerLevel && playerLevel < task.minPlayerLevel) {
+          isAvailable = false;
+        }
+
+        if (isAvailable && task.traderLevelRequirements) {
+          for (const req of task.traderLevelRequirements) {
+            const currentTraderLevel = traderLevelsAchieved.value[teamId]?.[req.trader.id] ?? 0;
+            if (currentTraderLevel < req.level) {
+              isAvailable = false;
+              break;
+            }
+          }
+        }
+
+        if (isAvailable && task.taskRequirements) {
+          for (const req of task.taskRequirements) {
+            const requiredTaskId = req?.task?.id;
+            if (!requiredTaskId) continue;
+
+            const requiredTaskComplete = tasksCompletions.value[requiredTaskId]?.[teamId] ?? false;
+            const statuses = (req.status || [])
+              .map((status) => (typeof status === 'string' ? status.toLowerCase() : ''))
+              .filter(Boolean);
+
+            let requirementMet = false;
+
+            if (!statuses.length) {
+              requirementMet = requiredTaskComplete;
+            } else {
+              if (statuses.includes('complete') && requiredTaskComplete) {
+                requirementMet = true;
+              }
+
+              const hasActiveStatus = statuses.some(
+                (status) => status === 'active' || status === 'accept' || status === 'accepted'
+              );
+
+              if (!requirementMet && hasActiveStatus) {
+                requirementMet = evaluateTaskAvailability(requiredTaskId, teamId, stack);
+              }
+
+              if (!requirementMet && statuses.includes('failed')) {
+                const requiredFailed = currentData?.taskCompletions?.[requiredTaskId]?.failed ?? false;
+                if (requiredFailed) {
+                  requirementMet = true;
+                }
+              }
+            }
+
+            if (!requirementMet && requiredTaskComplete) {
+              requirementMet = true;
+            }
+
+            if (!requirementMet) {
+              isAvailable = false;
+              break;
+            }
+          }
+        }
+
+        if (
+          isAvailable &&
+          task.factionName &&
+          task.factionName !== 'Any' &&
+          task.factionName !== currentPlayerFaction
+        ) {
+          isAvailable = false;
+        }
+
+        stack.delete(memoKey);
+        memo.set(memoKey, isAvailable);
+        return isAvailable;
+      };
+
+      for (const task of tasks.value as Task[]) {
         for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          const playerLevel = currentData?.level ?? 0;
-          const currentPlayerFaction = playerFaction.value[teamId];
-          const isTaskComplete = tasksCompletions.value[task.id]?.[teamId] ?? false;
-          if (isTaskComplete) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let failedReqsMet = true;
-          if (task.failedRequirements) {
-            for (const req of task.failedRequirements) {
-              const failed = currentData?.taskCompletions?.[req.task.id]?.failed ?? false;
-              if (failed) {
-                failedReqsMet = false;
-                break;
-              }
-            }
-          }
-          if (!failedReqsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          if (task.minPlayerLevel && playerLevel < task.minPlayerLevel) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let traderLevelsMet = true;
-          if (task.traderLevelRequirements) {
-            for (const req of task.traderLevelRequirements) {
-              const currentTraderLevel = traderLevelsAchieved.value[teamId]?.[req.trader.id] ?? 0;
-              if (currentTraderLevel < req.level) {
-                traderLevelsMet = false;
-                break;
-              }
-            }
-          }
-          if (!traderLevelsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let prereqsMet = true;
-          if (task.taskRequirements) {
-            for (const req of task.taskRequirements) {
-              const isPrereqComplete = tasksCompletions.value[req.task.id]?.[teamId] ?? false;
-              if (!isPrereqComplete) {
-                prereqsMet = false;
-                break;
-              }
-            }
-          }
-          if (!prereqsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          if (
-            task.factionName &&
-            task.factionName !== 'Any' &&
-            task.factionName !== currentPlayerFaction
-          ) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          available[task.id][teamId] = true;
+          available[task.id][teamId] = evaluateTaskAvailability(task.id, teamId);
         }
       }
+
       return available;
     });
     const objectiveCompletions = computed(() => {
