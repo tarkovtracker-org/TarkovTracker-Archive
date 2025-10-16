@@ -146,8 +146,6 @@ export class ProgressService {
    * Updates multiple tasks in a single transaction
    */
   async updateMultipleTasks(userId: string, taskUpdates: MultipleTaskUpdateRequest, gameMode: string = 'pvp'): Promise<void> {
-    const taskIds = Object.keys(taskUpdates);
-    
     try {
       // Run in transaction for consistency
       await this.db.runTransaction(async (transaction) => {

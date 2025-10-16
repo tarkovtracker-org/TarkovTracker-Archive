@@ -58,8 +58,6 @@ interface AuthenticatedRequest extends Request {
  *         description: "Internal server error."
  */
 export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'GP');
-  
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const gameMode = req.apiToken?.gameMode || 'pvp'; // Use token's game mode
   const progressData = await progressService.getUserProgress(userId, gameMode);
@@ -124,8 +122,6 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
  *         description: "Internal server error."
  */
 export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
-
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const level = ValidationService.validateLevel(req.params.levelValue);
 
@@ -214,8 +210,6 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
  *         description: "Internal server error."
  */
 export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
-
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskId = ValidationService.validateTaskId(req.params.taskId);
   const { state } = ValidationService.validateTaskUpdate(req.body);
@@ -297,8 +291,6 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
  *         description: "Internal server error during batch update."
  */
 export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
-
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
 
@@ -395,8 +387,6 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
  *         description: "Internal server error."
  */
 export const updateTaskObjective = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
-
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
   const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
   const updateData = ValidationService.validateObjectiveUpdate(req.body);

@@ -20,6 +20,14 @@ const firestoreMock = {
     fromDate: vi.fn((date) => ({ toDate: () => date })),
   },
 };
+const loggerMock = {
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+};
+
 const functionsMock = {
   // Basic structure
   config: vi.fn().mockReturnValue({}),
@@ -34,14 +42,7 @@ const functionsMock = {
       }
     },
   },
-  logger: {
-    // Keep logger
-    log: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
+  logger: loggerMock,
   pubsub: {
     // Keep basic pubsub structure
     schedule: vi.fn(() => ({
@@ -68,14 +69,68 @@ vi.mock('firebase-admin', () => {
   return { default: admin, admin };
 });
 // Mock both v1 and default functions paths
-vi.mock('firebase-functions', () => ({
-  ...functionsMock,
-  default: functionsMock,
+vi.mock('firebase-functions', () => {
+  const fn = { ...functionsMock, default: functionsMock };
+  return fn;
+});
+vi.mock('firebase-functions/v1', () => {
+  const fn = { ...functionsMock, default: functionsMock };
+  return fn;
+});
+vi.mock('firebase-functions/logger', () => ({
+  ...loggerMock,
+  default: loggerMock,
 }));
-vi.mock('firebase-functions/v1', () => ({
-  ...functionsMock,
-  default: functionsMock,
+vi.mock('firebase-functions/v2', () => ({
+  logger: loggerMock,
+  default: { logger: loggerMock },
 }));
+vi.mock('firebase-functions/v2/https', () => {
+  class HttpsError extends Error {
+    constructor(code, message, details) {
+      super(message);
+      this.code = code;
+      this.details = details;
+    }
+  }
+  const wrapHandler = (optionsOrHandler, maybeHandler) =>
+    typeof optionsOrHandler === 'function' && !maybeHandler ? optionsOrHandler : maybeHandler;
+  const onCall = (optionsOrHandler, maybeHandler) => {
+    const handler = wrapHandler(optionsOrHandler, maybeHandler);
+    return async (requestOrData = {}, maybeContext = {}) => {
+      if (requestOrData && typeof requestOrData === 'object' && 'data' in requestOrData) {
+        return handler(requestOrData);
+      }
+      return handler({
+        data: requestOrData,
+        auth: maybeContext.auth,
+        params: maybeContext.params || {},
+        headers: maybeContext.headers || {},
+        rawRequest: maybeContext.rawRequest,
+        acceptsStreaming: maybeContext.acceptsStreaming ?? false,
+      });
+    };
+  };
+  const onRequest = (optionsOrHandler, maybeHandler) => {
+    const handler = wrapHandler(optionsOrHandler, maybeHandler);
+    return async (req, res) => handler(req, res);
+  };
+  return {
+    onCall,
+    onRequest,
+    HttpsError,
+    Request: class {},
+    CallableRequest: class {},
+  };
+});
+vi.mock('firebase-functions/v2/scheduler', () => {
+  const onSchedule = (optionsOrHandler, maybeHandler) => {
+    const handler =
+      typeof optionsOrHandler === 'function' && !maybeHandler ? optionsOrHandler : maybeHandler;
+    return async (...args) => handler?.(...args);
+  };
+  return { onSchedule };
+});
 // --- Global Hooks ---
 beforeEach(() => {
   // Reset all mocks provided by vitest vi.fn()

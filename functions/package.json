@@ -23,19 +23,19 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "firebase-admin": "^13.4.0",
-    "firebase-functions": "^6.4.0",
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.5.0",
     "graphql-request": "^7.2.0",
     "uid-generator": "^2.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
-    "@types/node": "^22.16.5",
+    "@types/node": "^22.18.10",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/uid-generator": "^2.0.6",
-    "eslint": "^9.32.0",
+    "eslint": "^9.37.0",
     "swagger-jsdoc": "^6.2.8",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   }
 }
