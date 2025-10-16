@@ -4,6 +4,7 @@ import { markDataMigrated } from '@/plugins/store-initializer';
 import DataMigrationService, { type ProgressData } from '@/utils/DataMigrationService';
 import { useTarkovStore } from '@/stores/tarkov';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
+import { logger } from '@/utils/logger';
 
 export type ImportedData = ProgressData;
 
@@ -99,7 +100,7 @@ export function useDataMigration() {
       apiFetchSuccess.value = true;
       confirmDialog.value = true;
     } catch (error: unknown) {
-      console.error('Error fetching data with API token:', error);
+      logger.error('Error fetching data with API token:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error occurred during fetch.';
       apiError.value = `Error: ${errorMessage}`;
@@ -133,7 +134,7 @@ export function useDataMigration() {
         importError.value = 'Failed to import data. Please try again.';
       }
     } catch (error: unknown) {
-      console.error('Error during import:', error);
+      logger.error('Error during import:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       importError.value = 'Error during import: ' + errorMessage;
     } finally {

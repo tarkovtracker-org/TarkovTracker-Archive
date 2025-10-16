@@ -7,6 +7,7 @@ export interface ProgressData {
   taskObjectives?: Record<string, boolean>;
   hideoutModules?: Record<string, boolean>;
   hideoutParts?: Record<string, boolean>;
+  traderStandings?: Record<string, unknown>;
   importedFromApi?: boolean;
   importDate?: string;
   sourceUserId?: string;

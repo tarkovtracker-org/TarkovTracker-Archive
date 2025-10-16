@@ -1,0 +1,58 @@
+import { logger } from '@/utils/logger';
+import type { ProgressData } from './DataMigrationTypes';
+
+export const LOCAL_PROGRESS_KEY = 'progress';
+
+export const hasLocalData = (): boolean => {
+  try {
+    const progressData = localStorage.getItem(LOCAL_PROGRESS_KEY);
+    if (!progressData || progressData === '{}') {
+      return false;
+    }
+    const parsedData: ProgressData = JSON.parse(progressData);
+    const hasKeys = Object.keys(parsedData).length > 0;
+    const hasProgress =
+      parsedData.level > 1 ||
+      Object.keys(parsedData.taskCompletions || {}).length > 0 ||
+      Object.keys(parsedData.taskObjectives || {}).length > 0 ||
+      Object.keys(parsedData.hideoutModules || {}).length > 0;
+    return hasKeys && hasProgress;
+  } catch (error) {
+    logger.warn('[LocalDataService] Error checking local data availability:', error);
+    return false;
+  }
+};
+
+export const getLocalData = (): ProgressData | null => {
+  try {
+    const progressData = localStorage.getItem(LOCAL_PROGRESS_KEY);
+    if (!progressData) {
+      return null;
+    }
+    const parsedData: ProgressData = JSON.parse(progressData);
+    if (Object.keys(parsedData).length > 0) {
+      return JSON.parse(JSON.stringify(parsedData)) as ProgressData;
+    }
+    return null;
+  } catch (error) {
+    logger.warn('[LocalDataService] Error retrieving local data:', error);
+    return null;
+  }
+};
+
+export const backupLocalProgress = (data: ProgressData): void => {
+  const backupKey = `progress_backup_${new Date().toISOString()}`;
+  try {
+    localStorage.setItem(backupKey, JSON.stringify(data));
+  } catch (error) {
+    logger.warn('[LocalDataService] Failed to create local backup copy:', error);
+  }
+};
+
+export const saveLocalProgress = (data: unknown): void => {
+  try {
+    localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(data));
+  } catch (error) {
+    logger.warn('[LocalDataService] Failed to persist local progress:', error);
+  }
+};
