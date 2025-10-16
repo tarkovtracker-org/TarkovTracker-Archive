@@ -62,8 +62,6 @@ interface AuthenticatedRequest extends Request {
  *         description: "Internal server error."
  */
 export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'TP');
-
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
 
   // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)

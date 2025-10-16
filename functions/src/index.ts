@@ -50,7 +50,9 @@ async function getApiApp(): Promise<Express> {
   const corsModule = await import('cors');
   const bodyParserModule = await import('body-parser');
   const { verifyBearer } = await import('./middleware/auth.js');
+  const { abuseGuard } = await import('./middleware/abuseGuard.js');
   const { requireRecentAuth } = await import('./middleware/reauth.js');
+  const { requirePermission } = await import('./middleware/permissions.js');
   const { errorHandler, notFoundHandler, asyncHandler } = await import(
     './middleware/errorHandler.js'
   );
@@ -87,13 +89,22 @@ async function getApiApp(): Promise<Express> {
   );
   app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
   app.use('/api', verifyBearer);
+  app.use('/api', abuseGuard);
   app.get('/api/token', tokenHandler.getTokenInfo);
-  app.get('/api/progress', progressHandler.getPlayerProgress);
-  app.get('/api/team/progress', teamHandler.getTeamProgress);
-  app.post('/api/progress/level/:levelValue', progressHandler.setPlayerLevel);
-  app.post('/api/progress/task/:taskId', progressHandler.updateSingleTask);
-  app.post('/api/progress/tasks', progressHandler.updateMultipleTasks);
-  app.post('/api/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
+  app.get('/api/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
+  app.get('/api/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
+  app.post(
+    '/api/progress/level/:levelValue',
+    requirePermission('WP'),
+    progressHandler.setPlayerLevel
+  );
+  app.post('/api/progress/task/:taskId', requirePermission('WP'), progressHandler.updateSingleTask);
+  app.post('/api/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
+  app.post(
+    '/api/progress/task/objective/:objectiveId',
+    requirePermission('WP'),
+    progressHandler.updateTaskObjective
+  );
   app.options('/api/team/create', (_req: ExpressRequest, res: ExpressResponse) => {
     res.status(200).send();
   });
@@ -107,12 +118,24 @@ async function getApiApp(): Promise<Express> {
   });
   app.post('/api/team/leave', teamHandler.leaveTeam);
   app.get('/api/v2/token', tokenHandler.getTokenInfo);
-  app.get('/api/v2/progress', progressHandler.getPlayerProgress);
-  app.get('/api/v2/team/progress', teamHandler.getTeamProgress);
-  app.post('/api/v2/progress/level/:levelValue', progressHandler.setPlayerLevel);
-  app.post('/api/v2/progress/task/:taskId', progressHandler.updateSingleTask);
-  app.post('/api/v2/progress/tasks', progressHandler.updateMultipleTasks);
-  app.post('/api/v2/progress/task/objective/:objectiveId', progressHandler.updateTaskObjective);
+  app.get('/api/v2/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
+  app.get('/api/v2/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
+  app.post(
+    '/api/v2/progress/level/:levelValue',
+    requirePermission('WP'),
+    progressHandler.setPlayerLevel
+  );
+  app.post(
+    '/api/v2/progress/task/:taskId',
+    requirePermission('WP'),
+    progressHandler.updateSingleTask
+  );
+  app.post('/api/v2/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
+  app.post(
+    '/api/v2/progress/task/objective/:objectiveId',
+    requirePermission('WP'),
+    progressHandler.updateTaskObjective
+  );
   app.get(
     '/health',
     asyncHandler(async (_req: ExpressRequest, res: ExpressResponse) => {
@@ -138,6 +161,7 @@ async function getApiApp(): Promise<Express> {
   cachedApp = app;
   return app;
 }
+export const rawApp = getApiApp;
 
 export const api = onRequest(
   {
@@ -512,6 +536,7 @@ export const createTeamHttp = onRequest(
         auth: {
           uid: decodedToken.uid,
           token: decodedToken,
+          rawToken: authToken,
         },
         data: req.body,
         rawRequest: req as unknown as FirebaseRequest,
@@ -590,6 +615,7 @@ export const createTokenHttp = onRequest(
         auth: {
           uid: decodedToken.uid,
           token: decodedToken,
+          rawToken: authToken,
         },
         data: req.body,
         rawRequest: req as unknown as FirebaseRequest,
@@ -809,7 +835,7 @@ const TARKOV_ITEMS_QUERY = gql`
   }
 `;
 
-async function retrieveTarkovdata(): Promise<TarkovDataResponse | undefined> {
+export async function retrieveTarkovdata(): Promise<TarkovDataResponse | undefined> {
   try {
     const data: TarkovDataResponse = await request(
       'https://api.tarkov.dev/graphql',
@@ -853,6 +879,27 @@ async function saveTarkovData(data: TarkovDataResponse | undefined) {
     );
   }
 }
+
+export const updateTarkovdataHTTPS = onRequest(
+  {
+    memory: '256MiB',
+    timeoutSeconds: 120,
+    maxInstances: 1,
+    minInstances: 0,
+  },
+  async (_req, res) => {
+    try {
+      const data = await retrieveTarkovdata();
+      await saveTarkovData(data);
+      res.status(200).send('OK');
+    } catch (error: unknown) {
+      logger.error('Manual Tarkov data refresh failed:', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      res.status(200).send('OK');
+    }
+  }
+);
 // Nightly data sync from Tarkov API -> Firestore
 export const scheduledTarkovDataFetch = onSchedule(
   {
@@ -866,3 +913,5 @@ export const scheduledTarkovDataFetch = onSchedule(
     await saveTarkovData(data);
   }
 );
+export { _createTeamLogic, _joinTeamLogic, _leaveTeamLogic, _kickTeamMemberLogic };
+export default api;

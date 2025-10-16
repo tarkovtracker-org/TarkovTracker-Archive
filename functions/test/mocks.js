@@ -6,7 +6,7 @@ export const createTransactionMock = () => ({
   get: vi.fn().mockImplementation(() => {
     return Promise.resolve({
       exists: false,
-      data: () => ({ tokens: [] }),
+      data: () => ({}),
     });
   }),
   set: vi.fn().mockResolvedValue({}),
@@ -149,26 +149,35 @@ export const createFirebaseAdminMock = () => {
 
 // Mock for firebase-functions
 export const createFirebaseFunctionsMock = () => {
+  const wrapHttpsHandler = (optionsOrHandler, maybeHandler) => {
+    if (typeof optionsOrHandler === 'function') {
+      return optionsOrHandler;
+    }
+    return typeof maybeHandler === 'function' ? maybeHandler : vi.fn();
+  };
+
+  const httpsMock = {
+    HttpsError: class HttpsError extends Error {
+      constructor(code, message) {
+        super(message || 'Error during test');
+        this.code = code;
+      }
+    },
+    onCall: vi.fn((optionsOrHandler, maybeHandler) => wrapHttpsHandler(optionsOrHandler, maybeHandler)),
+    onRequest: vi.fn((optionsOrHandler, maybeHandler) => wrapHttpsHandler(optionsOrHandler, maybeHandler)),
+  };
+
+  const scheduleMock = vi.fn((optionsOrHandler, maybeHandler) => wrapHttpsHandler(optionsOrHandler, maybeHandler));
+
   return {
     config: vi.fn().mockReturnValue({}),
-    https: {
-      HttpsError: class HttpsError extends Error {
-        constructor(code, message) {
-          super(message || 'Error during test');
-          this.code = code;
-        }
-      },
-      onCall: vi.fn((handler) => handler),
-      onRequest: vi.fn((handler) => handler),
-    },
+    https: httpsMock,
     handler: {
       https: {
         onRequest: vi.fn((handler) => handler),
       },
     },
-    schedule: vi.fn(() => ({
-      onRun: vi.fn((handler) => handler),
-    })),
+    schedule: scheduleMock,
     logger: {
       log: vi.fn(),
       info: vi.fn(),
