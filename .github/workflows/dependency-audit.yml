@@ -1,0 +1,173 @@
+name: Dependency Security Audit
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  push:
+    paths:
+      - 'package*.json'
+      - 'frontend/package*.json'
+      - 'functions/package*.json'
+  pull_request:
+    paths:
+      - 'package*.json'
+      - 'frontend/package*.json'
+      - 'functions/package*.json'
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit (Root)
+        id: audit-root
+        run: |
+          npm audit --json > audit-root.json || true
+          VULNERABILITIES=$(cat audit-root.json | grep -o '"total":[0-9]*' | head -1 | grep -o '[0-9]*')
+          echo "vulnerabilities=$VULNERABILITIES" >> "$GITHUB_OUTPUT"
+
+      - name: Run npm audit (Frontend)
+        id: audit-frontend
+        run: |
+          npm audit --json --workspace=frontend > audit-frontend.json || true
+          VULNERABILITIES=$(cat audit-frontend.json | grep -o '"total":[0-9]*' | head -1 | grep -o '[0-9]*')
+          echo "vulnerabilities=$VULNERABILITIES" >> "$GITHUB_OUTPUT"
+
+      - name: Run npm audit (Functions)
+        id: audit-functions
+        run: |
+          npm audit --json --workspace=functions > audit-functions.json || true
+          VULNERABILITIES=$(cat audit-functions.json | grep -o '"total":[0-9]*' | head -1 | grep -o '[0-9]*')
+          echo "vulnerabilities=$VULNERABILITIES" >> "$GITHUB_OUTPUT"
+
+      - name: Check for vulnerabilities
+        if: ${{ steps.audit-root.outputs.vulnerabilities > 0 || steps.audit-frontend.outputs.vulnerabilities > 0 || steps.audit-functions.outputs.vulnerabilities > 0 }}
+        run: |
+          echo "⚠️ Vulnerabilities detected!"
+          echo "Root: ${{ steps.audit-root.outputs.vulnerabilities }}"
+          echo "Frontend: ${{ steps.audit-frontend.outputs.vulnerabilities }}"
+          echo "Functions: ${{ steps.audit-functions.outputs.vulnerabilities }}"
+          exit 1
+
+      - name: Create issue if vulnerabilities found
+        if: ${{ failure() && github.event_name == 'schedule' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const vulnerabilities = {
+              root: '${{ steps.audit-root.outputs.vulnerabilities }}',
+              frontend: '${{ steps.audit-frontend.outputs.vulnerabilities }}',
+              functions: '${{ steps.audit-functions.outputs.vulnerabilities }}'
+            };
+
+            const total = parseInt(vulnerabilities.root) + parseInt(vulnerabilities.frontend) + parseInt(vulnerabilities.functions);
+
+            const bodyLines = [
+              '## Security Audit Failed',
+              '',
+              'Vulnerabilities found in dependencies:',
+              `- **Root workspace:** ${vulnerabilities.root}`,
+              `- **Frontend workspace:** ${vulnerabilities.frontend}`,
+              `- **Functions workspace:** ${vulnerabilities.functions}`,
+              '',
+              `**Total:** ${total} vulnerabilities`,
+              '',
+              '### Action Required',
+              `1. Review the [workflow run](${context.payload.repository.html_url}/actions/runs/${context.runId})`,
+              '2. Run `npm audit` locally to see details',
+              '3. Apply fixes with `npm audit fix` or update packages manually',
+              '4. Test thoroughly before committing',
+              '',
+              'See audit reports in workflow artifacts.'
+            ];
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 ${total} Security Vulnerabilities Detected`,
+              body: bodyLines.join('\n'),
+              labels: ['security', 'dependencies', 'automated']
+            });
+
+  license-check:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check licenses
+        run: |
+          npx license-checker --summary
+          npx license-checker --json > licenses.json
+
+      - name: Validate license compliance
+        run: |
+          # Check for problematic licenses (GPL, AGPL, etc.)
+          if npx license-checker --summary | grep -E 'GPL-3.0|AGPL|LGPL'; then
+            echo "⚠️ Found copyleft licenses that may require review"
+            npx license-checker --summary
+            exit 1
+          fi
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.json
+
+  outdated-check:
+    name: Check Outdated Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Check outdated packages
+        run: |
+          npm outdated --json > outdated.json || true
+
+      - name: Generate update summary
+        run: |
+          echo "## Outdated Dependencies" > outdated-summary.md
+          echo "" >> outdated-summary.md
+          npm outdated >> outdated-summary.md || true
+
+      - name: Upload outdated report
+        uses: actions/upload-artifact@v4
+        with:
+          name: outdated-report
+          path: |
+            outdated.json
+            outdated-summary.md
