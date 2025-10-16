@@ -1,0 +1,33 @@
+name: Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  lint-and-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - name: Block raw useProgressStore usage
+        run: |
+          ALLOWLIST='(stores/progress\.ts|composables/useProgressQueries\.ts|composables/livedata\.ts|types/.*)'
+          if grep -RIn --include='*.{ts,tsx,vue}' 'useProgressStore\(' frontend | grep -Ev "$ALLOWLIST"; then
+            echo 'Direct useProgressStore detected outside allowlist';
+            exit 1;
+          fi
+      - name: Enforce bundle size
+        run: |
+          npm run build --workspace=frontend
+          SIZE=$(node -e "const fs=require('fs');const glob=require('glob');const file=glob.sync('frontend/dist/assets/index.*.js')[0];console.log(fs.statSync(file).size);")
+          if [ "$SIZE" -gt 512000 ]; then
+            echo "Bundle exceeds 500kb (actual: $SIZE bytes)";
+            exit 1;
+          fi

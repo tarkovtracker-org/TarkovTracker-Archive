@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "apollographql.vscode-apollo",
-    "Vue.volar",
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
     "DavidAnson.vscode-markdownlint",
