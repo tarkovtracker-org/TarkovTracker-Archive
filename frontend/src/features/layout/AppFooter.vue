@@ -105,10 +105,15 @@
         <v-col cols="12" sm="4" class="footer-section">
           <div class="footer-links d-flex flex-column align-center">
             <div class="mb-1">
-              <router-link to="/terms" target="_blank" class="footer-link">Terms</router-link>
+              <router-link to="/terms" class="footer-link">Terms</router-link>
             </div>
             <div class="mb-1">
-              <router-link to="/privacy" target="_blank" class="footer-link">Privacy</router-link>
+              <router-link to="/privacy" class="footer-link">Privacy</router-link>
+            </div>
+            <div v-if="choiceRecorded" class="mb-1">
+              <button type="button" class="footer-link footer-link__button" @click="openPrivacyPreferences">
+                Privacy Preferences
+              </button>
             </div>
           </div>
         </v-col>
@@ -130,8 +135,20 @@
   </v-footer>
 </template>
 <script setup>
+  import { onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
+
   const { t } = useI18n({ useScope: 'global' });
+  const { openPreferences, choiceRecorded, initializeConsent } = usePrivacyConsent();
+
+  const openPrivacyPreferences = () => {
+    openPreferences();
+  };
+
+  onMounted(() => {
+    initializeConsent();
+  });
 </script>
 <style lang="scss" scoped>
   .footer-background {
@@ -186,6 +203,13 @@
     &:hover {
       color: rgba(var(--v-theme-primary), 1);
     }
+  }
+  .footer-link__button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font: inherit;
   }
   .footer-icon {
     color: currentColor;
