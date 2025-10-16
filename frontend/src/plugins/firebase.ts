@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, setAnalyticsCollectionEnabled, type Analytics } from 'firebase/analytics';
 import {
   getAuth,
   onAuthStateChanged,
@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from 'firebase/functions';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { logger } from '@/utils/logger';
 // Define a comprehensive type for our reactive user state
 type FireUser = {
   uid: string | null;
@@ -64,9 +65,23 @@ const firebaseConfig: FirebaseOptions = isLocalDevelopment
       appId: import.meta.env.VITE_FIREBASE_APP_ID,
       measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
     };
+const measurementId = firebaseConfig.measurementId;
+
+type WindowWithGaDisable = Window & typeof globalThis & {
+  [key: `ga-disable-${string}`]: boolean;
+};
+
+const setGaTrackingEnabled = (enabled: boolean) => {
+  if (!measurementId || typeof window === 'undefined') {
+    return;
+  }
+  (window as WindowWithGaDisable)[`ga-disable-${measurementId}`] = !enabled;
+};
+
+setGaTrackingEnabled(false);
+
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
-const analytics = import.meta.env.PROD ? getAnalytics(app) : undefined;
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 const functions = getFunctions(app, 'us-central1');
@@ -118,12 +133,55 @@ if (isLocalDevelopment || ['localhost', '127.0.0.1'].includes(window.location.ho
     connectFunctionsEmulator(functions, 'localhost', 5001);
     connectStorageEmulator(storage, 'localhost', 9199);
   } catch (error) {
-    console.error('Error connecting to Firebase emulators:', error);
+    logger.error('Error connecting to Firebase emulators:', error);
   }
 }
+let analyticsInstance: Analytics | undefined;
+
+const ensureAnalytics = () => {
+  if (!import.meta.env.PROD) {
+    return undefined;
+  }
+  if (!analyticsInstance) {
+    try {
+      analyticsInstance = getAnalytics(app);
+    } catch (error) {
+      logger.error('Failed to initialize Firebase Analytics:', error);
+      analyticsInstance = undefined;
+    }
+  }
+  return analyticsInstance;
+};
+
+const enableAnalyticsCollection = async () => {
+  if (!import.meta.env.PROD) {
+    return undefined;
+  }
+  setGaTrackingEnabled(true);
+  const instance = ensureAnalytics();
+  if (instance) {
+    try {
+      setAnalyticsCollectionEnabled(instance, true);
+    } catch (error) {
+      logger.error('Unable to enable Firebase Analytics collection:', error);
+    }
+  }
+  return instance;
+};
+
+const disableAnalyticsCollection = () => {
+  setGaTrackingEnabled(false);
+  if (analyticsInstance) {
+    try {
+      setAnalyticsCollectionEnabled(analyticsInstance, false);
+    } catch (error) {
+      logger.error('Unable to disable Firebase Analytics collection:', error);
+    }
+  }
+};
+
 export {
   app,
-  analytics,
   auth,
   firestore,
   functions,
@@ -139,4 +197,6 @@ export {
   setDoc,
   collection,
   onSnapshot,
+  enableAnalyticsCollection,
+  disableAnalyticsCollection,
 };

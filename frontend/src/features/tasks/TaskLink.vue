@@ -9,29 +9,29 @@
           rel="noopener"
           class="task-link__anchor"
         >
-          <v-avatar size="1.5em" style="vertical-align: middle">
+          <v-avatar size="2em" style="vertical-align: middle">
             <v-img :src="traderAvatar" />
           </v-avatar>
           <template v-if="isFactionTask">
-            <v-avatar size="1.5em" rounded="0" style="vertical-align: middle" class="ml-2">
+            <v-avatar size="1.8em" rounded="0" style="vertical-align: middle" class="ml-2">
               <v-img :src="factionImage" class="faction-icon" />
             </v-avatar>
           </template>
-          <span class="ml-2 font-weight-bold">{{ task?.name }}</span>
+          <span class="task-title">{{ task?.name }}</span>
         </a>
       </template>
       {{ t('page.tasks.questcard.wiki_tooltip') }}
     </v-tooltip>
     <span v-else class="task-link__anchor">
-      <v-avatar size="1.5em" style="vertical-align: middle">
+      <v-avatar size="2em" style="vertical-align: middle">
         <v-img :src="traderAvatar" />
       </v-avatar>
       <template v-if="isFactionTask">
-        <v-avatar size="1.5em" rounded="0" style="vertical-align: middle" class="ml-2">
+        <v-avatar size="1.8em" rounded="0" style="vertical-align: middle" class="ml-2">
           <v-img :src="factionImage" class="faction-icon" />
         </v-avatar>
       </template>
-      <span class="ml-2 font-weight-bold">{{ task?.name }}</span>
+      <span class="task-title">{{ task?.name }}</span>
     </span>
   </div>
 </template>
@@ -68,10 +68,18 @@
     align-items: center;
     color: rgba(var(--v-theme-tasklink), 1) !important;
     text-decoration: none;
+    gap: 8px;
   }
   .faction-icon {
     filter: invert(1);
-    max-width: 24px;
-    max-height: 24px;
+    max-width: 28px;
+    max-height: 28px;
+  }
+
+  .task-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    letter-spacing: 0.25px;
   }
 </style>

@@ -3,46 +3,28 @@
     <div v-if="showBackgroundIcon" class="taskContainerBackground text-h1">
       <v-icon>{{ backgroundIcon }}</v-icon>
     </div>
-
-    <v-container>
-      <v-row>
-        <!-- Quest Info Section -->
-        <v-col cols="12" xs="12" sm="4" md="3" lg="3" :align="xs ? 'center' : 'left'">
-          <TaskInfo
+    <v-container fluid class="pa-0">
+      <v-row class="task-card-row">
+        <v-col
+          cols="12"
+          :align="xs ? 'center' : 'left'"
+          class="task-card-column task-card-column--left"
+        >
+          <TaskCardInfo
             :task="task"
-            :xs="xs"
-            :locked-before="lockedBefore"
-            :locked-behind="lockedBehind"
-            :faction-image="factionImage"
-            :show-kappa-status="showKappaStatus"
-            :kappa-required="kappaRequired"
-            :show-lightkeeper-status="showLightkeeperStatus"
-            :lightkeeper-required="lightkeeperRequired"
             :needed-by="neededBy"
             :active-user-view="activeUserView"
-            :show-next-tasks="showNextTasksSetting"
-            :next-tasks="nextTasks"
-            :show-previous-tasks="showPreviousTasksSetting"
-            :previous-tasks="previousTasks"
-            :show-task-ids="showTaskIds"
-            :show-eod-status="showEodStatus"
+            :show-next-tasks="showNextTasks"
+            :show-previous-tasks="showPreviousTasks"
           />
         </v-col>
-
-        <!-- Quest Content Section -->
-        <v-col cols="12" xs="12" sm="8" md="7" lg="7" class="d-flex align-center">
-          <v-container>
-            <QuestKeys v-if="task?.neededKeys?.length" :needed-keys="task.neededKeys" />
-            <QuestObjectives
-              :objectives="relevantViewObjectives"
-              :irrelevant-count="irrelevantObjectives.length"
-              :uncompleted-irrelevant="uncompletedIrrelevantObjectives.length"
-            />
-          </v-container>
+        <v-col cols="12" class="d-flex align-start task-card-column task-card-column--center">
+          <TaskCardObjectives :task="task" />
         </v-col>
-
-        <!-- Actions Section -->
-        <v-col cols="12" xs="12" sm="12" md="2" lg="2" class="d-flex align-center justify-center">
+        <v-col
+          cols="12"
+          class="task-actions-column task-card-column task-card-column--right d-flex"
+        >
           <TaskActions
             :task="task"
             :tasks="tasks"
@@ -59,7 +41,6 @@
         </v-col>
       </v-row>
     </v-container>
-
     <v-snackbar v-model="taskStatusUpdated" :timeout="4000" color="secondary">
       {{ taskStatus }}
       <template #actions>
@@ -71,343 +52,78 @@
     </v-snackbar>
   </v-sheet>
 </template>
-
-<script setup>
-  import { defineAsyncComponent, computed, ref } from 'vue';
+<script setup lang="ts">
+  import { computed, toRef, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useDisplay } from 'vuetify';
   import { useTarkovStore } from '@/stores/tarkov';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useUserStore } from '@/stores/user';
   import { useTarkovData } from '@/composables/tarkovdata';
-
-  const TaskInfo = defineAsyncComponent(() => import('./TaskInfo'));
-  const QuestKeys = defineAsyncComponent(() => import('./QuestKeys'));
-  const QuestObjectives = defineAsyncComponent(() => import('./QuestObjectives'));
-  const TaskActions = defineAsyncComponent(() => import('./TaskActions'));
-
-  const props = defineProps({
-    task: { type: Object, required: true },
-    activeUserView: { type: String, required: true },
-    neededBy: { type: Array, default: () => [] },
-    showNextTasks: { type: Boolean, default: false },
-    showPreviousTasks: { type: Boolean, default: false },
-  });
-
+  import TaskCardInfo from './TaskCardInfo.vue';
+  import TaskCardObjectives from './TaskCardObjectives.vue';
+  import { useTaskCardActions } from './composables/useTaskCardActions';
+  import type { Task } from '@/types/tarkov';
+  const TaskActions = defineAsyncComponent(() => import('./TaskActions.vue'));
+  interface TaskCardProps {
+    task: Task;
+    activeUserView: string;
+    neededBy: string[];
+    showNextTasks: boolean;
+    showPreviousTasks: boolean;
+  }
+  const props = defineProps<TaskCardProps>();
   const { t } = useI18n({ useScope: 'global' });
   const { xs } = useDisplay();
   const tarkovStore = useTarkovStore();
-  const progressStore = useProgressStore();
+  const { isTaskUnlockedFor } = useProgressQueries();
   const userStore = useUserStore();
   const { tasks } = useTarkovData();
-
-  const taskStatusUpdated = ref(false);
-  const taskStatus = ref('');
-  // { taskId: string, taskName: string, action: 'complete' | 'uncomplete' }
-  const undoData = ref(null);
-  const showUndoButton = ref(false);
-
-  // Computed properties
+  const taskRef = toRef(props, 'task');
+  const {
+    taskStatus,
+    taskStatusUpdated,
+    showUndoButton,
+    markTaskComplete,
+    markTaskUncomplete,
+    markTaskAvailable,
+    undoLastAction,
+  } = useTaskCardActions(taskRef, tasks);
   const isComplete = computed(() => tarkovStore.isTaskComplete(props.task.id));
   const isFailed = computed(() => tarkovStore.isTaskFailed(props.task.id));
-  const isLocked = computed(
-    () => progressStore.unlockedTasks[props.task.id]?.self !== true && !isComplete.value
-  );
+  const isLocked = computed(() => !isTaskUnlockedFor(props.task.id, 'self') && !isComplete.value);
   const isOurFaction = computed(() => {
     const taskFaction = props.task.factionName;
     return taskFaction === 'Any' || taskFaction === tarkovStore.getPMCFaction();
   });
-
   const taskClasses = computed(() => ({
     'task-complete': isComplete.value && !isFailed.value,
     'task-locked': isLocked.value || isFailed.value,
   }));
-
   const showBackgroundIcon = computed(() => isLocked.value || isFailed.value || isComplete.value);
   const backgroundIcon = computed(() => {
     if (isComplete.value) return 'mdi-check';
     if (isLocked.value || isFailed.value) return 'mdi-lock';
     return '';
   });
-
-  const lockedBehind = computed(
-    () => props.task.successors?.filter((s) => !tarkovStore.isTaskComplete(s.id)).length || 0
-  );
-  const lockedBefore = computed(
-    () => props.task.predecessors?.filter((s) => !tarkovStore.isTaskComplete(s.id)).length || 0
-  );
-  const showOptionalRequirementLabels = computed(
-    () => userStore.getShowOptionalTaskRequirementLabels
-  );
-  const showRequiredRequirementLabels = computed(
-    () => userStore.getShowRequiredTaskRequirementLabels
-  );
   const showExperienceRewards = computed(() => userStore.getShowExperienceRewards);
-  const showNextTasksSetting = computed(() => props.showNextTasks === true);
-  const nextTasks = computed(() => {
-    if (!showNextTasksSetting.value) return [];
-    const successors = props.task.children || [];
-    if (!Array.isArray(successors) || !successors.length) return [];
-    const allTasks = tasks.value || [];
-    return successors
-      .map((id) => allTasks.find((t) => t.id === id))
-      .filter((taskItem) => Boolean(taskItem && taskItem.name))
-      .map((taskItem) => ({
-        id: taskItem.id,
-        name: taskItem.name,
-        wikiLink: taskItem.wikiLink,
-      }));
-  });
-  const showTaskIds = computed(() => userStore.getShowTaskIds);
-  const showPreviousTasksSetting = computed(() => props.showPreviousTasks === true);
-  const previousTasks = computed(() => {
-    if (!showPreviousTasksSetting.value) return [];
-    const requirements = props.task.taskRequirements || [];
-    const allTasks = tasks.value || [];
-
-    const relevantRequirementIds = requirements
-      .filter((requirement) => {
-        const reqTaskId = requirement?.task?.id;
-        if (!reqTaskId) return false;
-        const statuses = requirement.status || [];
-        if (!statuses.length) return true;
-        return statuses.some((status) => {
-          const normalized = status?.toLowerCase();
-          if (!normalized) return false;
-          if (normalized.includes('accept')) return false;
-          return normalized.includes('complete') || normalized.includes('finish');
-        });
-      })
-      .map((requirement) => requirement.task.id);
-
-    if (!relevantRequirementIds.length) return [];
-
-    return relevantRequirementIds
-      .map((id) => allTasks.find((t) => t.id === id))
-      .filter((taskItem) => Boolean(taskItem && taskItem.name))
-      .map((taskItem) => ({
-        id: taskItem.id,
-        name: taskItem.name,
-        wikiLink: taskItem.wikiLink,
-      }));
-  });
-  const showKappaStatus = computed(() => {
-    if (props.task.kappaRequired === true) {
-      return showRequiredRequirementLabels.value;
-    }
-    if (props.task.kappaRequired === false) {
-      return showOptionalRequirementLabels.value;
-    }
-    return false;
-  });
-  const kappaRequired = computed(() => props.task.kappaRequired === true);
-  const showLightkeeperStatus = computed(() => {
-    if (props.task.lightkeeperRequired === true) {
-      return showRequiredRequirementLabels.value;
-    }
-    if (props.task.lightkeeperRequired === false) {
-      return showOptionalRequirementLabels.value;
-    }
-    return false;
-  });
-  const lightkeeperRequired = computed(() => props.task.lightkeeperRequired === true);
-  const showEodStatus = computed(() => {
-    if (props.task.eodOnly === true) {
-      return showRequiredRequirementLabels.value;
-    }
-    return false;
-  });
-  const factionImage = computed(() => `/img/factions/${props.task.factionName}.webp`);
-
-  const mapObjectiveTypes = [
-    'mark',
-    'zone',
-    'extract',
-    'visit',
-    'findItem',
-    'findQuestItem',
-    'plantItem',
-    'plantQuestItem',
-    'shoot',
-  ];
-  const onMapView = computed(() => userStore.getTaskPrimaryView === 'maps');
-
-  const relevantViewObjectives = computed(() => {
-    if (!onMapView.value) return props.task.objectives;
-
-    return props.task.objectives.filter((o) => {
-      if (!Array.isArray(o.maps) || !o.maps.length) return true;
-      return (
-        o.maps.some((m) => m.id === userStore.getTaskMapView) && mapObjectiveTypes.includes(o.type)
-      );
-    });
-  });
-
-  const irrelevantObjectives = computed(() => {
-    if (!onMapView.value) return [];
-
-    return props.task.objectives.filter((o) => {
-      if (!Array.isArray(o.maps) || !o.maps.length) return false;
-      const onSelectedMap = o.maps.some((m) => m.id === userStore.getTaskMapView);
-      const isMapType = mapObjectiveTypes.includes(o.type);
-      return !(onSelectedMap && isMapType);
-    });
-  });
-
-  const uncompletedIrrelevantObjectives = computed(() =>
-    props.task.objectives
-      .filter((o) => {
-        const onCorrectMap = o?.maps?.some((m) => m.id === userStore.getTaskMapView);
-        const isMapObjectiveType = mapObjectiveTypes.includes(o.type);
-        return !onCorrectMap || !isMapObjectiveType;
-      })
-      .filter((o) => !tarkovStore.isTaskObjectiveComplete(o.id))
-  );
-
-  // Methods
-  const updateTaskStatus = (statusKey, taskName = props.task.name, showUndo = false) => {
-    taskStatus.value = t(statusKey, { name: taskName });
-    taskStatusUpdated.value = true;
-    showUndoButton.value = showUndo;
-  };
-
-  const undoLastAction = () => {
-    if (!undoData.value) return;
-
-    const { taskId, taskName, action } = undoData.value;
-
-    if (action === 'complete') {
-      // Undo completion by setting task as uncompleted
-      tarkovStore.setTaskUncompleted(taskId);
-      // Find the task to handle objectives and alternatives
-      const taskToUndo = tasks.value.find((task) => task.id === taskId);
-      if (taskToUndo) {
-        handleTaskObjectives(taskToUndo.objectives, 'setTaskObjectiveUncomplete');
-        handleAlternatives(
-          taskToUndo.alternatives,
-          'setTaskUncompleted',
-          'setTaskObjectiveUncomplete'
-        );
-      }
-      updateTaskStatus('page.tasks.questcard.undocomplete', taskName);
-    } else if (action === 'uncomplete') {
-      // Undo uncompleting by setting task as completed
-      tarkovStore.setTaskComplete(taskId);
-      // Find the task to handle objectives and alternatives
-      const taskToUndo = tasks.value.find((task) => task.id === taskId);
-      if (taskToUndo) {
-        handleTaskObjectives(taskToUndo.objectives, 'setTaskObjectiveComplete');
-        handleAlternatives(taskToUndo.alternatives, 'setTaskFailed', 'setTaskObjectiveComplete');
-        // Ensure min level for completion
-        if (tarkovStore.playerLevel < taskToUndo.minPlayerLevel) {
-          tarkovStore.setLevel(taskToUndo.minPlayerLevel);
-        }
-      }
-      updateTaskStatus('page.tasks.questcard.undouncomplete', taskName);
-    }
-
-    showUndoButton.value = false;
-    undoData.value = null;
-  };
-
-  const handleTaskObjectives = (objectives, action) => {
-    objectives.forEach((objective) => {
-      if (action === 'setTaskObjectiveComplete') {
-        if (objective?.type === 'shoot' && objective?.shotType === 'kill' && objective?.count) {
-          tarkovStore.setObjectiveCount(objective.id, objective.count);
-        }
-        tarkovStore.setTaskObjectiveComplete(objective.id);
-      } else if (action === 'setTaskObjectiveUncomplete') {
-        if (objective?.type === 'shoot' && objective?.shotType === 'kill' && objective?.count) {
-          tarkovStore.setObjectiveCount(objective.id, 0);
-        }
-        tarkovStore.setTaskObjectiveUncomplete(objective.id);
-      } else if (typeof tarkovStore[action] === 'function') {
-        tarkovStore[action](objective.id);
-      }
-    });
-  };
-
-  const handleAlternatives = (alternatives, taskAction, objectiveAction) => {
-    if (!Array.isArray(alternatives)) return;
-
-    alternatives.forEach((a) => {
-      tarkovStore[taskAction](a);
-      const alternativeTask = tasks.value.find((task) => task.id === a);
-      if (alternativeTask?.objectives) {
-        handleTaskObjectives(alternativeTask.objectives, objectiveAction);
-      }
-    });
-  };
-
-  const ensureMinLevel = () => {
-    if (tarkovStore.playerLevel < props.task.minPlayerLevel) {
-      tarkovStore.setLevel(props.task.minPlayerLevel);
-    }
-  };
-
-  const markTaskComplete = (isUndo = false) => {
-    if (!isUndo) {
-      // Store undo data before performing the action
-      undoData.value = {
-        taskId: props.task.id,
-        taskName: props.task.name,
-        action: 'complete',
-      };
-    }
-
-    tarkovStore.setTaskComplete(props.task.id);
-    handleTaskObjectives(props.task.objectives, 'setTaskObjectiveComplete');
-    handleAlternatives(props.task.alternatives, 'setTaskFailed', 'setTaskObjectiveComplete');
-    ensureMinLevel();
-
-    if (isUndo) {
-      updateTaskStatus('page.tasks.questcard.undocomplete');
-    } else {
-      updateTaskStatus('page.tasks.questcard.statuscomplete', props.task.name, true);
-    }
-  };
-
-  const markTaskUncomplete = (isUndo = false) => {
-    if (!isUndo) {
-      // Store undo data before performing the action
-      undoData.value = {
-        taskId: props.task.id,
-        taskName: props.task.name,
-        action: 'uncomplete',
-      };
-    }
-
-    tarkovStore.setTaskUncompleted(props.task.id);
-    handleTaskObjectives(props.task.objectives, 'setTaskObjectiveUncomplete');
-    handleAlternatives(props.task.alternatives, 'setTaskUncompleted', 'setTaskObjectiveUncomplete');
-
-    if (isUndo) {
-      updateTaskStatus('page.tasks.questcard.undouncomplete');
-    } else {
-      updateTaskStatus('page.tasks.questcard.statusuncomplete', props.task.name, true);
-    }
-  };
-
-  const markTaskAvailable = () => {
-    props.task.predecessors?.forEach((p) => {
-      tarkovStore.setTaskComplete(p);
-      const predecessorTask = tasks.value.find((task) => task.id === p);
-      if (predecessorTask?.objectives) {
-        handleTaskObjectives(predecessorTask.objectives, 'setTaskObjectiveComplete');
-      }
-    });
-    ensureMinLevel();
-    updateTaskStatus('page.tasks.questcard.statusavailable');
-  };
 </script>
-
 <style lang="scss" scoped>
   .taskContainer {
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(40, 40, 40, 0.98) 0%,
+        rgba(33, 33, 33, 0.98) 70%,
+        rgba(30, 30, 30, 0.98) 100%
+      ),
+      #262626;
+    margin: 0;
   }
-
   .taskContainerBackground {
     margin: 3rem;
     position: absolute;
@@ -419,7 +135,6 @@
     color: #c6afaf;
     opacity: 0.2;
   }
-
   .task-complete {
     background: linear-gradient(
       135deg,
@@ -427,12 +142,100 @@
       rgba(var(--v-theme-complete), 0) 75%
     );
   }
-
   .task-locked {
     background: linear-gradient(
       135deg,
       rgba(var(--v-theme-failure), 1) 0%,
       rgba(var(--v-theme-failure), 0) 75%
     );
+  }
+  .task-card-row {
+    --divider-color: rgba(255, 255, 255, 0.06);
+  }
+  .task-card-column {
+    position: relative;
+    padding-top: 16px !important;
+    padding-bottom: 16px !important;
+  }
+  .task-card-column--left {
+    border-right: 1px solid var(--divider-color);
+  }
+  .task-card-column--center {
+    border-right: 1px solid var(--divider-color);
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+  .task-card-column--right {
+    padding-left: 24px !important;
+  }
+  .task-actions-column {
+    justify-content: flex-end;
+    align-items: flex-start;
+  }
+  @media (min-width: 960px) {
+    .task-card-row {
+      flex-wrap: nowrap;
+    }
+    .task-card-column {
+      max-width: none;
+    }
+    .task-card-column--left {
+      flex: 0 0 clamp(320px, 34%, 440px);
+      max-width: clamp(320px, 34%, 440px);
+    }
+    .task-card-column--center {
+      flex: 1 1 0;
+      min-width: clamp(360px, 44%, 760px);
+    }
+    .task-card-column--right {
+      flex: 0 0 clamp(300px, 22%, 340px);
+      max-width: clamp(300px, 22%, 340px);
+    }
+  }
+  @media (min-width: 960px) and (max-width: 1600px) {
+    .task-card-row {
+      flex-wrap: wrap;
+    }
+    .task-card-column--center {
+      border-right: none;
+    }
+    .task-card-column--right {
+      flex: 1 1 100%;
+      max-width: 100%;
+      margin-top: 12px;
+      padding-top: 16px;
+      position: relative;
+    }
+    .task-actions-column {
+      width: 100%;
+      justify-content: flex-end;
+    }
+    .task-card-column--right::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background-color: var(--divider-color);
+    }
+  }
+  @media (max-width: 959px) {
+    .task-actions-column {
+      justify-content: center;
+      align-items: center;
+    }
+    .task-card-column--left,
+    .task-card-column--center {
+      border-right: none;
+      border-bottom: 1px solid var(--divider-color);
+    }
+  }
+  @media (max-width: 1264px) {
+    .task-card-column--center,
+    .task-card-column--right {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
   }
 </style>

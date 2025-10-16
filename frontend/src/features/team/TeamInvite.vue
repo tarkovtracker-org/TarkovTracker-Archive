@@ -41,6 +41,7 @@
   import { auth } from '@/plugins/firebase';
   import { useLiveData } from '@/composables/livedata';
   import { getFunctions, httpsCallable } from 'firebase/functions';
+  import { logger } from '@/utils/logger';
   const router = useRouter();
   const { useSystemStore } = useLiveData();
   const systemStore = useSystemStore();
@@ -69,7 +70,7 @@
     try {
       // Use auth.currentUser to get the ID token
       if (!auth.currentUser) {
-        console.error('[TeamInvite.vue] User not authenticated. Cannot accept invite.');
+        logger.error('[TeamInvite.vue] User not authenticated. Cannot accept invite.');
         joinResult.value = t('page.team.card.teaminvite.auth_error');
         joinTeamSnackbar.value = true;
         accepting.value = false;
@@ -87,7 +88,7 @@
             return;
           }
         } catch (error) {
-          console.error('[Invite Debug] Error leaving team:', error);
+          logger.error('[Invite Debug] Error leaving team:', error);
           joinResult.value = t('page.team.card.teaminvite.leave_error');
           joinTeamSnackbar.value = true;
           accepting.value = false;
@@ -103,7 +104,7 @@
         const joinResponse = await joinTeamCallable(joinPayload);
         const joinResultResp = joinResponse.data;
         if (!joinResultResp.joined) {
-          console.error('[Invite Debug] joinTeam OK response but not joined:', joinResultResp);
+          logger.error('[Invite Debug] joinTeam OK response but not joined:', joinResultResp);
           joinResult.value = t('page.team.card.teaminvite.join_error');
           joinTeamSnackbar.value = true;
           accepting.value = false;
@@ -114,7 +115,7 @@
         accepting.value = false;
         router.push({ name: 'team' });
       } catch (_error) {
-        console.error(
+        logger.error(
           '[Invite Debug] Error joining team:',
           _error,
           JSON.stringify(_error, Object.getOwnPropertyNames(_error))

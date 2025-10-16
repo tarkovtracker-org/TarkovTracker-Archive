@@ -4,16 +4,16 @@
       <v-card>
         <v-tabs
           :model-value="activeMapView"
-          @update:model-value="(value: unknown) => $emit('update:activeMapView', value as string)"
           bg-color="accent"
           slider-color="secondary"
           align-tabs="center"
           show-arrows
+          @update:model-value="(value: unknown) => $emit('update:activeMapView', value as string)"
         >
           <v-tab
             v-for="(map, index) in maps"
             :key="index"
-            :value="map.mergedIds ? map.mergedIds[0] : map.id"
+            :value="map.id"
             prepend-icon="mdi-compass"
           >
             <v-badge
@@ -33,12 +33,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed } from 'vue';
-
   interface MapData {
     id: string;
     name: string;
-    mergedIds?: string[];
   }
 
   interface Props {
@@ -56,7 +53,6 @@
   defineEmits<Emits>();
 
   const getTaskTotal = (map: MapData): number => {
-    const mapId = map.mergedIds ? map.mergedIds[0] : map.id;
-    return props.taskTotals[mapId] || 0;
+    return props.taskTotals[map.id] || 0;
   };
 </script>

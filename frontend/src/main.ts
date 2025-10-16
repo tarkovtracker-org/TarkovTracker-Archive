@@ -10,6 +10,8 @@ import { VueFire } from 'vuefire';
 import { app as fireapp } from './plugins/firebase';
 import { markInitialized } from './plugins/store-initializer';
 import { markI18nReady } from '@/composables/utils/i18nHelpers';
+import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
+import { logger } from '@/utils/logger';
 // Base app component
 import App from './App.vue';
 
@@ -25,11 +27,16 @@ window.__TARKOV_DATA_MIGRATED = false;
 
 // Create app instance
 const app = createApp(App);
+
+const { initializeConsent: initializePrivacyConsent } = usePrivacyConsent();
+if (typeof window !== 'undefined') {
+  initializePrivacyConsent();
+}
 // Global error handler for debugging
 app.config.errorHandler = (err: unknown, vm: ComponentPublicInstance | null, info: string) => {
-  console.error('Vue Error:', err);
-  console.error('Component:', vm);
-  console.error('Info:', info);
+  logger.error('Vue Error:', err);
+  logger.error('Component:', vm);
+  logger.error('Info:', info);
 };
 
 // Configure app with plugins in the correct order

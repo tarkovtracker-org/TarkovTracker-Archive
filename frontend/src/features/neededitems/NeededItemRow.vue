@@ -212,7 +212,7 @@
                                 <v-icon size="x-small" class="mr-1"
                                   >mdi-account-child-circle</v-icon
                                 >
-                                {{ progressStore.getDisplayName(userNeed.user) }}
+                                {{ getDisplayName(userNeed.user) }}
                                 {{ userNeed.count.toLocaleString() }}/{{
                                   neededCount.toLocaleString()
                                 }}
@@ -326,7 +326,7 @@
                         style="white-space: pre-line"
                       >
                         <v-icon size="x-small" class="mr-1">mdi-account-child-circle</v-icon>
-                        {{ progressStore.getDisplayName(userNeed.user) }}
+                        {{ getDisplayName(userNeed.user) }}
                         {{ userNeed.count.toLocaleString() }}/{{ neededCount.toLocaleString() }}
                       </div>
                     </template>
@@ -342,7 +342,7 @@
 </template>
 <script setup>
   import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
@@ -355,7 +355,7 @@
     },
   });
   const { smAndDown, mdAndUp } = useDisplay();
-  const progressStore = useProgressStore();
+  const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   useTarkovData();
   const smallDialog = ref(false);

@@ -39,7 +39,7 @@ npm run test:e2e:ui      # E2E tests UI
 
 Place test files alongside components:
 
-```
+```bash
 src/
 ├── features/
 │   └── auth/
@@ -76,7 +76,7 @@ Common mocks are pre-configured in `src/test/setup.ts`:
 
 ## End-to-End Testing with Playwright
 
-### Configuration
+### Configurations
 
 - **Config File**: `playwright.config.ts`
 - **Test Directory**: `e2e/`
@@ -84,7 +84,7 @@ Common mocks are pre-configured in `src/test/setup.ts`:
 
 ### Test Structure
 
-```
+```bash
 e2e/
 ├── auth.spec.ts       # Authentication flows
 ├── dashboard.spec.ts  # Main navigation

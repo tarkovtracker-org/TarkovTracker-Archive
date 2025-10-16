@@ -9,8 +9,8 @@
         </v-row>
 
         <v-tooltip v-if="task.minPlayerLevel != 0" location="top">
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+          <template #activator="{ props: levelTooltipProps }">
+            <span class="tooltip-activator" v-bind="levelTooltipProps">
               <InfoRow icon="mdi-menu-right">
                 <i18n-t keypath="page.tasks.questcard.level" scope="global">
                   <template #count>{{ task.minPlayerLevel }}</template>
@@ -21,12 +21,38 @@
           {{ t('page.tasks.questcard.level_tooltip') }}
         </v-tooltip>
 
-        <v-tooltip
-          v-if="task?.predecessors?.length"
-          location="top"
+        <InfoRow
+          v-for="requirement in traderLoyaltyRequirements"
+          :key="`loyalty-${requirement.id}`"
+          icon="mdi-handshake"
+          class="mb-1"
+          :class="{ 'text-error': !requirement.met }"
         >
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+          <i18n-t keypath="page.tasks.questcard.trader_loyalty_requirement" scope="global">
+            <template #trader>{{ requirement.name }}</template>
+            <template #level>{{ requirement.required }}</template>
+            <template #current>{{ requirement.current }}</template>
+          </i18n-t>
+        </InfoRow>
+
+        <InfoRow
+          v-for="requirement in traderStandingRequirements"
+          :key="`standing-${requirement.id}`"
+          icon="mdi-thumb-up-outline"
+          class="mb-1"
+          :class="{ 'text-error': !requirement.met }"
+        >
+          <i18n-t keypath="page.tasks.questcard.trader_standing_requirement" scope="global">
+            <template #trader>{{ requirement.name }}</template>
+            <template #comparison>{{ requirement.operator }}</template>
+            <template #value>{{ requirement.required }}</template>
+            <template #current>{{ requirement.current }}</template>
+          </i18n-t>
+        </InfoRow>
+
+        <v-tooltip v-if="task?.predecessors?.length" location="top">
+          <template #activator="{ props: predecessorsTooltipProps }">
+            <span class="tooltip-activator" v-bind="predecessorsTooltipProps">
               <InfoRow icon="mdi-lock-open-outline" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbefore_label') }}</span>
                 <span class="lock-count">{{ lockedBefore }}</span>
@@ -36,12 +62,9 @@
           {{ t('page.tasks.questcard.lockedbefore_tooltip') }}
         </v-tooltip>
 
-        <v-tooltip
-          v-if="task?.successors?.length"
-          location="top"
-        >
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+        <v-tooltip v-if="task?.successors?.length" location="top">
+          <template #activator="{ props: successorsTooltipProps }">
+            <span class="tooltip-activator" v-bind="successorsTooltipProps">
               <InfoRow icon="mdi-lock" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbehind_label') }}</span>
                 <span class="lock-count">{{ lockedBehind }}</span>
@@ -69,7 +92,7 @@
               :class="[
                 'status-chip',
                 'status-chip--kappa',
-                kappaRequired ? 'status-chip--required' : 'status-chip--optional'
+                kappaRequired ? 'status-chip--required' : 'status-chip--optional',
               ]"
             >
               {{
@@ -87,7 +110,7 @@
               :class="[
                 'status-chip',
                 'status-chip--lightkeeper',
-                lightkeeperRequired ? 'status-chip--required' : 'status-chip--optional'
+                lightkeeperRequired ? 'status-chip--required' : 'status-chip--optional',
               ]"
             >
               {{
@@ -113,14 +136,13 @@
         >
           <span class="next-tasks__label">{{ t('page.tasks.questcard.next_tasks') }}:</span>
           <span class="next-tasks__list">
-            <span v-for="(nextTask, index) in nextTasks" :key="nextTask.id || index" class="next-task">
+            <span
+              v-for="(nextTask, index) in nextTasks"
+              :key="nextTask.id || index"
+              class="next-task"
+            >
               <template v-if="nextTask?.wikiLink">
-                <a
-                  :href="nextTask.wikiLink"
-                  target="_blank"
-                  rel="noopener"
-                  class="next-task__link"
-                >
+                <a :href="nextTask.wikiLink" target="_blank" rel="noopener" class="next-task__link">
                   {{ nextTask?.name || nextTask?.id || t('page.tasks.questcard.unknown_task') }}
                 </a>
               </template>
@@ -147,12 +169,7 @@
               class="next-task"
             >
               <template v-if="prevTask?.wikiLink">
-                <a
-                  :href="prevTask.wikiLink"
-                  target="_blank"
-                  rel="noopener"
-                  class="next-task__link"
-                >
+                <a :href="prevTask.wikiLink" target="_blank" rel="noopener" class="next-task__link">
                   {{ prevTask?.name || prevTask?.id || t('page.tasks.questcard.unknown_task') }}
                 </a>
               </template>
@@ -179,8 +196,6 @@
         <InfoRow v-if="showTaskIds" icon="mdi-identifier" class="mb-1 task-id-row">
           {{ task.id }}
         </InfoRow>
-
-        
       </v-container>
     </template>
     <template v-else>
@@ -192,40 +207,51 @@
   </div>
 </template>
 
-<script setup>
-  import { computed, defineAsyncComponent } from 'vue';
+<script setup lang="ts">
+  import { computed, defineAsyncComponent, toRef } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useTarkovStore } from '@/stores/tarkov';
+  import { EOD_EDITIONS } from '@/config/gameConstants';
+  import { useTaskRequirements } from './composables/useTaskRequirements';
+  import type { Task } from '@/types/tarkov';
 
-  const TaskLink = defineAsyncComponent(() => import('./TaskLink'));
-  const InfoRow = defineAsyncComponent(() => import('./InfoRow'));
+  const TaskLink = defineAsyncComponent(() => import('./TaskLink.vue'));
+  const InfoRow = defineAsyncComponent(() => import('./InfoRow.vue'));
 
-  const props = defineProps({
-    task: { type: Object, required: true },
-    xs: { type: Boolean, required: true },
-    lockedBefore: { type: Number, required: true },
-    lockedBehind: { type: Number, required: true },
-    factionImage: { type: String, required: true },
-    showKappaStatus: { type: Boolean, required: true },
-    kappaRequired: { type: Boolean, default: false },
-    showLightkeeperStatus: { type: Boolean, required: true },
-    lightkeeperRequired: { type: Boolean, default: false },
-    neededBy: { type: Array, required: true },
-    activeUserView: { type: String, required: true },
-    showNextTasks: { type: Boolean, default: false },
-    nextTasks: { type: Array, default: () => [] },
-    showPreviousTasks: { type: Boolean, default: false },
-    previousTasks: { type: Array, default: () => [] },
-    showTaskIds: { type: Boolean, default: false },
-    showEodStatus: { type: Boolean, default: false },
-  });
+  interface RelatedTaskSummary {
+    id?: string;
+    name?: string;
+    wikiLink?: string;
+  }
+
+  interface TaskInfoProps {
+    task: Task;
+    xs: boolean;
+    lockedBefore: number;
+    lockedBehind: number;
+    factionImage: string;
+    showKappaStatus: boolean;
+    kappaRequired: boolean;
+    showLightkeeperStatus: boolean;
+    lightkeeperRequired: boolean;
+    neededBy: string[];
+    activeUserView: string;
+    showNextTasks: boolean;
+    nextTasks: RelatedTaskSummary[];
+    showPreviousTasks: boolean;
+    previousTasks: RelatedTaskSummary[];
+    showTaskIds: boolean;
+    showEodStatus: boolean;
+  }
+
+  const props = defineProps<TaskInfoProps>();
 
   const { t } = useI18n({ useScope: 'global' });
 
+  const taskRef = toRef(props, 'task');
+  const { traderLoyaltyRequirements, traderStandingRequirements } = useTaskRequirements(taskRef);
+
   const tarkovStore = useTarkovStore();
-
-  const EOD_EDITIONS = new Set([4, 6]);
-
   const showEodChip = computed(() => {
     if (!props.showEodStatus || !props.task?.eodOnly) {
       return false;

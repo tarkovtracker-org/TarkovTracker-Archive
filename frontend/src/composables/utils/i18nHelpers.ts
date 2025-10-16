@@ -1,5 +1,6 @@
 import { computed, getCurrentInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { logger } from '@/utils/logger';
 
 // Global flag to track i18n readiness
 let i18nReady = false;
@@ -26,7 +27,7 @@ export function useSafeLocale() {
       });
       return computed(() => locale.value);
     } catch (error) {
-      console.warn('[useSafeLocale] Could not access i18n context:', error);
+      logger.warn('[useSafeLocale] Could not access i18n context:', error);
     }
   }
 

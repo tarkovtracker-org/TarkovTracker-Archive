@@ -32,10 +32,10 @@
 </template>
 <script setup>
   import { defineAsyncComponent, computed, inject, provide } from 'vue';
-  import { useUserStore } from '@/stores/user';
-  import { useProgressStore } from '@/stores/progress';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
+  import { useNeedVisibility } from '@/features/neededitems/useNeedVisibility';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   const NeededItemMediumCard = defineAsyncComponent(
     () => import('@/features/neededitems/NeededItemMediumCard')
   );
@@ -53,10 +53,18 @@
       default: 'mediumCard',
     },
   });
-  const userStore = useUserStore();
-  const progressStore = useProgressStore();
+  const {
+    visibleTeamStores,
+    getModulePartCompletionMap,
+    getObjectiveCompletionMap,
+    isTaskCompletedFor,
+    tasksCompletions,
+    moduleCompletions,
+    modulePartCompletions,
+  } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const { tasks, hideoutStations, alternativeTasks } = useTarkovData();
+  const { isTaskNeedVisible, isHideoutNeedVisible } = useNeedVisibility();
   // Helper functions and data to calculate if the item should be shown based
   // on the user's/team's progress and the user's filters
   const filterString = inject('itemFilterName');
@@ -74,122 +82,13 @@
   });
   const showItem = computed(() => {
     if (props.need.needType == 'taskObjective') {
-      // ONLY allow 'giveItem' objectives, and ensure an item exists
-      if (props.need.type !== 'giveItem') {
-        return false;
-      }
-      // Check if a valid item exists and other filters pass
-      return item.value && isTaskObjectiveNeeded(props.need);
+      return item.value && isTaskNeedVisible(props.need, relatedTask.value);
     } else if (props.need.needType == 'hideoutModule') {
-      // Check if a valid item exists and other filters pass
-      return item.value && isHideoutModuleNeeded(props.need);
+      return item.value && isHideoutNeedVisible(props.need);
     } else {
       return false;
     }
   });
-  function isTaskObjectiveNeeded(need) {
-    if (userStore.itemsNeededHideNonFIR) {
-      if (need.type == 'mark' || need.type == 'buildWeapon' || need.type == 'plantItem') {
-        return false;
-      } else if (need.type == 'giveItem') {
-        if (need.foundInRaid == false) {
-          return false;
-        }
-      }
-    }
-    if (userStore.hideKappaRequiredTasks && relatedTask.value.kappaRequired === true) {
-      return false;
-    }
-    if (userStore.hideLightkeeperRequiredTasks && relatedTask.value.lightkeeperRequired === true) {
-      return false;
-    }
-    if (
-      userStore.hideNonKappaTasks &&
-      relatedTask.value.kappaRequired !== true &&
-      relatedTask.value.lightkeeperRequired !== true
-    ) {
-      return false;
-    }
-    if (userStore.itemsTeamAllHidden) {
-      // Only show if the objective is needed by ourself
-      return (
-        !progressStore.tasksCompletions[need.taskId]?.self &&
-        !progressStore.objectiveCompletions[need.id]?.self &&
-        ['Any', tarkovStore.getPMCFaction].some(
-          (faction) => faction == relatedTask.value.factionName
-        )
-      );
-    } else if (userStore.itemsTeamNonFIRHidden) {
-      // Only show if a someone needs the objective
-      const taskNeeded = Object.entries(progressStore.tasksCompletions[need.taskId] || {}).some(
-        ([userTeamId, userStatus]) => {
-          const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
-          return (
-            relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
-            userStatus === false
-          );
-        }
-      );
-      const objectiveNeeded = Object.entries(
-        progressStore.objectiveCompletions[need.id] || {}
-      ).some(([userTeamId, userStatus]) => {
-        const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
-        return (
-          relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
-          userStatus === false
-        );
-      });
-      return need.foundInRaid && taskNeeded && objectiveNeeded;
-    } else {
-      return (
-        Object.entries(progressStore.tasksCompletions[need.taskId] || {}).some(
-          ([userTeamId, userStatus]) => {
-            const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
-            return (
-              relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
-              userStatus === false
-            );
-          }
-        ) &&
-        Object.entries(progressStore.objectiveCompletions[need.id] || {}).some(
-          ([userTeamId, userStatus]) => {
-            const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
-            return (
-              relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
-              userStatus === false
-            );
-          }
-        )
-      );
-    }
-  }
-  function isHideoutModuleNeeded(need) {
-    // If hideoutModule or its id is missing, this need cannot be for a hideout module
-    if (!need.hideoutModule || !need.hideoutModule.id) {
-      return false;
-    }
-    const moduleCompletions = progressStore.moduleCompletions?.[need.hideoutModule?.id] || {};
-    const modulePartCompletions = progressStore.modulePartCompletions?.[need.id] || {};
-    // If there is no progress data at all, show the item by default
-    if (
-      Object.keys(moduleCompletions).length === 0 &&
-      Object.keys(modulePartCompletions).length === 0
-    ) {
-      return true;
-    }
-    if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
-      // Only show if the objective is needed by ourself
-      return (
-        (moduleCompletions.self === undefined || moduleCompletions.self === false) &&
-        (modulePartCompletions.self === undefined || modulePartCompletions.self === false)
-      );
-    } else {
-      return (
-        Object.values(moduleCompletions).some((userStatus) => userStatus === false) &&
-        Object.values(modulePartCompletions).some((userStatus) => userStatus === false)
-      );
-    }
-  }
   // Emit functions to update the user's progress towards the need
   // the child functions emit these functions and we watch for them here
   const decreaseCount = () => {
@@ -303,17 +202,17 @@
   const selfCompletedNeed = computed(() => {
     if (props.need.needType == 'taskObjective') {
       const alternativeTaskCompleted = alternativeTasks.value[props.need.taskId]?.some(
-        (altTaskId) => progressStore.tasksCompletions?.[altTaskId]?.['self']
+        (altTaskId) => tasksCompletions.value?.[altTaskId]?.self
       );
       return (
-        progressStore.tasksCompletions?.[props.need.taskId]?.['self'] ||
+        tasksCompletions.value?.[props.need.taskId]?.self ||
         alternativeTaskCompleted ||
-        progressStore.objectiveCompletions?.[props.need.id]?.['self']
+        getObjectiveCompletionMap(props.need.id)?.self === true
       );
     } else if (props.need.needType == 'hideoutModule') {
       return (
-        progressStore.moduleCompletions?.[props.need.hideoutModule.id]?.['self'] ||
-        progressStore.modulePartCompletions?.[props.need.id]?.['self']
+        moduleCompletions.value?.[props.need.hideoutModule.id]?.self === true ||
+        modulePartCompletions.value?.[props.need.id]?.self === true
       );
     } else {
       return false;
@@ -338,31 +237,35 @@
     }
   });
   const teamNeeds = computed(() => {
-    let needingUsers = [];
+    const needingUsers = [];
     if (props.need.needType == 'taskObjective') {
-      // Find all of the users that need this objective
-      Object.entries(progressStore.objectiveCompletions[props.need.id]).forEach(
-        ([user, completed]) => {
-          if (!completed && !progressStore.tasksCompletions[props.need.taskId][user]) {
-            needingUsers.push({
-              user: user,
-              count: progressStore.teamStores[user].getObjectiveCount(props.need.id),
-            });
-          }
+      const completionMap = getObjectiveCompletionMap(props.need.id);
+      Object.entries(completionMap).forEach(([user, completed]) => {
+        if (!completed && !isTaskCompletedFor(props.need.taskId, user)) {
+          const teamStore = visibleTeamStores.value?.[user];
+          const count = teamStore?.getObjectiveCount
+            ? teamStore.getObjectiveCount(props.need.id)
+            : 0;
+          needingUsers.push({
+            user,
+            count,
+          });
         }
-      );
+      });
     } else if (props.need.needType == 'hideoutModule') {
-      // Find all of the users that need this module
-      Object.entries(progressStore.modulePartCompletions[props.need.id]).forEach(
-        ([user, completed]) => {
-          if (!completed) {
-            needingUsers.push({
-              user: user,
-              count: progressStore.teamStores[user].getHideoutPartCount(props.need.id),
-            });
-          }
+      const partCompletionMap = getModulePartCompletionMap(props.need.id);
+      Object.entries(partCompletionMap).forEach(([user, completed]) => {
+        if (!completed) {
+          const teamStore = visibleTeamStores.value?.[user];
+          const count = teamStore?.getHideoutPartCount
+            ? teamStore.getHideoutPartCount(props.need.id)
+            : 0;
+          needingUsers.push({
+            user,
+            count,
+          });
         }
-      );
+      });
     }
     return needingUsers;
   });

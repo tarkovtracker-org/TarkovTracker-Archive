@@ -1,6 +1,5 @@
 <template>
   <div class="task-actions">
-    <div v-if="experienceDisplay" class="task-experience">XP: {{ experienceDisplay }}</div>
     <template v-if="!isComplete && !isLocked">
       <ActionButton
         :xs="xs"
@@ -37,27 +36,24 @@
     </template>
 
     <template v-else-if="isLocked">
-      <div :class="xs ? 'd-flex justify-center' : ''">
-        <ActionButton
-          :xs="xs"
-          color="accent"
-          icon="mdi-fast-forward"
-          :text="t('page.tasks.questcard.availablebutton')"
-          :size="xs ? 'small' : 'x-large'"
-          class="mx-1 my-1"
-          @click="$emit('unlock')"
-        />
-        <ActionButton
-          :xs="xs"
-          color="success"
-          icon="mdi-check-all"
-          :text="t('page.tasks.questcard.completebutton')"
-          :size="xs ? 'small' : 'x-large'"
-          class="mx-1 my-1"
-          @click="$emit('complete')"
-        />
-      </div>
+      <ActionButton
+        :xs="xs"
+        color="accent"
+        icon="mdi-fast-forward"
+        :text="t('page.tasks.questcard.availablebutton')"
+        class="task-actions__button"
+        @click="$emit('unlock')"
+      />
+      <ActionButton
+        :xs="xs"
+        color="success"
+        icon="mdi-check-all"
+        :text="t('page.tasks.questcard.completebutton')"
+        class="task-actions__button"
+        @click="$emit('complete')"
+      />
     </template>
+    <div v-if="experienceDisplay" class="task-experience">XP: {{ experienceDisplay }}</div>
   </div>
 </template>
 
@@ -97,6 +93,34 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
+  }
+
+  .task-actions__button {
+    margin: 4px 0;
+  }
+
+  :deep(.v-btn.mx-1.my-1) {
+    margin: 0;
+  }
+
+  @media (max-width: 959px) {
+    .task-actions {
+      align-items: center;
+    }
+  }
+
+  @media (min-width: 960px) and (max-width: 1600px) {
+    .task-actions {
+      flex-direction: row;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .task-experience {
+      order: -1;
+    }
   }
 
   .task-experience {
