@@ -17,8 +17,12 @@ import type {
   NeededItemTaskObjective,
   ObjectiveMapInfo,
   ObjectiveGPSInfo,
+  TarkovItem,
+  RequiredKey,
+  Key,
 } from '@/types/tarkov';
 import type Graph from 'graphology';
+import { logger } from '@/utils/logger';
 
 // Disabled tasks list
 const DISABLED_TASKS: string[] = [
@@ -183,14 +187,52 @@ export function useTaskData() {
           }
         }
 
-        // Item requirements
-        if (objective?.item?.id || objective?.markerItem?.id) {
+        // Item requirements - handle both new 'items' array and legacy 'item'
+        const candidateItems: TarkovItem[] = [];
+        if (objective?.item) {
+          candidateItems.push(objective.item);
+        }
+        if (Array.isArray(objective?.items)) {
+          objective.items
+            .filter((candidate): candidate is TarkovItem => Boolean(candidate))
+            .forEach((candidate) => candidateItems.push(candidate));
+        }
+
+        const dedupedItems: TarkovItem[] = [];
+        const seenItemIds = new Set<string>();
+        candidateItems.forEach((candidate) => {
+          if (!candidate) {
+            return;
+          }
+          if (candidate.id) {
+            if (seenItemIds.has(candidate.id)) {
+              return;
+            }
+            seenItemIds.add(candidate.id);
+          }
+          dedupedItems.push(candidate);
+        });
+
+        if (dedupedItems.length > 0) {
+          const representativeItem = dedupedItems[0];
           tempNeededObjectives.push({
             id: objective.id,
             needType: 'taskObjective',
             taskId: task.id,
             type: objective.type,
-            item: objective.item!,
+            item: representativeItem,
+            alternativeItems: dedupedItems,
+            markerItem: objective.markerItem,
+            count: objective.count ?? 1,
+            foundInRaid: objective.foundInRaid ?? false,
+          });
+        } else if (objective?.markerItem?.id) {
+          tempNeededObjectives.push({
+            id: objective.id,
+            needType: 'taskObjective',
+            taskId: task.id,
+            type: objective.type,
+            item: undefined,
             markerItem: objective.markerItem,
             count: objective.count ?? 1,
             foundInRaid: objective.foundInRaid ?? false,
@@ -209,7 +251,43 @@ export function useTaskData() {
   };
 
   /**
-   * Enhances tasks with graph relationship data
+   * Collects required keys from task objectives to replace deprecated neededKeys
+   * Falls back to legacy neededKeys if no requiredKeys found on objectives
+   */
+  const getRequiredKeysFromObjectives = (task: Task) => {
+    const requiredKeys: RequiredKey[] = [];
+
+    // First try to collect from objectives.requiredKeys
+    task.objectives?.forEach((objective) => {
+      if (objective?.requiredKeys) {
+        const keys = Array.isArray(objective.requiredKeys) ? objective.requiredKeys : [objective.requiredKeys];
+        keys.forEach((key: Key) => {
+          // Find existing entry for this map or create new one
+          const existingMapEntry = requiredKeys.find(entry => entry.map?.id === objective.maps?.[0]?.id);
+          if (existingMapEntry) {
+            if (!existingMapEntry.keys.some((k: Key) => k.id === key.id)) {
+              existingMapEntry.keys.push(key);
+            }
+          } else {
+            requiredKeys.push({
+              keys: [key],
+              map: objective.maps?.[0] || null
+            });
+          }
+        });
+      }
+    });
+
+    // If no keys found from objectives and legacy neededKeys exists, use that
+    if (requiredKeys.length === 0 && task.neededKeys && Array.isArray(task.neededKeys)) {
+      return task.neededKeys;
+    }
+
+    return requiredKeys;
+  };
+
+  /**
+   * Enhances tasks with graph relationship data and computed required keys
    */
   const enhanceTasksWithRelationships = (taskList: Task[], graph: Graph) => {
     return taskList.map((task) => ({
@@ -220,6 +298,8 @@ export function useTaskData() {
       successors: getSuccessors(graph, task.id),
       parents: getParents(graph, task.id),
       children: getChildren(graph, task.id),
+      // Compute neededKeys from objectives with fallback to legacy field
+      neededKeys: getRequiredKeysFromObjectives(task),
     }));
   };
 
@@ -252,7 +332,7 @@ export function useTaskData() {
           neededItemTaskObjectives.value = [];
         }
       } catch (error) {
-        console.error('Error processing task data:', error);
+        logger.error('Error processing task data:', error);
         // Reset to safe state on error to prevent stuck loading
         tasks.value = [];
         taskGraph.value = createGraph();

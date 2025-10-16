@@ -1,16 +1,24 @@
 import { ref, shallowRef } from 'vue';
-import { useProgressStore } from '@/stores/progress';
 import { useTarkovData } from '@/composables/tarkovdata';
+import { getMapIdGroup } from '@/utils/mapNormalization';
 import type { Task } from '@/types/tarkov';
-
-interface MergedMap {
-  id: string;
-  mergedIds?: string[];
-}
+import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
+import { useProgressQueries } from '@/composables/useProgressQueries';
+import { logger } from '@/utils/logger';
 
 export function useTaskFiltering() {
-  const progressStore = useProgressStore();
-  const { tasks, disabledTasks } = useTarkovData();
+  const {
+    visibleTeamIds,
+    isTaskUnlockedFor,
+    isTaskUnlockedByAny,
+    isTaskCompletedFor,
+    getDisplayName,
+    playerFaction,
+    getUnlockedMap,
+    getTaskCompletionMap,
+    getObjectiveCompletionMap,
+  } = useProgressQueries();
+  const { tasks, disabledTasks, maps } = useTarkovData();
   const reloadingTasks = ref(false);
   const visibleTasks = shallowRef([]);
 
@@ -26,18 +34,14 @@ export function useTaskFiltering() {
     'shoot',
   ];
 
-  /**
-   * Filter tasks by primary view (all, maps, traders)
-   */
   const filterTasksByView = (
     taskList: Task[],
     primaryView: string,
     mapView: string,
-    traderView: string,
-    mergedMaps: MergedMap[]
+    traderView: string
   ) => {
     if (primaryView === 'maps') {
-      return filterTasksByMap(taskList, mapView, mergedMaps);
+      return filterTasksByMap(taskList, mapView);
     } else if (primaryView === 'traders') {
       return taskList.filter((task) => task.trader?.id === traderView);
     }
@@ -45,44 +49,31 @@ export function useTaskFiltering() {
   };
 
   /**
-   * Filter tasks by map, handling merged maps (Ground Zero, Factory)
+   * Filter tasks by map, handling map variants (Ground Zero 21+, Night Factory)
+   * by treating all variant IDs as part of the same map group
    */
-  const filterTasksByMap = (taskList: Task[], mapView: string, mergedMaps: MergedMap[]) => {
-    const mergedMap = mergedMaps.find((m) => m.mergedIds && m.mergedIds.includes(mapView));
+  const filterTasksByMap = (taskList: Task[], mapView: string) => {
+    // Get all map IDs that should be treated as the same map (canonical + variants)
+    const mapIdGroup = getMapIdGroup(mapView, maps.value);
 
-    if (mergedMap && mergedMap.mergedIds) {
-      const ids = mergedMap.mergedIds;
-      return taskList.filter((task) => {
-        // Check locations field
-        const taskLocations = Array.isArray(task.locations) ? task.locations : [];
-        let hasMap = ids.some((id: string) => taskLocations.includes(id));
+    return taskList.filter((task) => {
+      // Check locations field
+      const taskLocations = Array.isArray(task.locations) ? task.locations : [];
+      let hasMap = mapIdGroup.some((id: string) => taskLocations.includes(id));
 
-        // Check objectives[].maps
-        if (!hasMap && Array.isArray(task.objectives)) {
-          hasMap = task.objectives.some(
-            (obj) =>
-              Array.isArray(obj.maps) &&
-              obj.maps.some((map) => ids.includes(map.id)) &&
-              mapObjectiveTypes.includes(obj.type || '')
-          );
-        }
-        return hasMap;
-      });
-    } else {
-      // Default: single map logic
-      return taskList.filter((task) =>
-        task.objectives?.some(
+      // Also check objective maps
+      if (!hasMap && Array.isArray(task.objectives)) {
+        hasMap = task.objectives.some(
           (obj) =>
-            obj.maps?.some((map) => map.id === mapView) &&
+            Array.isArray(obj.maps) &&
+            obj.maps.some((map) => mapIdGroup.includes(map.id)) &&
             mapObjectiveTypes.includes(obj.type || '')
-        )
-      );
-    }
-  };
+        );
+      }
 
-  /**
-   * Filter tasks by status (available, locked, completed) and user view
-   */
+      return hasMap;
+    });
+  };
   const filterTasksByStatus = (taskList: Task[], secondaryView: string, userView: string) => {
     if (userView === 'all') {
       return filterTasksForAllUsers(taskList, secondaryView);
@@ -90,108 +81,89 @@ export function useTaskFiltering() {
       return filterTasksForUser(taskList, secondaryView, userView);
     }
   };
-
-  /**
-   * Filter tasks for all team members view
-   */
   const filterTasksForAllUsers = (taskList: Task[], secondaryView: string) => {
     if (secondaryView !== 'available') {
-      console.warn("Unexpected state: 'all' user view with non-'available' secondary view");
+      logger.warn("Unexpected state: 'all' user view with non-'available' secondary view");
       return [];
     }
-
     const tempVisibleTasks = [];
-
     for (const task of taskList) {
       const usersWhoNeedTask = [];
       let taskIsNeededBySomeone = false;
-
-      for (const teamId of Object.keys(progressStore.visibleTeamStores || {})) {
-        const isUnlockedForUser = progressStore.unlockedTasks?.[task.id]?.[teamId] === true;
-        const isCompletedByUser = progressStore.tasksCompletions?.[task.id]?.[teamId] === true;
-
+      for (const teamId of visibleTeamIds.value) {
+        const isUnlockedForUser = isTaskUnlockedFor(task.id, teamId);
+        const isCompletedByUser = isTaskCompletedFor(task.id, teamId);
         // Check faction requirements for this specific user
-        const userFaction = progressStore.playerFaction[teamId];
+        const userFaction = playerFaction.value?.[teamId];
         const taskFaction = task.factionName;
         const factionMatch = taskFaction === 'Any' || taskFaction === userFaction;
-
         if (isUnlockedForUser && !isCompletedByUser && factionMatch) {
           taskIsNeededBySomeone = true;
-          usersWhoNeedTask.push(progressStore.getDisplayName(teamId));
+          usersWhoNeedTask.push(getDisplayName(teamId));
         }
       }
-
       if (taskIsNeededBySomeone) {
         tempVisibleTasks.push({ ...task, neededBy: usersWhoNeedTask });
       }
     }
-
     return tempVisibleTasks;
   };
 
-  /**
-   * Filter tasks for specific user
-   */
   const filterTasksForUser = (taskList: Task[], secondaryView: string, userView: string) => {
     let filtered = taskList;
 
     if (secondaryView === 'available') {
-      filtered = filtered.filter(
-        (task) => progressStore.unlockedTasks?.[task.id]?.[userView] === true
-      );
+      filtered = filtered.filter((task) => isTaskUnlockedFor(task.id, userView));
     } else if (secondaryView === 'locked') {
       filtered = filtered.filter((task) => {
-        const taskCompletions = progressStore.tasksCompletions?.[task.id];
-        const unlockedTasks = progressStore.unlockedTasks?.[task.id];
-        return taskCompletions?.[userView] !== true && unlockedTasks?.[userView] !== true;
+        const taskCompletions = getTaskCompletionMap(task.id);
+        const unlockedMap = getUnlockedMap(task.id);
+        return taskCompletions?.[userView] !== true && unlockedMap?.[userView] !== true;
       });
     } else if (secondaryView === 'completed') {
-      filtered = filtered.filter(
-        (task) => progressStore.tasksCompletions?.[task.id]?.[userView] === true
-      );
+      filtered = filtered.filter((task) => isTaskCompletedFor(task.id, userView));
     }
-
     // Filter by faction
     return filtered.filter(
       (task) =>
-        task.factionName === 'Any' || task.factionName === progressStore.playerFaction[userView]
+        task.factionName === 'Any' || task.factionName === playerFaction.value?.[userView]
     );
   };
 
   /**
-   * Calculate task totals per map for badge display
+   * Calculate task counts per map, handling map variants
    */
   const calculateMapTaskTotals = (
-    mergedMaps: MergedMap[],
+    displayedMaps: Array<{ id: string; name: string }>,
     tasks: Task[],
     disabledTasks: string[],
     hideGlobalTasks: boolean,
     hideNonKappaTasks: boolean,
     hideKappaRequiredTasks: boolean,
     hideLightkeeperRequiredTasks: boolean,
-    activeUserView: string
+    activeUserView: string,
+    allMaps: Array<{ id: string; name: string }>
   ) => {
     const mapTaskCounts: Record<string, number> = {};
+    const requirementOptions = {
+      showKappa: !hideKappaRequiredTasks,
+      showLightkeeper: !hideLightkeeperRequiredTasks,
+      showEod: true,
+      hideNonEndgame: hideNonKappaTasks,
+      treatEodAsEndgame: false,
+    };
 
-    for (const map of mergedMaps) {
-      // If merged, count for both IDs
-      const ids = map.mergedIds || [map.id];
-      mapTaskCounts[ids[0]] = 0;
+    for (const map of displayedMaps) {
+      // Get all map IDs in this map's group (including variants)
+      const mapIdGroup = getMapIdGroup(map.id, allMaps);
+      mapTaskCounts[map.id] = 0;
 
       for (const task of tasks) {
         if (disabledTasks.includes(task.id)) continue;
         if (hideGlobalTasks && !task.map) continue;
-        if (hideKappaRequiredTasks && task.kappaRequired === true) continue;
-        if (hideLightkeeperRequiredTasks && task.lightkeeperRequired === true) continue;
-        if (
-          hideNonKappaTasks &&
-          task.kappaRequired !== true &&
-          task.lightkeeperRequired !== true
-        )
-          continue;
+        if (!taskMatchesRequirementFilters(task, requirementOptions)) continue;
 
         const taskLocations = Array.isArray(task.locations) ? task.locations : [];
-
         if (taskLocations.length === 0 && Array.isArray(task.objectives)) {
           for (const obj of task.objectives) {
             if (Array.isArray(obj.maps)) {
@@ -204,39 +176,35 @@ export function useTaskFiltering() {
           }
         }
 
-        // If any of the merged IDs are present
-        if (ids.some((id: string) => taskLocations.includes(id))) {
+        // Check if any of the map group IDs are present in task locations
+        if (mapIdGroup.some((id: string) => taskLocations.includes(id))) {
           // Check if task is available for the user
           const unlocked =
             activeUserView === 'all'
-              ? Object.values(progressStore.unlockedTasks[task.id] || {}).some(Boolean)
-              : progressStore.unlockedTasks[task.id]?.[activeUserView];
-
+              ? isTaskUnlockedByAny(task.id)
+              : isTaskUnlockedFor(task.id, activeUserView);
           if (unlocked) {
             let anyObjectiveLeft = false;
             for (const objective of task.objectives || []) {
-              if (Array.isArray(objective.maps) && objective.maps.some((m) => ids.includes(m.id))) {
-                const completions = progressStore.objectiveCompletions[objective.id] || {};
+              if (Array.isArray(objective.maps) && objective.maps.some((m) => mapIdGroup.includes(m.id))) {
+                const completions = getObjectiveCompletionMap(objective.id);
                 const isComplete =
                   activeUserView === 'all'
                     ? Object.values(completions).every(Boolean)
                     : completions[activeUserView] === true;
-
                 if (!isComplete) {
                   anyObjectiveLeft = true;
                   break;
                 }
               }
             }
-
             if (anyObjectiveLeft) {
-              mapTaskCounts[ids[0]]++;
+              mapTaskCounts[map.id]++;
             }
           }
         }
       }
     }
-
     return mapTaskCounts;
   };
 
@@ -249,37 +217,29 @@ export function useTaskFiltering() {
     activeUserView: string,
     activeMapView: string,
     activeTraderView: string,
-    mergedMaps: MergedMap[],
     tasksLoading: boolean
   ) => {
     // Simple guard clauses - data should be available due to global initialization
     if (tasksLoading || !tasks.value || !Array.isArray(disabledTasks)) {
       return;
     }
-
     reloadingTasks.value = true;
-
     try {
       let visibleTaskList = JSON.parse(JSON.stringify(tasks.value));
-
       // Apply primary view filter
       visibleTaskList = filterTasksByView(
         visibleTaskList,
         activePrimaryView,
         activeMapView,
-        activeTraderView,
-        mergedMaps
+        activeTraderView
       );
-
       // Apply status and user filters
       visibleTaskList = filterTasksByStatus(visibleTaskList, activeSecondaryView, activeUserView);
-
       visibleTasks.value = visibleTaskList;
     } finally {
       reloadingTasks.value = false;
     }
   };
-
   return {
     visibleTasks,
     reloadingTasks,
