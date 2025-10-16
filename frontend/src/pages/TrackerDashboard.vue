@@ -130,15 +130,15 @@
 </template>
 <script setup>
   import { useTarkovData } from '@/composables/tarkovdata';
-  import { useProgressStore } from '@/stores/progress';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useUserStore } from '@/stores/user';
   import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   const { t } = useI18n({ useScope: 'global' });
   const TrackerStat = defineAsyncComponent(() => import('@/features/dashboard/TrackerStat'));
   const { tasks, objectives } = useTarkovData();
-  const progressStore = useProgressStore();
+  const { tasksCompletions, objectiveCompletions } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
   const showAnnouncementAlert = computed({
@@ -240,21 +240,19 @@
     ).length;
   });
   const completedTasks = computed(() => {
-    // Check if progressStore.tasksCompletions exists before getting values
-    if (!progressStore.tasksCompletions) {
+    const completions = tasksCompletions.value;
+    if (!completions) {
       return 0;
     }
-    return Object.values(progressStore.tasksCompletions).filter(
-      (task) => task && task.self === true // Ensure task exists before checking self property
-    ).length;
+    return Object.values(completions).filter((task) => task && task.self === true).length;
   });
   const completedTaskItems = computed(() => {
     // Restore the original guard and logic
     if (
-      !neededItemTaskObjectives.value || // Use neededItemTaskObjectives here
+      !neededItemTaskObjectives.value ||
       !tasks.value ||
-      !progressStore.tasksCompletions ||
-      !progressStore.objectiveCompletions ||
+      !tasksCompletions.value ||
+      !objectiveCompletions.value ||
       !tarkovStore
     ) {
       return 0; // Return 0 if data isn't loaded yet
@@ -264,14 +262,15 @@
       // Iterate over neededItemTaskObjectives
       // Ensure objective exists before proceeding
       if (!objective) return;
-      // Check for item and item.id
+      // Check for items (new) or item (legacy) and their IDs
+      const objectiveItems = objective.items || (objective.item ? [objective.item] : []);
       if (
-        objective.item &&
-        [
+        objectiveItems.length > 0 &&
+        objectiveItems.some(item => [
           '5696686a4bdc2da3298b456a',
           '5449016a4bdc2d6f028b456f',
           '569668774bdc2da2298b4568',
-        ].includes(objective.item.id)
+        ].includes(item.id))
       ) {
         return;
       }
@@ -288,8 +287,8 @@
         return;
       }
       if (!objective.id || !objective.taskId) return;
-      const taskCompletion = progressStore.tasksCompletions[objective.taskId];
-      const objectiveCompletion = progressStore.objectiveCompletions[objective.id];
+      const taskCompletion = tasksCompletions.value?.[objective.taskId];
+      const objectiveCompletion = objectiveCompletions.value?.[objective.id];
       if (
         (taskCompletion && taskCompletion['self']) ||
         (objectiveCompletion && objectiveCompletion['self']) ||
@@ -315,14 +314,15 @@
       // Iterate over neededItemTaskObjectives
       // Ensure objective exists before proceeding
       if (!objective) return;
-      // Check for item and item.id
+      // Check for items (new) or item (legacy) and their IDs
+      const objectiveItems = objective.items || (objective.item ? [objective.item] : []);
       if (
-        objective.item &&
-        [
+        objectiveItems.length > 0 &&
+        objectiveItems.some(item => [
           '5696686a4bdc2da3298b456a',
           '5449016a4bdc2d6f028b456f',
           '569668774bdc2da2298b4568',
-        ].includes(objective.item.id)
+        ].includes(item.id))
       ) {
         return;
       }
@@ -358,7 +358,7 @@
     ).length;
   });
   const completedKappaTasks = computed(() => {
-    if (!tasks.value || !progressStore.tasksCompletions) {
+    if (!tasks.value || !tasksCompletions.value) {
       return 0;
     }
     return tasks.value.filter(
@@ -366,8 +366,7 @@
         task &&
         task.kappaRequired === true &&
         (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction) &&
-        progressStore.tasksCompletions[task.id] &&
-        progressStore.tasksCompletions[task.id].self === true
+        tasksCompletions.value?.[task.id] && tasksCompletions.value?.[task.id].self === true
     ).length;
   });
 
