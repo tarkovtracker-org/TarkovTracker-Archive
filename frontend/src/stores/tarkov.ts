@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { watch } from 'vue';
 import { fireuser, firestore } from '@/plugins/firebase';
+import { logger } from '@/utils/logger';
 import { doc, setDoc } from 'firebase/firestore';
 import {
   getters,
@@ -69,7 +70,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
           };
           await setDoc(userProgressRef, completeState, { merge: true });
         } catch (error) {
-          console.error('Error syncing gamemode to backend:', error);
+          logger.error('Error syncing gamemode to backend:', error);
           // TODO: Show error notification to user
         }
       }
@@ -83,7 +84,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
         ((this as unknown as Record<string, unknown>).level !== undefined && !this.pvp?.level); // Has legacy level but no pvp.level
 
       if (needsMigration) {
-        console.log('Migrating legacy data structure to gamemode-aware structure');
+        logger.info('Migrating legacy data structure to gamemode-aware structure');
         const currentState = JSON.parse(JSON.stringify(this.$state));
         const migratedData = migrateToGameModeStructure(currentState);
         this.$patch(migratedData);
@@ -94,14 +95,14 @@ export const useTarkovStore = defineStore('swapTarkov', {
             const userProgressRef = doc(firestore, 'progress', fireuser.uid);
             setDoc(userProgressRef, migratedData);
           } catch (error) {
-            console.error('Error saving migrated data to Firestore:', error);
+            logger.error('Error saving migrated data to Firestore:', error);
           }
         }
       }
     },
     async resetOnlineProfile() {
       if (!fireuser.uid) {
-        console.error('User not logged in. Cannot reset online profile.');
+        logger.error('User not logged in. Cannot reset online profile.');
         return;
       }
       const userProgressRef = doc(firestore, 'progress', fireuser.uid);
@@ -117,33 +118,28 @@ export const useTarkovStore = defineStore('swapTarkov', {
         // This ensures the in-memory state reflects the reset immediately.
         this.$patch(JSON.parse(JSON.stringify(defaultState)));
       } catch (error) {
-        console.error('Error resetting online profile:', error);
+        logger.error('Error resetting online profile:', error);
       }
     },
     async resetCurrentGameModeData() {
+      const currentMode = this.getCurrentGameMode();
+      await this.resetGameModeData(currentMode);
+    },
+    async resetGameModeData(mode: GameMode) {
       if (!fireuser.uid) {
-        console.error('User not logged in. Cannot reset game mode data.');
+        logger.error('User not logged in. Cannot reset game mode data.');
         return;
       }
 
-      const currentMode = this.getCurrentGameMode();
       const userProgressRef = doc(firestore, 'progress', fireuser.uid);
-
       try {
-        // Create fresh default progress data for the current game mode
-        const freshProgressData = JSON.parse(JSON.stringify(defaultState[currentMode]));
-
-        // Update only the current game mode data in Firestore
-        const updateData = { [currentMode]: freshProgressData };
+        const freshProgressData = JSON.parse(JSON.stringify(defaultState[mode]));
+        const updateData = { [mode]: freshProgressData };
         await setDoc(userProgressRef, updateData, { merge: true });
-
-        // Clear ALL localStorage data for gamemode reset
         localStorage.clear();
-
-        // Reset only the current game mode data in the local store
-        this.$patch({ [currentMode]: freshProgressData });
+        this.$patch({ [mode]: freshProgressData });
       } catch (error) {
-        console.error(`Error resetting ${currentMode} game mode data:`, error);
+        logger.error(`Error resetting ${mode} game mode data:`, error);
       }
     },
   },
@@ -165,7 +161,7 @@ const getSafeStoreInstance = (): StoreInstance => {
     const store = useTarkovStore();
     return store && typeof store.$id === 'string' ? store : null;
   } catch (error) {
-    console.error('Could not initialize tarkov store:', error);
+    logger.error('Could not initialize tarkov store:', error);
     return null;
   }
 };
@@ -181,7 +177,7 @@ watch(
       await new Promise((resolve) => setTimeout(resolve, 100));
       const tarkovStore = getSafeStoreInstance();
       if (!tarkovStore) {
-        console.warn('Cannot bind/unbind store - store instance is null');
+        logger.warn('Cannot bind/unbind store - store instance is null');
         watchHandlerRunning = false;
         return;
       }
@@ -211,7 +207,7 @@ watch(
         }
       }
     } catch (error) {
-      console.error('Error in fireuser watch handler:', error);
+      logger.error('Error in fireuser watch handler:', error);
     } finally {
       watchHandlerRunning = false;
     }
@@ -242,6 +238,6 @@ setTimeout(async () => {
       }
     }, 1000);
   } catch (error) {
-    console.error('Error in delayed store initialization:', error);
+    logger.error('Error in delayed store initialization:', error);
   }
 }, 500);
