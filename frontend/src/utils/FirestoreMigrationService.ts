@@ -21,14 +21,14 @@ const hasMeaningfulProgress = (data: ProgressData): boolean =>
   Object.keys(data.hideoutModules || {}).length > 0 ||
   Object.keys(data.hideoutParts || {}).length > 0;
 
-type ImportedProgressMetadata = UserProgressData & {
+interface ImportedProgressMetadata extends UserProgressData {
   lastUpdated: string;
   importedFromExternalSource: boolean;
   importDate: string;
   importedFromApi?: boolean;
   sourceUserId?: string;
   sourceDomain?: string;
-};
+}
 
 export const hasUserData = async (uid: string): Promise<boolean> => {
   try {
@@ -86,31 +86,28 @@ export const migrateLocalDataToUser = async (
   }
 };
 
-// eslint-disable-next-line complexity
-const buildImportedUserState = (importedData: ProgressData, existingData: UserState): UserState => {
-  const transformedProgressData: UserProgressData = {
-    level: importedData.level || 1,
-    pmcFaction: (importedData.pmcFaction?.toUpperCase() as 'USEC' | 'BEAR') || 'USEC',
-    displayName: importedData.displayName || null,
-    taskObjectives: transformTaskObjectives(importedData.taskObjectives || {}),
-    taskCompletions: importedData.taskCompletions || {},
-    hideoutParts: transformHideoutParts(importedData.hideoutParts || {}),
-    hideoutModules: importedData.hideoutModules || {},
-    traderStandings: transformTraderStandings(importedData.traderStandings || {}),
-  };
+const toTransformedProgressData = (importedData: ProgressData): UserProgressData => ({
+  level: importedData.level || 1,
+  pmcFaction: (importedData.pmcFaction?.toUpperCase() as 'USEC' | 'BEAR') || 'USEC',
+  displayName: importedData.displayName || null,
+  taskObjectives: transformTaskObjectives(importedData.taskObjectives || {}),
+  taskCompletions: importedData.taskCompletions || {},
+  hideoutParts: transformHideoutParts(importedData.hideoutParts || {}),
+  hideoutModules: importedData.hideoutModules || {},
+  traderStandings: transformTraderStandings(importedData.traderStandings || {}),
+});
 
-  const newUserState: UserState = {
-    ...existingData,
-    currentGameMode: 'pvp',
-    gameEdition:
-      typeof importedData.gameEdition === 'string'
-        ? parseInt(importedData.gameEdition) || 1
-        : importedData.gameEdition || 1,
-    pvp: transformedProgressData,
-  };
+const parseGameEdition = (importedData: ProgressData): number =>
+  typeof importedData.gameEdition === 'string'
+    ? parseInt(importedData.gameEdition) || 1
+    : importedData.gameEdition || 1;
 
-  const gameDataWithMetadata: ImportedProgressMetadata = {
-    ...newUserState.pvp,
+const attachImportedMetadata = (
+  progressData: UserProgressData,
+  importedData: ProgressData
+): ImportedProgressMetadata => {
+  const metadata: ImportedProgressMetadata = {
+    ...progressData,
     lastUpdated: new Date().toISOString(),
     importedFromExternalSource: true,
     importDate: new Date().toISOString(),
@@ -120,13 +117,26 @@ const buildImportedUserState = (importedData: ProgressData, existingData: UserSt
   };
 
   if (importedData.sourceUserId) {
-    gameDataWithMetadata.sourceUserId = importedData.sourceUserId;
+    metadata.sourceUserId = importedData.sourceUserId;
   }
   if (importedData.sourceDomain) {
-    gameDataWithMetadata.sourceDomain = importedData.sourceDomain;
+    metadata.sourceDomain = importedData.sourceDomain;
   }
 
-  newUserState.pvp = gameDataWithMetadata;
+  return metadata;
+};
+
+const buildImportedUserState = (importedData: ProgressData, existingData: UserState): UserState => {
+  const transformedProgressData = toTransformedProgressData(importedData);
+  const gameEdition = parseGameEdition(importedData);
+  const gameDataWithMetadata = attachImportedMetadata(transformedProgressData, importedData);
+
+  const newUserState: UserState = {
+    ...existingData,
+    currentGameMode: 'pvp',
+    gameEdition,
+    pvp: gameDataWithMetadata,
+  };
 
   return newUserState;
 };
