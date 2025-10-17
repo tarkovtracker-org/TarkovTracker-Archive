@@ -95,6 +95,9 @@
     }
   });
   function isTaskObjectiveNeeded(need) {
+    const rt = relatedTask.value;
+    if (!rt) return false;
+
     if (userStore.itemsNeededHideNonFIR) {
       if (need.type == 'mark' || need.type == 'buildWeapon' || need.type == 'plantItem') {
         return false;
@@ -104,16 +107,16 @@
         }
       }
     }
-    if (userStore.hideKappaRequiredTasks && relatedTask.value.kappaRequired === true) {
+    if (userStore.hideKappaRequiredTasks && rt.kappaRequired === true) {
       return false;
     }
-    if (userStore.hideLightkeeperRequiredTasks && relatedTask.value.lightkeeperRequired === true) {
+    if (userStore.hideLightkeeperRequiredTasks && rt.lightkeeperRequired === true) {
       return false;
     }
     if (
       userStore.hideNonKappaTasks &&
-      relatedTask.value.kappaRequired !== true &&
-      relatedTask.value.lightkeeperRequired !== true
+      rt.kappaRequired !== true &&
+      rt.lightkeeperRequired !== true
     ) {
       return false;
     }
@@ -123,7 +126,7 @@
         !tasksCompletions.value?.[need.taskId]?.self &&
         !objectiveCompletions.value?.[need.id]?.self &&
         ['Any', tarkovStore.getPMCFaction].some(
-          (faction) => faction == relatedTask.value.factionName
+          (faction) => faction == rt.factionName
         )
       );
     } else if (userStore.itemsTeamNonFIRHidden) {
@@ -132,7 +135,7 @@
         ([userTeamId, userStatus]) => {
           const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
           return (
-            relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
+            relevantFactions.some((faction) => faction == rt.factionName) &&
             userStatus === false
           );
         }
@@ -141,7 +144,7 @@
         ([userTeamId, userStatus]) => {
           const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
           return (
-            relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
+            relevantFactions.some((faction) => faction == rt.factionName) &&
             userStatus === false
           );
         }
@@ -153,7 +156,7 @@
           ([userTeamId, userStatus]) => {
             const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
             return (
-              relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
+              relevantFactions.some((faction) => faction == rt.factionName) &&
               userStatus === false
             );
           }
@@ -162,7 +165,7 @@
           ([userTeamId, userStatus]) => {
             const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
             return (
-              relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
+              relevantFactions.some((faction) => faction == rt.factionName) &&
               userStatus === false
             );
           }
@@ -298,7 +301,9 @@
   });
   const lockedBefore = computed(() => {
     if (props.need.needType == 'taskObjective') {
-      return relatedTask.value.predecessors.filter((s) => !tarkovStore.isTaskComplete(s)).length;
+      return (
+        relatedTask.value?.predecessors?.filter((s) => !tarkovStore.isTaskComplete(s)).length ?? 0
+      );
     } else if (props.need.needType == 'hideoutModule') {
       return props.need.hideoutModule.predecessors.filter(
         (s) => !tarkovStore.isHideoutModuleComplete(s)
@@ -337,7 +342,7 @@
   });
   const levelRequired = computed(() => {
     if (props.need.needType == 'taskObjective') {
-      return relatedTask.value.minPlayerLevel;
+      return relatedTask.value?.minPlayerLevel ?? 0;
     } else if (props.need.needType == 'hideoutModule') {
       return 0;
     } else {
@@ -353,7 +358,7 @@
           if (!completed && !tasksCompletions.value?.[props.need.taskId]?.[user]) {
             needingUsers.push({
               user: user,
-              count: progressStore.teamStores[user].getObjectiveCount(props.need.id),
+              count: progressStore.teamStores[user]?.getObjectiveCount(props.need.id) ?? 0,
             });
           }
         }
@@ -365,7 +370,7 @@
           if (!completed) {
             needingUsers.push({
               user: user,
-              count: progressStore.teamStores[user].getHideoutPartCount(props.need.id),
+              count: progressStore.teamStores[user]?.getHideoutPartCount(props.need.id) ?? 0,
             });
           }
         }
