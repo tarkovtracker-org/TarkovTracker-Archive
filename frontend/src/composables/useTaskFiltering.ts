@@ -216,7 +216,7 @@ export function useTaskFiltering() {
           if (unlocked) {
             let anyObjectiveLeft = false;
             for (const objective of task.objectives || []) {
-              if (Array.isArray(objective.maps) && objective.maps.some((m) => mapIdGroup.includes(m.id))) {
+              if (Array.isArray(objective.maps) && objective.maps.some((m) => m != null && mapIdGroup.includes(m.id))) {
                 const completions = getObjectiveCompletionMap(objective.id);
                 const isComplete =
                   activeUserView === 'all'
