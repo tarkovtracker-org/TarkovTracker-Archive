@@ -233,7 +233,10 @@ export function useTaskData() {
             if (existingMapEntry) {
               if (key.id && !existingMapEntry.keys.some((k: Key) => k.id === key.id)) {
                 existingMapEntry.keys.push(key);
-              } else if (!key.id && !existingMapEntry.keys.includes(key)) {
+              } else if (
+                !key.id &&
+                !existingMapEntry.keys.some((k: Key) => k.id === key.id || JSON.stringify(k) === JSON.stringify(key))
+              ) {
                 existingMapEntry.keys.push(key);
               }
             } else {
