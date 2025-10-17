@@ -3,8 +3,6 @@ import { logger } from 'firebase-functions/v2';
 import { 
   Firestore, 
   DocumentReference, 
-  // DocumentSnapshot, // Unused
-  // Transaction, // Unused
   FieldValue 
 } from 'firebase-admin/firestore';
 import UIDGenerator from 'uid-generator';
@@ -12,7 +10,6 @@ import {
   TeamDocument, 
   SystemDocument, 
   FormattedProgress
-  // ServiceOptions // Unused
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 import { formatProgress } from '../progress/progressUtils.js';
@@ -245,7 +242,7 @@ export class TeamService {
   /**
    * Get team progress for all members
    */
-  async getTeamProgress(userId: string): Promise<{
+  async getTeamProgress(userId: string, gameMode: string = 'pvp'): Promise<{
     data: FormattedProgress[];
     meta: { self: string; hiddenTeammates: string[] };
   }> {
@@ -295,7 +292,7 @@ export class TeamService {
             logger.warn(`Progress document not found for member ${memberId}`);
             return null;
           }
-          return formatProgress(doc.data(), memberId, hideoutData, taskData);
+          return formatProgress(doc.data(), memberId, hideoutData, taskData, gameMode);
         })
         .filter((progress): progress is FormattedProgress => progress !== null);
 

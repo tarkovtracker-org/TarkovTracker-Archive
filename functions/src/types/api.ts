@@ -25,11 +25,15 @@ export interface UserContext {
   roles?: string[];
 }
 
+// Token game mode type (for token restrictions)
+export type TokenGameMode = 'pvp' | 'pve' | 'dual';
+
 // API Token interface (from authentication)
 export interface ApiToken {
   owner: string;
   note: string;
   permissions: string[];
+  gameMode?: string;
   calls?: number;
   createdAt?: FirebaseFirestore.Timestamp;
   token: string;
@@ -133,9 +137,7 @@ export interface TaskUpdateRequest {
   state: TaskStatus;
 }
 
-export interface MultipleTaskUpdateRequest {
-  [taskId: string]: TaskStatus;
-}
+export type MultipleTaskUpdateRequest = { id: string, state: TaskStatus }[]
 
 export interface ObjectiveUpdateRequest {
   state?: 'completed' | 'uncompleted';

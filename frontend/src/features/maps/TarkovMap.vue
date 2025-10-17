@@ -16,6 +16,14 @@
       </v-col>
       <v-col cols="12">
         <div :id="randomMapId" style="position: relative; width: 100%">
+          <MapZone
+            v-for="(zone, zoneLocationIndex) in sortedZones"
+            :key="zoneLocationIndex"
+            :mark="zone.mark"
+            :zone-location="zone.zone"
+            :selected-floor="selectedFloor"
+            :map="props.map"
+          />
           <template v-for="(mark, markIndex) in props.marks" :key="markIndex">
             <template
               v-for="(markLocation, markLocationIndex) in mark.possibleLocations"
@@ -30,19 +38,6 @@
                 :map="props.map"
               />
             </template>
-            <template
-              v-for="(zoneLocation, zoneLocationIndex) in mark.zones"
-              :key="zoneLocationIndex"
-            >
-              <MapZone
-                v-if="zoneLocation.map.id === props.map.id"
-                :key="zoneLocationIndex"
-                :mark="mark"
-                :zone-location="zoneLocation"
-                :selected-floor="selectedFloor"
-                :map="props.map"
-              />
-            </template>
           </template>
         </div>
       </v-col>
@@ -50,7 +45,7 @@
   </v-container>
 </template>
 <script setup lang="ts">
-  import { ref, onMounted, watch, defineAsyncComponent, withDefaults } from 'vue';
+  import { ref, onMounted, watch, defineAsyncComponent, withDefaults, computed } from 'vue';
   import { v4 as uuidv4 } from 'uuid';
   import * as d3 from 'd3';
 
@@ -76,6 +71,34 @@
   // Cache for Factory floors to avoid refetching
   const factoryFloorsCache = ref<Map<string, Document>>(new Map());
   const isFactoryLoaded = ref(false);
+
+  // trapezoidal form of the shoelace formula
+  // https://en.wikipedia.org/wiki/Shoelace_formula
+  const polygonArea = (points: { x: number; z: number }[]) => {
+    let area = 0;
+    let j = points.length - 1;
+
+    for (let i = 0; i < points.length; i++) {
+      area += (points[j].x + points[i].x) * (points[j].z - points[i].z);
+      j = i;
+    }
+
+    return Math.abs(area / 2);
+  };
+
+  const sortedZones = computed(() => {
+    let zones: any[] = [];
+
+    for (const mark of props.marks) {
+      for (const zone of mark.zones) {
+        if (zone.map.id === props.map.id) {
+          zones.push({ zone, mark });
+        }
+      }
+    }
+
+    return zones.toSorted((a, b) => polygonArea(b.zone.outline) - polygonArea(a.zone.outline));
+  });
 
   const setFloor = (floor: string) => {
     selectedFloor.value = floor;

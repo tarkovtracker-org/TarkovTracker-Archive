@@ -153,21 +153,16 @@ async function _revokeTokenLogic(
 }
 
 const corsHandler = cors({ 
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:8080',
-    'https://tarkovtracker.org',
-    'https://www.tarkovtracker.org'
-  ],
+  origin: true, // reflect request origin (allow all) to work with credentials
   credentials: true
 });
 export const revokeToken = onRequest(
   {
-    memory: '128MiB',
+    memory: '256MiB',
     timeoutSeconds: 20,
     cors: true,
   },
-  (req: FirebaseRequest, res: any) => {
+  (req: FirebaseRequest, res) => {
   corsHandler(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });

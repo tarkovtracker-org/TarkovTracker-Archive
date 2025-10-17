@@ -3,8 +3,6 @@ import { logger } from 'firebase-functions/v2';
 import { 
   Firestore, 
   DocumentReference, 
-  // DocumentSnapshot, // Unused
-  // Transaction, // Unused
   FieldValue 
 } from 'firebase-admin/firestore';
 import { 
@@ -15,7 +13,6 @@ import {
   ObjectiveUpdateRequest,
   ServiceOptions,
   TaskCompletion
-  // TaskObjective // Unused
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 import { formatProgress, updateTaskState } from '../progress/progressUtils.js';
@@ -159,9 +156,9 @@ export class ProgressService {
         const batchUpdateData: Record<string, boolean | number | FieldValue> = {};
 
         // Build update data for all tasks
-        for (const taskId of taskIds) {
-          const state = taskUpdates[taskId];
-          this.buildTaskUpdateData(taskId, state, updateTime, batchUpdateData, gameMode);
+        for (const task of taskUpdates) {
+          const { id, state } = task;
+          this.buildTaskUpdateData(id, state, updateTime, batchUpdateData, gameMode);
         }
 
         // Apply all updates in single transaction
@@ -169,33 +166,33 @@ export class ProgressService {
 
         logger.log('Multiple tasks updated in transaction', {
           userId,
-          taskCount: taskIds.length,
+          taskCount: taskUpdates.length,
           updateTime,
         });
       });
 
       // Handle dependencies for all tasks (outside transaction)
-      const dependencyPromises = taskIds.map(async (taskId) => {
+      const dependencyPromises = taskUpdates.map(async ({ id, state }) => {
         try {
           const taskData = await getTaskData();
-          await updateTaskState(taskId, taskUpdates[taskId], userId, taskData);
+          await updateTaskState(id, state, userId, taskData);
         } catch (depError) {
           logger.error('Error updating task dependencies in batch:', {
             error: depError instanceof Error ? depError.message : String(depError),
             userId,
-            taskId,
-            state: taskUpdates[taskId],
+            id,
+            state,
           });
         }
       });
 
       await Promise.allSettled(dependencyPromises);
-      logger.log('Multiple tasks updated successfully', { userId, taskCount: taskIds.length });
+      logger.log('Multiple tasks updated successfully', { userId, taskCount: taskUpdates.length });
     } catch (error) {
       logger.error('Error updating multiple tasks:', {
         error: error instanceof Error ? error.message : String(error),
         userId,
-        taskCount: taskIds.length,
+        taskCount: taskUpdates.length,
       });
       throw errors.internal('Failed to update tasks');
     }

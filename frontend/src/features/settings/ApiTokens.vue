@@ -19,7 +19,7 @@
     </template>
     <v-row no-gutters>
       <v-col
-        v-for="(token, index) in userTokens"
+        v-for="token in userTokens"
         :key="token"
         cols="12"
         sm="12"
@@ -60,6 +60,68 @@
 
         <div class="mb-4">
           <div class="text-subtitle-2 mb-2 d-flex align-center">
+            <v-icon class="mr-2" size="20">mdi-gamepad-variant</v-icon>
+            {{ $t('page.api.tokens.form.gamemode_title') }}
+          </div>
+          <div class="text-caption text-medium-emphasis mb-3">
+            {{ $t('page.api.tokens.form.gamemode_description') }}
+          </div>
+          
+          <v-radio-group v-model="selectedGameMode" density="compact" class="mb-4" column>
+            <v-radio
+              value="pvp"
+              color="white"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium d-flex align-center">
+                    <v-chip color="blue" size="x-small" class="mr-2">PvP</v-chip>
+                    {{ $t('page.api.tokens.form.gamemode_pvp_title') }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ $t('page.api.tokens.form.gamemode_pvp_description') }}
+                  </div>
+                </div>
+              </template>
+            </v-radio>
+            <v-radio
+              value="pve"
+              color="white"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium d-flex align-center">
+                    <v-chip color="green" size="x-small" class="mr-2">PvE</v-chip>
+                    {{ $t('page.api.tokens.form.gamemode_pve_title') }}
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ $t('page.api.tokens.form.gamemode_pve_description') }}
+                  </div>
+                </div>
+              </template>
+            </v-radio>
+            <v-radio
+              value="dual"
+              color="white"
+            >
+              <template #label>
+                <div>
+                  <div class="font-weight-medium d-flex align-center">
+                    <v-chip color="orange" size="x-small" class="mr-2">DUAL</v-chip>
+                    {{ $t('page.api.tokens.form.gamemode_dual_title') }}
+                    <v-icon color="warning" size="small" class="ml-1">mdi-alert</v-icon>
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ $t('page.api.tokens.form.gamemode_dual_description') }}
+                  </div>
+                </div>
+              </template>
+            </v-radio>
+          </v-radio-group>
+        </div>
+
+        <div class="mb-4">
+          <div class="text-subtitle-2 mb-2 d-flex align-center">
             <v-icon class="mr-2" size="20">mdi-shield-key</v-icon>
             {{ $t('page.api.tokens.form.permissions_title') }}
           </div>
@@ -95,12 +157,13 @@
                   :error="selectOneError"
                   density="compact"
                   hide-details
+                  color="white"
                   class="permission-checkbox"
                 >
                   <template #label>
                     <div>
-                      <div class="font-weight-medium">{{ permission.title }}</div>
-                      <div class="text-caption text-medium-emphasis">
+                      <div class="font-weight-medium text-white">{{ permission.title }}</div>
+                      <div class="text-caption text-white">
                         {{
                           permission.description || 'Access to ' + permission.title.toLowerCase()
                         }}
@@ -113,16 +176,17 @@
           </v-card>
 
           <div v-if="selectedPermissions.length > 0" class="mt-3">
-            <div class="text-caption text-medium-emphasis mb-2">
+            <div class="text-caption text-white mb-2">
               {{ $t('page.api.tokens.form.selected_permissions') }}:
             </div>
             <div class="d-flex flex-wrap gap-2">
               <v-chip
                 v-for="perm in selectedPermissions"
                 :key="perm"
-                color="primary"
+                color="white"
                 size="small"
-                variant="tonal"
+                variant="outlined"
+                class="selected-permission-chip"
               >
                 {{ availablePermissions[perm]?.title || perm }}
               </v-chip>
@@ -142,7 +206,7 @@
             </v-btn>
             <v-btn
               :disabled="!canCreateToken"
-              color="success"
+              color="green"
               :loading="creatingToken"
               append-icon="mdi-key-plus"
               @click="createToken"
@@ -211,6 +275,7 @@
   const tokenName = ref('');
   const tokenNameError = ref('');
   const selectedPermissions = ref([]);
+  const selectedGameMode = ref('pvp'); // Default to PvP for backward compatibility
   const selectedPermissionsCount = computed(() => selectedPermissions.value.length);
   const canCreateToken = computed(() => {
     return (
@@ -236,6 +301,7 @@
     newTokenForm.value?.reset();
     tokenName.value = '';
     selectedPermissions.value = [];
+    selectedGameMode.value = 'pvp'; // Reset to default
     selectOneError.value = false;
     tokenNameError.value = '';
   };
@@ -288,6 +354,7 @@
     const tokenData = {
       note: tokenName.value,
       permissions: selectedPermissions.value,
+      gameMode: selectedGameMode.value,
     };
 
     try {
@@ -306,7 +373,9 @@
       if (!result || !result.token) {
         console.error('Token not found in response. Expected: result.token');
         console.error('Available response data:', Object.keys(result || {}));
+        throw new Error('Token creation failed: No token returned from server');
       }
+      
       cancelTokenCreation();
       snackbarColor.value = 'success';
       snackbarIcon.value = 'mdi-check-circle';
@@ -326,9 +395,14 @@
 </script>
 <style lang="scss" scoped>
   .permission-checkbox {
-    .v-label {
-      opacity: 1 !important;
+    :deep(.v-label) {
+      opacity: 1;
     }
+  }
+
+  .selected-permission-chip {
+    color: white;
+    border-color: white;
   }
 
   .gap-2 {

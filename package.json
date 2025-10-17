@@ -27,6 +27,7 @@
     "deps": "npx taze --r --I"
   },
   "devDependencies": {
+    "firebase": "^12.0.0",
     "concurrently": "^9.2.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",

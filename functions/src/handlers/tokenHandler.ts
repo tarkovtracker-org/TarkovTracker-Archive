@@ -49,28 +49,32 @@ interface AuthenticatedRequest extends Request {
  *                     calls:
  *                       type: integer
  *                       description: "Number of API calls made with this token."
+ *                     gameMode:
+ *                       type: string
+ *                       description: "Token game mode (pvp, pve, or dual)."
  *       401:
  *         description: "Unauthorized. Invalid or missing token."
  *       500:
  *         description: "Internal server error."
  */
-export const getTokenInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  // Token is already validated by middleware and attached to req.apiToken
-  const token = req.apiToken!;
-  
-  const response: ApiResponse = {
-    success: true,
-    data: {
+export const getTokenInfo = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    // Token is already validated by middleware and attached to req.apiToken
+    const token = req.apiToken!;
+
+    const response = {
+      success: true,
       permissions: token.permissions,
       token: token.token,
       owner: token.owner,
       note: token.note,
       calls: token.calls || 0,
-    },
-  };
-  
-  res.status(200).json(response);
-});
+      gameMode: token.gameMode || 'pvp',
+    };
+
+    res.status(200).json(response);
+  }
+);
 
 export default {
   getTokenInfo,

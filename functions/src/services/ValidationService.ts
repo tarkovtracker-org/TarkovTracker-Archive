@@ -43,29 +43,41 @@ export class ValidationService {
    * Validates multiple task updates request
    */
   static validateMultipleTaskUpdate(body: unknown): MultipleTaskUpdateRequest {
-    if (!body || typeof body !== 'object' || Array.isArray(body)) {
-      throw errors.badRequest('Request body must be an object');
+    if (!body || typeof body !== 'object' || !Array.isArray(body)) {
+      throw errors.badRequest('Request body must be an array');
     }
 
-    const updates = body as Record<string, unknown>;
-    const taskIds = Object.keys(updates);
+    const updates = body as unknown[];
 
-    if (taskIds.length === 0) {
+    if (updates.length === 0) {
       throw errors.badRequest('At least one task update is required');
     }
 
     // Validate each task update
-    const validatedUpdates: MultipleTaskUpdateRequest = {};
-    for (const taskId of taskIds) {
-      const state = updates[taskId];
-      
+    const validatedUpdates: MultipleTaskUpdateRequest = [];
+
+    for (const task of updates) {
+      if (!task || typeof task !== 'object') {
+        throw errors.badRequest('Each task must be an object');
+      }
+
+      if (!('id' in task) || !('state' in task)) {
+        throw errors.badRequest('Each task must have id and state fields');
+      }
+
+      const { id, state } = task;
+
+      if (typeof id !== 'string') {
+        throw errors.badRequest('Task id must be a string');
+      }
+
       if (!this.validateTaskStatus(state)) {
         throw errors.badRequest(
-          `Invalid state for task ${taskId}. Must be 'completed', 'failed', or 'uncompleted'`
+          `Invalid state for task ${id}. Must be 'completed', 'failed', or 'uncompleted'`
         );
       }
 
-      validatedUpdates[taskId] = state;
+      validatedUpdates.push({ id, state });
     }
 
     return validatedUpdates;

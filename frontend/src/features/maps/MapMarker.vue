@@ -146,6 +146,7 @@
       top: relativeLocation.value.topPercent + '%',
       left: relativeLocation.value.leftPercent + '%',
       transform: 'translate(-50%, -125%)',
+      zIndex: 100,
     };
   });
 </script>

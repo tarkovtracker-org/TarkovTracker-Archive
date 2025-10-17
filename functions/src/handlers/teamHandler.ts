@@ -4,6 +4,9 @@ import { TeamService } from '../services/TeamService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
+// Reuse a single service instance across requests
+const teamService = new TeamService();
+
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
   user?: {
@@ -21,6 +24,15 @@ interface AuthenticatedRequest extends Request {
  *       - "Team"
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: gameMode
+ *         required: false
+ *         description: "Game mode to get team progress for (pvp or pve). Only used for dual-mode tokens; single-mode tokens use their configured game mode."
+ *         schema:
+ *           type: string
+ *           enum: [pvp, pve]
+ *           default: pvp
  *     responses:
  *       200:
  *         description: "Team progress retrieved successfully."
@@ -51,11 +63,16 @@ interface AuthenticatedRequest extends Request {
  */
 export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   ValidationService.validatePermissions(req.apiToken, 'TP');
-  
+
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
-  const result = await teamService.getTeamProgress(userId);
+
+  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+  let gameMode = req.apiToken?.gameMode || 'pvp';
+  if (gameMode === 'dual') {
+    gameMode = req.query.gameMode as string || 'pvp';
+  }
+
+  const result = await teamService.getTeamProgress(userId, gameMode);
   
   const response: ApiResponse = {
     success: true,
@@ -118,8 +135,6 @@ export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, re
  */
 export const createTeam = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
   // Validate request body if provided
   const data: { password?: string; maximumMembers?: number } = {};
   
