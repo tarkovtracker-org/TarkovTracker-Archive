@@ -140,10 +140,10 @@
   const showNextTasksSetting = computed(() => props.showNextTasks === true);
   const nextTasks = computed(() => {
     if (!showNextTasksSetting.value) return [];
-    const successors = props.task.children || [];
-    if (!Array.isArray(successors) || !successors.length) return [];
+    const children = props.task.children || [];
+    if (!Array.isArray(children) || !children.length) return [];
     const allTasks = tasks.value || [];
-    return successors
+    return children
       .map((id) => allTasks.find((t) => t.id === id))
       .filter((taskItem) => Boolean(taskItem && taskItem.name))
       .map((taskItem) => ({
