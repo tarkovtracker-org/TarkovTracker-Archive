@@ -163,21 +163,48 @@ export function useTaskFiltering() {
 
       for (const task of tasks) {
         if (disabledTasks.includes(task.id)) continue;
-        if (hideGlobalTasks && !task.map) continue;
-        if (!taskMatchesRequirementFilters(task, requirementOptions)) continue;
 
-        const taskLocations = Array.isArray(task.locations) ? task.locations : [];
-        if (taskLocations.length === 0 && Array.isArray(task.objectives)) {
+        const taskLocations: string[] = [];
+        const appendLocation = (mapId?: string | null) => {
+          if (mapId && !taskLocations.includes(mapId)) {
+            taskLocations.push(mapId);
+          }
+        };
+
+        appendLocation(task.map?.id);
+
+        if (Array.isArray(task.locations)) {
+          for (const locationId of task.locations) {
+            appendLocation(locationId);
+          }
+        }
+
+        if (Array.isArray(task.objectives)) {
           for (const obj of task.objectives) {
             if (Array.isArray(obj.maps)) {
               for (const objMap of obj.maps) {
-                if (objMap && objMap.id && !taskLocations.includes(objMap.id)) {
-                  taskLocations.push(objMap.id);
-                }
+                appendLocation(objMap?.id);
+              }
+            }
+
+            appendLocation(obj.location?.id);
+
+            if (Array.isArray(obj.possibleLocations)) {
+              for (const possibleLocation of obj.possibleLocations) {
+                appendLocation(possibleLocation?.map?.id);
+              }
+            }
+
+            if (Array.isArray(obj.zones)) {
+              for (const zone of obj.zones) {
+                appendLocation(zone?.map?.id);
               }
             }
           }
         }
+
+        if (hideGlobalTasks && taskLocations.length === 0) continue;
+        if (!taskMatchesRequirementFilters(task, requirementOptions)) continue;
 
         // Check if any of the map group IDs are present in task locations
         if (mapIdGroup.some((id: string) => taskLocations.includes(id))) {
@@ -193,7 +220,7 @@ export function useTaskFiltering() {
                 const completions = getObjectiveCompletionMap(objective.id);
                 const isComplete =
                   activeUserView === 'all'
-                    ? Object.values(completions).every(Boolean)
+                    ? visibleTeamIds.value.length > 0 && visibleTeamIds.value.every((id: string) => completions[id] === true)
                     : completions[activeUserView] === true;
                 if (!isComplete) {
                   anyObjectiveLeft = true;
