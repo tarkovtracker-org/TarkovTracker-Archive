@@ -38,6 +38,7 @@ interface OldApiRawData {
   [key: string]: unknown;
 }
 
+// eslint-disable-next-line complexity
 export const fetchDataWithApiToken = async (
   apiToken: string,
   oldDomain: string = 'https://tarkovtracker.io/api/v2/progress'

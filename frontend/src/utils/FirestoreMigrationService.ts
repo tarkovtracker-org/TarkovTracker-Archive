@@ -85,6 +85,7 @@ export const migrateLocalDataToUser = async (
   }
 };
 
+// eslint-disable-next-line complexity
 const buildImportedUserState = (importedData: ProgressData, existingData: UserState): UserState => {
   const transformedProgressData: UserProgressData = {
     level: importedData.level || 1,

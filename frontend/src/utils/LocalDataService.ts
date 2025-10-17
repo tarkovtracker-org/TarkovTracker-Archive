@@ -3,6 +3,7 @@ import type { ProgressData } from './DataMigrationTypes';
 
 export const LOCAL_PROGRESS_KEY = 'progress';
 
+// eslint-disable-next-line complexity
 export const hasLocalData = (): boolean => {
   try {
     const progressData = localStorage.getItem(LOCAL_PROGRESS_KEY);
