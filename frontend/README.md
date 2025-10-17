@@ -119,5 +119,6 @@ The application supports multiple languages through Vue I18n:
 - French (fr)
 - Russian (ru)
 - Ukrainian (uk)
+- Japanese (ja)
 
 Translation files are located in `src/locales/` as JSON5 files.

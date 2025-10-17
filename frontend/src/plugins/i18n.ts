@@ -7,6 +7,7 @@ import {
   es as vuetifyEs,
   ru as vuetifyRu,
   uk as vuetifyUk,
+  ja as vuetifyJa,
 } from 'vuetify/locale';
 // Assume messages are structured appropriately,
 // potentially needing manual type def if library doesn't provide
@@ -32,6 +33,7 @@ const vuetifyLocales: Record<string, any> = {
   es: vuetifyEs,
   ru: vuetifyRu,
   uk: vuetifyUk,
+  ja: vuetifyJa,
 };
 const typedMessages = messages as AppMessages;
 // Merge Vuetify's locale messages into all supported locales
