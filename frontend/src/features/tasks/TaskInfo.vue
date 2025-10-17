@@ -195,7 +195,6 @@
 <script setup>
   import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { useTarkovStore } from '@/stores/tarkov';
 
   const TaskLink = defineAsyncComponent(() => import('./TaskLink'));
   const InfoRow = defineAsyncComponent(() => import('./InfoRow'));
@@ -222,21 +221,8 @@
 
   const { t } = useI18n({ useScope: 'global' });
 
-  const tarkovStore = useTarkovStore();
-
-  const EOD_EDITIONS = new Set([4, 6]);
-
   const showEodChip = computed(() => {
-    if (!props.showEodStatus || !props.task?.eodOnly) {
-      return false;
-    }
-
-    if (typeof tarkovStore.getGameEdition !== 'function') {
-      return false;
-    }
-
-    const edition = tarkovStore.getGameEdition();
-    return EOD_EDITIONS.has(edition ?? 0);
+    return props.showEodStatus && props.task?.eodOnly === true;
   });
 </script>
 
