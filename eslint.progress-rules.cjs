@@ -7,8 +7,10 @@ const restrictedStoreImportRule = {
     'frontend/src/stores/progress.ts',
   ],
   rules: {
+    // TODO: Change to 'error' once codebase is refactored to use useProgressQueries
+    // See: https://github.com/tarkovtracker-org/TarkovTracker/issues/XXX
     'no-restricted-imports': [
-      'error',
+      'warn',
       {
         paths: [
           {

@@ -51,6 +51,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn', // TODO: Fix and change to 'error'
       'no-unused-vars': 'off',
       'vue/no-unused-vars': 'off',
       'no-debugger': 'off',
@@ -60,6 +61,7 @@ export default [
   {
     files: ['functions/**/*.{ts,js}'],
     languageOptions: {
+      parser: tseslint.parser,
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
@@ -79,6 +81,12 @@ export default [
   },
   {
     files: ['functions/test/**/*.{ts,js}'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: null, // Disable project-based linting for test files
+      },
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
