@@ -74,10 +74,14 @@
             </v-card-text>
             <div class="auth-footer px-6 py-4">
               <p class="auth-consent text-caption text-medium-emphasis mb-0">
-                By continuing you agree to the TarkovTracker
-                <router-link to="/terms" class="auth-consent__link">Terms of Service</router-link>
-                and
-                <router-link to="/privacy" class="auth-consent__link">Privacy Policy</router-link>.
+                <i18n-t keypath="auth.consent.full" scope="global">
+                  <template #terms>
+                    <router-link to="/terms" class="auth-consent__link">{{ $t('auth.consent.terms') }}</router-link>
+                  </template>
+                  <template #privacy>
+                    <router-link to="/privacy" class="auth-consent__link">{{ $t('auth.consent.privacy') }}</router-link>
+                  </template>
+                </i18n-t>
               </p>
             </div>
           </v-card>

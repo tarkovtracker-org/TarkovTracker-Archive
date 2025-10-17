@@ -15,6 +15,13 @@
     refreshbutton: 'Intentar de nuevo',
     cancel: 'Cancelar',
   },
+  auth: {
+    consent: {
+      full: 'Al continuar, aceptas la {terms} y la {privacy} de TarkovTracker.',
+      terms: 'Términos de Servicio',
+      privacy: 'Política de Privacidad',
+    },
+  },
   menu: {
     language: 'Idioma',
   },

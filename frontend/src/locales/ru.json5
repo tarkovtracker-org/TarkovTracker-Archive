@@ -14,6 +14,13 @@
     refreshbutton: 'Попробовать снова',
     cancel: 'Отмена',
   },
+  auth: {
+    consent: {
+      full: 'Продолжая, вы согласны с {terms} и {privacy} TarkovTracker.',
+      terms: 'Условиями обслуживания',
+      privacy: 'Политикой конфиденциальности',
+    },
+  },
   menu: {
     language: 'Язык',
   },

@@ -30,6 +30,13 @@
     refreshbutton: 'Try again',
     cancel: 'Cancel',
   },
+  auth: {
+    consent: {
+      full: 'By continuing you agree to the TarkovTracker {terms} and {privacy}.',
+      terms: 'Terms of Service',
+      privacy: 'Privacy Policy',
+    },
+  },
   menu: {
     language: 'Language',
   },

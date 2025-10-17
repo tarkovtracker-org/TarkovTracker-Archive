@@ -62,6 +62,13 @@
     refreshbutton: 'Erneut versuchen',
     cancel: 'Abbrechen',
   },
+  auth: {
+    consent: {
+      full: 'Wenn du fortfährst, erkennst du die TarkovTracker {terms} und {privacy} an.',
+      terms: 'Nutzungsbedingungen',
+      privacy: 'Datenschutzrichtlinie',
+    },
+  },
   menu: {
     language: 'Language',
   },

@@ -28,6 +28,13 @@
   common: {
     refreshbutton: "再試行",
   },
+  auth: {
+    consent: {
+      full: "続行することで、TarkovTracker の {terms} と {privacy} に同意します。",
+      terms: "利用規約",
+      privacy: "プライバシーポリシー",
+    },
+  },
   menu: {
     language: "言語",
   },
