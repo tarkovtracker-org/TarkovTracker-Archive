@@ -101,7 +101,7 @@
                 </v-row>
               </template>
               <template v-else-if="props.need.needType == 'hideoutModule'">
-                <v-row dense no-gutters class="mb-1 mt-1 d-flex justify-center">
+                <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
                   <v-col cols="auto" align="center">
                     <station-link :station="relatedStation" class="justify-center" />
                   </v-col>

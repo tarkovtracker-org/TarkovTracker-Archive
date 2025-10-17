@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-row dense>
+    <v-row class="compact-row">
       <v-col cols="12">
         <v-card>
           <v-tabs
@@ -22,7 +22,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-row v-if="primaryModel === 'maps'" dense>
+    <v-row v-if="primaryModel === 'maps'" class="compact-row">
       <v-col cols="12">
         <v-card>
           <v-tabs
@@ -52,7 +52,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-row dense>
+    <v-row class="compact-row">
       <v-col lg="5" md="5">
         <v-card>
           <v-tabs
@@ -115,7 +115,7 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-row v-if="orderedTraders.length" dense class="task-trader-filter-row">
+    <v-row v-if="orderedTraders.length" class="task-trader-filter-row compact-row">
       <v-col cols="12">
         <v-card class="task-trader-filter">
           <v-tabs
@@ -228,6 +228,10 @@
 <style scoped lang="scss">
   .task-trader-filter-row {
     margin-top: 8px;
+  }
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
   }
   .task-trader-filter {
     margin-bottom: 16px;

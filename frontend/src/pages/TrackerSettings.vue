@@ -179,7 +179,7 @@
             </div>
             <v-row justify="center">
               <v-col cols="12">
-                <v-alert dense outlined type="error" :value="true" class="ma-2">
+                <v-alert v-model="notLoggedInAlert" type="error" variant="tonal" class="ma-2">
                   {{ $t('page.settings.card.apitokens.not_logged_in') }}
                 </v-alert>
               </v-col>
@@ -212,6 +212,7 @@
   const { systemStore } = useSystemStore();
 
   const tokensSection = ref(null);
+  const notLoggedInAlert = ref(true);
 
   // Computed properties for token count
   const userTokenCount = computed(() => {

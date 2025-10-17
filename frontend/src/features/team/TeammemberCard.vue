@@ -1,7 +1,7 @@
 <template>
   <v-sheet class="pa-2" color="primary" :rounded="true">
     <v-container no-gutters>
-      <v-row dense align="center" justify="space-between">
+      <v-row class="compact-row" align="center" justify="space-between">
         <v-col cols="auto" class="text-left">
           <div class="text-h4">
             {{ getDisplayName(props.teammember) }}
@@ -31,7 +31,7 @@
           </div>
         </v-col>
       </v-row>
-      <v-row dense justify="space-between">
+      <v-row class="compact-row" justify="space-between">
         <v-col cols="auto">
           <i18n-t
             v-if="!userStore.teamIsHidden(props.teammember)"
@@ -177,4 +177,9 @@
     kickingTeammate.value = false;
   };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>

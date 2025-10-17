@@ -10,7 +10,7 @@
             <p class="text-body-2 mb-4">
               {{ $t('page.settings.cards.profile.description') }}
             </p>
-            <v-row dense>
+            <v-row class="compact-row">
               <v-col cols="12" md="6">
                 <v-select
                   v-model="currentGameEdition"
@@ -69,11 +69,11 @@
               type="warning"
               variant="tonal"
               class="mb-4"
-              dense
+              density="compact"
             >
               {{ $t('page.settings.cards.progress.login_required') }}
             </v-alert>
-            <v-row dense>
+            <v-row class="compact-row">
               <v-col cols="12" md="6">
                 <v-btn
                   block
@@ -138,7 +138,7 @@
           <p class="mb-4">
             {{ $t('page.settings.dialogs.reset_mode.description', { mode: resetModeLabel }) }}
           </p>
-          <v-alert type="warning" variant="tonal" class="mb-4" dense>
+          <v-alert type="warning" variant="tonal" class="mb-4" density="compact">
             {{ $t('page.settings.dialogs.reset_mode.warning') }}
           </v-alert>
         </v-card-text>
@@ -161,7 +161,7 @@
     <v-dialog v-model="fullResetDialog" max-width="520">
       <v-card :title="$t('page.settings.dialogs.full_reset.title')">
         <v-card-text>
-          <v-alert type="error" variant="tonal" class="mb-4" dense>
+          <v-alert type="error" variant="tonal" class="mb-4" density="compact">
             {{ $t('page.settings.dialogs.full_reset.warning') }}
           </v-alert>
           <p class="mb-4">
@@ -293,5 +293,10 @@
 
   .w-100 {
     width: 100%;
+  }
+
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
   }
 </style>

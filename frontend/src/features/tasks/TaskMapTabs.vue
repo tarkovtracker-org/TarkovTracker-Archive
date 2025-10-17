@@ -1,14 +1,13 @@
 <template>
-  <v-row v-if="show" dense>
+  <v-row v-if="show" class="compact-row">
     <v-col cols="12">
       <v-card>
         <v-tabs
-          :model-value="activeMapView"
+          v-model="activeMapViewModel"
           bg-color="accent"
           slider-color="secondary"
           align-tabs="center"
           show-arrows
-          @update:model-value="(value: unknown) => $emit('update:activeMapView', value as string)"
         >
           <v-tab
             v-for="(map, index) in maps"
@@ -33,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+  import { computed } from 'vue';
+
   interface MapData {
     id: string;
     name: string;
@@ -50,9 +51,21 @@
   }
 
   const props = defineProps<Props>();
-  defineEmits<Emits>();
+  const emit = defineEmits<Emits>();
 
   const getTaskTotal = (map: MapData): number => {
     return props.taskTotals[map.id] || 0;
   };
+
+  const activeMapViewModel = computed({
+    get: () => props.activeMapView,
+    set: (value: string) => emit('update:activeMapView', value),
+  });
 </script>
+
+<style scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>

@@ -30,7 +30,7 @@
 
       <v-row
         v-if="!loadingTasks && !reloadingTasks && (renderedTasks?.length || 0) === 0"
-        dense
+        class="compact-row"
       >
         <v-col cols="12">
           <v-alert icon="mdi-clipboard-search">{{ $t('page.tasks.notasksfound') }}</v-alert>
@@ -123,5 +123,10 @@
 
   .task-list__content-row {
     margin: 0 -12px;
+  }
+
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
   }
 </style>

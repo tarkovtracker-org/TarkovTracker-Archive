@@ -1,7 +1,7 @@
 <template>
   <tracker-tip :tip="{ id: 'neededitems' }"></tracker-tip>
   <v-container>
-    <v-row align="center" dense>
+    <v-row align="center" class="compact-row">
       <v-col cols="9" sm="8" md="9" lg="8">
         <!-- Primary views (all, maps, traders) -->
         <v-card>
@@ -46,7 +46,7 @@
               <v-card :title="$t('page.neededitems.options.title')" style="width: fit-content">
                 <v-card-text>
                   <v-container class="ma-0 pa-0">
-                    <v-row dense>
+                    <v-row class="compact-row">
                       <!-- Choose needed items layout style -->
                       <v-col cols="12">
                         <v-btn-toggle
@@ -508,4 +508,9 @@
    * downstream consumers that expect it.
    */
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>
