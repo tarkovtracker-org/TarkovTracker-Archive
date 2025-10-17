@@ -172,14 +172,14 @@
     name: string;
   }
   interface Props {
-    primaryViews: ViewOption[];
-    secondaryViews: ViewOption[];
-    userViews: ViewOption[];
-    maps: MapSummary[];
-    mapTaskTotals: Record<string, number>;
-    secondaryTaskCounts: SecondaryTaskCounts;
-    orderedTraders: Trader[];
-    traderAvatar: (id: string) => string | undefined;
+    primaryViews?: ViewOption[];
+    secondaryViews?: ViewOption[];
+    userViews?: ViewOption[];
+    maps?: MapSummary[];
+    mapTaskTotals?: Record<string, number>;
+    secondaryTaskCounts?: SecondaryTaskCounts;
+    orderedTraders?: Trader[];
+    traderAvatar?: (id: string) => string | undefined;
     filtersActive?: boolean;
     primary: string;
     secondary: string;
@@ -226,7 +226,12 @@
   const maps = computed<MapSummary[]>(() => props.maps ?? []);
   const mapTaskTotals = computed<Record<string, number>>(() => props.mapTaskTotals ?? {});
   const secondaryTaskCounts = computed<SecondaryTaskCounts>(
-    () => props.secondaryTaskCounts ?? { available: 0, locked: 0, completed: 0 }
+    () =>
+      props.secondaryTaskCounts ?? {
+        available: 0,
+        locked: 0,
+        completed: 0,
+      }
   );
   const traderAvatar = (id: string) => props.traderAvatar?.(id);
 </script>
