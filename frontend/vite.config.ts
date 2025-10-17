@@ -24,6 +24,48 @@ const getBuildTime = () => {
   return new Date().toISOString();
 };
 
+const includesAny = (value: string, substrings: string[]) => {
+  return substrings.some((substring) => value.includes(substring));
+};
+
+const vendorChunkMatchers = [
+  { name: 'vuetify', match: (id: string) => id.includes('vuetify') },
+  { name: 'apollo-graphql', match: (id: string) => includesAny(id, ['@apollo', 'graphql']) },
+  { name: 'firebase', match: (id: string) => id.includes('firebase') },
+  { name: 'd3', match: (id: string) => id.includes('d3') },
+  { name: 'pinia', match: (id: string) => id.includes('pinia') },
+  { name: 'vue-router', match: (id: string) => id.includes('vue-router') },
+  { name: 'vue-i18n', match: (id: string) => includesAny(id, ['vue-i18n', '@intlify']) },
+  { name: 'vuefire', match: (id: string) => includesAny(id, ['vuefire', 'rxfire']) },
+  { name: 'graphology', match: (id: string) => id.includes('graphology') },
+];
+
+const appChunkMatchers = [
+  { name: 'stores', match: (id: string) => id.includes('/src/stores/') },
+  {
+    name: 'composables',
+    match: (id: string) => id.includes('/src/composables/') && !id.includes('tarkovdata'),
+  },
+  {
+    name: 'tarkov-data',
+    match: (id: string) =>
+      includesAny(id, [
+        '/src/composables/tarkovdata',
+        '/src/composables/api/',
+        '/src/composables/data/',
+      ]),
+  },
+  { name: 'services', match: (id: string) => id.includes('/src/services/') },
+];
+
+const matchChunk = (
+  id: string,
+  matchers: { name: string; match: (value: string) => boolean }[]
+) => {
+  const matcher = matchers.find(({ match }) => match(id));
+  return matcher?.name;
+};
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -44,52 +86,13 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            // Group specific large vendors into their own chunks
-            if (id.includes('vuetify')) {
-              return 'vuetify';
+            const vendorChunk = matchChunk(id, vendorChunkMatchers);
+            if (vendorChunk) {
+              return vendorChunk;
             }
-            if (id.includes('@apollo') || id.includes('graphql')) {
-              return 'apollo-graphql';
-            }
-            if (id.includes('firebase')) {
-              return 'firebase';
-            }
-            if (id.includes('d3')) {
-              return 'd3';
-            }
-            // Split other common vendors
-            if (id.includes('pinia')) {
-              return 'pinia';
-            }
-            if (id.includes('vue-router')) {
-              return 'vue-router';
-            }
-            if (id.includes('vue-i18n') || id.includes('@intlify')) {
-              return 'vue-i18n';
-            }
-            if (id.includes('vuefire') || id.includes('rxfire')) {
-              return 'vuefire';
-            }
-            if (id.includes('graphology')) {
-              return 'graphology';
-            }
-            // Let Vite handle other node_modules with its default chunking strategy
           }
-          // Split application code by feature
-          if (id.includes('/src/stores/')) {
-            return 'stores';
-          }
-          if (id.includes('/src/composables/') && !id.includes('tarkovdata')) {
-            return 'composables';
-          }
-          if (id.includes('/src/composables/tarkovdata') || 
-              id.includes('/src/composables/api/') ||
-              id.includes('/src/composables/data/')) {
-            return 'tarkov-data';
-          }
-          if (id.includes('/src/services/')) {
-            return 'services';
-          }
+          const appChunk = matchChunk(id, appChunkMatchers);
+          return appChunk;
         },
       },
     },
