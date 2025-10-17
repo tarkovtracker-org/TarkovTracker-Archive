@@ -10,6 +10,7 @@ export { useMapData, useTraderData, usePlayerLevelData } from '@/composables/dat
 // Re-export types for backward compatibility
 export type { Task } from '@/types/tarkov';
 import { computed, ref } from 'vue';
+import { DISABLED_TASK_IDS } from '@/config/gameConstants';
 import { useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTaskData } from '@/composables/data/useTaskData';
 import { useHideoutData } from '@/composables/data/useHideoutData';
@@ -63,14 +64,7 @@ export const hideoutLoading = ref<boolean>(false);
 // Map loading functionality moved to @/composables/api/useTarkovApi.ts
 // Helper functions moved to @/composables/utils/graphHelpers.ts
 // Language extraction moved to @/composables/api/useTarkovApi.ts
-// Disabled tasks moved to @/composables/data/useTaskData.ts
-const disabledTasks = [
-  '61e6e5e0f5b9633f6719ed95',
-  '61e6e60223374d168a4576a6',
-  '61e6e621bfeab00251576265',
-  '61e6e615eea2935bc018a2c5',
-  '61e6e60c5ca3b3783662be27',
-];
+// Disabled tasks moved to @/config/gameConstants.ts
 // Watchers moved to individual data composables
 // Task processing moved to @/composables/data/useTaskData.ts
 // Computed properties moved to individual data composables
@@ -141,7 +135,7 @@ export function useTarkovData(): TarkovDataComposable {
     traders: traderData.traders,
     neededItemTaskObjectives: taskData.neededItemTaskObjectives,
     neededItemHideoutModules: hideoutData.neededItemHideoutModules,
-    disabledTasks: disabledTasks,
+    disabledTasks: [...DISABLED_TASK_IDS],
     playerLevels: playerData.playerLevels,
     minPlayerLevel: playerData.minPlayerLevel,
     maxPlayerLevel: playerData.maxPlayerLevel,
