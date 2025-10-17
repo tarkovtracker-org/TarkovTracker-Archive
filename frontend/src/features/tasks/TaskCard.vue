@@ -62,7 +62,9 @@
         <v-btn v-if="showUndoButton" color="white" variant="text" @click="undoLastAction">
           {{ t('page.tasks.questcard.undo') }}
         </v-btn>
-        <v-btn color="white" variant="text" @click="taskStatusUpdated = false">Close</v-btn>
+        <v-btn color="white" variant="text" @click="taskStatusUpdated = false">
+          {{ t('page.tasks.filters.close') }}
+        </v-btn>
       </template>
     </v-snackbar>
   </v-sheet>
@@ -137,14 +139,18 @@
     () => userStore.getShowRequiredTaskRequirementLabels
   );
   const showExperienceRewards = computed(() => userStore.getShowExperienceRewards);
+  const tasksById = computed(() => {
+    const map = new Map();
+    (tasks.value || []).forEach((t) => map.set(t.id, t));
+    return map;
+  });
   const showNextTasksSetting = computed(() => props.showNextTasks === true);
   const nextTasks = computed(() => {
     if (!showNextTasksSetting.value) return [];
     const children = props.task.children || [];
     if (!Array.isArray(children) || !children.length) return [];
-    const allTasks = tasks.value || [];
     return children
-      .map((id) => allTasks.find((t) => t.id === id))
+      .map((id) => tasksById.value.get(id))
       .filter((taskItem) => Boolean(taskItem && taskItem.name))
       .map((taskItem) => ({
         id: taskItem.id,
@@ -157,7 +163,6 @@
   const previousTasks = computed(() => {
     if (!showPreviousTasksSetting.value) return [];
     const requirements = props.task.taskRequirements || [];
-    const allTasks = tasks.value || [];
     const relevantRequirementIds = requirements
       .filter((requirement) => {
         const reqTaskId = requirement?.task?.id;
@@ -174,7 +179,7 @@
       .map((requirement) => requirement.task.id);
     if (!relevantRequirementIds.length) return [];
     return relevantRequirementIds
-      .map((id) => allTasks.find((t) => t.id === id))
+      .map((id) => tasksById.value.get(id))
       .filter((taskItem) => Boolean(taskItem && taskItem.name))
       .map((taskItem) => ({
         id: taskItem.id,

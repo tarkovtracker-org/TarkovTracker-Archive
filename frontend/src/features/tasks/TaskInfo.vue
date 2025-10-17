@@ -8,9 +8,9 @@
           </v-col>
         </v-row>
 
-        <v-tooltip v-if="task.minPlayerLevel != 0" location="top">
+        <v-tooltip v-if="task.minPlayerLevel > 0" location="top">
           <template #activator="activator">
-            <span class="tooltip-activator" v-bind="activator.props">
+            <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
               <InfoRow icon="mdi-menu-right">
                 <i18n-t keypath="page.tasks.questcard.level" scope="global">
                   <template #count>{{ task.minPlayerLevel }}</template>
@@ -26,7 +26,7 @@
           location="top"
         >
           <template #activator="activator">
-            <span class="tooltip-activator" v-bind="activator.props">
+            <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
               <InfoRow icon="mdi-lock-open-outline" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbefore_label') }}</span>
                 <span class="lock-count">{{ lockedBefore }}</span>
@@ -41,7 +41,7 @@
           location="top"
         >
           <template #activator="activator">
-            <span class="tooltip-activator" v-bind="activator.props">
+            <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
               <InfoRow icon="mdi-lock" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbehind_label') }}</span>
                 <span class="lock-count">{{ lockedBehind }}</span>
@@ -66,11 +66,9 @@
           <v-col v-if="showKappaStatus" cols="auto" class="mr-1">
             <v-chip
               size="x-small"
-              :class="[
-                'status-chip',
-                'status-chip--kappa',
-                kappaRequired ? 'status-chip--required' : 'status-chip--optional'
-              ]"
+              :class="['status-chip']"
+              :color="kappaRequired ? 'success' : 'warning'"
+              variant="flat"
             >
               {{
                 t(
@@ -84,11 +82,9 @@
           <v-col v-if="showLightkeeperStatus" cols="auto">
             <v-chip
               size="x-small"
-              :class="[
-                'status-chip',
-                'status-chip--lightkeeper',
-                lightkeeperRequired ? 'status-chip--required' : 'status-chip--optional'
-              ]"
+              :class="['status-chip']"
+              :color="lightkeeperRequired ? 'primary' : 'warning'"
+              variant="flat"
             >
               {{
                 t(
@@ -100,7 +96,7 @@
             </v-chip>
           </v-col>
           <v-col v-if="showEodChip" cols="auto">
-            <v-chip size="x-small" :class="['status-chip', 'status-chip--eod']">
+            <v-chip size="x-small" :class="['status-chip']" color="secondary" variant="flat">
               {{ t('page.tasks.questcard.eodonly') }}
             </v-chip>
           </v-col>
@@ -278,25 +274,7 @@
     margin-right: 6px;
   }
 
-  .status-chip--required.status-chip--kappa {
-    background-color: #0e8b4a;
-  }
-
-  .status-chip--optional.status-chip--kappa {
-    background-color: #7b2d2d;
-  }
-
-  .status-chip--required.status-chip--lightkeeper {
-    background-color: #1764d0;
-  }
-
-  .status-chip--optional.status-chip--lightkeeper {
-    background-color: #b8860b;
-  }
-
-  .status-chip--eod {
-    background-color: #6b2dbf;
-  }
+  /* Chip colors now use Vuetify theme colors via color prop */
 
   .task-id-row {
     font-size: 0.85rem;

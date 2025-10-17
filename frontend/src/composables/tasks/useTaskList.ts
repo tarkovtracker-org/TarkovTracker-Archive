@@ -305,7 +305,7 @@ export function useTaskList() {
 
   const taskShouldBeConsidered = (task: Task, options: RequirementOptions, hideGlobal: boolean) => {
     if (disabledTasks.includes(task.id)) return false;
-    if (hideGlobal && !task.map) return false;
+    if (hideGlobal && collectTaskLocationIds(task).size === 0) return false;
     return taskMatchesRequirementFilters(task, options);
   };
 
@@ -314,19 +314,50 @@ export function useTaskList() {
     return mapIdGroup.some((id) => taskLocations.has(id));
   };
 
-  const collectTaskLocationIds = (task: Task) => {
-    const locationIds = new Set(Array.isArray(task.locations) ? task.locations : []);
-    if (locationIds.size > 0 || !Array.isArray(task.objectives)) {
-      return locationIds;
+  const addLocationId = (locationIds: Set<string>, id?: string | null) => {
+    if (id) locationIds.add(id);
+  };
+
+  const collectObjectiveLocationIds = (objective: TaskObjective, locationIds: Set<string>) => {
+    // Collect from objective.maps
+    if (Array.isArray(objective.maps)) {
+      objective.maps.forEach((objMap) => addLocationId(locationIds, objMap?.id));
     }
-    for (const objective of task.objectives) {
-      if (!Array.isArray(objective.maps)) continue;
-      for (const objMap of objective.maps) {
-        if (objMap?.id) {
-          locationIds.add(objMap.id);
-        }
+
+    // Collect from objective.location
+    addLocationId(locationIds, objective.location?.id);
+
+    // Collect from objective.possibleLocations
+    if (Array.isArray(objective.possibleLocations)) {
+      objective.possibleLocations.forEach((loc) => addLocationId(locationIds, loc?.map?.id));
+    }
+
+    // Collect from objective.zones
+    if (Array.isArray(objective.zones)) {
+      objective.zones.forEach((zone) => addLocationId(locationIds, zone?.map?.id));
+    }
+  };
+
+  const collectTaskLocationIds = (task: Task) => {
+    const locationIds = new Set<string>();
+
+    // Collect from task.map
+    if (task.map?.id) locationIds.add(task.map.id);
+
+    // Collect from task.locations
+    if (Array.isArray(task.locations)) {
+      for (const locationId of task.locations) {
+        if (locationId) locationIds.add(locationId);
       }
     }
+
+    // Collect from objectives
+    if (Array.isArray(task.objectives)) {
+      for (const objective of task.objectives) {
+        collectObjectiveLocationIds(objective, locationIds);
+      }
+    }
+
     return locationIds;
   };
 
@@ -356,7 +387,7 @@ export function useTaskList() {
 
   const filterTasksByPrimaryView = (taskList: Task[]) => {
     let filteredTasks = Array.isArray(taskList) ? [...taskList] : [];
-    if (activePrimaryView.value === 'maps') {
+    if (activePrimaryView.value === 'maps' && activeMapView.value !== 'all') {
       const mapIdGroup = getMapIdGroup(activeMapView.value, maps.value);
       filteredTasks = filteredTasks.filter((task) => {
         const taskLocations = Array.isArray(task.locations) ? task.locations : [];

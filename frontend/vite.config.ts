@@ -57,7 +57,38 @@ export default defineConfig({
             if (id.includes('d3')) {
               return 'd3';
             }
+            // Split other common vendors
+            if (id.includes('pinia')) {
+              return 'pinia';
+            }
+            if (id.includes('vue-router')) {
+              return 'vue-router';
+            }
+            if (id.includes('vue-i18n') || id.includes('@intlify')) {
+              return 'vue-i18n';
+            }
+            if (id.includes('vuefire') || id.includes('rxfire')) {
+              return 'vuefire';
+            }
+            if (id.includes('graphology')) {
+              return 'graphology';
+            }
             // Let Vite handle other node_modules with its default chunking strategy
+          }
+          // Split application code by feature
+          if (id.includes('/src/stores/')) {
+            return 'stores';
+          }
+          if (id.includes('/src/composables/') && !id.includes('tarkovdata')) {
+            return 'composables';
+          }
+          if (id.includes('/src/composables/tarkovdata') || 
+              id.includes('/src/composables/api/') ||
+              id.includes('/src/composables/data/')) {
+            return 'tarkov-data';
+          }
+          if (id.includes('/src/services/')) {
+            return 'services';
           }
         },
       },
