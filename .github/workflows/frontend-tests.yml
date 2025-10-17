@@ -8,6 +8,11 @@ on:
     branches: [ master, develop ]
     paths: [ 'frontend/**' ]
 
+# Principle of least privilege: only grant necessary permissions
+permissions:
+  contents: read              # Read repository contents for checkout
+  actions: write              # Upload test artifacts (Playwright reports)
+
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
