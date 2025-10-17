@@ -5,7 +5,7 @@
       density="compact"
       color="green-darken-3"
       title="API Update Complete"
-      class="mb-3 api-update-alert"
+      class="mb-3 announcement-alert"
       style="flex: 0 0 auto"
       closable
     >
