@@ -61,8 +61,6 @@
       notasksfound: 'Keine Aufgaben gefunden. Ändere deine Filter oder passe dein Level links an.',
       hide_global_tasks: 'Globale Aufgaben ausblenden',
       show_global_tasks: 'Globale Aufgaben anzeigen',
-      hide_non_kappa_tasks: 'Aufgaben ohne Kappa-Pflicht ausblenden',
-      show_non_kappa_tasks: 'Aufgaben ohne Kappa-Pflicht anzeigen',
       filters: {
         title: 'Aufgabeneinstellungen',
         close: 'Schließen',
