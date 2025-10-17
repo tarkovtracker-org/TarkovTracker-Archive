@@ -190,6 +190,7 @@
   import { fireuser, auth, functions, httpsCallable } from '@/plugins/firebase';
   import { useLiveData } from '@/composables/livedata';
   import FittedCard from '@/features/ui/FittedCard.vue';
+  import { logger } from '@/utils/logger';
 
   const router = useRouter();
   const { useTeamStore } = useLiveData();
@@ -219,14 +220,14 @@
 
   const userEmail = computed(() => {
     // Debug logging to understand what's available
-    console.log('Debug - fireuser:', {
+    logger.debug('Debug - fireuser:', {
       email: fireuser.email,
       uid: fireuser.uid,
       displayName: fireuser.displayName,
       loggedIn: fireuser.loggedIn,
     });
 
-    console.log('Debug - auth.currentUser:', {
+    logger.debug('Debug - auth.currentUser:', {
       email: auth.currentUser?.email,
       uid: auth.currentUser?.uid,
       displayName: auth.currentUser?.displayName,
@@ -269,7 +270,7 @@
         accountIdCopied.value = false;
       }, 2000);
     } catch (error) {
-      console.error('Failed to copy account ID:', error);
+      logger.error('Failed to copy account ID:', error);
       // Fallback for older browsers
       try {
         const textArea = document.createElement('textarea');
@@ -283,7 +284,7 @@
           accountIdCopied.value = false;
         }, 2000);
       } catch (fallbackError) {
-        console.error('Fallback copy also failed:', fallbackError);
+        logger.error('Fallback copy also failed:', fallbackError);
       }
     }
   };
@@ -316,7 +317,7 @@
       showConfirmationDialog.value = false;
       showSuccessDialog.value = true;
     } catch (error) {
-      console.error('Account deletion error:', error);
+      logger.error('Account deletion error:', error);
 
       if (error.code === 'functions/unauthenticated') {
         deleteError.value = 'Authentication required. Please refresh the page and try again.';
@@ -335,7 +336,7 @@
   const redirectToHome = async () => {
     try {
       showSuccessDialog.value = false;
-      console.log('Signing out user and redirecting to dashboard...');
+      logger.info('Signing out user and redirecting to dashboard...');
 
       // Clear ALL localStorage data before signing out
       localStorage.clear();
@@ -345,16 +346,16 @@
 
       // Navigate to dashboard
       await router.push('/');
-      console.log('Successfully signed out and redirected to dashboard');
+      logger.info('Successfully signed out and redirected to dashboard');
     } catch (error) {
-      console.error('Failed to sign out and redirect:', error);
+      logger.error('Failed to sign out and redirect:', error);
       // Fallback: force signout and navigate
       try {
         // Clear localStorage even on error
         localStorage.clear();
         await auth.signOut();
       } catch (signOutError) {
-        console.error('Signout failed:', signOutError);
+        logger.error('Signout failed:', signOutError);
       }
       window.location.href = '/';
     }

@@ -4,7 +4,7 @@
       <v-row dense align="center" justify="space-between">
         <v-col cols="auto" class="text-left">
           <div class="text-h4">
-            {{ progressStore.getDisplayName(props.teammember) }}
+            {{ getDisplayName(props.teammember) }}
           </div>
           <div v-if="props.teammember == fireuser.uid" class="text-left">
             <b>
@@ -24,7 +24,7 @@
               </div>
               <div class="text-center">
                 <h1 style="font-size: 2.5em; line-height: 0.8em">
-                  {{ progressStore.getLevel(props.teammember) }}
+                  {{ getLevel(props.teammember) }}
                 </h1>
               </div>
             </span>
@@ -98,8 +98,9 @@
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
+  import { logger } from '@/utils/logger';
   // Define the props for the component
   const props = defineProps({
     teammember: {
@@ -118,17 +119,18 @@
       return props.teammember;
     }
   });
-  const progressStore = useProgressStore();
+  const { getDisplayName, getLevel, tasksCompletions } = useProgressQueries();
   const userStore = useUserStore();
   const { tasks, playerLevels } = useTarkovData();
   const { t } = useI18n({ useScope: 'global' });
   const completedTaskCount = computed(() => {
+    const completions = tasksCompletions.value || {};
     return tasks.value.filter(
-      (task) => progressStore.tasksCompletions?.[task.id]?.[teamStoreId.value] == true
+      (task) => completions?.[task.id]?.[teamStoreId.value] === true
     ).length;
   });
   const groupIcon = computed(() => {
-    const level = progressStore.getLevel(props.teammember);
+    const level = getLevel(props.teammember);
     const entry = playerLevels.value.find((pl) => pl.level === level);
     return entry?.levelBadgeImageLink ?? '';
   });
@@ -169,7 +171,7 @@
     } catch (error) {
       let backendMsg = error?.message || error?.data?.message || error?.toString();
       kickTeammateResult.value = backendMsg || t('page.team.card.manageteam.membercard.kick_error');
-      console.error('[TeammemberCard.vue] Error kicking teammate:', error);
+      logger.error('[TeammemberCard.vue] Error kicking teammate:', error);
       kickTeammateSnackbar.value = true;
     }
     kickingTeammate.value = false;

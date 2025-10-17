@@ -27,18 +27,9 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
-  import type { GameMode } from '@/shared_state';
-
-  interface GameModeOption {
-    label: string;
-    value: GameMode;
-    icon: string;
-    description: string;
-  }
 
   const store = useTarkovStore();
-
-  const gameModeOptions: GameModeOption[] = [
+  const gameModeOptions = [
     {
       label: 'PvP',
       value: 'pvp',
@@ -57,7 +48,7 @@
     get() {
       return store.getCurrentGameMode();
     },
-    set(newMode: GameMode) {
+    set(newMode) {
       store.switchGameMode(newMode);
     },
   });

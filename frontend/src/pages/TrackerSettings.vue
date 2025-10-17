@@ -197,9 +197,6 @@
       </v-col>
 
       <!-- Account Deletion -->
-      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="4" lg="6" xl="6" class="d-flex">
-        <account-deletion-card class="flex-grow-1" />
-      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -209,7 +206,6 @@
   import { useLiveData } from '@/composables/livedata';
   import ApiTokens from '@/features/settings/ApiTokens';
   import DataMigrationCard from '@/features/settings/DataMigrationCard';
-  import AccountDeletionCard from '@/features/settings/AccountDeletionCard.vue';
   import FittedCard from '@/features/ui/FittedCard';
 
   const { useSystemStore } = useLiveData();

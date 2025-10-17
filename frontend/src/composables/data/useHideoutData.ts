@@ -12,6 +12,7 @@ import {
 } from '@/composables/utils/graphHelpers';
 import type { HideoutStation, HideoutModule, NeededItemHideoutModule } from '@/types/tarkov';
 import type { AbstractGraph } from 'graphology-types';
+import { logger } from '@/utils/logger';
 /**
  * Composable for managing hideout data, station relationships, and requirements
  */
@@ -35,29 +36,40 @@ export function useHideoutData() {
    */
   const buildHideoutGraph = (stations: HideoutStation[]) => {
     const newGraph = createGraph();
+    if (!Array.isArray(stations) || stations.length === 0) {
+      return newGraph;
+    }
+
+    const levelLookup = new Map<string, string>();
+
     stations.forEach((station) => {
       station.levels.forEach((level) => {
         safeAddNode(newGraph, level.id);
+        levelLookup.set(`${station.id}:${level.level}`, level.id);
+      });
+    });
+
+    stations.forEach((station) => {
+      station.levels.forEach((level) => {
         level.stationLevelRequirements?.forEach((requirement) => {
-          if (requirement?.station?.id) {
-            // Find the required level's ID
-            const requiredStation = stations.find((s) => s.id === requirement.station.id);
-            const requiredLevel = requiredStation?.levels.find(
-              (l) => l.level === requirement.level
+          const requiredStationId = requirement?.station?.id;
+          if (!requiredStationId) {
+            return;
+          }
+
+          const requiredLevelId = levelLookup.get(`${requiredStationId}:${requirement.level}`);
+          if (requiredLevelId) {
+            safeAddEdge(newGraph, requiredLevelId, level.id);
+          } else {
+            logger.warn(
+              `Could not find required level ID for station ${requiredStationId} ` +
+                `level ${requirement.level} needed by ${level.id}`
             );
-            if (requiredLevel?.id) {
-              safeAddNode(newGraph, requiredLevel.id);
-              safeAddEdge(newGraph, requiredLevel.id, level.id);
-            } else {
-              console.warn(
-                `Could not find required level ID for station ${requirement.station.id} ` +
-                  `level ${requirement.level} needed by ${level.id}`
-              );
-            }
           }
         });
       });
     });
+
     return newGraph;
   };
   /**
@@ -126,7 +138,7 @@ export function useHideoutData() {
           neededItemHideoutModules.value = [];
         }
       } catch (error) {
-        console.error('Error processing hideout data:', error);
+        logger.error('Error processing hideout data:', error);
         // Reset to safe state on error to prevent stuck loading
         hideoutStations.value = [];
         hideoutModules.value = [];
@@ -211,7 +223,7 @@ export function useHideoutData() {
    * Get modules that require a specific item
    */
   const getModulesRequiringItem = (itemId: string): NeededItemHideoutModule[] => {
-    return neededItemHideoutModules.value.filter((item) => item.item.id === itemId);
+    return neededItemHideoutModules.value.filter((item) => item.item?.id === itemId);
   };
   /**
    * Calculate total construction time for a module including prerequisites

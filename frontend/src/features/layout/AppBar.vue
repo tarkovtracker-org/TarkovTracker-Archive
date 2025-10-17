@@ -48,7 +48,7 @@
             <v-btn icon="mdi-cog" v-bind="props"></v-btn>
           </v-badge>
         </template>
-        <overflow-menu />
+        <overflow-menu @close="state.menu = false" />
       </v-menu>
     </template>
   </v-app-bar>

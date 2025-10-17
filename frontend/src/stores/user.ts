@@ -3,6 +3,7 @@ import { defineStore, type StoreDefinition } from 'pinia';
 import { watch } from 'vue';
 import pinia from '@/plugins/pinia';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
+import { logger } from '@/utils/logger';
 // Define the state structure
 interface UserState {
   allTipsHidden: boolean;
@@ -130,6 +131,7 @@ type UserGetters = {
   getHideNonKappaTasks: (state: UserState) => boolean;
   getHideKappaRequiredTasks: (state: UserState) => boolean;
   getHideLightkeeperRequiredTasks: (state: UserState) => boolean;
+  getHideEodOnlyTasks: (state: UserState) => boolean;
   getShowOptionalTaskRequirementLabels: (state: UserState) => boolean;
   getShowRequiredTaskRequirementLabels: (state: UserState) => boolean;
   getShowExperienceRewards: (state: UserState) => boolean;
@@ -421,6 +423,8 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
   ],
 }) as UserStoreDefinition;
+
+export type UserStore = ReturnType<typeof useUserStore>;
 // Watch for fireuser state changing and bind/unbind
 watch(
   () => fireuser.loggedIn,
@@ -443,7 +447,7 @@ watch(
       }
     } catch (_error) {
       // Handle cases where pinia or userStore might not be ready
-      console.error('Error in userStore watch for fireuser.loggedIn:', _error);
+      logger.error('Error in userStore watch for fireuser.loggedIn:', _error);
     }
   },
   { immediate: true }

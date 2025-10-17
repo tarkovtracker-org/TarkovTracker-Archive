@@ -168,7 +168,7 @@
                       style="white-space: pre-line"
                     >
                       <v-icon size="x-small" class="mr-1">mdi-account-child-circle</v-icon
-                      >{{ progressStore.getDisplayName(userNeed.user) }}
+                      >{{ getDisplayName(userNeed.user) }}
                       {{ userNeed.count.toLocaleString() }}/{{ neededCount.toLocaleString() }}
                     </div>
                   </template>
@@ -186,7 +186,7 @@
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink'));
   const StationLink = defineAsyncComponent(() => import('@/features/hideout/StationLink'));
   const props = defineProps({
@@ -195,7 +195,7 @@
       required: true,
     },
   });
-  const progressStore = useProgressStore();
+  const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   useTarkovData();
   const { smAndDown, mdAndUp } = useDisplay();

@@ -63,7 +63,16 @@ export default gql`
       lightkeeperRequired
       experience
       wikiLink
+      taskImageLink
       minPlayerLevel
+      normalizedName
+      availableDelaySecondsMin
+      availableDelaySecondsMax
+      restartable
+      descriptionMessageId
+      startMessageId
+      successMessageId
+      failMessageId
       taskRequirements {
         task {
           id
@@ -142,7 +151,7 @@ export default gql`
           zones {
             ...TaskZoneData
           }
-          item {
+          items {
             ...ItemData
             properties {
               ... on ItemPropertiesWeapon {
@@ -260,6 +269,14 @@ export default gql`
           }
           count
         }
+        ... on TaskObjectiveTraderStanding {
+          trader {
+            id
+            name
+          }
+          compareMethod
+          value
+        }
       }
       startRewards {
         traderStanding {
@@ -306,6 +323,9 @@ export default gql`
           id
           name
         }
+        craftUnlock {
+          id
+        }
       }
       finishRewards {
         traderStanding {
@@ -351,6 +371,249 @@ export default gql`
         traderUnlock {
           id
           name
+        }
+        craftUnlock {
+          id
+        }
+      }
+      failConditions {
+        id
+        description
+        type
+        maps {
+          id
+          name
+        }
+        optional
+        __typename
+        ... on TaskObjectiveBasic {
+          zones {
+            ...TaskZoneData
+          }
+        }
+        ... on TaskObjectiveBuildItem {
+          item {
+            ...ItemData
+            properties {
+              ... on ItemPropertiesWeapon {
+                defaultPreset {
+                  ...ItemData
+                }
+              }
+            }
+          }
+          containsAll {
+            ...ItemData
+          }
+          containsCategory {
+            ...CategoryData
+            parent {
+              ...CategoryData
+            }
+            children {
+              ...CategoryData
+            }
+          }
+          attributes {
+            name
+            requirement {
+              compareMethod
+              value
+            }
+          }
+        }
+        ... on TaskObjectiveExperience {
+          healthEffect {
+            bodyParts
+            effects
+            time {
+              compareMethod
+              value
+            }
+          }
+        }
+        ... on TaskObjectiveExtract {
+          exitStatus
+          zoneNames
+        }
+        ... on TaskObjectiveItem {
+          zones {
+            ...TaskZoneData
+          }
+          items {
+            ...ItemData
+            properties {
+              ... on ItemPropertiesWeapon {
+                defaultPreset {
+                  ...ItemData
+                }
+              }
+            }
+          }
+          count
+          foundInRaid
+          dogTagLevel
+          maxDurability
+          minDurability
+        }
+        ... on TaskObjectiveMark {
+          markerItem {
+            ...ItemData
+          }
+          zones {
+            ...TaskZoneData
+          }
+        }
+        ... on TaskObjectivePlayerLevel {
+          playerLevel
+        }
+        ... on TaskObjectiveQuestItem {
+          possibleLocations {
+            ...MapWithPositionsData
+          }
+          zones {
+            ...TaskZoneData
+          }
+          questItem {
+            id
+            name
+          }
+          count
+        }
+        ... on TaskObjectiveShoot {
+          shotType
+          targetNames
+          count
+          zoneNames
+          bodyParts
+          usingWeapon {
+            ...ItemData
+            properties {
+              ... on ItemPropertiesWeapon {
+                defaultPreset {
+                  ...ItemData
+                }
+              }
+            }
+          }
+          usingWeaponMods {
+            ...ItemData
+          }
+          wearing {
+            ...ItemData
+          }
+          notWearing {
+            ...ItemData
+          }
+          distance {
+            compareMethod
+            value
+          }
+          playerHealthEffect {
+            bodyParts
+            effects
+            time {
+              compareMethod
+              value
+            }
+          }
+          enemyHealthEffect {
+            bodyParts
+            effects
+            time {
+              compareMethod
+              value
+            }
+          }
+          zones {
+            ...TaskZoneData
+          }
+        }
+        ... on TaskObjectiveSkill {
+          skillLevel {
+            name
+            level
+          }
+        }
+        ... on TaskObjectiveTaskStatus {
+          task {
+            id
+            name
+          }
+          status
+        }
+        ... on TaskObjectiveTraderLevel {
+          trader {
+            id
+            name
+          }
+          level
+        }
+        ... on TaskObjectiveTraderStanding {
+          trader {
+            id
+            name
+          }
+          compareMethod
+          value
+        }
+        ... on TaskObjectiveUseItem {
+          useAny {
+            ...ItemData
+          }
+          zones {
+            ...TaskZoneData
+          }
+          count
+        }
+      }
+      failureOutcome {
+        traderStanding {
+          trader {
+            id
+            name
+          }
+          standing
+        }
+        items {
+          count
+          item {
+            ...ItemData
+            containsItems {
+              item {
+                ...ItemData
+              }
+              count
+            }
+          }
+        }
+        offerUnlock {
+          id
+          trader {
+            id
+            name
+          }
+          level
+          item {
+            ...ItemData
+            containsItems {
+              count
+              item {
+                ...ItemData
+              }
+            }
+          }
+        }
+        skillLevelReward {
+          name
+          level
+        }
+        traderUnlock {
+          id
+          name
+        }
+        craftUnlock {
+          id
         }
       }
       factionName

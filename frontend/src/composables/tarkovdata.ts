@@ -137,6 +137,7 @@ export function useTarkovData(): TarkovDataComposable {
     mapTasks: taskData.mapTasks,
     objectives: taskData.objectives,
     maps: mapData.maps,
+    rawMaps: mapData.rawMaps, // Includes all maps with variants for normalization
     traders: traderData.traders,
     neededItemTaskObjectives: taskData.neededItemTaskObjectives,
     neededItemHideoutModules: hideoutData.neededItemHideoutModules,

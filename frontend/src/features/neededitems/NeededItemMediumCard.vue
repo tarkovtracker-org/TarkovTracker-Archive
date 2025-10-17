@@ -130,7 +130,7 @@
                   style="white-space: pre-line"
                 >
                   <v-icon size="x-small" class="mr-1">mdi-account-child-circle</v-icon
-                  >{{ progressStore.getDisplayName(userNeed.user) }}
+                  >{{ getDisplayName(userNeed.user) }}
                   {{ userNeed.count.toLocaleString() }}/{{ neededCount.toLocaleString() }}
                 </div>
               </template>
@@ -143,7 +143,7 @@
 </template>
 <script setup>
   import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink'));
   const StationLink = defineAsyncComponent(() => import('@/features/hideout/StationLink'));
@@ -154,7 +154,7 @@
     },
   });
   defineEmits(['increaseCount', 'decreaseCount', 'toggleCount']);
-  const progressStore = useProgressStore();
+  const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const {
     selfCompletedNeed,

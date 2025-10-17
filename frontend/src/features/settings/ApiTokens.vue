@@ -258,6 +258,7 @@
   import availablePermissions from '@/utils/api_permissions';
   import TokenCard from '@/features/settings/TokenCard.vue';
   import { auth } from '@/plugins/firebase';
+  import { logger } from '@/utils/logger';
   const { t } = useI18n({ useScope: 'global' });
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
@@ -365,17 +366,17 @@
         const callableResult = await createTokenFn(tokenData);
         result = callableResult.data;
       } catch (callableError) {
-        console.warn('Callable function failed, trying HTTP endpoint:', callableError);
+        logger.warn('Callable function failed, trying HTTP endpoint:', callableError);
         // If callable fails (likely due to CORS), use HTTP endpoint
         result = await createTokenWithHttp(tokenData);
       }
 
       if (!result || !result.token) {
-        console.error('Token not found in response. Expected: result.token');
-        console.error('Available response data:', Object.keys(result || {}));
+        logger.error('Token not found in response. Expected: result.token');
+        logger.error('Available response data:', Object.keys(result || {}));
         throw new Error('Token creation failed: No token returned from server');
       }
-      
+
       cancelTokenCreation();
       snackbarColor.value = 'success';
       snackbarIcon.value = 'mdi-check-circle';
@@ -383,7 +384,7 @@
       tokenResultSubtext.value = t('page.api.tokens.success.message');
       newTokenSnackbar.value = true;
     } catch (error) {
-      console.error('Error creating token:', error);
+      logger.error('Error creating token:', error);
       snackbarColor.value = 'error';
       snackbarIcon.value = 'mdi-alert-circle';
       tokenResult.value = t('page.api.tokens.error.title');

@@ -62,6 +62,7 @@
   import FittedCard from '@/features/ui/FittedCard';
   import TeamInputRow from './TeamInputRow.vue';
   import NotificationSnackbar from '@/features/ui/NotificationSnackbar.vue';
+  import { logger } from '@/utils/logger';
   const { t } = useI18n({ useScope: 'global' });
   const { useTeamStore, useSystemStore } = useLiveData();
   const { teamStore } = useTeamStore();
@@ -94,7 +95,7 @@
       const response = await teamFunction(payload);
       return response.data;
     } catch (error) {
-      console.error('Error calling team function:', functionName, error);
+      logger.error('Error calling team function:', functionName, error);
       throw error;
     }
   };
@@ -149,7 +150,7 @@
         throw new Error(t('page.team.card.myteam.create_team_error_ui_update'));
       }
     } catch (error) {
-      console.error('[MyTeam] Error creating team:', error);
+      logger.error('[MyTeam] Error creating team:', error);
       const message =
         error.details?.error || error.message || t('page.team.card.myteam.create_team_error');
       showNotification(message, 'error');
@@ -171,7 +172,7 @@
       }
       showNotification(t('page.team.card.myteam.leave_team_success'));
     } catch (error) {
-      console.error('[MyTeam] Error leaving team:', error);
+      logger.error('[MyTeam] Error leaving team:', error);
       const message = error.message || t('page.team.card.myteam.leave_team_error_unexpected');
       showNotification(message, 'error');
     }

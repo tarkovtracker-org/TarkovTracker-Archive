@@ -1,5 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { defineComponent, nextTick } from 'vue';
+import { mount, type VueWrapper } from '@vue/test-utils';
 import { useTarkovTime } from '../useTarkovTime';
+
+const activeWrappers: VueWrapper[] = [];
+
+const mountUseTarkovTime = (): ReturnType<typeof useTarkovTime> => {
+  let composableResult: ReturnType<typeof useTarkovTime> | null = null;
+
+  const TestComponent = defineComponent({
+    setup() {
+      composableResult = useTarkovTime();
+      return () => null;
+    },
+  });
+
+  const wrapper = mount(TestComponent);
+  activeWrappers.push(wrapper);
+
+  if (!composableResult) {
+    throw new Error('useTarkovTime did not initialize');
+  }
+
+  return composableResult as ReturnType<typeof useTarkovTime>;
+};
 
 describe('useTarkovTime', () => {
   beforeEach(() => {
@@ -7,14 +31,16 @@ describe('useTarkovTime', () => {
   });
 
   afterEach(() => {
+    activeWrappers.splice(0).forEach((wrapper) => wrapper.unmount());
     vi.useRealTimers();
   });
 
-  it('initializes with formatted time string', () => {
+  it('initializes with formatted time string', async () => {
     const mockDate = new Date('2024-01-01T12:00:00Z');
     vi.setSystemTime(mockDate);
 
-    const { tarkovTime } = useTarkovTime();
+    const { tarkovTime } = mountUseTarkovTime();
+    await nextTick();
 
     expect(typeof tarkovTime.value).toBe('string');
   });
@@ -23,25 +49,31 @@ describe('useTarkovTime', () => {
     const mockDate = new Date('2024-01-01T12:00:00Z');
     vi.setSystemTime(mockDate);
 
-    const { tarkovTime } = useTarkovTime();
-    // Store initial time for potential future comparison
-    // const _initialTime = tarkovTime.value
+    const { tarkovTime } = mountUseTarkovTime();
+    await nextTick();
 
-    // Advance time by 4 seconds (interval is 3000ms)
-    vi.advanceTimersByTime(4000);
+    const initialValue = tarkovTime.value;
+    const realTimeAdvanceMs = 10_000; // ~1m10s Tarkov time, guarantees minute rollover
+    vi.advanceTimersByTime(realTimeAdvanceMs);
+    vi.setSystemTime(new Date(mockDate.getTime() + realTimeAdvanceMs));
+    await vi.runOnlyPendingTimersAsync();
+    await nextTick();
 
     // Time should have updated
     expect(typeof tarkovTime.value).toBe('string');
+    expect(tarkovTime.value).not.toBe(initialValue);
   });
 
-  it('provides time as string', () => {
-    const { tarkovTime } = useTarkovTime();
+  it('provides time as string', async () => {
+    const { tarkovTime } = mountUseTarkovTime();
+    await nextTick();
 
     expect(typeof tarkovTime.value).toBe('string');
   });
 
-  it('composable can be imported and used', () => {
-    const result = useTarkovTime();
+  it('composable can be imported and used', async () => {
+    const result = mountUseTarkovTime();
+    await nextTick();
 
     expect(result).toHaveProperty('tarkovTime');
     expect(result.tarkovTime).toBeDefined();
