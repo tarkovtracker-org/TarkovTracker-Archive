@@ -180,7 +180,7 @@
     let relevantTasks = tasks.value.filter(
       (task) =>
         // Ensure task exists and has factionName before filtering
-        task && (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+        task && (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
     ).length;
     // Find all tasks with alternatives and subtract n-1 from the total
     // Ensure tasks.value exists before filtering
@@ -219,7 +219,7 @@
       .filter(
         (task) =>
           // Ensure task exists before filtering
-          task && (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+          task && (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
       )
       .forEach((task) => {
         // Check if task and task.objectives exist before accessing length
@@ -279,12 +279,12 @@
       let relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
-      const currentPMCFaction = tarkovStore.getPMCFaction;
+      const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
         !relatedTask ||
         !relatedTask.factionName ||
         currentPMCFaction === undefined ||
-        (relatedTask.factionName != 'Any' && relatedTask.factionName != currentPMCFaction)
+        (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
         return;
       }
@@ -331,12 +331,12 @@
       let relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
-      const currentPMCFaction = tarkovStore.getPMCFaction;
+      const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
         !relatedTask ||
         !relatedTask.factionName ||
         currentPMCFaction === undefined ||
-        (relatedTask.factionName != 'Any' && relatedTask.factionName != currentPMCFaction)
+        (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
         return;
       }
@@ -356,7 +356,7 @@
       (task) =>
         task &&
         task.kappaRequired === true &&
-        (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+        (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
     ).length;
   });
   const completedKappaTasks = computed(() => {
@@ -367,8 +367,8 @@
       (task) =>
         task &&
         task.kappaRequired === true &&
-        (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction) &&
-        progressStore.tasksCompletions?.[task.id] && progressStore.tasksCompletions?.[task.id].self === true
+        (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction()) &&
+        progressStore.tasksCompletions?.[task.id]?.self === true
     ).length;
   });
 
