@@ -297,6 +297,14 @@ describe('usePrivacyConsent', () => {
   });
 
   describe('Clarity integration', () => {
+    beforeEach(async () => {
+      vi.stubEnv('VITE_CLARITY_PROJECT_ID', 'test-clarity-id');
+      vi.resetModules();
+      ({ usePrivacyConsent: usePrivacyConsent, __privacyConsentInternals } = await import(
+        '../usePrivacyConsent'
+      ));
+    });
+
     it('calls clarity consent when enabled', () => {
       const mockClarity = vi.fn();
       global.window.clarity = mockClarity;

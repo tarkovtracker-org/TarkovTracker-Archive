@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { createI18n } from 'vue-i18n';
 import AuthButtons from '../AuthButtons.vue';
 
 // Mock Firebase
@@ -35,9 +36,25 @@ describe('AuthButtons', () => {
     firebaseMock.signInWithPopup.mockResolvedValue({ user: { uid: 'uid-123' } });
   });
 
-  const mountWithStubs = () =>
-    mount(AuthButtons, {
+  const mountWithStubs = () => {
+    const i18n = createI18n({
+      locale: 'en',
+      messages: {
+        en: {
+          auth: {
+            consent: {
+              full: 'By continuing you agree to the TarkovTracker {terms} and {privacy}.',
+              terms: 'Terms of Service',
+              privacy: 'Privacy Policy',
+            },
+          },
+        },
+      },
+    });
+
+    return mount(AuthButtons, {
       global: {
+        plugins: [i18n],
         stubs: {
           'router-link': {
             name: 'RouterLinkStub',
@@ -52,6 +69,7 @@ describe('AuthButtons', () => {
         },
       },
     });
+  };
 
   it('renders auth buttons correctly', () => {
     const wrapper = mountWithStubs();
