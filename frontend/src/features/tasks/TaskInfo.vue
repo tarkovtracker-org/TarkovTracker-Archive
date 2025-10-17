@@ -9,8 +9,8 @@
         </v-row>
 
         <v-tooltip v-if="task.minPlayerLevel != 0" location="top">
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+          <template #activator="activator">
+            <span class="tooltip-activator" v-bind="activator.props">
               <InfoRow icon="mdi-menu-right">
                 <i18n-t keypath="page.tasks.questcard.level" scope="global">
                   <template #count>{{ task.minPlayerLevel }}</template>
@@ -25,8 +25,8 @@
           v-if="task?.predecessors?.length"
           location="top"
         >
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+          <template #activator="activator">
+            <span class="tooltip-activator" v-bind="activator.props">
               <InfoRow icon="mdi-lock-open-outline" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbefore_label') }}</span>
                 <span class="lock-count">{{ lockedBefore }}</span>
@@ -40,8 +40,8 @@
           v-if="task?.successors?.length"
           location="top"
         >
-          <template #activator="{ props }">
-            <span class="tooltip-activator" v-bind="props">
+          <template #activator="activator">
+            <span class="tooltip-activator" v-bind="activator.props">
               <InfoRow icon="mdi-lock" class="mb-1 lock-indicator">
                 <span class="lock-label">{{ t('page.tasks.questcard.lockedbehind_label') }}</span>
                 <span class="lock-count">{{ lockedBehind }}</span>

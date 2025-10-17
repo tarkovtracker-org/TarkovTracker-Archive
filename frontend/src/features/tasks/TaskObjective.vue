@@ -68,7 +68,7 @@
 import { computed, ref, defineAsyncComponent, watch } from 'vue';
 import { useTarkovStore } from '@/stores/tarkov';
 import { useTarkovData } from '@/composables/tarkovdata';
-import { useProgressStore } from '@/stores/progress';
+import { useProgressQueries } from '@/composables/useProgressQueries';
 import { useLiveData } from '@/composables/livedata';
 import TaskObjectiveKillTracker from './TaskObjectiveKillTracker.vue';
 
@@ -86,7 +86,7 @@ const props = defineProps({
 const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
 const { objectives } = useTarkovData();
 const tarkovStore = useTarkovStore();
-const progressStore = useProgressStore();
+const { progressStore, unlockedTasks, objectiveCompletions } = useProgressQueries();
 
 const isComplete = computed(() => {
   return tarkovStore.isTaskObjectiveComplete(props.objective.id);
@@ -165,12 +165,12 @@ const userNeeds = computed(() => {
   if (!fullObjective.value?.taskId) {
     return needingUsers;
   }
-  const unlockedTasksForObjective = progressStore.unlockedTasks?.[fullObjective.value.taskId] || {};
+  const unlockedTasksForObjective = unlockedTasks.value?.[fullObjective.value.taskId] || {};
   Object.entries(unlockedTasksForObjective).forEach(
     ([teamId, unlocked]) => {
       if (
         unlocked &&
-        progressStore.objectiveCompletions?.[props.objective.id]?.[teamId] === false
+        objectiveCompletions.value?.[props.objective.id]?.[teamId] === false
       ) {
         needingUsers.push(teamId);
       }

@@ -5,12 +5,13 @@ import { logger } from '@/utils/logger';
 export type ConsentStatus = 'accepted' | 'rejected' | 'unknown';
 
 const STORAGE_KEY = 'tt-analytics-consent';
-const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID || 'qw2qze9js7';
+const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
 const consentStatus = ref<ConsentStatus>('unknown');
 const bannerVisible = ref(false);
 const hasInitialized = ref(false);
 let clarityBootstrapped = false;
+let clarityConfigLogged = false;
 
 const getStorage = () => {
   if (typeof window === 'undefined') {
@@ -25,7 +26,17 @@ const getStorage = () => {
 };
 
 const bootstrapClarity = () => {
-  if (clarityBootstrapped || typeof window === 'undefined' || typeof document === 'undefined') {
+  if (!CLARITY_PROJECT_ID) {
+    if (!clarityConfigLogged) {
+      logger.warn('Clarity project ID not configured; skipping Clarity initialization.');
+      clarityConfigLogged = true;
+    }
+    return;
+  }
+  if (clarityBootstrapped) {
+    return;
+  }
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
   clarityBootstrapped = true;
@@ -51,7 +62,7 @@ const bootstrapClarity = () => {
 };
 
 const enableClarity = () => {
-  if (typeof window === 'undefined') {
+  if (!CLARITY_PROJECT_ID || typeof window === 'undefined') {
     return;
   }
   bootstrapClarity();
@@ -61,7 +72,7 @@ const enableClarity = () => {
 };
 
 const disableClarity = () => {
-  if (typeof window === 'undefined') {
+  if (!CLARITY_PROJECT_ID || typeof window === 'undefined') {
     return;
   }
   if (typeof window.clarity === 'function') {
@@ -129,6 +140,7 @@ const initializeConsent = () => {
   } else {
     consentStatus.value = 'unknown';
     bannerVisible.value = true;
+    syncAnalyticsWithConsent('rejected');
   }
 };
 

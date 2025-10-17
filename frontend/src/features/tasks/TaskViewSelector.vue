@@ -7,8 +7,9 @@
             v-model="primaryModel"
             bg-color="accent"
             slider-color="secondary"
-            align-tabs="center"
+            centered
             show-arrows
+            class="tabs-centered"
           >
             <v-tab
               v-for="(view, index) in primaryViews"
@@ -29,8 +30,9 @@
             v-model="mapModel"
             bg-color="accent"
             slider-color="secondary"
-            align-tabs="center"
+            centered
             show-arrows
+            class="tabs-centered"
           >
             <v-tab
               v-for="(mapItem, index) in maps"
@@ -59,9 +61,10 @@
             v-model="secondaryModel"
             bg-color="accent"
             slider-color="secondary"
-            align-tabs="center"
+            centered
             show-arrows
             density="comfortable"
+            class="tabs-centered"
           >
             <v-tab
               v-for="(view, index) in secondaryViews"
@@ -88,8 +91,9 @@
             v-model="userModel"
             bg-color="accent"
             slider-color="secondary"
-            align-tabs="center"
+            centered
             density="comfortable"
+            class="tabs-centered"
           >
             <v-tab
               v-for="view in userViews"
@@ -122,9 +126,10 @@
             v-model="traderModel"
             bg-color="accent"
             slider-color="secondary"
-            align-tabs="center"
+            centered
             show-arrows
             density="comfortable"
+            class="tabs-centered"
           >
             <v-tab value="all">
               <v-avatar color="primary" size="2em" class="mr-2">
@@ -235,6 +240,9 @@
   }
   .task-trader-filter {
     margin-bottom: 16px;
+  }
+  .tabs-centered :deep(.v-slide-group__content) {
+    justify-content: center;
   }
   .task-settings-trigger {
     display: inline-flex;

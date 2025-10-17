@@ -130,7 +130,7 @@
 </template>
 <script setup>
   import { useTarkovData } from '@/composables/tarkovdata';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useUserStore } from '@/stores/user';
   import { computed, defineAsyncComponent } from 'vue';
@@ -138,7 +138,7 @@
   const { t } = useI18n({ useScope: 'global' });
   const TrackerStat = defineAsyncComponent(() => import('@/features/dashboard/TrackerStat'));
   const { tasks, objectives } = useTarkovData();
-  const progressStore = useProgressStore();
+  const { progressStore, tasksCompletions, objectiveCompletions } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
   const showAnnouncementAlert = computed({
@@ -241,10 +241,10 @@
   });
   const completedTasks = computed(() => {
     // Check if progressStore.tasksCompletions exists before getting values
-    if (!progressStore.tasksCompletions) {
+    if (!tasksCompletions.value) {
       return 0;
     }
-    return Object.values(progressStore.tasksCompletions).filter(
+    return Object.values(tasksCompletions.value).filter(
       (task) => task && task.self === true // Ensure task exists before checking self property
     ).length;
   });
@@ -253,8 +253,8 @@
     if (
       !neededItemTaskObjectives.value ||
       !tasks.value ||
-      !progressStore.tasksCompletions ||
-      !progressStore.objectiveCompletions ||
+      !tasksCompletions.value ||
+      !objectiveCompletions.value ||
       !tarkovStore
     ) {
       return 0; // Return 0 if data isn't loaded yet
@@ -289,8 +289,8 @@
         return;
       }
       if (!objective.id || !objective.taskId) return;
-      const taskCompletion = progressStore.tasksCompletions?.[objective.taskId];
-      const objectiveCompletion = progressStore.objectiveCompletions?.[objective.id];
+      const taskCompletion = tasksCompletions.value?.[objective.taskId];
+      const objectiveCompletion = objectiveCompletions.value?.[objective.id];
       if (
         (taskCompletion && taskCompletion['self']) ||
         (objectiveCompletion && objectiveCompletion['self']) ||
@@ -360,7 +360,7 @@
     ).length;
   });
   const completedKappaTasks = computed(() => {
-    if (!tasks.value || !progressStore.tasksCompletions) {
+    if (!tasks.value || !tasksCompletions.value) {
       return 0;
     }
     return tasks.value.filter(
@@ -368,7 +368,7 @@
         task &&
         task.kappaRequired === true &&
         (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction()) &&
-        progressStore.tasksCompletions?.[task.id]?.self === true
+        tasksCompletions.value?.[task.id]?.self === true
     ).length;
   });
 

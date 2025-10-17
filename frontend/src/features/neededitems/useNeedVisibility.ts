@@ -3,12 +3,9 @@ import { useTarkovStore } from '@/stores/tarkov';
 import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
 import { useProgressQueries } from '@/composables/useProgressQueries';
 import type { NeededItemTaskObjective, NeededItemHideoutModule, Task } from '@/types/tarkov';
-
 const ANY_FACTION = 'Any';
-
 const asString = (value: unknown): string | undefined =>
   typeof value === 'string' && value.length > 0 ? value : undefined;
-
 export function useNeedVisibility() {
   const userStore = useUserStore();
   const tarkovStore = useTarkovStore();
@@ -19,7 +16,6 @@ export function useNeedVisibility() {
     moduleCompletions,
     modulePartCompletions,
   } = useProgressQueries();
-
   const getTeamFactions = (teamId?: string): string[] => {
     const factions = [ANY_FACTION];
     if (!teamId || teamId === 'self') {
@@ -29,21 +25,17 @@ export function useNeedVisibility() {
       if (normalized) factions.push(normalized);
       return factions;
     }
-
     const faction = playerFaction.value?.[teamId];
     const normalized = asString(faction);
     if (normalized) factions.push(normalized);
     return factions;
   };
-
   const normalizeFaction = (faction: string | undefined): string =>
     asString(faction) ?? ANY_FACTION;
-
   const matchesFactionForTeam = (taskFaction: string | undefined, teamId?: string): boolean => {
     const normalizedTaskFaction = normalizeFaction(taskFaction);
     return getTeamFactions(teamId).includes(normalizedTaskFaction);
   };
-
   const hasTeamNeedingEntry = (
     record: Record<string, boolean> | undefined,
     taskFaction: string | undefined
@@ -56,12 +48,9 @@ export function useNeedVisibility() {
       return matchesFactionForTeam(taskFaction, teamId);
     });
   };
-
   const isTaskNeedVisible = (need: NeededItemTaskObjective, task: Task | undefined): boolean => {
     if (!need || !task) return false;
-    if (need.type && need.type !== 'giveItem') return false;
     if (!need.item) return false;
-
     if (userStore.itemsNeededHideNonFIR) {
       if (need.type === 'mark' || need.type === 'buildWeapon' || need.type === 'plantItem') {
         return false;
@@ -70,7 +59,6 @@ export function useNeedVisibility() {
         return false;
       }
     }
-
     const requirementOptions = {
       showKappa: !userStore.hideKappaRequiredTasks,
       showLightkeeper: !userStore.hideLightkeeperRequiredTasks,
@@ -78,60 +66,47 @@ export function useNeedVisibility() {
       hideNonEndgame: userStore.hideNonKappaTasks,
       treatEodAsEndgame: false,
     } as const;
-
     if (!taskMatchesRequirementFilters(task, requirementOptions)) {
       return false;
     }
-
     const taskFaction = task.factionName;
     const selfTaskComplete = tasksCompletions.value?.[need.taskId]?.self === true;
     const selfObjectiveComplete = objectiveCompletions.value?.[need.id]?.self === true;
-
     if (userStore.itemsTeamAllHidden) {
       return (
         !selfTaskComplete && !selfObjectiveComplete && matchesFactionForTeam(taskFaction, 'self')
       );
     }
-
     const taskNeedsAttention = hasTeamNeedingEntry(tasksCompletions.value?.[need.taskId], taskFaction);
     const objectiveNeedsAttention = hasTeamNeedingEntry(
       objectiveCompletions.value?.[need.id],
       taskFaction
     );
-
     if (userStore.itemsTeamNonFIRHidden) {
       return need.foundInRaid !== false && taskNeedsAttention && objectiveNeedsAttention;
     }
-
     return taskNeedsAttention && objectiveNeedsAttention;
   };
-
   const isHideoutNeedVisible = (need: NeededItemHideoutModule): boolean => {
     if (!need || !need.hideoutModule?.id) return false;
     if (!need.item) return false;
-
     const moduleCompletionsForModule = moduleCompletions.value?.[need.hideoutModule.id] ?? {};
     const modulePartCompletionsForModule = modulePartCompletions.value?.[need.id] ?? {};
-
     if (
       Object.keys(moduleCompletionsForModule).length === 0 &&
       Object.keys(modulePartCompletionsForModule).length === 0
     ) {
       return true;
     }
-
     if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
       const selfModuleIncomplete = moduleCompletionsForModule.self !== true;
       const selfPartIncomplete = modulePartCompletionsForModule.self !== true;
       return selfModuleIncomplete && selfPartIncomplete;
     }
-
     const moduleNeeded = Object.values(moduleCompletionsForModule).some((status) => status === false);
     const partNeeded = Object.values(modulePartCompletionsForModule).some((status) => status === false);
-
     return moduleNeeded && partNeeded;
   };
-
   return {
     isTaskNeedVisible,
     isHideoutNeedVisible,

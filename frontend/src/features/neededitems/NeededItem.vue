@@ -33,7 +33,7 @@
 <script setup>
   import { defineAsyncComponent, computed, inject, provide } from 'vue';
   import { useUserStore } from '@/stores/user';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   const NeededItemMediumCard = defineAsyncComponent(
@@ -54,7 +54,14 @@
     },
   });
   const userStore = useUserStore();
-  const progressStore = useProgressStore();
+  const {
+    progressStore,
+    tasksCompletions,
+    objectiveCompletions,
+    moduleCompletions,
+    modulePartCompletions,
+    playerFaction,
+  } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const { tasks, hideoutStations, alternativeTasks } = useTarkovData();
   // Helper functions and data to calculate if the item should be shown based
@@ -113,47 +120,47 @@
     if (userStore.itemsTeamAllHidden) {
       // Only show if the objective is needed by ourself
       return (
-        !progressStore.tasksCompletions[need.taskId]?.self &&
-        !progressStore.objectiveCompletions[need.id]?.self &&
+        !tasksCompletions.value?.[need.taskId]?.self &&
+        !objectiveCompletions.value?.[need.id]?.self &&
         ['Any', tarkovStore.getPMCFaction].some(
           (faction) => faction == relatedTask.value.factionName
         )
       );
     } else if (userStore.itemsTeamNonFIRHidden) {
       // Only show if a someone needs the objective
-      const taskNeeded = Object.entries(progressStore.tasksCompletions[need.taskId] || {}).some(
+      const taskNeeded = Object.entries(tasksCompletions.value?.[need.taskId] || {}).some(
         ([userTeamId, userStatus]) => {
-          const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
+          const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
           return (
             relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
             userStatus === false
           );
         }
       );
-      const objectiveNeeded = Object.entries(
-        progressStore.objectiveCompletions[need.id] || {}
-      ).some(([userTeamId, userStatus]) => {
-        const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
-        return (
-          relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
-          userStatus === false
-        );
-      });
+      const objectiveNeeded = Object.entries(objectiveCompletions.value?.[need.id] || {}).some(
+        ([userTeamId, userStatus]) => {
+          const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
+          return (
+            relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
+            userStatus === false
+          );
+        }
+      );
       return need.foundInRaid && taskNeeded && objectiveNeeded;
     } else {
       return (
-        Object.entries(progressStore.tasksCompletions[need.taskId] || {}).some(
+        Object.entries(tasksCompletions.value?.[need.taskId] || {}).some(
           ([userTeamId, userStatus]) => {
-            const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
+            const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
             return (
               relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
               userStatus === false
             );
           }
         ) &&
-        Object.entries(progressStore.objectiveCompletions[need.id] || {}).some(
+        Object.entries(objectiveCompletions.value?.[need.id] || {}).some(
           ([userTeamId, userStatus]) => {
-            const relevantFactions = ['Any', progressStore.playerFaction[userTeamId]];
+            const relevantFactions = ['Any', playerFaction.value?.[userTeamId]];
             return (
               relevantFactions.some((faction) => faction == relatedTask.value.factionName) &&
               userStatus === false
@@ -168,25 +175,25 @@
     if (!need.hideoutModule || !need.hideoutModule.id) {
       return false;
     }
-    const moduleCompletions = progressStore.moduleCompletions?.[need.hideoutModule?.id] || {};
-    const modulePartCompletions = progressStore.modulePartCompletions?.[need.id] || {};
+    const moduleCompletionsForModule = moduleCompletions.value?.[need.hideoutModule?.id] || {};
+    const modulePartCompletionsForPart = modulePartCompletions.value?.[need.id] || {};
     // If there is no progress data at all, show the item by default
     if (
-      Object.keys(moduleCompletions).length === 0 &&
-      Object.keys(modulePartCompletions).length === 0
+      Object.keys(moduleCompletionsForModule).length === 0 &&
+      Object.keys(modulePartCompletionsForPart).length === 0
     ) {
       return true;
     }
     if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
       // Only show if the objective is needed by ourself
       return (
-        (moduleCompletions.self === undefined || moduleCompletions.self === false) &&
-        (modulePartCompletions.self === undefined || modulePartCompletions.self === false)
+        (moduleCompletionsForModule.self === undefined || moduleCompletionsForModule.self === false) &&
+        (modulePartCompletionsForPart.self === undefined || modulePartCompletionsForPart.self === false)
       );
     } else {
       return (
-        Object.values(moduleCompletions).some((userStatus) => userStatus === false) &&
-        Object.values(modulePartCompletions).some((userStatus) => userStatus === false)
+        Object.values(moduleCompletionsForModule).some((userStatus) => userStatus === false) &&
+        Object.values(modulePartCompletionsForPart).some((userStatus) => userStatus === false)
       );
     }
   }
@@ -303,17 +310,17 @@
   const selfCompletedNeed = computed(() => {
     if (props.need.needType == 'taskObjective') {
       const alternativeTaskCompleted = alternativeTasks.value[props.need.taskId]?.some(
-        (altTaskId) => progressStore.tasksCompletions?.[altTaskId]?.['self']
+        (altTaskId) => tasksCompletions.value?.[altTaskId]?.['self']
       );
       return (
-        progressStore.tasksCompletions?.[props.need.taskId]?.['self'] ||
+        tasksCompletions.value?.[props.need.taskId]?.['self'] ||
         alternativeTaskCompleted ||
-        progressStore.objectiveCompletions?.[props.need.id]?.['self']
+        objectiveCompletions.value?.[props.need.id]?.['self']
       );
     } else if (props.need.needType == 'hideoutModule') {
       return (
-        progressStore.moduleCompletions?.[props.need.hideoutModule.id]?.['self'] ||
-        progressStore.modulePartCompletions?.[props.need.id]?.['self']
+        moduleCompletions.value?.[props.need.hideoutModule.id]?.['self'] ||
+        modulePartCompletions.value?.[props.need.id]?.['self']
       );
     } else {
       return false;
@@ -341,9 +348,9 @@
     let needingUsers = [];
     if (props.need.needType == 'taskObjective') {
       // Find all of the users that need this objective
-      Object.entries(progressStore.objectiveCompletions[props.need.id]).forEach(
+      Object.entries(objectiveCompletions.value?.[props.need.id] || {}).forEach(
         ([user, completed]) => {
-          if (!completed && !progressStore.tasksCompletions[props.need.taskId][user]) {
+          if (!completed && !tasksCompletions.value?.[props.need.taskId]?.[user]) {
             needingUsers.push({
               user: user,
               count: progressStore.teamStores[user].getObjectiveCount(props.need.id),
@@ -353,7 +360,7 @@
       );
     } else if (props.need.needType == 'hideoutModule') {
       // Find all of the users that need this module
-      Object.entries(progressStore.modulePartCompletions[props.need.id]).forEach(
+      Object.entries(modulePartCompletions.value?.[props.need.id] || {}).forEach(
         ([user, completed]) => {
           if (!completed) {
             needingUsers.push({

@@ -53,6 +53,9 @@ export function useTaskFiltering() {
    * by treating all variant IDs as part of the same map group
    */
   const filterTasksByMap = (taskList: Task[], mapView: string) => {
+    if (!mapView || mapView === 'all') {
+      return taskList;
+    }
     // Get all map IDs that should be treated as the same map (canonical + variants)
     const mapIdGroup = getMapIdGroup(mapView, maps.value);
 
