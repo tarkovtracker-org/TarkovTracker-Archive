@@ -184,6 +184,7 @@
       </v-card>
     </v-dialog>
   </v-container>
+  <notification-snackbar v-model="resetNotification" />
 </template>
 <script setup lang="ts">
   import { computed, ref } from 'vue';
@@ -195,6 +196,7 @@
   import AccountDeletionCard from '@/features/settings/AccountDeletionCard.vue';
   import type { GameMode } from '@/shared_state';
   import { logger } from '@/utils/logger';
+  import NotificationSnackbar from '@/features/ui/NotificationSnackbar.vue';
 
   const { t } = useI18n({ useScope: 'global' });
   const tarkovStore = useTarkovStore();
@@ -241,6 +243,17 @@
   const resetting = ref(false);
   const fullResetDialog = ref(false);
   const fullResetting = ref(false);
+  const resetNotification = ref({ show: false, message: '', color: 'error' });
+
+  const showResetError = (error: unknown) => {
+    const detail =
+      error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error';
+    resetNotification.value = {
+      show: true,
+      message: `Reset failed. Please try again or contact support. (${detail})`,
+      color: 'error',
+    };
+  };
 
   const resetModeLabel = computed(() => {
     if (!resetDialogMode.value) {
@@ -267,6 +280,7 @@
       closeResetDialog();
     } catch (error) {
       logger.error('Failed to reset gamemode data:', error);
+      showResetError(error);
     } finally {
       resetting.value = false;
     }
@@ -279,6 +293,7 @@
       fullResetDialog.value = false;
     } catch (error) {
       logger.error('Failed to reset account:', error);
+      showResetError(error);
     } finally {
       fullResetting.value = false;
     }

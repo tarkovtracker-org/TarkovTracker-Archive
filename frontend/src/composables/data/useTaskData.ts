@@ -172,6 +172,7 @@ export function useTaskData() {
           dedupedItems.push(candidate);
         });
         if (dedupedItems.length > 0) {
+          // Use the first deduped item as representative because all entries share the same item id
           const representativeItem = dedupedItems[0];
           tempNeededObjectives.push({
             id: objective.id,
@@ -218,21 +219,30 @@ export function useTaskData() {
         const keys = Array.isArray(objective.requiredKeys)
           ? objective.requiredKeys
           : [objective.requiredKeys];
+        const objectiveMaps =
+          Array.isArray(objective.maps) && objective.maps.length > 0 ? objective.maps : [null];
         keys.forEach((key: Key) => {
-          // Find existing entry for this map or create new one
-          const existingMapEntry = requiredKeys.find(
-            (entry) => entry.map?.id === objective.maps?.[0]?.id
-          );
-          if (existingMapEntry) {
-            if (!existingMapEntry.keys.some((k: Key) => k.id === key.id)) {
-              existingMapEntry.keys.push(key);
-            }
-          } else {
-            requiredKeys.push({
-              keys: [key],
-              map: objective.maps?.[0] || null,
-            });
+          if (!key) {
+            return;
           }
+          objectiveMaps.forEach((map) => {
+            const mapId = map?.id ?? null;
+            const existingMapEntry = requiredKeys.find(
+              (entry) => (entry.map?.id ?? null) === mapId
+            );
+            if (existingMapEntry) {
+              if (key.id && !existingMapEntry.keys.some((k: Key) => k.id === key.id)) {
+                existingMapEntry.keys.push(key);
+              } else if (!key.id && !existingMapEntry.keys.includes(key)) {
+                existingMapEntry.keys.push(key);
+              }
+            } else {
+              requiredKeys.push({
+                keys: key.id ? [key] : [key],
+                map: map ?? null,
+              });
+            }
+          });
         });
       }
     });

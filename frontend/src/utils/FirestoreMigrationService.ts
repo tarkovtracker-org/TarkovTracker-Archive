@@ -10,7 +10,7 @@ import {
   transformHideoutParts,
   transformTraderStandings,
 } from './DataTransformService';
-import { backupLocalProgress, saveLocalProgress } from './LocalDataService';
+import { backupLocalProgress, saveLocalUserState } from './LocalDataService';
 
 const getProgressRef = (uid: string) => doc(firestore, 'progress', uid);
 
@@ -18,7 +18,8 @@ const hasMeaningfulProgress = (data: ProgressData): boolean =>
   data.level > 1 ||
   Object.keys(data.taskCompletions || {}).length > 0 ||
   Object.keys(data.taskObjectives || {}).length > 0 ||
-  Object.keys(data.hideoutModules || {}).length > 0;
+  Object.keys(data.hideoutModules || {}).length > 0 ||
+  Object.keys(data.hideoutParts || {}).length > 0;
 
 type ImportedProgressMetadata = UserProgressData & {
   lastUpdated: string;
@@ -159,7 +160,7 @@ export const importDataToUser = async (
 
     const newUserState = buildImportedUserState(importedData, existingData);
     await setDoc(progressRef, newUserState as DocumentData, { merge: true });
-    saveLocalProgress(newUserState);
+    saveLocalUserState(newUserState);
     return true;
   } catch (error) {
     logger.error(
