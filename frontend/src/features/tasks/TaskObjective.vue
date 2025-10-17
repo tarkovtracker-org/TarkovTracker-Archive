@@ -30,7 +30,7 @@
       style="font-size: smaller; margin-top: 1px; margin-bottom: 1px"
     >
       <v-col
-        v-if="fullObjective && itemObjectiveTypes.includes(fullObjective.type)"
+        v-if="fullObjective && itemObjectiveTypes.includes(fullObjective.type) && relatedItem"
         cols="auto"
         class="pa-0 d-flex align-center"
       >

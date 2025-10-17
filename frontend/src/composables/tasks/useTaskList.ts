@@ -599,9 +599,7 @@ export function useTaskList() {
   });
 
   function objectiveHasLocation(objective: TaskObjective) {
-    const possibleLocations = (objective as { possibleLocations?: unknown[] }).possibleLocations;
-    const zones = (objective as { zones?: unknown[] }).zones;
-    return Boolean(possibleLocations?.length || zones?.length);
+    return Boolean(objective.possibleLocations?.length || objective.zones?.length);
   }
 
   onMounted(() => {
