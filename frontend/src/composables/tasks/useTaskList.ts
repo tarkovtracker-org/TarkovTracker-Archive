@@ -49,7 +49,7 @@ export function useTaskList() {
     getObjectiveCompletionMap,
   } = useProgressQueries();
   const tarkovStore = useTarkovStore();
-  const { tasks, maps, rawMaps, traders, loading: tasksLoading, disabledTasks } = useTarkovData();
+  const { tasks, maps, traders, loading: tasksLoading, disabledTasks } = useTarkovData();
 
   const primaryViews = computed(() => [
     {
@@ -288,7 +288,7 @@ export function useTaskList() {
   });
 
   const countTasksForMap = (mapId: string, options: RequirementOptions) => {
-    const mapIdGroup = getMapIdGroup(mapId, rawMaps.value);
+    const mapIdGroup = getMapIdGroup(mapId, maps.value);
     return tasks.value.reduce((total, task) => {
       if (!taskShouldBeConsidered(task, options, hideGlobalTasks.value)) {
         return total;
@@ -357,7 +357,7 @@ export function useTaskList() {
   const filterTasksByPrimaryView = (taskList: Task[]) => {
     let filteredTasks = Array.isArray(taskList) ? [...taskList] : [];
     if (activePrimaryView.value === 'maps') {
-      const mapIdGroup = getMapIdGroup(activeMapView.value, rawMaps.value);
+      const mapIdGroup = getMapIdGroup(activeMapView.value, maps.value);
       filteredTasks = filteredTasks.filter((task) => {
         const taskLocations = Array.isArray(task.locations) ? task.locations : [];
         let hasMap = mapIdGroup.some((id: string) => taskLocations.includes(id));
