@@ -138,7 +138,7 @@
   const { t } = useI18n({ useScope: 'global' });
   const TrackerStat = defineAsyncComponent(() => import('@/features/dashboard/TrackerStat'));
   const { tasks, objectives } = useTarkovData();
-  const { progressStore, tasksCompletions, objectiveCompletions } = useProgressQueries();
+  const { tasksCompletions, objectiveCompletions } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
   const showAnnouncementAlert = computed({
