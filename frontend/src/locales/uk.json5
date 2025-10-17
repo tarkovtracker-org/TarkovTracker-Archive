@@ -203,6 +203,7 @@
         alternatives: 'Альтернативні завдання',
         alternativefailed: 'Альтернативні завдання також будуть перезавантаженні',
         eodonly: 'Лише для EOD',
+        neededby: 'Потрібні для: {names}',
       },
     },
     hideout: {

@@ -182,6 +182,7 @@
         alternatives: 'Misiones alternativas',
         alternativefailed: 'Las misiones alternativas también se reiniciarán',
         eodonly: 'Solo EOD',
+        neededby: 'Necesario para: {names}',
       },
     },
     hideout: {

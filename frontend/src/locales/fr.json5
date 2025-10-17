@@ -186,6 +186,7 @@
         alternativefailed: 'Les quêtes alternatives seront également réinitialisées',
         eodonly: 'Réservé EOD',
         differentfaction: "Cette quête n'est pas disponible pour votre faction",
+        neededby: 'Requis par: {names}',
       },
     },
     hideout: {
@@ -194,7 +195,7 @@
       nostationsfound: 'Aucun module trouvé. Essayez de modifier vos filtres ou de mettre à jour votre niveau',
       primaryviews: {
         all: 'Toutes',
-        locked: 'Vérrouillées',
+        locked: 'Verrouillées',
         available: 'Disponibles',
         maxed: 'Niveau max',
       },

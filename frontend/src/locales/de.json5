@@ -185,6 +185,7 @@
         alternatives: 'Alternative Aufgaben',
         alternativefailed: 'Alternative Aufgaben werden auch zurückgesetzt',
         eodonly: 'Nur EOD',
+        neededby: 'Erforderlich von: {names}',
       },
     },
     hideout: {

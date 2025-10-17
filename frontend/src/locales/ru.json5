@@ -201,6 +201,7 @@
         alternatives: 'Альтернативные задания',
         alternativefailed: 'Альтернативные задания также будут сброшены',
         eodonly: 'Только для EOD',
+        neededby: 'Требуется для: {names}',
       },
     },
     hideout: {
