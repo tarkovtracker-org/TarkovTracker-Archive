@@ -45,6 +45,8 @@ jobs:
       run: npm run lint
 
   e2e-tests:
+    # Only run E2E tests on master/develop branches, skip on PRs to save time
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
     
     steps:

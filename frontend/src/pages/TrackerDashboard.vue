@@ -1,10 +1,11 @@
 <template>
   <v-container class="mt-2 d-flex flex-column" style="min-height: calc(100vh - 250px)">
     <v-alert
+      v-model="showAnnouncementAlert"
       density="compact"
       color="green-darken-3"
       title="API Update Complete"
-      class="mb-3 api-update-alert"
+      class="mb-3 announcement-alert"
       style="flex: 0 0 auto"
       closable
     >
@@ -20,6 +21,7 @@
       </div>
     </v-alert>
     <v-alert
+      v-model="showProjectStatusAlert"
       density="compact"
       color="green-darken-4"
       title="Project Status"
@@ -130,6 +132,7 @@
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useProgressStore } from '@/stores/progress';
   import { useTarkovStore } from '@/stores/tarkov';
+  import { useUserStore } from '@/stores/user';
   import { computed, defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
   const { t } = useI18n({ useScope: 'global' });
@@ -137,6 +140,23 @@
   const { tasks, objectives } = useTarkovData();
   const progressStore = useProgressStore();
   const tarkovStore = useTarkovStore();
+  const userStore = useUserStore();
+  const showAnnouncementAlert = computed({
+    get: () => userStore.showTip('dashboard-announcement'),
+    set: (value) => {
+      if (!value) {
+        userStore.hideTip('dashboard-announcement');
+      }
+    },
+  });
+  const showProjectStatusAlert = computed({
+    get: () => userStore.showTip('dashboard-project-status'),
+    set: (value) => {
+      if (!value) {
+        userStore.hideTip('dashboard-project-status');
+      }
+    },
+  });
   const neededItemTaskObjectives = computed(() => {
     if (!objectives || !objectives.value) {
       return [];
@@ -160,7 +180,7 @@
     let relevantTasks = tasks.value.filter(
       (task) =>
         // Ensure task exists and has factionName before filtering
-        task && (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+        task && (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
     ).length;
     // Find all tasks with alternatives and subtract n-1 from the total
     // Ensure tasks.value exists before filtering
@@ -199,7 +219,7 @@
       .filter(
         (task) =>
           // Ensure task exists before filtering
-          task && (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+          task && (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
       )
       .forEach((task) => {
         // Check if task and task.objectives exist before accessing length
@@ -231,7 +251,7 @@
   const completedTaskItems = computed(() => {
     // Restore the original guard and logic
     if (
-      !neededItemTaskObjectives.value || // Use neededItemTaskObjectives here
+      !neededItemTaskObjectives.value ||
       !tasks.value ||
       !progressStore.tasksCompletions ||
       !progressStore.objectiveCompletions ||
@@ -244,32 +264,33 @@
       // Iterate over neededItemTaskObjectives
       // Ensure objective exists before proceeding
       if (!objective) return;
-      // Check for item and item.id
+      // Check for items (new) or item (legacy) and their IDs
+      const objectiveItems = objective.items || (objective.item ? [objective.item] : []);
       if (
-        objective.item &&
-        [
+        objectiveItems.length > 0 &&
+        objectiveItems.some(item => [
           '5696686a4bdc2da3298b456a',
           '5449016a4bdc2d6f028b456f',
           '569668774bdc2da2298b4568',
-        ].includes(objective.item.id)
+        ].includes(item.id))
       ) {
         return;
       }
       let relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
-      const currentPMCFaction = tarkovStore.getPMCFaction;
+      const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
         !relatedTask ||
         !relatedTask.factionName ||
         currentPMCFaction === undefined ||
-        (relatedTask.factionName != 'Any' && relatedTask.factionName != currentPMCFaction)
+        (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
         return;
       }
       if (!objective.id || !objective.taskId) return;
-      const taskCompletion = progressStore.tasksCompletions[objective.taskId];
-      const objectiveCompletion = progressStore.objectiveCompletions[objective.id];
+      const taskCompletion = progressStore.tasksCompletions?.[objective.taskId];
+      const objectiveCompletion = progressStore.objectiveCompletions?.[objective.id];
       if (
         (taskCompletion && taskCompletion['self']) ||
         (objectiveCompletion && objectiveCompletion['self']) ||
@@ -295,26 +316,27 @@
       // Iterate over neededItemTaskObjectives
       // Ensure objective exists before proceeding
       if (!objective) return;
-      // Check for item and item.id
+      // Check for items (new) or item (legacy) and their IDs
+      const objectiveItems = objective.items || (objective.item ? [objective.item] : []);
       if (
-        objective.item &&
-        [
+        objectiveItems.length > 0 &&
+        objectiveItems.some(item => [
           '5696686a4bdc2da3298b456a',
           '5449016a4bdc2d6f028b456f',
           '569668774bdc2da2298b4568',
-        ].includes(objective.item.id)
+        ].includes(item.id))
       ) {
         return;
       }
       let relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
-      const currentPMCFaction = tarkovStore.getPMCFaction;
+      const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
         !relatedTask ||
         !relatedTask.factionName ||
         currentPMCFaction === undefined ||
-        (relatedTask.factionName != 'Any' && relatedTask.factionName != currentPMCFaction)
+        (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
         return;
       }
@@ -334,7 +356,7 @@
       (task) =>
         task &&
         task.kappaRequired === true &&
-        (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction)
+        (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
     ).length;
   });
   const completedKappaTasks = computed(() => {
@@ -345,9 +367,8 @@
       (task) =>
         task &&
         task.kappaRequired === true &&
-        (task.factionName == 'Any' || task.factionName == tarkovStore.getPMCFaction) &&
-        progressStore.tasksCompletions[task.id] &&
-        progressStore.tasksCompletions[task.id].self === true
+        (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction()) &&
+        progressStore.tasksCompletions?.[task.id]?.self === true
     ).length;
   });
 
