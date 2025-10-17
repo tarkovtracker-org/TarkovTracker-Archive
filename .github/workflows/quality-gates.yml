@@ -26,7 +26,7 @@ jobs:
       - name: Enforce bundle size
         run: |
           npm run build --workspace=frontend
-          SIZE=$(node -e "const fs=require('fs');const glob=require('glob');const file=glob.sync('frontend/dist/assets/index.*.js')[0];console.log(fs.statSync(file).size);")
+          SIZE=$(node -e "const fs=require('fs');const files=fs.readdirSync('frontend/dist/assets').filter(f=>f.startsWith('index-')&&f.endsWith('.js'));if(!files[0]){console.error('No index file found');process.exit(1);}console.log(fs.statSync('frontend/dist/assets/'+files[0]).size);")
           if [ "$SIZE" -gt 512000 ]; then
             echo "Bundle exceeds 500kb (actual: $SIZE bytes)";
             exit 1;
