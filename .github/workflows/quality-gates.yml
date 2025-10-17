@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+# Principle of least privilege: only grant necessary permissions
+permissions:
+  contents: read        # Read repository contents for checkout and linting
+
 jobs:
   lint-and-guards:
     runs-on: ubuntu-latest

@@ -15,6 +15,12 @@ on:
       - 'functions/package*.json'
   workflow_dispatch:
 
+# Principle of least privilege: only grant necessary permissions
+permissions:
+  contents: read        # Read repository contents
+  issues: write        # Create issues for scheduled audit failures
+  actions: read        # Read workflow run information
+
 jobs:
   security-audit:
     name: NPM Security Audit
