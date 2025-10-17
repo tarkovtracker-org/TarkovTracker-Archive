@@ -417,7 +417,6 @@
   },
   navigation_drawer: {
     home: 'Inicio',
-    settings: 'Configuración',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
     level: 'Nivel',

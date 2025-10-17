@@ -409,7 +409,6 @@
   },
   navigation_drawer: {
     home: 'Heimat',
-    settings: 'Einstellungen',
     login: 'Einloggen',
     logout: 'Ausloggen',
     level: 'Level',

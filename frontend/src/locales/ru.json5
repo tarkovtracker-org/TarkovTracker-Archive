@@ -436,7 +436,6 @@
   },
   navigation_drawer: {
     home: 'Главная',
-    settings: 'Настройки',
     login: 'Войти',
     logout: 'Выйти из системы',
     level: 'Уровень',

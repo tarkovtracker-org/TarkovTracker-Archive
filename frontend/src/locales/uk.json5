@@ -438,7 +438,6 @@
   },
   navigation_drawer: {
     home: 'Головна',
-    settings: 'Налаштування',
     login: 'Увійти',
     logout: 'Вийти із системи',
     level: 'Рівень',
