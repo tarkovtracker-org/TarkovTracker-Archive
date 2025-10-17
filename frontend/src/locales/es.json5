@@ -45,6 +45,30 @@
     },
     settings: {
       title: 'Configuración',
+      card: {
+        apitokens: {
+          title: 'Tokens API',
+          description: 'TarkovTracker aloja una API pública que permite a otras herramientas acceder al progreso que almacenas aquí. Puedes generar un token API para permitir que otras herramientas accedan a tus datos. Ver la {openAPI_documentation}',
+          new_token_expand: 'Crear un token',
+          submit_new_token: 'Crear token',
+          openAPI_documentation: 'Documentación OpenAPI',
+          show_tokens: 'Mostrar mis tokens',
+          create_token_success: 'Token API creado exitosamente.',
+          create_token_error: 'Error al crear el token API.',
+          no_tokens: 'No tienes ningún token API de TarkovTracker.',
+          not_logged_in: 'Debes iniciar sesión para crear un token API.',
+          token_column: 'Token',
+          note_column: 'Nota',
+          created_column: 'Creado',
+          streamer_mode_qr: 'El modo streamer está activado. Los códigos QR están ocultos.',
+          permissions_column: 'Permisos',
+          permission: {
+            GP: 'Obtener Progreso Personal',
+            TP: 'Obtener Progreso del Equipo',
+            WP: 'Escribir Progreso',
+          },
+        },
+      },
       fields: {
         game_edition: 'Edición del juego',
         streamer_privacy_mode: 'Modo Streamer/Privacidad',

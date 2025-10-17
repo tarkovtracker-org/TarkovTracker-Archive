@@ -42,54 +42,6 @@
         },
       },
     },
-    settings: {
-      title: 'Paramètres',
-      fields: {
-        game_edition: 'Édition du jeu',
-        streamer_privacy_mode: 'Mode Streamer/Vie privée',
-      },
-      cards: {
-        profile: {
-          title: 'Préférences du profil',
-          description: 'Ajustez les options rarement modifiées qui affectent votre profil Escape from Tarkov.',
-          streamer_privacy_hint: 'Activez cette option pour masquer votre identité dans les vues partagées : idéal pour le streaming ou davantage de confidentialité.',
-        },
-        progress: {
-          title: 'Gestion du progrès',
-          description: 'Réinitialisez le progrès PvP ou PvE lorsque vous souhaitez repartir de zéro.',
-          login_required: 'Connectez-vous pour gérer les réinitialisations par mode de jeu.',
-          reset_pvp: 'Réinitialiser les données PvP',
-          reset_pve: 'Réinitialiser les données PvE',
-        },
-        account_reset: {
-          title: 'Réinitialisation complète du compte',
-          description: 'Supprime toutes les données suivies, les paramètres et les préférences mises en cache.',
-          button: 'Réinitialiser complètement le compte',
-        },
-      },
-      dialogs: {
-        reset_mode: {
-          title: 'Réinitialiser les données {mode}',
-          description: 'Voulez-vous vraiment effacer tout le progrès {mode} ? Les quêtes, objets et données du planque de ce mode seront supprimés.',
-          warning: 'Cette action est irréversible.',
-          confirm: 'Réinitialiser {mode}',
-        },
-        full_reset: {
-          title: 'Confirmer la réinitialisation complète',
-          warning: 'Cette opération supprime définitivement toutes les données stockées, y compris le cache local.',
-          description: 'Votre compte TarkovTracker sera rétabli à son état initial.',
-          confirm: 'Tout supprimer',
-        },
-      },
-      options: {
-        edition_standard: 'Édition Standard',
-        edition_left_behind: 'Édition Left Behind',
-        edition_prepare_escape: 'Édition Prepare for Escape',
-        edition_edge_darkness: 'Édition Edge of Darkness (Limitée)',
-        edition_unheard: 'Édition Unheard',
-        edition_unheard_eod: 'Édition Unheard + Edge of Darkness (EOD)',
-      },
-    },
     tasks: {
       title: 'Quêtes',
       primaryviews: {
@@ -164,8 +116,8 @@
         level_tooltip: 'Niveau minimum requis pour accéder à cette tâche.',
         wiki: 'Wiki',
         wiki_tooltip: 'Ouvre la page du wiki Escape from Tarkov dédiée à cette tâche.',
-        lockedbefore: 'Quêtes avant : {count}',
-        lockedbehind: 'Quêtes après : {count}',
+        lockedbefore: 'Quêtes avant : {count}',
+        lockedbehind: 'Quêtes après : {count}',
         lockedbefore_label: 'Quêtes avant :',
         lockedbehind_label: 'Quêtes après :',
         lockedbefore_tooltip: 'Nombre de quêtes prérequises à terminer avant que celle-ci ne devienne disponible.',
@@ -186,14 +138,14 @@
         next_tasks: 'Quête(s) suivante(s)',
         previous_tasks: 'Quête(s) précédente(s)',
         unknown_task: 'Quête inconnue',
-        task_id: 'ID de quête : {id}',
+        task_id: 'ID de quête : {id}',
         keysneeded: '{keys} requis sur {map} | Une des {keys} requis sur {map}',
         objectiveshidden: '{count} objectifs non présent sur la carte ({uncompleted} non terminés)',
         alternatives: 'Quêtes alternatives',
         alternativefailed: 'Les quêtes alternatives seront également réinitialisées',
         eodonly: 'Réservé EOD',
         differentfaction: "Cette quête n'est pas disponible pour votre faction",
-        neededby: 'Requis par: {names}',
+        neededby: 'Requis par : {names}',
       },
     },
     hideout: {
@@ -232,7 +184,7 @@
         tasks: 'Quêtes',
         hideout: 'Planque',
       },
-      neededby: 'Requis par: {users}',
+      neededby: 'Requis par : {users}',
       options: {
         title: 'Options',
         close: 'Fermer',
@@ -301,6 +253,51 @@
             WP: 'Écrire la progression',
           },
         },
+      },
+      fields: {
+        game_edition: 'Édition du jeu',
+        streamer_privacy_mode: 'Mode Streamer/Vie privée',
+      },
+      cards: {
+        profile: {
+          title: 'Préférences du profil',
+          description: 'Ajustez les options rarement modifiées qui affectent votre profil Escape from Tarkov.',
+          streamer_privacy_hint: 'Activez cette option pour masquer votre identité dans les vues partagées : idéal pour le streaming ou davantage de confidentialité.',
+        },
+        progress: {
+          title: 'Gestion du progrès',
+          description: 'Réinitialisez le progrès PvP ou PvE lorsque vous souhaitez repartir de zéro.',
+          login_required: 'Connectez-vous pour gérer les réinitialisations par mode de jeu.',
+          reset_pvp: 'Réinitialiser les données PvP',
+          reset_pve: 'Réinitialiser les données PvE',
+        },
+        account_reset: {
+          title: 'Réinitialisation complète du compte',
+          description: 'Supprime toutes les données suivies, les paramètres et les préférences mises en cache.',
+          button: 'Réinitialiser complètement le compte',
+        },
+      },
+      dialogs: {
+        reset_mode: {
+          title: 'Réinitialiser les données {mode}',
+          description: 'Voulez-vous vraiment effacer tout le progrès {mode} ? Les quêtes, objets et données de la planque de ce mode seront supprimés.',
+          warning: 'Cette action est irréversible.',
+          confirm: 'Réinitialiser {mode}',
+        },
+        full_reset: {
+          title: 'Confirmer la réinitialisation complète',
+          warning: 'Cette opération supprime définitivement toutes les données stockées, y compris le cache local.',
+          description: 'Votre compte TarkovTracker sera rétabli à son état initial.',
+          confirm: 'Tout supprimer',
+        },
+      },
+      options: {
+        edition_standard: 'Édition Standard',
+        edition_left_behind: 'Édition Left Behind',
+        edition_prepare_escape: 'Édition Prepare for Escape',
+        edition_edge_darkness: 'Édition Edge of Darkness (Limitée)',
+        edition_unheard: 'Édition Unheard',
+        edition_unheard_eod: 'Édition Unheard + Edge of Darkness (EOD)',
       },
     },
     team: {
@@ -396,7 +393,7 @@
         close: 'Fermer',
         form: {
           description_label: 'Description du token',
-          description_placeholder: 'ex: Tarkov Monitor, Rat Scanner, etc.',
+          description_placeholder: 'ex : Tarkov Monitor, Rat Scanner, etc.',
           description_hint: "Choisissez un nom descriptif pour identifier l'objectif de ce token",
           gamemode_title: 'Mode de jeu',
           gamemode_description: 'Sélectionnez à quel mode de jeu ce token accèdera. Cela ne peut pas être modifié après création.',

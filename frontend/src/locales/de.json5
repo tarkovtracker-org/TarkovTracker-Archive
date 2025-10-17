@@ -9,54 +9,6 @@
       streamer_mode: 'Streamer-/Privatsphäre-Modus',
       open_settings: 'Einstellungen öffnen',
     },
-    settings: {
-      title: 'Einstellungen',
-      fields: {
-        game_edition: 'Spieledition',
-        streamer_privacy_mode: 'Streamer-/Privatsphäre-Modus',
-      },
-      cards: {
-        profile: {
-          title: 'Profileinstellungen',
-          description: 'Passe selten geänderte Optionen für dein Escape from Tarkov Profil an.',
-          streamer_privacy_hint: 'Aktiviere dies, um deine Identität in geteilten Ansichten zu verbergen – ideal für Streams oder mehr Privatsphäre.',
-        },
-        progress: {
-          title: 'Fortschrittsverwaltung',
-          description: 'Setze den Fortschritt für PvP oder PvE zurück, wenn du neu beginnen möchtest.',
-          login_required: 'Melde dich an, um Spielmodus-Resets zu verwalten.',
-          reset_pvp: 'PvP-Daten zurücksetzen',
-          reset_pve: 'PvE-Daten zurücksetzen',
-        },
-        account_reset: {
-          title: 'Kompletter Kontoreset',
-          description: 'Löscht sämtliche getrackten Daten, Einstellungen und zwischengespeicherten Präferenzen in allen Spielmodi.',
-          button: 'Komplettes Konto zurücksetzen',
-        },
-      },
-      dialogs: {
-        reset_mode: {
-          title: 'Daten für {mode} zurücksetzen',
-          description: 'Möchtest du wirklich den gesamten Fortschritt für {mode} entfernen? Aufgaben, Gegenstände und Hideout-Daten für diesen Modus werden gelöscht.',
-          warning: 'Diese Aktion kann nicht rückgängig gemacht werden.',
-          confirm: '{mode} zurücksetzen',
-        },
-        full_reset: {
-          title: 'Kompletten Kontoreset bestätigen',
-          warning: 'Dies löscht dauerhaft alle gespeicherten Daten, einschließlich lokaler Zwischenspeicher.',
-          description: 'Dein TarkovTracker-Konto wird in den Ausgangszustand zurückgesetzt.',
-          confirm: 'Alles löschen',
-        },
-      },
-      options: {
-        edition_standard: 'Standard Edition',
-        edition_left_behind: 'Left Behind Edition',
-        edition_prepare_escape: 'Prepare for Escape Edition',
-        edition_edge_darkness: 'Edge of Darkness (Limited Edition)',
-        edition_unheard: 'Unheard Edition',
-        edition_unheard_eod: 'Unheard + Edge Of Darkness (EOD) Edition',
-      },
-    },
   },
   common: {
     refreshbutton: 'Erneut versuchen',
@@ -260,9 +212,11 @@
           create_token_success: 'Es wurde erfolgreich ein API token erstellt.',
           create_token_error: 'Erstellung eines neuen API Tokens fehlgeschlagen.',
           no_tokens: 'Du hast keine TarkovTracker API Tokens.',
+          not_logged_in: 'Du musst angemeldet sein, um einen API-Token zu erstellen.',
           token_column: 'Token',
           note_column: 'Notiz',
           created_column: 'Erstellt',
+          streamer_mode_qr: 'Streamermodus ist aktiviert. QR-Codes sind ausgeblendet.',
           permissions_column: 'Erlaubnis',
           permission: {
             GP: 'Erhalte Persönlichenfortschritt',
@@ -270,6 +224,51 @@
             WP: 'Schreibe Fortschritt',
           },
         },
+      },
+      fields: {
+        game_edition: 'Spieledition',
+        streamer_privacy_mode: 'Streamer-/Privatsphäre-Modus',
+      },
+      cards: {
+        profile: {
+          title: 'Profileinstellungen',
+          description: 'Passe selten geänderte Optionen für dein Escape from Tarkov Profil an.',
+          streamer_privacy_hint: 'Aktiviere dies, um deine Identität in geteilten Ansichten zu verbergen – ideal für Streams oder mehr Privatsphäre.',
+        },
+        progress: {
+          title: 'Fortschrittsverwaltung',
+          description: 'Setze den Fortschritt für PvP oder PvE zurück, wenn du neu beginnen möchtest.',
+          login_required: 'Melde dich an, um Spielmodus-Resets zu verwalten.',
+          reset_pvp: 'PvP-Daten zurücksetzen',
+          reset_pve: 'PvE-Daten zurücksetzen',
+        },
+        account_reset: {
+          title: 'Kompletter Kontoreset',
+          description: 'Löscht sämtliche getrackten Daten, Einstellungen und zwischengespeicherten Präferenzen in allen Spielmodi.',
+          button: 'Komplettes Konto zurücksetzen',
+        },
+      },
+      dialogs: {
+        reset_mode: {
+          title: 'Daten für {mode} zurücksetzen',
+          description: 'Möchtest du wirklich den gesamten Fortschritt für {mode} entfernen? Aufgaben, Gegenstände und Hideout-Daten für diesen Modus werden gelöscht.',
+          warning: 'Diese Aktion kann nicht rückgängig gemacht werden.',
+          confirm: '{mode} zurücksetzen',
+        },
+        full_reset: {
+          title: 'Kompletten Kontoreset bestätigen',
+          warning: 'Dies löscht dauerhaft alle gespeicherten Daten, einschließlich lokaler Zwischenspeicher.',
+          description: 'Dein TarkovTracker-Konto wird in den Ausgangszustand zurückgesetzt.',
+          confirm: 'Alles löschen',
+        },
+      },
+      options: {
+        edition_standard: 'Standard Edition',
+        edition_left_behind: 'Left Behind Edition',
+        edition_prepare_escape: 'Prepare for Escape Edition',
+        edition_edge_darkness: 'Edge of Darkness (Limited Edition)',
+        edition_unheard: 'Unheard Edition',
+        edition_unheard_eod: 'Unheard + Edge Of Darkness (EOD) Edition',
       },
     },
     team: {

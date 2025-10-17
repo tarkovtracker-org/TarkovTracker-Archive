@@ -42,59 +42,6 @@
         },
       },
     },
-    settings: {
-      title: 'Налаштування',
-      fields: {
-        game_edition: 'Видання гри',
-        streamer_privacy_mode: 'Режим стримера/конфіденційності',
-      },
-      cards: {
-        profile: {
-          title: 'Налаштування профілю',
-          description:
-            'Налаштуйте параметри, які рідко змінюються і впливають на ваш профіль Escape from Tarkov.',
-          streamer_privacy_hint:
-            'Увімкніть, щоб приховати свою особистість у спільних переглядах — зручно для стримів та додаткової приватності.',
-        },
-        progress: {
-          title: 'Керування прогресом',
-          description: 'Скиньте прогрес PvP або PvE, коли потрібно почати з нуля.',
-          login_required: 'Увійдіть, щоб керувати скиданнями за режимами.',
-          reset_pvp: 'Скинути дані PvP',
-          reset_pve: 'Скинути дані PvE',
-        },
-        account_reset: {
-          title: 'Повне скидання акаунта',
-          description:
-            'Повністю видаляє всі відстежувані дані, налаштування та кешовані вподобання.',
-          button: 'Повністю скинути акаунт',
-        },
-      },
-      dialogs: {
-        reset_mode: {
-          title: 'Скинути дані {mode}',
-          description:
-            'Ви впевнені, що хочете видалити весь прогрес {mode}? Будуть очищені завдання, предмети та дані сховища для цього режиму.',
-          warning: 'Цю дію не можна скасувати.',
-          confirm: 'Скинути {mode}',
-        },
-        full_reset: {
-          title: 'Підтвердьте повне скидання акаунта',
-          warning:
-            'Це назавжди видалить усі збережені дані, включно з локальним кешем.',
-          description: 'Ваш акаунт TarkovTracker буде повернено до початкового стану.',
-          confirm: 'Видалити все',
-        },
-      },
-      options: {
-        edition_standard: 'Стандартне видання',
-        edition_left_behind: 'Видання Left Behind',
-        edition_prepare_escape: 'Видання Prepare for Escape',
-        edition_edge_darkness: 'Видання Edge of Darkness (обмежене)',
-        edition_unheard: 'Видання Unheard',
-        edition_unheard_eod: 'Видання Unheard + Edge of Darkness (EOD)',
-      },
-    },
     tasks: {
       title: 'Завдання',
       primaryviews: {
@@ -259,26 +206,6 @@
     settings: {
       title: 'Налаштування',
       card: {
-        reset: {
-          title: 'Скинути',
-          description: 'Скинути всі дані прогресу.',
-          button: 'Скинути мій прогрес',
-          confirmation: 'Ви впевнені, що хочете скинути свій прогрес? Відновити прогрес буде неможливо.',
-          confirmtitle: 'Підтвердити скидання',
-          confirmcancelbutton: 'Скасувати',
-          confirmresetbutton: 'Скидання',
-        },
-        gameedition: {
-          title: 'Ігрове Видання',
-          description: 'Виберіть видання гри, в яку ви граєте. З цієї інформації можуть бути обчислені додаткові дані (наприклад, репутація торговця, рівень схованки).',
-          select: 'Виберіть видання гри',
-        },
-        streamermode: {
-          title: 'Режим Стримера',
-          description: 'Приховує коди запрошень у команду від сторонніх очей, щоб ви могли продемонструвати свій прогрес, не дозволяючи людям приєднатися до вашої живої команди.',
-          modeOn: 'Увімкнути',
-          modeOff: 'Вимкнути',
-        },
         apitokens: {
           title: 'API Токен',
           description: 'TarkovTracker має публічний API, який дозволяє іншим інструментам отримувати доступ до вашого прогресу. Ви можете згенерувати API-токен, щоб дозволити іншим інструментам отримати доступ до ваших даних. Ознайомтеся докладніше на {openAPI_documentation}',
@@ -289,9 +216,11 @@
           create_token_success: 'Успішно створено новий API токен.',
           create_token_error: 'Не вдалося створити новий API токен.',
           no_tokens: 'У вас поки що немає API токенів TarkovTracker.',
+          not_logged_in: 'Ви повинні увійти в систему, щоб створити API токен.',
           token_column: 'Токен',
           note_column: 'Примітка',
           created_column: 'Створені',
+          streamer_mode_qr: 'Режим стримера увімкнено. QR-коди приховані.',
           permissions_column: 'Дозволи',
           permission: {
             GP: 'Отримати Особистий Прогрес',
@@ -299,6 +228,51 @@
             WP: 'Запис у Прогрес',
           },
         },
+      },
+      fields: {
+        game_edition: 'Видання гри',
+        streamer_privacy_mode: 'Режим стримера/конфіденційності',
+      },
+      cards: {
+        profile: {
+          title: 'Налаштування профілю',
+          description: 'Налаштуйте параметри, які рідко змінюються і впливають на ваш профіль Escape from Tarkov.',
+          streamer_privacy_hint: 'Увімкніть, щоб приховати свою особистість у спільних переглядах — зручно для стримів та додаткової приватності.',
+        },
+        progress: {
+          title: 'Керування прогресом',
+          description: 'Скиньте прогрес PvP або PvE, коли потрібно почати з нуля.',
+          login_required: 'Увійдіть, щоб керувати скиданнями за режимами.',
+          reset_pvp: 'Скинути дані PvP',
+          reset_pve: 'Скинути дані PvE',
+        },
+        account_reset: {
+          title: 'Повне скидання акаунта',
+          description: 'Повністю видаляє всі відстежувані дані, налаштування та кешовані вподобання.',
+          button: 'Повністю скинути акаунт',
+        },
+      },
+      dialogs: {
+        reset_mode: {
+          title: 'Скинути дані {mode}',
+          description: 'Ви впевнені, що хочете видалити весь прогрес {mode}? Будуть очищені завдання, предмети та дані сховища для цього режиму.',
+          warning: 'Цю дію не можна скасувати.',
+          confirm: 'Скинути {mode}',
+        },
+        full_reset: {
+          title: 'Підтвердьте повне скидання акаунта',
+          warning: 'Це назавжди видалить усі збережені дані, включно з локальним кешем.',
+          description: 'Ваш акаунт TarkovTracker буде повернено до початкового стану.',
+          confirm: 'Видалити все',
+        },
+      },
+      options: {
+        edition_standard: 'Стандартне видання',
+        edition_left_behind: 'Видання Left Behind',
+        edition_prepare_escape: 'Видання Prepare for Escape',
+        edition_edge_darkness: 'Видання Edge of Darkness (обмежене)',
+        edition_unheard: 'Видання Unheard',
+        edition_unheard_eod: 'Видання Unheard + Edge of Darkness (EOD)',
       },
     },
     team: {

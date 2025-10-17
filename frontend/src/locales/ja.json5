@@ -184,6 +184,51 @@
           },
         },
       },
+      fields: {
+        game_edition: 'ゲームエディション',
+        streamer_privacy_mode: 'ストリーマー/プライバシーモード',
+      },
+      cards: {
+        profile: {
+          title: 'プロフィール設定',
+          description: 'Escape from Tarkovプロフィールに影響する、めったに変更されないオプションを調整します。',
+          streamer_privacy_hint: 'これを有効にすると、共有ビューで自分の身元を隠すことができ、ストリーミングやプライバシーの追加に最適です。',
+        },
+        progress: {
+          title: '進行状況管理',
+          description: 'PvPまたはPvEトラッキングを最初からやり直したい場合は、モードごとの進行状況をリセットします。',
+          login_required: 'ゲームモードのリセットを管理するにはサインインしてください。',
+          reset_pvp: 'PvPデータをリセット',
+          reset_pve: 'PvEデータをリセット',
+        },
+        account_reset: {
+          title: '完全なアカウントリセット',
+          description: 'すべてのゲームモードで、追跡されたすべてのデータ、設定、キャッシュされた設定を完全に消去します。',
+          button: '完全なアカウントリセット',
+        },
+      },
+      dialogs: {
+        reset_mode: {
+          title: '{mode}データをリセット',
+          description: '{mode}の追跡された進行状況をすべて削除してもよろしいですか？そのモードのタスク、アイテム、隠れ家のデータがクリアされます。',
+          warning: 'この操作は元に戻せません。',
+          confirm: '{mode}をリセット',
+        },
+        full_reset: {
+          title: '完全なアカウントリセットの確認',
+          warning: 'これにより、ローカルキャッシュを含む保存されたすべてのデータが完全に削除されます。',
+          description: 'TarkovTrackerアカウントが新品の状態に復元されます。',
+          confirm: 'すべて削除',
+        },
+      },
+      options: {
+        edition_standard: 'スタンダードエディション',
+        edition_left_behind: 'Left Behindエディション',
+        edition_prepare_escape: 'Prepare for Escapeエディション',
+        edition_edge_darkness: 'Edge of Darkness（限定版）',
+        edition_unheard: 'Unheardエディション',
+        edition_unheard_eod: 'Unheard + Edge Of Darkness（EOD）エディション',
+      },
     },
     team: {
       title: "チーム",
