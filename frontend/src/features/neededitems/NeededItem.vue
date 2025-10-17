@@ -190,12 +190,12 @@
     if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
       // Only show if the objective is needed by ourself
       return (
-        (moduleCompletionsForModule.self === undefined || moduleCompletionsForModule.self === false) &&
+        (moduleCompletionsForModule.self === undefined || moduleCompletionsForModule.self === false) ||
         (modulePartCompletionsForPart.self === undefined || modulePartCompletionsForPart.self === false)
       );
     } else {
       return (
-        Object.values(moduleCompletionsForModule).some((userStatus) => userStatus === false) &&
+        Object.values(moduleCompletionsForModule).some((userStatus) => userStatus === false) ||
         Object.values(modulePartCompletionsForPart).some((userStatus) => userStatus === false)
       );
     }
