@@ -93,7 +93,7 @@ const isComplete = computed(() => {
 });
 
 const fullObjective = computed(() => {
-  return objectives.value.find((o) => o.id == props.objective.id);
+  return objectives.value.find((o) => o.id === props.objective.id);
 });
 
 // Kill tracker functionality
@@ -162,14 +162,15 @@ const relatedItem = computed(() => {
 
 const userNeeds = computed(() => {
   let needingUsers = [];
-  if (fullObjective.value == undefined) {
+  if (!fullObjective.value?.taskId) {
     return needingUsers;
   }
-  Object.entries(progressStore.unlockedTasks[fullObjective.value.taskId]).forEach(
+  const unlockedTasksForObjective = progressStore.unlockedTasks?.[fullObjective.value.taskId] || {};
+  Object.entries(unlockedTasksForObjective).forEach(
     ([teamId, unlocked]) => {
       if (
         unlocked &&
-        progressStore.objectiveCompletions?.[props.objective.id]?.[teamId] == false
+        progressStore.objectiveCompletions?.[props.objective.id]?.[teamId] === false
       ) {
         needingUsers.push(teamId);
       }
