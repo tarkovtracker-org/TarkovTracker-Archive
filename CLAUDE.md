@@ -2,10 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Task Master AI Instructions
+## Prerequisites
 
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+- **Node.js 18+** - Required for all development
+- **Java 11+ Runtime Environment** - Required for Firebase emulators
+- **Firebase CLI** - Installed as dev dependency (`firebase-tools`)
 
 ## Development Commands
 
@@ -29,11 +30,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run emulators:local` - Start emulators with local data import
 - `npm run export:data` - Export emulator data to local_data directory
 
+### Testing
+
+- `cd frontend && npm test` - Run frontend unit tests with Vitest (watch mode)
+- `cd frontend && npm run test:run` - Run frontend unit tests once
+- `cd frontend && npm run test:coverage` - Run tests with coverage report
+- `cd frontend && npm run test:e2e` - Run Playwright end-to-end tests
+- `cd frontend && npm run test:e2e:ui` - Run E2E tests in interactive UI mode
+- `cd functions && npm test` - Run backend/functions tests with Vitest
+
 ### API Documentation
 
-- `npm run docs` - Generate API documentation
-- `npm run docs:generate` - Build functions and generate API docs
-- `npm run docs:serve` - Generate docs and show instructions to view
+- `npm run docs` - Generate API documentation (output: `docs/index.html` - open in browser to view Swagger UI)
 
 ### Deployment
 

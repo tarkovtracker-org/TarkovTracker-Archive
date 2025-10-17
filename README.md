@@ -10,6 +10,7 @@ A community-maintained web application for planning and tracking your Escape Fro
 ---
 
 ## Table of Contents
+
 - [Features](#features)
 - [Architecture overview](#architecture-overview)
 - [Getting started](#getting-started)
@@ -26,6 +27,7 @@ A community-maintained web application for planning and tracking your Escape Fro
 - [Acknowledgments](#acknowledgments)
 
 ## Features
+
 - Track trader tasks and objectives with filtering by map, type, and status
 - Monitor hideout module requirements and completion progress
 - Keep a centralized list of required items for quests and upgrades
@@ -34,6 +36,7 @@ A community-maintained web application for planning and tracking your Escape Fro
 - Benefit from an open API and generated documentation for integrations
 
 ## Architecture overview
+
 TarkovTracker is built as a modern Jamstack-style application:
 
 - **Frontend** – A Vue 3 + Vite single-page application (SPA) with TypeScript, Pinia for state management, and Vuetify for UI.
@@ -44,11 +47,13 @@ TarkovTracker is built as a modern Jamstack-style application:
 ## Getting started
 
 ### Prerequisites
+
 - [Node.js 18](https://nodejs.org/en/download/) or newer (installs npm automatically)
 - [Java 11+ Runtime Environment](https://firebase.google.com/docs/emulator-suite/install_and_configure) (required for Firebase emulators)
 - Optional: [Firebase CLI](https://firebase.google.com/docs/cli) if you prefer to manage emulators separately
 
 ### Quick start
+
 ```bash
 # Clone the repository
 git clone https://github.com/TarkovTracker/tarkovtracker.git
@@ -60,9 +65,11 @@ npm install
 # Run the frontend and Firebase emulators together
 npm run dev
 ```
+
 The application will start a Vite development server (default `http://localhost:5173`) alongside local Firebase emulators.
 
 ### Available scripts
+
 The root `package.json` exposes helpful scripts for daily development:
 
 | Command | Description |
@@ -75,7 +82,8 @@ The root `package.json` exposes helpful scripts for daily development:
 | `npm run emulators` | Builds functions and launches the Firebase Emulator Suite. |
 
 ## Project structure
-```
+
+```bash
 TarkovTracker/
 ├── frontend/           # Vue application (pages, components, assets)
 ├── functions/          # Firebase Cloud Functions (TypeScript)
@@ -89,6 +97,7 @@ TarkovTracker/
 ```
 
 ## Documentation
+
 - **User & feature guides** – Work-in-progress documentation lives in the [`docs/`](docs/) directory and at <https://tarkovtracker.org/docs> when deployed.
 - **API reference** – View the generated OpenAPI specification (`docs/openapi.json`) or open the embedded Swagger UI (`docs/index.html`).
 - **Changelog** – Review notable updates in [CHANGELOG.md](CHANGELOG.md).
@@ -96,11 +105,13 @@ TarkovTracker/
 We welcome additional documentation improvements! Open an issue or pull request if you find gaps.
 
 ## Deployment & hosting
+
 - The community fork is deployed to <https://tarkovtracker.org>.
 - Firebase hosting is used for both the SPA and backend functions. Deployment is managed through the Firebase CLI and CI/CD pipelines.
 - Secrets, service accounts, and production data are **not** included in this repository. Please coordinate with maintainers before attempting production deployments.
 
 ## Community & support
+
 - **Questions & ideas** – Use [GitHub Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) or open an issue.
 - **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) to coordinate raids, ask questions in real time, or hang out with fellow Tarkov fans.
 - **Bug reports** – File an issue with clear reproduction steps and screenshots/logs when possible.
@@ -109,17 +120,21 @@ We welcome additional documentation improvements! Open an issue or pull request 
 - **More resources** – See [SUPPORT.md](SUPPORT.md) for additional help channels and troubleshooting tips.
 
 ## Contributing
+
 We enthusiastically welcome contributions from the Escape From Tarkov community! Please read our [CONTRIBUTING guidelines](CONTRIBUTING.md) for details on development workflows, coding standards, testing expectations, and how to propose large features.
 
 If you are unsure where to begin, check the issue tracker for labels such as `good first issue`, `help wanted`, or reach out on Discussions.
 
 ## Code of Conduct
+
 Participation in this project is governed by our [Code of Conduct](CODE_OF_CONDUCT.md). We are committed to providing a welcoming and harassment-free experience for all community members.
 
 ## License
+
 This project remains licensed under the GNU General Public License v3.0. See [LICENSE.md](LICENSE.md) for the full license text.
 
 ## Acknowledgments
+
 - The original TarkovTracker team and [@thaddeus](https://github.com/thaddeus)
 - Contributors and testers who keep the project alive
 - The Escape From Tarkov community for continued enthusiasm and support
