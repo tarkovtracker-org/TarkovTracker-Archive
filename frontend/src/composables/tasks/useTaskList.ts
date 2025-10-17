@@ -542,6 +542,7 @@ export function useTaskList() {
       hideNonKappaTasks,
       hideKappaRequiredTasks,
       hideLightkeeperRequiredTasks,
+      showEodOnlyTasks,
       currentPlayerLevel,
     ],
     async () => {
