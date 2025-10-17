@@ -22,33 +22,38 @@
     <v-row
       v-if="
         fullObjective &&
-        ((systemStore.userTeam && userNeeds.length > 0) || isItemObjective)
+        ((systemStore.userTeam && userNeeds.length > 0) ||
+          itemObjectiveTypes.includes(fullObjective.type))
       "
       align="center"
       class="pa-0 ml-0"
       style="font-size: smaller; margin-top: 1px; margin-bottom: 1px"
     >
-      <v-col v-if="fullObjective && isItemObjective && relatedItem" cols="auto" class="pa-0 d-flex align-center">
+      <v-col
+        v-if="fullObjective && itemObjectiveTypes.includes(fullObjective.type)"
+        cols="auto"
+        class="pa-0 d-flex align-center"
+      >
         <v-sheet
           class="rounded-lg pr-0 d-flex align-start mb-2"
           color="accent"
           style="width: fit-content"
         >
-          <TarkovItemCard
-            :item-id="relatedItem?.id ?? null"
-            :item-name="relatedItem?.shortName ?? null"
-            :dev-link="relatedItem?.link ?? null"
-            :wiki-link="relatedItem?.wikiLink ?? null"
+          <tarkov-item
+            :item-id="relatedItem.id"
+            :item-name="relatedItem.shortName"
+            :dev-link="relatedItem.link"
+            :wiki-link="relatedItem.wikiLink"
             :count="fullObjective.count ?? 1"
             class="mr-2"
           />
         </v-sheet>
       </v-col>
-      <v-col v-if="shouldShowTeamNeeds" cols="auto" class="pa-0">
-        <task-objective-team-needs
-          :user-ids="userNeeds"
-          :teammate-names="teammateDisplayNames"
-        />
+      <v-col v-if="systemStore.userTeam && userNeeds.length > 0" cols="auto" class="pa-0">
+        <span v-for="(user, userIndex) in userNeeds" :key="userIndex">
+          <v-icon size="x-small" class="ml-1">mdi-account-child-circle</v-icon
+          >{{ progressStore.teammemberNames[user] }}
+        </span>
       </v-col>
       <v-col v-if="objective.type === 'mark'" cols="auto">
         <!-- Mark specific content -->
@@ -59,43 +64,46 @@
     </v-row>
   </span>
 </template>
-<script setup lang="ts">
+<script setup>
 import { computed, ref, defineAsyncComponent, watch } from 'vue';
 import { useTarkovStore } from '@/stores/tarkov';
 import { useTarkovData } from '@/composables/tarkovdata';
-import { useProgressQueries } from '@/composables/useProgressQueries';
+import { useProgressStore } from '@/stores/progress';
 import { useLiveData } from '@/composables/livedata';
-import type { TaskObjective as TaskObjectiveType, TarkovItem } from '@/types/tarkov';
 import TaskObjectiveKillTracker from './TaskObjectiveKillTracker.vue';
-import TaskObjectiveTeamNeeds from './TaskObjectiveTeamNeeds.vue';
-
-const ITEM_OBJECTIVE_TYPES = new Set(['giveItem', 'mark', 'buildWeapon', 'plantItem']);
 
 const { useSystemStore } = useLiveData();
 const { systemStore } = useSystemStore();
 
-const props = defineProps<{
-  objective: TaskObjectiveType;
-}>();
+// Define the props for the component
+const props = defineProps({
+  objective: {
+    type: Object,
+    required: true,
+  },
+});
 
-const TarkovItemCard = defineAsyncComponent(() => import('@/features/game/TarkovItem.vue'));
+const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
 const { objectives } = useTarkovData();
 const tarkovStore = useTarkovStore();
-const { getUnlockedMap, isObjectiveIncompleteFor, getDisplayName } = useProgressQueries();
+const progressStore = useProgressStore();
 
-const isComplete = computed(() => tarkovStore.isTaskObjectiveComplete(props.objective.id));
+const isComplete = computed(() => {
+  return tarkovStore.isTaskObjectiveComplete(props.objective.id);
+});
 
-const fullObjective = computed(() =>
-  objectives.value.find((o) => o.id === props.objective.id)
-);
+const fullObjective = computed(() => {
+  return objectives.value.find((o) => o.id == props.objective.id);
+});
 
+// Kill tracker functionality
 const killRequiredCount = computed(() => {
   const required = fullObjective.value?.count;
   return required && required > 0 ? required : 0;
 });
 
 const showKillTracker = computed(() => {
-  const objective = fullObjective.value as (TaskObjectiveType & { shotType?: string }) | null;
+  const objective = fullObjective.value;
   if (!objective) {
     return false;
   }
@@ -114,7 +122,7 @@ const killCount = computed(() =>
   showKillTracker.value ? Math.min(rawKillCount.value, killRequiredCount.value) : 0
 );
 
-const setKillCount = (count: number) => {
+const setKillCount = (count) => {
   if (!showKillTracker.value) return;
   const normalized = Math.max(0, Math.min(count, killRequiredCount.value));
   if (normalized !== rawKillCount.value) {
@@ -126,73 +134,49 @@ const incrementKillCount = () => setKillCount(rawKillCount.value + 1);
 const decrementKillCount = () => setKillCount(rawKillCount.value - 1);
 const resetKillCount = () => setKillCount(0);
 
-const extractPrimaryObjectiveItem = (objective: TaskObjectiveType | null): TarkovItem | null => {
-  if (!objective) {
-    return null;
-  }
-  if (Array.isArray(objective.items) && objective.items.length > 0) {
-    return objective.items[0];
-  }
-  return objective.item ?? null;
-};
+const itemObjectiveTypes = ['giveItem', 'mark', 'buildWeapon', 'plantItem'];
 
-const resolveBuildWeaponItem = (item: TarkovItem | null): TarkovItem | null => {
-  if (!item) {
+const relatedItem = computed(() => {
+  if (!fullObjective.value) {
     return null;
   }
-  const defaultPreset =
-    (item as unknown as { properties?: { defaultPreset?: TarkovItem } })?.properties
-      ?.defaultPreset;
-  return defaultPreset ?? item;
-};
-
-const pickRelatedItem = (objective: TaskObjectiveType | null): TarkovItem | null => {
-  if (!objective) {
-    return null;
-  }
-  const primaryItem = extractPrimaryObjectiveItem(objective);
-  switch (objective.type) {
+  switch (fullObjective.value.type) {
     case 'giveItem':
-    case 'plantItem':
-      return primaryItem;
+      return fullObjective.value.item;
     case 'mark':
-      return objective.markerItem ?? primaryItem;
-    case 'buildWeapon':
-      return resolveBuildWeaponItem(primaryItem);
+      return fullObjective.value.markerItem;
+    case 'buildWeapon': {
+      // Prefer the defaultPreset (full build) if available
+      const item = fullObjective.value.item;
+      if (item?.properties?.defaultPreset) {
+        return item.properties.defaultPreset;
+      }
+      return item;
+    }
+    case 'plantItem':
+      return fullObjective.value.item;
     default:
       return null;
   }
-};
-
-const relatedItem = computed<TarkovItem | null>(() => pickRelatedItem(fullObjective.value ?? null));
-
-const userNeeds = computed<string[]>(() => {
-  const needingUsers: string[] = [];
-  const objective = fullObjective.value;
-  if (!objective?.taskId) {
-    return needingUsers;
-  }
-
-  const unlockedEntries = Object.entries(getUnlockedMap(objective.taskId));
-  for (const [teamId, unlocked] of unlockedEntries) {
-    if (unlocked && isObjectiveIncompleteFor(props.objective.id, teamId)) {
-      needingUsers.push(teamId);
-    }
-  }
-  return needingUsers;
 });
 
-const shouldShowTeamNeeds = computed(
-  () => Boolean(systemStore.userTeam) && userNeeds.value.length > 0
-);
-
-const isItemObjective = computed(
-  () => Boolean(fullObjective.value?.type && ITEM_OBJECTIVE_TYPES.has(fullObjective.value.type))
-);
-
-const teammateDisplayNames = computed<Record<string, string>>(() =>
-  Object.fromEntries(userNeeds.value.map((teamId) => [teamId, getDisplayName(teamId)]))
-);
+const userNeeds = computed(() => {
+  let needingUsers = [];
+  if (fullObjective.value == undefined) {
+    return needingUsers;
+  }
+  Object.entries(progressStore.unlockedTasks[fullObjective.value.taskId]).forEach(
+    ([teamId, unlocked]) => {
+      if (
+        unlocked &&
+        progressStore.objectiveCompletions?.[props.objective.id]?.[teamId] == false
+      ) {
+        needingUsers.push(teamId);
+      }
+    }
+  );
+  return needingUsers;
+});
 
 const isHovered = ref(false);
 const objectiveMouseEnter = () => {
@@ -204,9 +188,13 @@ const objectiveMouseLeave = () => {
 
 const objectiveIcon = computed(() => {
   if (isHovered.value) {
-    return isComplete.value ? 'mdi-close-circle' : 'mdi-check-circle';
+    if (isComplete.value) {
+      return 'mdi-close-circle';
+    } else {
+      return 'mdi-check-circle';
+    }
   }
-  const iconMap: Record<string, string> = {
+  let iconMap = {
     key: 'mdi-key',
     shoot: 'mdi-target-account',
     giveItem: 'mdi-close-circle-outline',
@@ -228,11 +216,12 @@ const objectiveIcon = computed(() => {
     experience: 'mdi-eye-circle-outline',
     warning: 'mdi-alert-circle',
   };
-  return iconMap[props.objective.type ?? ''] || 'mdi-help-circle';
+  return iconMap[props.objective.type] || 'mdi-help-circle';
 });
 
 const toggleObjectiveCompletion = () => {
   if (showKillTracker.value) {
+    // For kill tracker objectives, toggle between complete/incomplete
     if (isComplete.value) {
       tarkovStore.setTaskObjectiveUncomplete(props.objective.id);
     } else {
@@ -244,6 +233,7 @@ const toggleObjectiveCompletion = () => {
   tarkovStore.toggleTaskObjectiveComplete(props.objective.id);
 };
 
+// Watch for kill count changes to auto-complete/uncomplete objectives
 watch(
   () => rawKillCount.value,
   (newValue) => {
@@ -256,6 +246,7 @@ watch(
   }
 );
 
+// Watch for completion status changes to sync kill count
 watch(
   () => isComplete.value,
   (complete) => {
