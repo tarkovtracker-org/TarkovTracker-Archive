@@ -50,8 +50,8 @@
   import * as d3 from 'd3';
 
   interface Props {
-    map: Record<string, any>;
-    marks?: Record<string, any>[];
+    map: { id: string; svg?: { defaultFloor?: string; floors?: string[] }; [key: string]: unknown };
+    marks?: Array<{ zones: Array<{ map: { id: string }; [key: string]: unknown }>; [key: string]: unknown }>;
   }
 
   const randomMapId = ref(uuidv4());
@@ -87,7 +87,7 @@
   };
 
   const sortedZones = computed(() => {
-    let zones: any[] = [];
+    let zones: Array<{ zone: unknown; mark: unknown }> = [];
 
     for (const mark of props.marks) {
       for (const zone of mark.zones) {
