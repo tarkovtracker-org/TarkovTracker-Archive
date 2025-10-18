@@ -229,13 +229,18 @@
   const downgradeDisabled = computed(() => {
     if (props.station.id === STASH_STATION_ID) {
       const currentStash = currentStationLevel.value ?? 0;
-      const editionId = tarkovStore.getGameEdition();
-      const editionData = gameEditionData.value?.find((e) => e.version === editionId);
+      const rawEdition = tarkovStore.getGameEdition();
+      const editionId = Number(rawEdition);
+      const editionData = gameEditionData.value?.find((e) => {
+        const version = Number(e.version);
+        return Number.isFinite(version) && Number.isFinite(editionId) && version === editionId;
+      });
       const defaultStash = editionData?.defaultStashLevel ?? 0;
       return currentStash <= defaultStash;
     }
     if (props.station.id === CULTIST_CIRCLE_STATION_ID) {
-      const editionId = tarkovStore.getGameEdition();
+      const rawEdition = tarkovStore.getGameEdition();
+      const editionId = Number(rawEdition);
       // If Unheard Edition (5) or Unheard+EOD Edition (6), disable downgrade
       return editionId === 5 || editionId === 6;
     }
@@ -290,11 +295,12 @@
       return description;
     }
     // Check if user has Unheard Edition (5) or Unheard + EOD Edition (6)
-    const editionId = tarkovStore.getGameEdition();
+    const rawEdition = tarkovStore.getGameEdition();
+    const editionId = Number(rawEdition);
     const isUnheardEdition = editionId === 5 || editionId === 6;
     // For Unheard editions, show static description with 10x72
     if (isUnheardEdition) {
-      return 'Maximum size stash (10x72)';
+      return t('page.hideout.stationcard.unheard_max_stash');
     }
     return description;
   };

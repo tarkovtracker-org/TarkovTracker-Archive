@@ -1,7 +1,7 @@
 import { ref, shallowRef } from 'vue';
 import { useTarkovData } from '@/composables/tarkovdata';
 import { getMapIdGroup } from '@/utils/mapNormalization';
-import type { Task } from '@/types/tarkov';
+import type { Task, TaskObjective } from '@/types/tarkov';
 import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
 import { useProgressQueries } from '@/composables/useProgressQueries';
 import { logger } from '@/utils/logger';
@@ -43,6 +43,9 @@ export function useTaskFiltering() {
     if (primaryView === 'maps') {
       return filterTasksByMap(taskList, mapView);
     } else if (primaryView === 'traders') {
+      if (!traderView || traderView === 'all') {
+        return taskList;
+      }
       return taskList.filter((task) => task.trader?.id === traderView);
     }
     return taskList;
@@ -116,7 +119,9 @@ export function useTaskFiltering() {
     let filtered = taskList;
 
     if (secondaryView === 'available') {
-      filtered = filtered.filter((task) => isTaskUnlockedFor(task.id, userView));
+      filtered = filtered.filter(
+        (task) => isTaskUnlockedFor(task.id, userView) && !isTaskCompletedFor(task.id, userView)
+      );
     } else if (secondaryView === 'locked') {
       filtered = filtered.filter((task) => {
         const taskCompletions = getTaskCompletionMap(task.id);
@@ -145,15 +150,17 @@ export function useTaskFiltering() {
     hideKappaRequiredTasks: boolean,
     hideLightkeeperRequiredTasks: boolean,
     activeUserView: string,
-    allMaps: Array<{ id: string; name: string }>
+    allMaps: Array<{ id: string; name: string }>,
+    hideEodOnlyTasks: boolean = false,
+    treatEodAsEndgame: boolean = false
   ) => {
     const mapTaskCounts: Record<string, number> = {};
     const requirementOptions = {
       showKappa: !hideKappaRequiredTasks,
       showLightkeeper: !hideLightkeeperRequiredTasks,
-      showEod: true,
+      showEod: !hideEodOnlyTasks,
       hideNonEndgame: hideNonKappaTasks,
-      treatEodAsEndgame: false,
+      treatEodAsEndgame,
     };
 
     for (const map of displayedMaps) {
@@ -215,17 +222,48 @@ export function useTaskFiltering() {
               : isTaskUnlockedFor(task.id, activeUserView);
           if (unlocked) {
             let anyObjectiveLeft = false;
+            const objectiveTouchesMap = (objective: TaskObjective | null | undefined) => {
+              if (!objective) return false;
+              const matchesId = (id?: string | null) => !!id && mapIdGroup.includes(id);
+              if (Array.isArray(objective.maps) && objective.maps.some((m) => matchesId(m?.id))) {
+                return true;
+              }
+              const objectiveLocation = objective.location as
+                | { id?: string | null; map?: { id?: string | null } }
+                | undefined;
+              if (matchesId(objectiveLocation?.id)) {
+                return true;
+              }
+              if (matchesId(objectiveLocation?.map?.id)) {
+                return true;
+              }
+              if (
+                Array.isArray(objective.possibleLocations) &&
+                objective.possibleLocations.some((possibleLocation) =>
+                  matchesId(possibleLocation?.map?.id)
+                )
+              ) {
+                return true;
+              }
+              if (
+                Array.isArray(objective.zones) &&
+                objective.zones.some((zone) => matchesId(zone?.map?.id))
+              ) {
+                return true;
+              }
+              return false;
+            };
             for (const objective of task.objectives || []) {
-              if (Array.isArray(objective.maps) && objective.maps.some((m) => m != null && mapIdGroup.includes(m.id))) {
-                const completions = getObjectiveCompletionMap(objective.id);
-                const isComplete =
-                  activeUserView === 'all'
-                    ? visibleTeamIds.value.length > 0 && visibleTeamIds.value.every((id: string) => completions[id] === true)
-                    : completions[activeUserView] === true;
-                if (!isComplete) {
-                  anyObjectiveLeft = true;
-                  break;
-                }
+              if (!objectiveTouchesMap(objective)) continue;
+              const completions = getObjectiveCompletionMap(objective.id);
+              const isComplete =
+                activeUserView === 'all'
+                  ? visibleTeamIds.value.length > 0 &&
+                    visibleTeamIds.value.every((id: string) => completions?.[id] === true)
+                  : completions?.[activeUserView] === true;
+              if (!isComplete) {
+                anyObjectiveLeft = true;
+                break;
               }
             }
             if (anyObjectiveLeft) {

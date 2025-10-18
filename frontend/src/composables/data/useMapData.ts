@@ -56,14 +56,15 @@ export function useMapData() {
   // Computed property for maps with merged static data
   // Filters out map variants (Night Factory, Ground Zero 21+) so they don't appear in UI
   const maps = computed<TarkovMap[]>(() => {
-    if (!queryResult.value?.maps || !staticMapData.value) {
-      return [];
+    if (!queryResult.value?.maps) return [];
+    const source = queryResult.value.maps.filter((map) => !isMapVariant(map.name));
+    if (!staticMapData.value) {
+      // Show maps without SVG while static data loads
+      return [...source].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));
     }
-    const mergedMaps = queryResult.value.maps
-      .filter((map) => !isMapVariant(map.name)) // Filter out variants
+    const mergedMaps = source
       .map((map) => {
-        const lowerCaseName = map.name.toLowerCase();
-        const mapKey = MAP_NAME_MAPPING[lowerCaseName] || lowerCaseName.replace(/\s+|\+/g, '');
+        const mapKey = getStaticMapKey(map.name);
         const staticData = staticMapData.value?.[mapKey];
         if (staticData?.svg) {
           return {

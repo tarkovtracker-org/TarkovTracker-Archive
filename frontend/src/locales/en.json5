@@ -37,6 +37,20 @@
       privacy: 'Privacy Policy',
     },
   },
+  consent: {
+    title: 'We value your privacy',
+    body: {
+      beforeLink:
+        'TarkovTracker uses analytics tools like Firebase Analytics and Microsoft Clarity to understand feature usage and improve the service. You can learn more in our ',
+      afterLink:
+        'Choose whether to enable analytics tracking below. You can change your choice at any time from the footer.',
+    },
+    privacyLink: 'Privacy Policy',
+    actions: {
+      accept: 'Accept',
+      decline: 'Decline',
+    },
+  },
   menu: {
     language: 'Language',
   },
@@ -107,10 +121,10 @@
         hide_experience_rewards: 'Hide experience rewards',
         show_task_ids: 'Show task IDs',
         hide_task_ids: 'Hide task IDs',
-        show_next_tasks: 'Show next quests',
-        hide_next_tasks: 'Hide next quests',
-        show_previous_tasks: 'Show previous quests',
-        hide_previous_tasks: 'Hide previous quests',
+        show_next_tasks: 'Show next tasks',
+        hide_next_tasks: 'Hide next tasks',
+        show_previous_tasks: 'Show previous tasks',
+        hide_previous_tasks: 'Hide previous tasks',
         tooltips: {
           show_global_tasks: 'Keep global objectives visible on the map filter.',
           show_non_endgame_tasks: 'Display tasks that do not require Kappa or Lightkeeper.',
@@ -124,8 +138,8 @@
         optional_requirement_labels_tooltip: 'Toggle whether "Not Required" chips appear on Kappa and Lightkeeper tasks.',
         required_requirement_labels_tooltip: 'Toggle whether "Kappa Required" and "Lightkeeper Required" chips are shown.',
         experience_rewards_tooltip: 'Toggle the display of task experience rewards.',
-        next_tasks_tooltip: 'Show quests that unlock immediately after this task.',
-        previous_tasks_tooltip: 'Show quests that must be completed before this task becomes available.',
+        next_tasks_tooltip: 'Show tasks that unlock immediately after this task.',
+        previous_tasks_tooltip: 'Show tasks that must be completed before this task becomes available.',
         task_ids_tooltip: 'Display each task’s Tarkov.dev identifier beneath the card.',
       },
       notasksfound: 'No tasks found. Try changing your filters or updating your level.',
@@ -155,8 +169,8 @@
         kapparequired: 'Kappa Required',
         lightkeeperrequired: 'Lightkeeper Required',
         nonlightkeeper: 'Not Required for Lightkeeper',
-        next_tasks: 'Next Quest(s)',
-        previous_tasks: 'Previous Quest(s)',
+        next_tasks: 'Next Task(s)',
+        previous_tasks: 'Previous Task(s)',
         unknown_task: 'Unknown task',
         task_id: 'Task ID: {id}',
         keysneeded: '{keys} needed on {map} | One of {keys} needed on {map}',
@@ -197,6 +211,7 @@
         downgradebutton: 'Remove station | Downgrade to level {level} | Downgrade to level {level}',
         statusupgraded: 'Upgraded {name} to level {level}',
         statusdowngraded: 'Downgraded {name} from level {level}',
+        unheard_max_stash: 'Maximum size stash (10x72)',
       },
     },
     neededitems: {
@@ -349,7 +364,7 @@
       card: {
         apitokens: {
           title: 'API Tokens',
-          description: 'TarkovTracker hosts a public API that allows other tools to access the progress you store here. You can generate an API token to allow other tools to access your data. View the {openAPI_documentation}',
+          description: 'Generate API tokens to allow third-party tools to access your progress data. View the {openAPI_documentation} for details.',
           new_token_expand: 'Create a token',
           submit_new_token: 'Create token',
           openAPI_documentation: 'OpenAPI documentation',

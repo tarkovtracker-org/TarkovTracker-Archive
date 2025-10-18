@@ -206,7 +206,7 @@
     color: rgba(255, 255, 255, 0.6) !important;
   }
   .auth-consent__link {
-    color: rgba(var(--v-theme-secondary));
+    color: rgba(var(--v-theme-secondary), 1);
     text-decoration: underline;
     font-weight: 500;
   }

@@ -377,7 +377,9 @@ describe('useTaskFiltering', () => {
         false,
         false,
         'player1',
-        allMaps
+        allMaps,
+        false,
+        false
       );
 
       expect(result).toHaveProperty('customs');
@@ -406,7 +408,9 @@ describe('useTaskFiltering', () => {
         false,
         false,
         'player1',
-        allMaps
+        allMaps,
+        false,
+        false
       );
 
       expect(result.customs).toBe(0);
@@ -435,7 +439,9 @@ describe('useTaskFiltering', () => {
         false,
         false,
         'player1',
-        allMaps
+        allMaps,
+        false,
+        false
       );
 
       expect(result.customs).toBe(0);

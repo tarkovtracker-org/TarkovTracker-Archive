@@ -41,8 +41,8 @@ const colorTheme: Record<ColorThemeKeys, string> = {
   failure: '#391111', // Note: Same as warning
   tasklink: '#00acc1',
   kappaRequired: '#248F52',
-  kappaOptional: '#B24B3C',
-  lightkeeperRequired: '#1C5FA7',
+  kappaOptional: '#FF8C5A',
+  lightkeeperRequired: '#5BA9FF',
   lightkeeperOptional: '#C76A1F',
 };
 const trackerTheme: ThemeDefinition = {

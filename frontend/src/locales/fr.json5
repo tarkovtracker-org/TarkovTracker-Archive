@@ -21,6 +21,20 @@
       privacy: 'Politique de confidentialité',
     },
   },
+  consent: {
+    title: 'Nous respectons votre vie privée',
+    body: {
+      beforeLink:
+        'TarkovTracker utilise des outils d’analyse comme Firebase Analytics et Microsoft Clarity pour comprendre l’utilisation des fonctionnalités et améliorer le service. Vous pouvez en savoir plus dans notre ',
+      afterLink:
+        'Choisissez ci-dessous si vous souhaitez activer le suivi analytique. Vous pouvez modifier votre choix à tout moment depuis le pied de page.',
+    },
+    privacyLink: 'Politique de confidentialité',
+    actions: {
+      accept: 'Accepter',
+      decline: 'Refuser',
+    },
+  },
   menu: {
     language: 'Langue',
   },
@@ -174,6 +188,7 @@
         downgradebutton: 'Supprimer le module | Rétrograder au niveau {level} | Rétrograder au niveau {level}',
         statusupgraded: 'Amélioré {name} au niveau {level}',
         statusdowngraded: '{name} rétrogradé au niveau {level}',
+        unheard_max_stash: 'Taille maximale du coffre (10x72)',
       },
     },
     neededitems: {

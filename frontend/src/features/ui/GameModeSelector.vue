@@ -27,6 +27,7 @@
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
+  import type { GameMode } from '@/shared_state';
 
   const store = useTarkovStore();
   const gameModeOptions = [
@@ -48,7 +49,7 @@
     get() {
       return store.getCurrentGameMode();
     },
-    set(newMode) {
+    set(newMode: GameMode) {
       store.switchGameMode(newMode);
     },
   });

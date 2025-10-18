@@ -101,11 +101,11 @@ export function useNeedVisibility() {
     if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
       const selfModuleIncomplete = moduleCompletionsForModule.self !== true;
       const selfPartIncomplete = modulePartCompletionsForModule.self !== true;
-      return selfModuleIncomplete && selfPartIncomplete;
+      return selfModuleIncomplete || selfPartIncomplete;
     }
     const moduleNeeded = Object.values(moduleCompletionsForModule).some((status) => status === false);
     const partNeeded = Object.values(modulePartCompletionsForModule).some((status) => status === false);
-    return moduleNeeded && partNeeded;
+    return moduleNeeded || partNeeded;
   };
   return {
     isTaskNeedVisible,

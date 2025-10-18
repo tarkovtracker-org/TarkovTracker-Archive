@@ -29,39 +29,34 @@
   const mapObjectiveTypes = MAP_OBJECTIVE_TYPES;
   const onMapView = computed(() => userStore.getTaskPrimaryView === 'maps');
 
-  const relevantObjectives = computed(() => {
-    if (!onMapView.value) return props.task.objectives || [];
-
-    return (props.task.objectives || []).filter((objective) => {
-      if (!Array.isArray(objective?.maps) || objective.maps.length === 0) return true;
-      return (
-        objective.maps.some((map) => map.id === userStore.getTaskMapView) &&
-        isMapObjectiveType(objective)
-      );
-    });
-  });
-
-  const irrelevantObjectives = computed(() => {
-    if (!onMapView.value) return [];
-
-    return (props.task.objectives || []).filter((objective) => {
-      if (!Array.isArray(objective?.maps) || objective.maps.length === 0) return false;
-      const onSelectedMap = objective.maps.some((map) => map.id === userStore.getTaskMapView);
-      return !(onSelectedMap && isMapObjectiveType(objective));
-    });
-  });
-
-  const uncompletedIrrelevantObjectives = computed(() =>
-    (props.task.objectives || [])
-      .filter((objective) => !objectiveIsOnSelectedMap(objective) || !isMapObjectiveType(objective))
-      .filter((objective) => !tarkovStore.isTaskObjectiveComplete(objective.id))
-  );
-
   const objectiveIsOnSelectedMap = (objective: TaskObjective) =>
     objective?.maps?.some((map) => map.id === userStore.getTaskMapView) ?? false;
 
   const isMapObjectiveType = (objective: TaskObjective) =>
     mapObjectiveTypes.includes((objective.type as typeof mapObjectiveTypes[number]) ?? '');
+
+  const relevantObjectives = computed(() => {
+    if (!onMapView.value) return props.task.objectives || [];
+
+    return (props.task.objectives || []).filter(
+      (objective) => objectiveIsOnSelectedMap(objective) && isMapObjectiveType(objective)
+    );
+  });
+
+  const irrelevantObjectives = computed(() => {
+    if (!onMapView.value) return [];
+
+    return (props.task.objectives || []).filter(
+      (objective) => !(objectiveIsOnSelectedMap(objective) && isMapObjectiveType(objective))
+    );
+  });
+
+  const uncompletedIrrelevantObjectives = computed(() => {
+    if (!onMapView.value) return [];
+    return irrelevantObjectives.value.filter(
+      (objective) => !tarkovStore.isTaskObjectiveComplete(objective.id)
+    );
+  });
 </script>
 
 <style scoped>

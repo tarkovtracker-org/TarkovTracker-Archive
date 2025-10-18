@@ -84,7 +84,7 @@ export function useTaskCardActions(task: Ref<Task>, tasks: Ref<Task[]>) {
     }
     tarkovStore.setTaskComplete(task.value.id);
     handleTaskObjectives(task.value.objectives, 'setTaskObjectiveComplete');
-    handleAlternatives(task.value.alternatives, 'setTaskFailed', 'setTaskObjectiveComplete');
+    handleAlternatives(task.value.alternatives, 'setTaskFailed', 'setTaskObjectiveFailed');
     ensureMinLevel(task.value.minPlayerLevel);
     const statusKey = isUndo
       ? 'page.tasks.questcard.undocomplete'
@@ -126,7 +126,7 @@ export function useTaskCardActions(task: Ref<Task>, tasks: Ref<Task[]>) {
       tarkovStore.setTaskComplete(taskId);
       if (targetTask) {
         handleTaskObjectives(targetTask.objectives, 'setTaskObjectiveComplete');
-        handleAlternatives(targetTask.alternatives, 'setTaskFailed', 'setTaskObjectiveComplete');
+        handleAlternatives(targetTask.alternatives, 'setTaskFailed', 'setTaskObjectiveFailed');
         ensureMinLevel(targetTask.minPlayerLevel);
       }
       updateTaskStatus('page.tasks.questcard.undouncomplete', taskName);

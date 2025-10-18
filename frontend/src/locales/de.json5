@@ -21,6 +21,20 @@
       privacy: 'Datenschutzrichtlinie',
     },
   },
+  consent: {
+    title: 'Wir schätzen deine Privatsphäre',
+    body: {
+      beforeLink:
+        'TarkovTracker verwendet Analysetools wie Firebase Analytics und Microsoft Clarity, um die Funktionsnutzung zu verstehen und den Dienst zu verbessern. Weitere Informationen findest du in unserer ',
+      afterLink:
+        'Wähle unten, ob Analytics-Tracking aktiviert werden soll. Du kannst deine Entscheidung jederzeit über die Fußzeile ändern.',
+    },
+    privacyLink: 'Datenschutzerklärung',
+    actions: {
+      accept: 'Akzeptieren',
+      decline: 'Ablehnen',
+    },
+  },
   menu: {
     language: 'Language',
   },
@@ -171,6 +185,7 @@
         downgradebutton: 'Station entfernen | Abbau auf Stufe {level} | Abbau auf Stufe {level}',
         statusupgraded: '{name} wurde ausgebaut auf Stufe {level}',
         statusdowngraded: '{name} wurde herabgestuft von Stufe {level}',
+        unheard_max_stash: 'Stash maximale Größe (10x72)',
       },
     },
     neededitems: {

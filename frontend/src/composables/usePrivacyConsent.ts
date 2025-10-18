@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue';
+import { computed, ref, type Ref } from 'vue';
 import { enableAnalyticsCollection, disableAnalyticsCollection } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
 
@@ -7,9 +7,24 @@ export type ConsentStatus = 'accepted' | 'rejected' | 'unknown';
 const STORAGE_KEY = 'tt-analytics-consent';
 const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
 
-const consentStatus = ref<ConsentStatus>('unknown');
-const bannerVisible = ref(false);
-const hasInitialized = ref(false);
+interface ConsentRefs {
+  consentStatus: Ref<ConsentStatus>;
+  bannerVisible: Ref<boolean>;
+  hasInitialized: Ref<boolean>;
+}
+
+let consentRefs: ConsentRefs | null = null;
+
+const getConsentRefs = (): ConsentRefs => {
+  if (!consentRefs) {
+    consentRefs = {
+      consentStatus: ref<ConsentStatus>('unknown'),
+      bannerVisible: ref(false),
+      hasInitialized: ref(false),
+    };
+  }
+  return consentRefs;
+};
 let clarityBootstrapped = false;
 let clarityConfigLogged = false;
 
@@ -127,6 +142,7 @@ const clearStoredConsent = (storage: Storage | undefined) => {
 };
 
 const initializeConsent = () => {
+  const { hasInitialized, consentStatus, bannerVisible } = getConsentRefs();
   if (hasInitialized.value) {
     return;
   }
@@ -145,6 +161,7 @@ const initializeConsent = () => {
 };
 
 const setConsent = (status: 'accepted' | 'rejected') => {
+  const { consentStatus, bannerVisible } = getConsentRefs();
   consentStatus.value = status;
   const storage = getStorage();
   persistConsent(storage, status);
@@ -153,10 +170,12 @@ const setConsent = (status: 'accepted' | 'rejected') => {
 };
 
 const openPreferences = () => {
+  const { bannerVisible } = getConsentRefs();
   bannerVisible.value = true;
 };
 
 const resetConsent = () => {
+  const { consentStatus, bannerVisible } = getConsentRefs();
   consentStatus.value = 'unknown';
   const storage = getStorage();
   clearStoredConsent(storage);
@@ -165,10 +184,10 @@ const resetConsent = () => {
   disableClarity();
 };
 
-const consentGiven = computed(() => consentStatus.value === 'accepted');
-const choiceRecorded = computed(() => consentStatus.value !== 'unknown');
-
 export const usePrivacyConsent = () => {
+  const { consentStatus, bannerVisible } = getConsentRefs();
+  const consentGiven = computed(() => consentStatus.value === 'accepted');
+  const choiceRecorded = computed(() => consentStatus.value !== 'unknown');
   return {
     consentStatus,
     bannerVisible,

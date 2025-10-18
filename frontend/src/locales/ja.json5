@@ -140,6 +140,7 @@
         downgradebutton: "ステーションを撤去 | レベル {level} にダウングレード | レベル {level} にダウングレード",
         statusupgraded: "{name} をレベル {level} にアップグレード",
         statusdowngraded: "{name} をレベル {level} からダウングレード",
+        unheard_max_stash: "最大サイズのスタッシュ (10x72)",
       },
     },
     neededitems: {

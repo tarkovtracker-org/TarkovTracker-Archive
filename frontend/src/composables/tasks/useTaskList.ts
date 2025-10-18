@@ -18,7 +18,7 @@ import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
 import { getMapIdGroup } from '@/utils/mapNormalization';
 import { logger } from '@/utils/logger';
 import { useVirtualTaskList } from './useVirtualTaskList';
-import { EOD_EDITIONS, MAP_OBJECTIVE_TYPES, TRADER_ORDER } from '@/config/gameConstants';
+import { EOD_EDITIONS, TRADER_ORDER } from '@/config/gameConstants';
 import type { Task, TaskObjective } from '@/types/tarkov';
 
 interface ObjectiveWithUsers extends TaskObjective {
@@ -338,6 +338,12 @@ export function useTaskList() {
     }
   };
 
+  const resolveObjectiveMapIds = (objective: TaskObjective): string[] => {
+    const ids = new Set<string>();
+    collectObjectiveLocationIds(objective, ids);
+    return [...ids];
+  };
+
   const collectTaskLocationIds = (task: Task) => {
     const locationIds = new Set<string>();
 
@@ -369,10 +375,8 @@ export function useTaskList() {
 
   const taskHasIncompleteObjectiveOnMap = (task: Task, mapIdGroup: string[]) => {
     for (const objective of task.objectives || []) {
-      if (!Array.isArray(objective.maps)) continue;
-      if (!objective.maps.some((map) => mapIdGroup.includes(map.id))) {
-        continue;
-      }
+      const objectiveMapIds = resolveObjectiveMapIds(objective);
+      if (!objectiveMapIds.some((id) => mapIdGroup.includes(id))) continue;
       const completions = getObjectiveCompletionMap(objective.id) || {};
       const isComplete =
         activeUserView.value === 'all'
@@ -390,17 +394,8 @@ export function useTaskList() {
     if (activePrimaryView.value === 'maps' && activeMapView.value !== 'all') {
       const mapIdGroup = getMapIdGroup(activeMapView.value, maps.value);
       filteredTasks = filteredTasks.filter((task) => {
-        const taskLocations = Array.isArray(task.locations) ? task.locations : [];
-        let hasMap = mapIdGroup.some((id: string) => taskLocations.includes(id));
-        if (!hasMap && Array.isArray(task.objectives)) {
-          hasMap = task.objectives.some(
-            (obj) =>
-              Array.isArray(obj.maps) &&
-              obj.maps.some((map) => mapIdGroup.includes(map.id)) &&
-              MAP_OBJECTIVE_TYPES.includes(obj.type as (typeof MAP_OBJECTIVE_TYPES)[number])
-          );
-        }
-        return hasMap;
+        const taskLocations = collectTaskLocationIds(task);
+        return mapIdGroup.some((id: string) => taskLocations.has(id));
       });
     }
     if (activeTraderView.value && activeTraderView.value !== 'all') {
@@ -415,10 +410,17 @@ export function useTaskList() {
       if (!task || typeof task.id !== 'string') return false;
       if (disabledTasks.includes(task.id)) return false;
       if (!taskMatchesRequirementFilters(task, requirementOptions)) return false;
-      if (task.eodOnly && activeUserView.value !== 'all') {
-        const editionForView = getEditionForView(activeUserView.value);
-        if (!isEditionEod(editionForView)) {
-          return false;
+      if (task.eodOnly) {
+        if (activeUserView.value === 'all') {
+          const anyEod = visibleTeamIds.value.some((id) => isEditionEod(getEditionForView(id)));
+          if (!anyEod) {
+            return false;
+          }
+        } else {
+          const editionForView = getEditionForView(activeUserView.value);
+          if (!isEditionEod(editionForView)) {
+            return false;
+          }
         }
       }
       return true;

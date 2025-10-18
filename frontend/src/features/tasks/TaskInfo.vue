@@ -83,7 +83,7 @@
             <v-chip
               size="x-small"
               :class="['status-chip']"
-              :color="lightkeeperRequired ? 'primary' : 'warning'"
+              :color="lightkeeperRequired ? 'lightkeeperRequired' : 'lightkeeperOptional'"
               variant="flat"
             >
               {{

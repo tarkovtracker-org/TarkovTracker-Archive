@@ -4,21 +4,19 @@
       <v-card class="consent-banner__card" elevation="12" variant="flat">
         <v-card-text class="consent-banner__content">
           <div class="consent-banner__text">
-            <h2 class="consent-banner__title">We value your privacy</h2>
+            <h2 class="consent-banner__title">{{ t('consent.title') }}</h2>
             <p class="consent-banner__body">
-              TarkovTracker uses analytics tools like Firebase Analytics and Microsoft Clarity to understand
-              feature usage and improve the service. You can learn more in our
-              <router-link to="/privacy" class="consent-banner__link">Privacy Policy</router-link>.
-              Choose whether to enable analytics tracking below. You can change your choice at any time from
-              the footer.
+              {{ t('consent.body.beforeLink') }}
+              <router-link to="/privacy" class="consent-banner__link">{{ t('consent.privacyLink') }}</router-link>.
+              {{ t('consent.body.afterLink') }}
             </p>
           </div>
           <div class="consent-banner__actions">
             <v-btn color="secondary" variant="flat" class="consent-banner__primary" @click="handleAccept">
-              Accept
+              {{ t('consent.actions.accept') }}
             </v-btn>
             <v-btn variant="outlined" color="secondary" class="consent-banner__secondary" @click="handleReject">
-              Decline
+              {{ t('consent.actions.decline') }}
             </v-btn>
           </div>
         </v-card-text>
@@ -28,6 +26,7 @@
 </template>
 <script setup>
   import { onMounted } from 'vue';
+  import { useI18n } from 'vue-i18n';
   import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
 
   const {
@@ -36,6 +35,7 @@
     reject,
     initializeConsent,
   } = usePrivacyConsent();
+  const { t } = useI18n({ useScope: 'global' });
 
   const handleAccept = () => {
     accept();
@@ -93,7 +93,7 @@
   }
 
   .consent-banner__link {
-    color: rgba(var(--v-theme-secondary));
+    color: rgb(var(--v-theme-secondary));
     font-weight: 500;
     text-decoration: underline;
   }

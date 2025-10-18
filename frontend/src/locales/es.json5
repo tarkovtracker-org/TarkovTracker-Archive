@@ -22,6 +22,20 @@
       privacy: 'Política de Privacidad',
     },
   },
+  consent: {
+    title: 'Valoramos tu privacidad',
+    body: {
+      beforeLink:
+        'TarkovTracker utiliza herramientas de analítica como Firebase Analytics y Microsoft Clarity para comprender el uso de las funciones y mejorar el servicio. Puedes obtener más información en nuestra ',
+      afterLink:
+        'Elige a continuación si deseas habilitar el seguimiento de analíticas. Puedes cambiar tu elección en cualquier momento desde el pie de página.',
+    },
+    privacyLink: 'Política de Privacidad',
+    actions: {
+      accept: 'Aceptar',
+      decline: 'Rechazar',
+    },
+  },
   menu: {
     language: 'Idioma',
   },
@@ -242,6 +256,7 @@
         downgradebutton: 'Eliminar estación | Degradar a nivel {level} | Degradar a nivel {level}',
         statusupgraded: 'Mejorado {name} a nivel {level}',
         statusdowngraded: 'Degradado {name} desde el nivel {level}',
+        unheard_max_stash: 'Trastero de tamaño máximo (10x72)',
       },
     },
     neededitems: {
