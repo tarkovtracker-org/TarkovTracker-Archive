@@ -99,10 +99,16 @@ export function useNeedVisibility() {
       return true;
     }
     if (userStore.itemsTeamAllHidden || userStore.itemsTeamHideoutHidden) {
+      // For self-only view: Show item if EITHER the module OR the part is incomplete
+      // This is correct because:
+      // - moduleCompletions tracks if the hideout module level is built (e.g., Workbench Level 2)
+      // - modulePartCompletions tracks if the specific construction part for that level is installed
+      // If either is incomplete, the item is still needed for that hideout upgrade
       const selfModuleIncomplete = moduleCompletionsForModule.self !== true;
       const selfPartIncomplete = modulePartCompletionsForModule.self !== true;
       return selfModuleIncomplete || selfPartIncomplete;
     }
+    // For team view: Show item if ANY team member needs the module OR part
     const moduleNeeded = Object.values(moduleCompletionsForModule).some((status) => status === false);
     const partNeeded = Object.values(modulePartCompletionsForModule).some((status) => status === false);
     return moduleNeeded || partNeeded;

@@ -9,6 +9,12 @@ export const GAME_EDITIONS = {
 
 export const EOD_EDITIONS = new Set<number>([4, 6]);
 
+// Unheard editions (Unheard and Unheard+EOD) - used for Cultist Circle station
+export const UNHEARD_EDITIONS = new Set<number>([
+  GAME_EDITIONS.UNHEARD.version,
+  GAME_EDITIONS.UNHEARD_TRIAL.version,
+]);
+
 export const DISABLED_TASK_IDS: ReadonlyArray<string> = [
   '61e6e5e0f5b9633f6719ed95',
   '61e6e60223374d168a4576a6',

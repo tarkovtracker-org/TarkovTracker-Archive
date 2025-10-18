@@ -187,6 +187,7 @@
 <script setup>
   import { computed, defineAsyncComponent, ref } from 'vue';
   import { STASH_STATION_ID, CULTIST_CIRCLE_STATION_ID } from '@/stores/progress';
+  import { UNHEARD_EDITIONS } from '@/config/gameConstants';
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useI18n } from 'vue-i18n';
@@ -241,8 +242,8 @@
     if (props.station.id === CULTIST_CIRCLE_STATION_ID) {
       const rawEdition = tarkovStore.getGameEdition();
       const editionId = Number(rawEdition);
-      // If Unheard Edition (5) or Unheard+EOD Edition (6), disable downgrade
-      return editionId === 5 || editionId === 6;
+      // If Unheard Edition or Unheard+EOD Edition, disable downgrade
+      return UNHEARD_EDITIONS.has(editionId);
     }
     return false;
   });
@@ -294,10 +295,10 @@
     if (props.station.id !== STASH_STATION_ID) {
       return description;
     }
-    // Check if user has Unheard Edition (5) or Unheard + EOD Edition (6)
+    // Check if user has Unheard Edition or Unheard + EOD Edition
     const rawEdition = tarkovStore.getGameEdition();
     const editionId = Number(rawEdition);
-    const isUnheardEdition = editionId === 5 || editionId === 6;
+    const isUnheardEdition = UNHEARD_EDITIONS.has(editionId);
     // For Unheard editions, show static description with 10x72
     if (isUnheardEdition) {
       return t('page.hideout.stationcard.unheard_max_stash');

@@ -1,4 +1,4 @@
-import { computed, ref, type Ref } from 'vue';
+import { computed, ref, type Ref, type ComputedRef } from 'vue';
 import { enableAnalyticsCollection, disableAnalyticsCollection } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
 
@@ -11,16 +11,23 @@ interface ConsentRefs {
   consentStatus: Ref<ConsentStatus>;
   bannerVisible: Ref<boolean>;
   hasInitialized: Ref<boolean>;
+  consentGiven: ComputedRef<boolean>;
+  choiceRecorded: ComputedRef<boolean>;
 }
 
 let consentRefs: ConsentRefs | null = null;
 
 const getConsentRefs = (): ConsentRefs => {
   if (!consentRefs) {
+    const consentStatus = ref<ConsentStatus>('unknown');
+    const bannerVisible = ref(false);
+    const hasInitialized = ref(false);
     consentRefs = {
-      consentStatus: ref<ConsentStatus>('unknown'),
-      bannerVisible: ref(false),
-      hasInitialized: ref(false),
+      consentStatus,
+      bannerVisible,
+      hasInitialized,
+      consentGiven: computed(() => consentStatus.value === 'accepted'),
+      choiceRecorded: computed(() => consentStatus.value !== 'unknown'),
     };
   }
   return consentRefs;
@@ -185,9 +192,7 @@ const resetConsent = () => {
 };
 
 export const usePrivacyConsent = () => {
-  const { consentStatus, bannerVisible } = getConsentRefs();
-  const consentGiven = computed(() => consentStatus.value === 'accepted');
-  const choiceRecorded = computed(() => consentStatus.value !== 'unknown');
+  const { consentStatus, bannerVisible, consentGiven, choiceRecorded } = getConsentRefs();
   return {
     consentStatus,
     bannerVisible,
