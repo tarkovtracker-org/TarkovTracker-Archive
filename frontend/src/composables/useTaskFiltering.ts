@@ -20,7 +20,7 @@ export function useTaskFiltering() {
   } = useProgressQueries();
   const { tasks, disabledTasks, maps } = useTarkovData();
   const reloadingTasks = ref(false);
-  const visibleTasks = shallowRef([]);
+  const visibleTasks = shallowRef<Task[]>([]);
 
   const mapObjectiveTypes = [
     'mark',
@@ -87,6 +87,19 @@ export function useTaskFiltering() {
       return filterTasksForUser(taskList, secondaryView, userView);
     }
   };
+  /**
+   * Filter tasks for the 'all users' view, showing tasks needed by any team member
+   *
+   * Creates augmented task objects with a 'neededBy' array listing which team members
+   * need each task. Only includes tasks that are:
+   * - Unlocked for at least one team member
+   * - Not completed by that team member
+   * - Match the team member's faction requirements
+   *
+   * @param taskList - Tasks to filter
+   * @param secondaryView - Expected to be 'available' (other views not supported for 'all')
+   * @returns Array of tasks with additional 'neededBy' property containing user display names
+   */
   const filterTasksForAllUsers = (taskList: Task[], secondaryView: string) => {
     if (secondaryView !== 'available') {
       logger.warn("Unexpected state: 'all' user view with non-'available' secondary view");
@@ -139,7 +152,38 @@ export function useTaskFiltering() {
   };
 
   /**
-   * Calculate task counts per map, handling map variants
+   * Calculate available task counts per map for display in UI
+   *
+   * This function counts tasks that:
+   * 1. Have incomplete objectives on the specified map
+   * 2. Are unlocked for the active user/team
+   * 3. Match the current requirement filters (Kappa, Lightkeeper, EOD, etc.)
+   *
+   * The function handles map variants (e.g., Night Factory, Ground Zero 21+) by treating
+   * them as part of the same map group using getMapIdGroup().
+   *
+   * Location resolution logic:
+   * - Checks task.map, task.locations array
+   * - For each objective: checks obj.maps, obj.location, obj.possibleLocations, obj.zones
+   * - Collects all map IDs to determine if task belongs to a map
+   *
+   * Objective completion tracking:
+   * - For 'all' view: Only counts if ALL team members have completed the objective
+   * - For single user: Only counts if that user has completed the objective
+   * - Only counts tasks with at least one incomplete objective on the map
+   *
+   * @param displayedMaps - Maps to calculate counts for (usually visible in UI)
+   * @param tasks - Full task list to analyze
+   * @param disabledTasks - Task IDs to exclude from counts
+   * @param hideGlobalTasks - Whether to exclude tasks without specific map locations
+   * @param hideNonKappaTasks - Whether to show only endgame tasks
+   * @param hideKappaRequiredTasks - Whether to hide Kappa-required tasks
+   * @param hideLightkeeperRequiredTasks - Whether to hide Lightkeeper-required tasks
+   * @param activeUserView - Current user view ('all' or specific user ID)
+   * @param allMaps - Complete map list for variant resolution
+   * @param hideEodOnlyTasks - Whether to hide EOD-only tasks
+   * @param treatEodAsEndgame - Whether to treat EOD tasks as endgame tasks
+   * @returns Record mapping map ID to count of available tasks with incomplete objectives
    */
   const calculateMapTaskTotals = (
     displayedMaps: Array<{ id: string; name: string }>,
@@ -277,7 +321,21 @@ export function useTaskFiltering() {
   };
 
   /**
-   * Main function to update visible tasks based on all filters
+   * Main function to update visible tasks based on all active filters
+   *
+   * Applies filtering in two stages:
+   * 1. Primary view filter (maps/traders) - narrows down by selected map or trader
+   * 2. Status and user filter (available/locked/completed) - filters by task availability
+   *
+   * Performance note: No deep cloning is performed. Filter functions create new arrays
+   * as needed via .filter(), and filterTasksForAllUsers creates new objects with spread operator.
+   *
+   * @param activePrimaryView - Current primary view ('maps', 'traders', etc.)
+   * @param activeSecondaryView - Current status filter ('available', 'locked', 'completed')
+   * @param activeUserView - Current user selection ('all' or specific user ID)
+   * @param activeMapView - Selected map ID (or 'all')
+   * @param activeTraderView - Selected trader ID (or 'all')
+   * @param tasksLoading - Whether tasks are currently loading (skips update if true)
    */
   const updateVisibleTasks = async (
     activePrimaryView: string,
@@ -293,7 +351,10 @@ export function useTaskFiltering() {
     }
     reloadingTasks.value = true;
     try {
-      let visibleTaskList = JSON.parse(JSON.stringify(tasks.value));
+      // No need for deep clone - filter functions create new arrays/objects as needed
+      // filterTasksForAllUsers creates new objects with { ...task, neededBy }
+      // Other filters only read properties and return new arrays via .filter()
+      let visibleTaskList = tasks.value;
       // Apply primary view filter
       visibleTaskList = filterTasksByView(
         visibleTaskList,

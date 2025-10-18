@@ -24,9 +24,39 @@ interface TraderLevelRequirement {
 
 const ACTIVE_STATUSES = new Set(['active', 'accept', 'accepted']);
 
+/**
+ * Service for evaluating task availability based on game requirements
+ *
+ * This service determines whether a task is available/unlocked for a specific player
+ * by checking all game requirements including:
+ * - Player level requirements
+ * - Prerequisite task completion
+ * - Trader level and loyalty requirements
+ * - Faction requirements (BEAR/USEC)
+ * - Game edition requirements (EOD-only tasks)
+ * - Task and objective completion states
+ *
+ * Uses memoization to cache availability results for performance, as task graphs
+ * can have complex dependency chains that would be expensive to recalculate repeatedly.
+ *
+ * Handles circular dependencies by maintaining a stack of currently evaluating tasks
+ * and returning false if a cycle is detected.
+ *
+ * @example
+ * const service = new TaskAvailabilityService(tasks, stores, completions, levels, standings, factions);
+ * const isAvailable = service.evaluateAvailability('task-id-123', 'player-id-456');
+ */
 export class TaskAvailabilityService {
   private memo = new Map<string, boolean>();
 
+  /**
+   * @param tasks - Map of task IDs to Task objects
+   * @param teamStores - Map of team member IDs to their Pinia store instances
+   * @param tasksCompletions - Map of task completions by team member
+   * @param traderLevels - Map of trader loyalty levels by team member
+   * @param traderStandings - Map of trader reputation standings by team member
+   * @param playerFactions - Map of player factions (BEAR/USEC) by team member
+   */
   constructor(
     private readonly tasks: Map<string, Task>,
     private readonly teamStores: TeamStoresMap,
@@ -36,6 +66,25 @@ export class TaskAvailabilityService {
     private readonly playerFactions: FactionMap
   ) {}
 
+  /**
+   * Evaluate whether a task is available for a specific team member
+   *
+   * Checks all requirements in order:
+   * 1. EOD edition requirement
+   * 2. Failed task requirements (prerequisites that must NOT be failed)
+   * 3. Task not already completed
+   * 4. Player level requirement
+   * 5. Trader level/standing requirements
+   * 6. Objective completion requirements
+   * 7. Task prerequisite requirements
+   * 8. Faction requirements
+   *
+   * Results are memoized to avoid redundant calculations.
+   *
+   * @param taskId - ID of the task to evaluate
+   * @param teamId - ID of the team member ('self' or specific member ID)
+   * @returns true if task is available/unlocked, false otherwise
+   */
   evaluateAvailability(taskId: string, teamId: string): boolean {
     return this.evaluateWithStack(taskId, teamId, new Set());
   }
