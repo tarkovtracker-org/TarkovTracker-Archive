@@ -25,6 +25,30 @@ const createMockResponse = () => {
   return res;
 };
 
+const runHandlerWithErrorPipeline = async (
+  handler: (req: any, res: any, next?: (err?: unknown) => void) => unknown,
+  req: any,
+  res: any,
+  errorHandler: (err: Error, req: any, res: any, next: (err?: unknown) => void) => void
+) => {
+  const next = (err?: unknown) => {
+    if (err) {
+      errorHandler(err as Error, req, res, vi.fn());
+    }
+  };
+
+  try {
+    const maybePromise = handler(req, res, next);
+    if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
+      await (maybePromise as PromiseLike<void>).catch(err => {
+        next(err);
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
 describe('Token API Contract Tests', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -32,7 +56,7 @@ describe('Token API Contract Tests', () => {
 
   describe('GET /api/v2/token - Response Structure', () => {
     it('returns correct token information structure', async () => {
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'some-token',
@@ -58,7 +82,7 @@ describe('Token API Contract Tests', () => {
 
     it('ensures permissions are valid values', async () => {
       const validPermissions = ['GP', 'WP'];
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'some-token',
@@ -77,7 +101,7 @@ describe('Token API Contract Tests', () => {
 
     it('ensures gameMode is valid when present', async () => {
       const validGameModes = ['pvp', 'pve', 'dual'];
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'some-token',
@@ -98,7 +122,7 @@ describe('Token API Contract Tests', () => {
 
   describe('Backward Compatibility - Token Endpoints', () => {
     it('maintains token response fields by calling handler', async () => {
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'test-token',
@@ -126,7 +150,7 @@ describe('Token API Contract Tests', () => {
     });
 
     it('maintains optional token response fields when present by calling handler', async () => {
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'token-string',
@@ -152,7 +176,7 @@ describe('Token API Contract Tests', () => {
 
     it('validates permission strings are valid types by calling handler', async () => {
       // Call handler with known permissions and validate they have correct types
-      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
       const req = createMockRequest({
         owner: 'user-id',
         token: 'test-token',
@@ -178,44 +202,98 @@ describe('Token API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates standardized error response format', () => {
-      // Error responses must always follow this format when returned to clients
-      const errorResponses = [
-        { success: false, error: 'Invalid permissions provided' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Token not found' },
-        { success: false, error: 'Invalid game mode' },
-      ];
+    it('returns the standardized unauthorized error payload from the handler pipeline', async () => {
+      const { errorHandler, errors } = await import('../../src/middleware/errorHandler.ts');
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
 
-      errorResponses.forEach(response => {
-        expect(response).toMatchObject({
-          success: false,
-          error: expect.any(String),
-        });
+      const req: any = {
+        ...createMockRequest(undefined),
+        method: 'GET',
+        originalUrl: '/api/v2/token',
+        headers: {},
+      };
 
-        expect(response.success).toBe(false);
-        expect(response.error.length).toBeGreaterThan(0);
+      const unauthorizedError = errors.unauthorized('Authentication required');
+      delete req.apiToken;
+      let firstAccess = true;
+      Object.defineProperty(req, 'apiToken', {
+        configurable: true,
+        get() {
+          if (firstAccess) {
+            firstAccess = false;
+            throw unauthorizedError;
+          }
+          return undefined;
+        },
       });
+
+      const res = createMockResponse();
+
+      await runHandlerWithErrorPipeline(tokenHandler.getTokenInfo.bind(tokenHandler), req, res, errorHandler);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Authentication required',
+          meta: expect.objectContaining({
+            code: 'UNAUTHORIZED',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const payload = res.json.mock.calls[0][0];
+      expect(payload.success).toBe(false);
+      expect(payload.meta.code).toBe('UNAUTHORIZED');
+      expect(typeof payload.meta.timestamp).toBe('string');
     });
 
-    it('validates error structure for various error types', () => {
-      // All error responses must follow consistent format
-      const errorFormats = [
-        { success: false, error: 'Invalid permissions provided' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Token not found' },
-        { success: false, error: 'Invalid game mode' },
-        { success: false, error: 'Token revoked' },
-        { success: false, error: 'Internal error' },
-      ];
+    it('uses the generic error contract when unexpected errors bubble out of the handler', async () => {
+      const { errorHandler } = await import('../../src/middleware/errorHandler.ts');
+      const tokenHandler = (await import('../../src/handlers/tokenHandler.ts')).default;
 
-      errorFormats.forEach(errorFormat => {
-        expect(errorFormat).toHaveProperty('success');
-        expect(errorFormat).toHaveProperty('error');
-        expect(errorFormat.success).toBe(false);
-        expect(typeof errorFormat.error).toBe('string');
-        expect(errorFormat.error.length).toBeGreaterThan(0);
+      const req: any = {
+        ...createMockRequest(undefined),
+        method: 'GET',
+        originalUrl: '/api/v2/token',
+        headers: {},
+      };
+
+      const unexpectedError = new Error('Token decoding failure');
+      delete req.apiToken;
+      let firstAccess = true;
+      Object.defineProperty(req, 'apiToken', {
+        configurable: true,
+        get() {
+          if (firstAccess) {
+            firstAccess = false;
+            throw unexpectedError;
+          }
+          return undefined;
+        },
       });
+
+      const res = createMockResponse();
+
+      await runHandlerWithErrorPipeline(tokenHandler.getTokenInfo.bind(tokenHandler), req, res, errorHandler);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Internal server error',
+          meta: expect.objectContaining({
+            code: 'INTERNAL_ERROR',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const payload = res.json.mock.calls[0][0];
+      expect(payload.success).toBe(false);
+      expect(payload.meta.code).toBe('INTERNAL_ERROR');
+      expect(typeof payload.meta.timestamp).toBe('string');
     });
   });
 });
