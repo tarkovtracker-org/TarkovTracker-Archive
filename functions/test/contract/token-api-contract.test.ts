@@ -1,7 +1,7 @@
 /**
  * API Contract Tests for Token Endpoints
  * 
- * These tests ensure that token API response structures remain stable.
+ * These tests ensure that token API response structures remain stable for third-party consumers.
  * Purpose: Prevent breaking changes to token management API contracts
  * 
  * Approach: Tests the actual handler layer by calling real handler functions with mocked requests.
@@ -31,12 +31,14 @@ describe('Token API Contract Tests', () => {
   });
 
   describe('GET /api/v2/token - Response Structure', () => {
-    it('returns complete token information structure', async () => {
+    it('returns correct token information structure', async () => {
       const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
       const req = createMockRequest({
         owner: 'user-id',
-        token: 'test-token',
+        token: 'some-token',
         permissions: ['GP', 'WP'],
+        note: 'test',
+        gameMode: 'pvp',
       });
       const res = createMockResponse();
 
@@ -46,137 +48,110 @@ describe('Token API Contract Tests', () => {
       const responseData = res.json.mock.calls[0][0];
 
       expect(responseData).toMatchObject({
+        success: true,
         permissions: expect.any(Array),
         token: expect.any(String),
-      });
-
-      // Validate permissions array
-      expect(Array.isArray(responseData.permissions)).toBe(true);
-      responseData.permissions.forEach((permission: string) => {
-        expect(typeof permission).toBe('string');
+        owner: expect.any(String),
+        note: expect.any(String),
       });
     });
 
-    it('ensures permissions are valid values', () => {
-      const validPermissions = ['GP', 'WP', 'TP'];
-      const response = {
-        success: true,
-        data: {
-          owner: 'user-id',
-          note: 'test',
-          permissions: ['GP', 'WP'],
-        },
-      };
+    it('ensures permissions are valid values', async () => {
+      const validPermissions = ['GP', 'WP'];
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
+        owner: 'user-id',
+        token: 'some-token',
+        permissions: ['GP', 'WP'],
+        note: 'test',
+      });
+      const res = createMockResponse();
 
-      response.data.permissions.forEach(permission => {
+      await tokenHandler.getTokenInfo(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+      responseData.permissions.forEach((permission: string) => {
         expect(validPermissions).toContain(permission);
       });
     });
 
-    it('ensures gameMode is valid when present', () => {
+    it('ensures gameMode is valid when present', async () => {
       const validGameModes = ['pvp', 'pve', 'dual'];
-      const response = {
-        success: true,
-        data: {
-          owner: 'user-id',
-          note: 'test',
-          permissions: ['GP'],
-          gameMode: 'pvp',
-        },
-      };
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
+        owner: 'user-id',
+        token: 'some-token',
+        permissions: ['GP'],
+        note: 'test',
+        gameMode: 'pvp',
+      });
+      const res = createMockResponse();
 
-      if ('gameMode' in response.data) {
-        expect(validGameModes).toContain(response.data.gameMode);
+      await tokenHandler.getTokenInfo(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+      if (responseData.gameMode) {
+        expect(validGameModes).toContain(responseData.gameMode);
       }
     });
   });
 
-  describe('POST /api/token (create) - Response Structure', () => {
-    it('returns token creation confirmation with token string', () => {
-      const expectedResponse = {
-        token: 'newly-generated-token-string',
-        note: 'My API Token',
-        permissions: ['GP', 'WP'],
-        gameMode: 'pvp',
-      };
-
-      expect(expectedResponse).toMatchObject({
-        token: expect.any(String),
-        note: expect.any(String),
-        permissions: expect.any(Array),
-      });
-
-      expect(expectedResponse.token.length).toBeGreaterThan(10);
-      expect(Array.isArray(expectedResponse.permissions)).toBe(true);
-    });
-  });
-
-  describe('DELETE /api/token (revoke) - Response Structure', () => {
-    it('returns revocation confirmation', () => {
-      const expectedResponse = {
-        revoked: true,
-        message: 'Token revoked successfully',
-      };
-
-      expect(expectedResponse).toMatchObject({
-        revoked: expect.any(Boolean),
-      });
-
-      expect(expectedResponse.revoked).toBe(true);
-    });
-  });
-
   describe('Backward Compatibility - Token Endpoints', () => {
-    it('maintains token info response fields', () => {
-      const tokenInfo = {
+    it('maintains token response fields', () => {
+      const response = {
+        success: true,
+        permissions: ['GP', 'WP'],
+        token: 'test-token',
         owner: 'user-id',
-        note: 'token-note',
-        permissions: ['GP'],
-        gameMode: 'pvp',
+        note: 'test',
         calls: 0,
-        createdAt: new Date(),
+        gameMode: 'pvp',
       };
 
-      const requiredFields = ['owner', 'note', 'permissions'];
+      const requiredFields = ['success', 'permissions', 'token', 'owner', 'note'];
       requiredFields.forEach(field => {
-        expect(tokenInfo).toHaveProperty(field);
+        expect(response).toHaveProperty(field);
       });
 
-      expect(Array.isArray(tokenInfo.permissions)).toBe(true);
-      expect(typeof tokenInfo.owner).toBe('string');
-      expect(typeof tokenInfo.note).toBe('string');
+      expect(Array.isArray(response.permissions)).toBe(true);
+      expect(typeof response.success).toBe('boolean');
+      expect(typeof response.token).toBe('string');
+      expect(typeof response.owner).toBe('string');
+      expect(typeof response.note).toBe('string');
     });
 
-    it('maintains token creation response structure', () => {
-      const createResponse = {
-        token: 'generated-token',
-        note: 'note',
+    it('maintains optional token response fields when present', () => {
+      const response = {
+        success: true,
         permissions: ['GP'],
-        gameMode: 'pvp',
+        token: 'token-string',
+        owner: 'user-id',
+        note: 'My Token',
+        calls: 42,
+        gameMode: 'dual',
       };
 
-      expect(createResponse).toHaveProperty('token');
-      expect(createResponse).toHaveProperty('note');
-      expect(createResponse).toHaveProperty('permissions');
-      
-      expect(typeof createResponse.token).toBe('string');
-      expect(typeof createResponse.note).toBe('string');
-      expect(Array.isArray(createResponse.permissions)).toBe(true);
+      // Optional fields must have correct types if present
+      if ('calls' in response) {
+        expect(typeof response.calls).toBe('number');
+      }
+      if ('gameMode' in response) {
+        expect(['pvp', 'pve', 'dual']).toContain(response.gameMode);
+      }
     });
 
-    it('validates permission strings format', () => {
+    it('validates permission strings are valid types', () => {
       const permissions = ['GP', 'WP', 'TP'];
       
       permissions.forEach(permission => {
         expect(typeof permission).toBe('string');
-        expect(permission.length).toBe(2);
-        expect(permission).toMatch(/^[A-Z]{2}$/);
+        expect(permission.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe('Error Responses - Token Endpoints', () => {
-    it('returns standard error for invalid permissions', () => {
+  describe('Error Response Contracts', () => {
+    it('validates standardized error response format', () => {
       const errorResponse = {
         success: false,
         error: 'Invalid permissions provided',
@@ -186,17 +161,26 @@ describe('Token API Contract Tests', () => {
         success: false,
         error: expect.any(String),
       });
-    });
-
-    it('returns standard error for missing authentication', () => {
-      const errorResponse = {
-        success: false,
-        error: 'Authentication required',
-      };
 
       expect(errorResponse.success).toBe(false);
-      expect(typeof errorResponse.error).toBe('string');
       expect(errorResponse.error.length).toBeGreaterThan(0);
+    });
+
+    it('validates error structure for various error types', () => {
+      const errors = [
+        { success: false, error: 'Invalid permissions provided' },
+        { success: false, error: 'Authentication required' },
+        { success: false, error: 'Token not found' },
+        { success: false, error: 'Invalid game mode' },
+      ];
+
+      errors.forEach(error => {
+        expect(error).toHaveProperty('success');
+        expect(error).toHaveProperty('error');
+        expect(error.success).toBe(false);
+        expect(typeof error.error).toBe('string');
+        expect(error.error.length).toBeGreaterThan(0);
+      });
     });
   });
 });

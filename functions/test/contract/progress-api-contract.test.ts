@@ -455,30 +455,37 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('returns standardized error format for invalid requests', () => {
-      const expectedErrorResponse = {
+    it('validates standardized error response format', () => {
+      // Error response schema validation
+      const errorResponse = {
         success: false,
         error: 'Invalid task ID provided',
       };
 
-      expect(expectedErrorResponse).toMatchObject({
+      expect(errorResponse).toMatchObject({
         success: false,
         error: expect.any(String),
       });
       
-      expect(expectedErrorResponse.success).toBe(false);
-      expect(expectedErrorResponse.error.length).toBeGreaterThan(0);
+      expect(errorResponse.success).toBe(false);
+      expect(errorResponse.error.length).toBeGreaterThan(0);
     });
 
-    it('returns proper error structure for authentication failures', () => {
-      const expectedErrorResponse = {
-        success: false,
-        error: 'Authentication failed',
-      };
+    it('validates error structure for various error types', () => {
+      // Different error responses should have consistent structure
+      const errors = [
+        { success: false, error: 'Invalid request' },
+        { success: false, error: 'Authentication required' },
+        { success: false, error: 'Insufficient permissions' },
+        { success: false, error: 'Resource not found' },
+      ];
 
-      expect(expectedErrorResponse).toMatchObject({
-        success: false,
-        error: expect.any(String),
+      errors.forEach(error => {
+        expect(error).toHaveProperty('success');
+        expect(error).toHaveProperty('error');
+        expect(error.success).toBe(false);
+        expect(typeof error.error).toBe('string');
+        expect(error.error.length).toBeGreaterThan(0);
       });
     });
   });
