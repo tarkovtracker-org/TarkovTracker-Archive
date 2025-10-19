@@ -13,6 +13,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FormattedProgress } from '../../src/types/api.ts';
 
+const firestoreMock = {
+  collection: vi.fn(() => ({
+    doc: vi.fn(() => ({
+      get: vi.fn(),
+      set: vi.fn(),
+    })),
+  })),
+  doc: vi.fn(() => ({
+    get: vi.fn(),
+    set: vi.fn(),
+  })),
+  runTransaction: vi.fn(async (callback: (transaction: any) => Promise<void> | void) => {
+    await callback({
+      get: vi.fn(),
+      set: vi.fn(),
+      update: vi.fn(),
+    });
+  }),
+};
+
+vi.mock('firebase-admin', () => ({
+  default: {
+    firestore: vi.fn(() => firestoreMock),
+  },
+}));
+
+vi.mock('firebase-admin/firestore', () => ({
+  Firestore: class {},
+  DocumentReference: class {},
+  FieldValue: {
+    delete: vi.fn(),
+  },
+}));
+
 type ProgressLevelResponse = {
   level: number;
   message: string;
@@ -438,6 +472,7 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
 
       // CRITICAL: These fields must always be present in the API response for backward compatibility
       const requiredFields = [
