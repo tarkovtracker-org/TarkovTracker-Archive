@@ -3,37 +3,56 @@
  * 
  * These tests ensure that token API response structures remain stable.
  * Purpose: Prevent breaking changes to token management API contracts
+ * 
+ * Approach: Tests the actual handler layer by calling real handler functions with mocked requests.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Helper to create mock Express request
+const createMockRequest = (apiToken: any, params = {}, body = {}, query = {}) => ({
+  apiToken,
+  params,
+  body,
+  query,
+});
+
+// Helper to create mock Express response
+const createMockResponse = () => {
+  const res: any = {};
+  res.status = vi.fn().mockReturnValue(res);
+  res.json = vi.fn().mockReturnValue(res);
+  return res;
+};
 
 describe('Token API Contract Tests', () => {
-  describe('GET /api/v2/token - Response Structure', () => {
-    it('returns complete token information structure', () => {
-      const expectedResponse = {
-        success: true,
-        data: {
-          owner: 'user-id',
-          note: 'My API Token',
-          permissions: ['GP', 'WP'],
-          gameMode: 'pvp',
-          calls: 100,
-          createdAt: expect.any(Object),
-        },
-      };
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
 
-      expect(expectedResponse).toMatchObject({
-        success: expect.any(Boolean),
-        data: expect.objectContaining({
-          owner: expect.any(String),
-          note: expect.any(String),
-          permissions: expect.any(Array),
-        }),
+  describe('GET /api/v2/token - Response Structure', () => {
+    it('returns complete token information structure', async () => {
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
+        owner: 'user-id',
+        token: 'test-token',
+        permissions: ['GP', 'WP'],
+      });
+      const res = createMockResponse();
+
+      await tokenHandler.getTokenInfo(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+
+      expect(responseData).toMatchObject({
+        permissions: expect.any(Array),
+        token: expect.any(String),
       });
 
       // Validate permissions array
-      expect(Array.isArray(expectedResponse.data.permissions)).toBe(true);
-      expectedResponse.data.permissions.forEach(permission => {
+      expect(Array.isArray(responseData.permissions)).toBe(true);
+      responseData.permissions.forEach((permission: string) => {
         expect(typeof permission).toBe('string');
       });
     });
