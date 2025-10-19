@@ -6,12 +6,27 @@
  * 
  * Purpose: Prevent incidents where API output changes break third-party integrations
  * 
- * Note: These tests validate the handler layer output to ensure the API contract is maintained.
- * They mock the service layer but test the actual handler transformations and response structures.
+ * Approach: Tests the actual handler layer by calling real handler functions with mocked requests.
+ * This validates the complete API response structure including success/data/meta wrappers.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { FormattedProgress } from '../../src/types/api.js';
+
+// Helper to create mock Express request
+const createMockRequest = (apiToken: any, params = {}, body = {}, query = {}) => ({
+  apiToken,
+  params,
+  body,
+  query,
+});
+
+// Helper to create mock Express response
+const createMockResponse = () => {
+  const res: any = {};
+  res.status = vi.fn().mockReturnValue(res);
+  res.json = vi.fn().mockReturnValue(res);
+  return res;
+};
 
 describe('Progress API Contract Tests', () => {
   beforeEach(() => {
@@ -19,12 +34,10 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('GET /api/v2/progress - Response Structure', () => {
-    it('returns the correct response structure with all required fields', async () => {
+    it('returns the correct API response structure with all required fields', async () => {
+      // Mock the service layer (infrastructure)
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      // Mock the service to return a controlled response
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [
           { id: 'task-1', complete: true, failed: false },
           { id: 'task-2', complete: false },
@@ -45,38 +58,55 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      // Import and call the actual handler
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      // Validate complete response structure
-      expect(result).toMatchObject({
-        tasksProgress: expect.any(Array),
-        taskObjectivesProgress: expect.any(Array),
-        hideoutModulesProgress: expect.any(Array),
-        hideoutPartsProgress: expect.any(Array),
-        displayName: expect.any(String),
-        userId: expect.any(String),
-        playerLevel: expect.any(Number),
-        gameEdition: expect.any(Number),
-        pmcFaction: expect.any(String),
-      });
+      await progressHandler.getPlayerProgress(req, res);
 
-      // All required top-level fields must be present
-      expect(result).toHaveProperty('tasksProgress');
-      expect(result).toHaveProperty('taskObjectivesProgress');
-      expect(result).toHaveProperty('hideoutModulesProgress');
-      expect(result).toHaveProperty('hideoutPartsProgress');
-      expect(result).toHaveProperty('displayName');
-      expect(result).toHaveProperty('userId');
-      expect(result).toHaveProperty('playerLevel');
-      expect(result).toHaveProperty('gameEdition');
-      expect(result).toHaveProperty('pmcFaction');
+      // Validate the handler was called and responded correctly
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            tasksProgress: expect.any(Array),
+            taskObjectivesProgress: expect.any(Array),
+            hideoutModulesProgress: expect.any(Array),
+            hideoutPartsProgress: expect.any(Array),
+            displayName: expect.any(String),
+            userId: expect.any(String),
+            playerLevel: expect.any(Number),
+            gameEdition: expect.any(Number),
+            pmcFaction: expect.any(String),
+          }),
+          meta: expect.objectContaining({
+            self: 'test-user-123',
+            gameMode: 'pvp',
+          }),
+        })
+      );
+
+      // Verify the actual response data structure
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.success).toBe(true);
+      expect(responseData.data).toHaveProperty('tasksProgress');
+      expect(responseData.data).toHaveProperty('taskObjectivesProgress');
+      expect(responseData.data).toHaveProperty('hideoutModulesProgress');
+      expect(responseData.data).toHaveProperty('hideoutPartsProgress');
+      expect(responseData.data).toHaveProperty('displayName');
+      expect(responseData.data).toHaveProperty('userId');
+      expect(responseData.data).toHaveProperty('playerLevel');
+      expect(responseData.data).toHaveProperty('gameEdition');
+      expect(responseData.data).toHaveProperty('pmcFaction');
+      expect(responseData.meta).toHaveProperty('self');
+      expect(responseData.meta).toHaveProperty('gameMode');
     });
 
     it('ensures tasksProgress items have required fields', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [
           { id: 'task-1', complete: true, failed: false },
           { id: 'task-2', complete: false },
@@ -92,10 +122,16 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+      
       // Every task must have id and complete fields
-      result.tasksProgress.forEach((task) => {
+      responseData.data.tasksProgress.forEach((task: any) => {
         expect(task).toHaveProperty('id');
         expect(task).toHaveProperty('complete');
         expect(typeof task.id).toBe('string');
@@ -110,9 +146,7 @@ describe('Progress API Contract Tests', () => {
 
     it('ensures taskObjectivesProgress items have correct schema', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [
           { id: 'obj-1', complete: true, count: 5 },
@@ -128,9 +162,15 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      result.taskObjectivesProgress.forEach((objective) => {
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+
+      responseData.data.taskObjectivesProgress.forEach((objective: any) => {
         expect(objective).toHaveProperty('id');
         expect(objective).toHaveProperty('complete');
         expect(typeof objective.id).toBe('string');
@@ -145,9 +185,7 @@ describe('Progress API Contract Tests', () => {
 
     it('ensures playerLevel is a valid number', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
         hideoutModulesProgress: [],
@@ -159,19 +197,23 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      expect(typeof result.playerLevel).toBe('number');
-      expect(result.playerLevel).toBeGreaterThanOrEqual(1);
-      expect(result.playerLevel).toBeLessThanOrEqual(79);
-      expect(Number.isInteger(result.playerLevel)).toBe(true);
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+
+      expect(typeof responseData.data.playerLevel).toBe('number');
+      expect(responseData.data.playerLevel).toBeGreaterThanOrEqual(1);
+      expect(responseData.data.playerLevel).toBeLessThanOrEqual(79);
+      expect(Number.isInteger(responseData.data.playerLevel)).toBe(true);
     });
 
     it('ensures pmcFaction is a valid value', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
         hideoutModulesProgress: [],
@@ -183,104 +225,127 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      expect(typeof result.pmcFaction).toBe('string');
-      expect(['USEC', 'BEAR']).toContain(result.pmcFaction);
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+
+      expect(typeof responseData.data.pmcFaction).toBe('string');
+      expect(['USEC', 'BEAR']).toContain(responseData.data.pmcFaction);
     });
   });
 
   describe('POST /api/v2/progress/task/:taskId - Response Structure', () => {
     it('returns standardized success response', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
+      vi.spyOn(ProgressService.prototype, 'updateSingleTask').mockResolvedValue(undefined);
 
-      vi.spyOn(progressService, 'updateSingleTask').mockResolvedValue(undefined);
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest(
+        { owner: 'test-user', permissions: ['WP'] },
+        { taskId: 'task-123' },
+        { state: 'completed' }
+      );
+      const res = createMockResponse();
 
-      await progressService.updateSingleTask('test-user', 'task-123', 'completed', 'pvp');
+      await progressHandler.updateSingleTask(req, res);
 
-      // The handler wraps this in a standard response
-      const expectedResponse = {
-        success: true,
-        data: {
-          taskId: 'task-123',
-          state: 'completed',
-          message: expect.any(String),
-        },
-      };
-
-      expect(expectedResponse).toMatchObject({
-        success: expect.any(Boolean),
-        data: expect.objectContaining({
-          taskId: expect.any(String),
-          state: expect.any(String),
-          message: expect.any(String),
-        }),
-      });
+      // Validate the handler response structure
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            taskId: 'task-123',
+            state: 'completed',
+            message: expect.any(String),
+          }),
+        })
+      );
     });
   });
 
   describe('POST /api/v2/progress/level/:levelValue - Response Structure', () => {
-    it('returns standardized success response with level confirmation', () => {
-      const expectedResponse = {
-        success: true,
-        data: {
-          level: 42,
-          message: 'Level updated successfully',
-        },
-      };
+    it('returns standardized success response with level confirmation', async () => {
+      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      vi.spyOn(ProgressService.prototype, 'setPlayerLevel').mockResolvedValue(undefined);
 
-      expect(expectedResponse).toMatchObject({
-        success: expect.any(Boolean),
-        data: expect.objectContaining({
-          level: expect.any(Number),
-          message: expect.any(String),
-        }),
-      });
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest(
+        { owner: 'test-user', permissions: ['WP'] },
+        { levelValue: '42' }
+      );
+      const res = createMockResponse();
 
-      expect(expectedResponse.data.level).toBeGreaterThanOrEqual(1);
-      expect(expectedResponse.data.level).toBeLessThanOrEqual(79);
+      await progressHandler.setPlayerLevel(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            level: expect.any(Number),
+            message: expect.any(String),
+          }),
+        })
+      );
+
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.data.level).toBeGreaterThanOrEqual(1);
+      expect(responseData.data.level).toBeLessThanOrEqual(79);
     });
   });
 
   describe('POST /api/v2/progress/tasks - Response Structure', () => {
-    it('returns standardized success response with updated task list', () => {
-      const expectedResponse = {
-        success: true,
-        data: {
-          updatedTasks: ['task-1', 'task-2', 'task-3'],
-          message: 'Tasks updated successfully',
-        },
-      };
+    it('returns standardized success response with updated task list', async () => {
+      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      vi.spyOn(ProgressService.prototype, 'updateMultipleTasks').mockResolvedValue(undefined);
 
-      expect(expectedResponse).toMatchObject({
-        success: expect.any(Boolean),
-        data: expect.objectContaining({
-          updatedTasks: expect.any(Array),
-          message: expect.any(String),
-        }),
-      });
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest(
+        { owner: 'test-user', permissions: ['WP'] },
+        {},
+        [{ id: 'task-1', state: 'completed' }, { id: 'task-2', state: 'uncompleted' }]  // Body should be an array with id and state
+      );
+      const res = createMockResponse();
 
-      expectedResponse.data.updatedTasks.forEach(taskId => {
-        expect(typeof taskId).toBe('string');
-      });
+      await progressHandler.updateMultipleTasks(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            message: expect.any(String),
+          }),
+        })
+      );
     });
   });
 
   describe('POST /api/v2/progress/task/objective/:objectiveId - Response Structure', () => {
-    it('returns standardized success response with objective update confirmation', () => {
-      const expectedResponse = {
-        success: true,
-        data: {
-          objectiveId: 'obj-123',
-          state: 'completed',
-          count: 5,
-          message: 'Task objective updated successfully',
-        },
-      };
+    it('returns standardized success response with objective update confirmation', async () => {
+      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      vi.spyOn(ProgressService.prototype, 'updateTaskObjective').mockResolvedValue(undefined);
 
-      expect(expectedResponse).toMatchObject({
-        success: expect.any(Boolean),
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest(
+        { owner: 'test-user', permissions: ['WP'] },
+        { objectiveId: 'obj-123' },
+        { state: 'completed', count: 5 }
+      );
+      const res = createMockResponse();
+
+      await progressHandler.updateTaskObjective(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+      
+      expect(responseData).toMatchObject({
+        success: true,
         data: expect.objectContaining({
           objectiveId: expect.any(String),
           message: expect.any(String),
@@ -288,12 +353,12 @@ describe('Progress API Contract Tests', () => {
       });
 
       // State and count are optional but must be correct type if present
-      if ('state' in expectedResponse.data) {
-        expect(['completed', 'uncompleted']).toContain(expectedResponse.data.state);
+      if ('state' in responseData.data) {
+        expect(['completed', 'uncompleted']).toContain(responseData.data.state);
       }
-      if ('count' in expectedResponse.data) {
-        expect(typeof expectedResponse.data.count).toBe('number');
-        expect(expectedResponse.data.count).toBeGreaterThanOrEqual(0);
+      if ('count' in responseData.data) {
+        expect(typeof responseData.data.count).toBe('number');
+        expect(responseData.data.count).toBeGreaterThanOrEqual(0);
       }
     });
   });
