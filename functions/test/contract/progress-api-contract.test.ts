@@ -5,40 +5,13 @@
  * Any breaking changes to these contracts should cause tests to fail and require explicit version bumps.
  * 
  * Purpose: Prevent incidents where API output changes break third-party integrations
+ * 
+ * Note: These tests validate the handler layer output to ensure the API contract is maintained.
+ * They mock the service layer but test the actual handler transformations and response structures.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FormattedProgress } from '../../src/types/api.js';
-
-// Expected API response schema for GET /api/v2/progress
-const PROGRESS_RESPONSE_SCHEMA = {
-  success: expect.any(Boolean),
-  data: {
-    tasksProgress: expect.any(Array),
-    taskObjectivesProgress: expect.any(Array),
-    hideoutModulesProgress: expect.any(Array),
-    hideoutPartsProgress: expect.any(Array),
-    displayName: expect.any(String),
-    userId: expect.any(String),
-    playerLevel: expect.any(Number),
-    gameEdition: expect.any(Number),
-    pmcFaction: expect.any(String),
-  },
-  meta: {
-    self: expect.any(String),
-    gameMode: expect.stringMatching(/^(pvp|pve|dual)$/),
-  },
-};
-
-// Expected schema for task items in progress arrays
-const TASK_ITEM_SCHEMA = {
-  id: expect.any(String),
-  complete: expect.any(Boolean),
-  // Optional fields
-  count: expect.anything(),
-  invalid: expect.anything(),
-  failed: expect.anything(),
-};
 
 describe('Progress API Contract Tests', () => {
   beforeEach(() => {
