@@ -432,13 +432,14 @@ describe('Progress API Contract Tests', () => {
         }),
       });
 
+      const objectiveResponse = responseData.data as ProgressObjectiveResponse;
       // State and count are optional but must be correct type if present
-      if ('state' in responseData.data) {
-        expect(['completed', 'uncompleted']).toContain(responseData.data.state);
+      if ('state' in objectiveResponse) {
+        expect(['completed', 'uncompleted']).toContain(objectiveResponse.state);
       }
-      if ('count' in responseData.data) {
-        expect(typeof responseData.data.count).toBe('number');
-        expect(responseData.data.count).toBeGreaterThanOrEqual(0);
+      if ('count' in objectiveResponse) {
+        expect(typeof objectiveResponse.count).toBe('number');
+        expect(objectiveResponse.count).toBeGreaterThanOrEqual(0);
       }
     });
   });
