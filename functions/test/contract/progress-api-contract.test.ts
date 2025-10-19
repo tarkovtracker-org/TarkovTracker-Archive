@@ -13,6 +13,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FormattedProgress } from '../../src/types/api.ts';
 
+type ProgressLevelResponse = {
+  level: number;
+  message: string;
+};
+
+type ProgressTaskResponse = {
+  taskId: string;
+  state: string;
+  message: string;
+};
+
+type ProgressObjectiveResponse = {
+  objectiveId: string;
+  message: string;
+  state?: string;
+  count?: number;
+};
+
+type ProgressMessageResponse = {
+  message: string;
+};
+
+type ProgressResponseData =
+  | FormattedProgress
+  | ProgressLevelResponse
+  | ProgressTaskResponse
+  | ProgressObjectiveResponse
+  | ProgressMessageResponse;
+
 type MockResponse = {
   status: ReturnType<typeof vi.fn>;
   json: ReturnType<typeof vi.fn>;
@@ -36,9 +65,12 @@ const createMockResponse = (): MockResponse => {
 
 type ProgressResponse = {
   success: boolean;
-  data: FormattedProgress;
+  data: ProgressResponseData;
   meta: Record<string, unknown>;
 };
+
+const asFormattedProgress = (data: ProgressResponseData): FormattedProgress =>
+  data as FormattedProgress;
 
 const readProgressResponse = (res: MockResponse): ProgressResponse =>
   res.json.mock.calls[0][0] as ProgressResponse;
@@ -105,16 +137,17 @@ describe('Progress API Contract Tests', () => {
 
       // Verify the actual response data structure
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
       expect(responseData.success).toBe(true);
-      expect(responseData.data).toHaveProperty('tasksProgress');
-      expect(responseData.data).toHaveProperty('taskObjectivesProgress');
-      expect(responseData.data).toHaveProperty('hideoutModulesProgress');
-      expect(responseData.data).toHaveProperty('hideoutPartsProgress');
-      expect(responseData.data).toHaveProperty('displayName');
-      expect(responseData.data).toHaveProperty('userId');
-      expect(responseData.data).toHaveProperty('playerLevel');
-      expect(responseData.data).toHaveProperty('gameEdition');
-      expect(responseData.data).toHaveProperty('pmcFaction');
+      expect(formattedProgress).toHaveProperty('tasksProgress');
+      expect(formattedProgress).toHaveProperty('taskObjectivesProgress');
+      expect(formattedProgress).toHaveProperty('hideoutModulesProgress');
+      expect(formattedProgress).toHaveProperty('hideoutPartsProgress');
+      expect(formattedProgress).toHaveProperty('displayName');
+      expect(formattedProgress).toHaveProperty('userId');
+      expect(formattedProgress).toHaveProperty('playerLevel');
+      expect(formattedProgress).toHaveProperty('gameEdition');
+      expect(formattedProgress).toHaveProperty('pmcFaction');
       expect(responseData.meta).toHaveProperty('self');
       expect(responseData.meta).toHaveProperty('gameMode');
     });
@@ -144,9 +177,10 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
-      
+      const formattedProgress = asFormattedProgress(responseData.data);
+
       // Every task must have id and complete fields
-      responseData.data.tasksProgress.forEach((task: any) => {
+      formattedProgress.tasksProgress.forEach((task: any) => {
         expect(task).toHaveProperty('id');
         expect(task).toHaveProperty('complete');
         expect(typeof task.id).toBe('string');
@@ -184,8 +218,9 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
 
-      responseData.data.taskObjectivesProgress.forEach((objective: any) => {
+      formattedProgress.taskObjectivesProgress.forEach((objective: any) => {
         expect(objective).toHaveProperty('id');
         expect(objective).toHaveProperty('complete');
         expect(typeof objective.id).toBe('string');
@@ -219,11 +254,12 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
 
-      expect(typeof responseData.data.playerLevel).toBe('number');
-      expect(responseData.data.playerLevel).toBeGreaterThanOrEqual(1);
-      expect(responseData.data.playerLevel).toBeLessThanOrEqual(79);
-      expect(Number.isInteger(responseData.data.playerLevel)).toBe(true);
+      expect(typeof formattedProgress.playerLevel).toBe('number');
+      expect(formattedProgress.playerLevel).toBeGreaterThanOrEqual(1);
+      expect(formattedProgress.playerLevel).toBeLessThanOrEqual(79);
+      expect(Number.isInteger(formattedProgress.playerLevel)).toBe(true);
     });
 
     it('ensures pmcFaction is a valid value', async () => {
@@ -247,9 +283,10 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
 
-      expect(typeof responseData.data.pmcFaction).toBe('string');
-      expect(['USEC', 'BEAR']).toContain(responseData.data.pmcFaction);
+      expect(typeof formattedProgress.pmcFaction).toBe('string');
+      expect(['USEC', 'BEAR']).toContain(formattedProgress.pmcFaction);
     });
   });
 
@@ -309,8 +346,9 @@ describe('Progress API Contract Tests', () => {
       );
 
       const responseData = readProgressResponse(res);
-      expect(responseData.data.level).toBeGreaterThanOrEqual(1);
-      expect(responseData.data.level).toBeLessThanOrEqual(79);
+      const levelResponse = responseData.data as ProgressLevelResponse;
+      expect(levelResponse.level).toBeGreaterThanOrEqual(1);
+      expect(levelResponse.level).toBeLessThanOrEqual(79);
     });
   });
 
@@ -425,7 +463,7 @@ describe('Progress API Contract Tests', () => {
       ];
 
       requiredDataFields.forEach(field => {
-        expect(responseData.data).toHaveProperty(field);
+        expect(formattedProgress).toHaveProperty(field);
       });
     });
 
@@ -450,6 +488,7 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.getPlayerProgress(req, res);
 
       const responseData = readProgressResponse(res);
+      const formattedProgress = asFormattedProgress(responseData.data);
 
       // CRITICAL: Response wrapper types must never change
       expect(typeof responseData.success).toBe('boolean');
@@ -457,15 +496,15 @@ describe('Progress API Contract Tests', () => {
       expect(typeof responseData.meta).toBe('object');
 
       // CRITICAL: Data field types must never change for backward compatibility
-      expect(Array.isArray(responseData.data.tasksProgress)).toBe(true);
-      expect(Array.isArray(responseData.data.taskObjectivesProgress)).toBe(true);
-      expect(Array.isArray(responseData.data.hideoutModulesProgress)).toBe(true);
-      expect(Array.isArray(responseData.data.hideoutPartsProgress)).toBe(true);
-      expect(typeof responseData.data.displayName).toBe('string');
-      expect(typeof responseData.data.userId).toBe('string');
-      expect(typeof responseData.data.playerLevel).toBe('number');
-      expect(typeof responseData.data.gameEdition).toBe('number');
-      expect(typeof responseData.data.pmcFaction).toBe('string');
+      expect(Array.isArray(formattedProgress.tasksProgress)).toBe(true);
+      expect(Array.isArray(formattedProgress.taskObjectivesProgress)).toBe(true);
+      expect(Array.isArray(formattedProgress.hideoutModulesProgress)).toBe(true);
+      expect(Array.isArray(formattedProgress.hideoutPartsProgress)).toBe(true);
+      expect(typeof formattedProgress.displayName).toBe('string');
+      expect(typeof formattedProgress.userId).toBe('string');
+      expect(typeof formattedProgress.playerLevel).toBe('number');
+      expect(typeof formattedProgress.gameEdition).toBe('number');
+      expect(typeof formattedProgress.pmcFaction).toBe('string');
     });
   });
 
