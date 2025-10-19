@@ -205,7 +205,7 @@ describe('Token API Contract Tests', () => {
 
       const res = createMockResponse();
 
-      await new Promise<void>(async resolve => {
+      await new Promise<void>(resolve => {
         let settled = false;
         const finish = () => {
           if (!settled) {
@@ -221,8 +221,12 @@ describe('Token API Contract Tests', () => {
         };
 
         try {
-          await tokenHandler.getTokenInfo(req, res, next);
-          finish();
+          const maybePromise = tokenHandler.getTokenInfo(req, res, next);
+          if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
+            (maybePromise as PromiseLike<void>).then(finish).catch(next);
+          } else {
+            finish();
+          }
         } catch (err) {
           next(err);
         }
@@ -273,7 +277,7 @@ describe('Token API Contract Tests', () => {
 
       const res = createMockResponse();
 
-      await new Promise<void>(async resolve => {
+      await new Promise<void>(resolve => {
         let settled = false;
         const finish = () => {
           if (!settled) {
@@ -289,8 +293,12 @@ describe('Token API Contract Tests', () => {
         };
 
         try {
-          await tokenHandler.getTokenInfo(req, res, next);
-          finish();
+          const maybePromise = tokenHandler.getTokenInfo(req, res, next);
+          if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
+            (maybePromise as PromiseLike<void>).then(finish).catch(next);
+          } else {
+            finish();
+          }
         } catch (err) {
           next(err);
         }
