@@ -455,49 +455,93 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates error response format specification', () => {
-      // Error responses must always follow this format when returned to clients
-      const errorResponses = [
-        { success: false, error: 'Validation failed' },
-        { success: false, error: 'Unauthorized' },
-        { success: false, error: 'Not found' },
-        { success: false, error: 'Internal server error' },
-      ];
+    it('returns standardized error payloads when the progress service throws an ApiError', async () => {
+      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { errorHandler, errors } = await import('../../lib/middleware/errorHandler.js');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
 
-      errorResponses.forEach(response => {
-        // Error responses must have this exact format
-        expect(response).toHaveProperty('success');
-        expect(response).toHaveProperty('error');
-        expect(response.success).toBe(false);
-        expect(typeof response.error).toBe('string');
-        expect(response.error.length).toBeGreaterThan(0);
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockRejectedValue(
+        errors.serviceUnavailable('Progress temporarily unavailable')
+      );
+
+      const req: any = {
+        ...createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' }),
+        method: 'GET',
+        originalUrl: '/api/v2/progress',
+        headers: {},
+      };
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        progressHandler.getPlayerProgress(req, res, next);
       });
+
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Progress temporarily unavailable',
+          meta: expect.objectContaining({
+            code: 'SERVICE_UNAVAILABLE',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const errorPayload = res.json.mock.calls[0][0];
+      expect(errorPayload.success).toBe(false);
+      expect(typeof errorPayload.error).toBe('string');
+      expect(typeof errorPayload.meta.timestamp).toBe('string');
+      expect(errorPayload.meta.code).toBe('SERVICE_UNAVAILABLE');
     });
 
-    it('validates error format consistency across error types', () => {
-      // All error responses must follow consistent format
-      const errorFormats = [
-        { success: false, error: 'Invalid request' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Permission denied' },
-        { success: false, error: 'Resource not found' },
-        { success: false, error: 'Conflict' },
-        { success: false, error: 'Internal error' },
-      ];
+    it('falls back to the generic error contract for unexpected failures', async () => {
+      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { errorHandler } = await import('../../lib/middleware/errorHandler.js');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
 
-      errorFormats.forEach(errorFormat => {
-        // All error responses must have these required fields
-        expect(errorFormat).toHaveProperty('success');
-        expect(errorFormat).toHaveProperty('error');
-        
-        // Validate types
-        expect(typeof errorFormat.success).toBe('boolean');
-        expect(typeof errorFormat.error).toBe('string');
-        
-        // Validate values
-        expect(errorFormat.success).toBe(false);
-        expect(errorFormat.error.length).toBeGreaterThan(0);
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockRejectedValue(
+        new Error('Database unavailable')
+      );
+
+      const req: any = {
+        ...createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' }),
+        method: 'GET',
+        originalUrl: '/api/v2/progress',
+        headers: {},
+      };
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        progressHandler.getPlayerProgress(req, res, next);
       });
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Internal server error',
+          meta: expect.objectContaining({
+            code: 'INTERNAL_ERROR',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const errorPayload = res.json.mock.calls[0][0];
+      expect(errorPayload.success).toBe(false);
+      expect(errorPayload.meta.code).toBe('INTERNAL_ERROR');
+      expect(typeof errorPayload.meta.timestamp).toBe('string');
     });
   });
 });

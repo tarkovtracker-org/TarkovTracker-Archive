@@ -178,44 +178,100 @@ describe('Token API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates standardized error response format', () => {
-      // Error responses must always follow this format when returned to clients
-      const errorResponses = [
-        { success: false, error: 'Invalid permissions provided' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Token not found' },
-        { success: false, error: 'Invalid game mode' },
-      ];
+    it('returns the standardized unauthorized error payload from the handler pipeline', async () => {
+      const { errorHandler, errors } = await import('../../lib/middleware/errorHandler.js');
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
 
-      errorResponses.forEach(response => {
-        expect(response).toMatchObject({
-          success: false,
-          error: expect.any(String),
-        });
+      const req: any = {
+        ...createMockRequest(undefined),
+        method: 'GET',
+        originalUrl: '/api/v2/token',
+        headers: {},
+      };
 
-        expect(response.success).toBe(false);
-        expect(response.error.length).toBeGreaterThan(0);
+      delete req.apiToken;
+      Object.defineProperty(req, 'apiToken', {
+        configurable: true,
+        get() {
+          throw errors.unauthorized('Authentication required');
+        },
       });
+
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        tokenHandler.getTokenInfo(req, res, next);
+      });
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Authentication required',
+          meta: expect.objectContaining({
+            code: 'UNAUTHORIZED',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const payload = res.json.mock.calls[0][0];
+      expect(payload.success).toBe(false);
+      expect(payload.meta.code).toBe('UNAUTHORIZED');
+      expect(typeof payload.meta.timestamp).toBe('string');
     });
 
-    it('validates error structure for various error types', () => {
-      // All error responses must follow consistent format
-      const errorFormats = [
-        { success: false, error: 'Invalid permissions provided' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Token not found' },
-        { success: false, error: 'Invalid game mode' },
-        { success: false, error: 'Token revoked' },
-        { success: false, error: 'Internal error' },
-      ];
+    it('uses the generic error contract when unexpected errors bubble out of the handler', async () => {
+      const { errorHandler } = await import('../../lib/middleware/errorHandler.js');
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
 
-      errorFormats.forEach(errorFormat => {
-        expect(errorFormat).toHaveProperty('success');
-        expect(errorFormat).toHaveProperty('error');
-        expect(errorFormat.success).toBe(false);
-        expect(typeof errorFormat.error).toBe('string');
-        expect(errorFormat.error.length).toBeGreaterThan(0);
+      const req: any = {
+        ...createMockRequest(undefined),
+        method: 'GET',
+        originalUrl: '/api/v2/token',
+        headers: {},
+      };
+
+      delete req.apiToken;
+      Object.defineProperty(req, 'apiToken', {
+        configurable: true,
+        get() {
+          throw new Error('Token decoding failure');
+        },
       });
+
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        tokenHandler.getTokenInfo(req, res, next);
+      });
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Internal server error',
+          meta: expect.objectContaining({
+            code: 'INTERNAL_ERROR',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const payload = res.json.mock.calls[0][0];
+      expect(payload.success).toBe(false);
+      expect(payload.meta.code).toBe('INTERNAL_ERROR');
+      expect(typeof payload.meta.timestamp).toBe('string');
     });
   });
 });
