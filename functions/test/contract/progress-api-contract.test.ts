@@ -119,6 +119,30 @@ const asProgressLevelResponse = (data: ProgressResponseData): ProgressLevelRespo
   return data;
 };
 
+const isProgressTaskResponse = (data: ProgressResponseData): data is ProgressTaskResponse => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as Partial<ProgressTaskResponse>;
+
+  return (
+    typeof candidate.taskId === 'string' &&
+    typeof candidate.state === 'string' &&
+    typeof candidate.message === 'string'
+  );
+};
+
+const asProgressTaskResponse = (data: ProgressResponseData): ProgressTaskResponse => {
+  if (!isProgressTaskResponse(data)) {
+    throw new Error(
+      `Task handler returned unexpected data shape: ${JSON.stringify(data)}`
+    );
+  }
+
+  return data;
+};
+
 const isProgressObjectiveResponse = (
   data: ProgressResponseData
 ): data is ProgressObjectiveResponse => {
@@ -140,6 +164,26 @@ const asProgressObjectiveResponse = (data: ProgressResponseData): ProgressObject
   if (!isProgressObjectiveResponse(data)) {
     throw new Error(
       `Objective handler returned unexpected data shape: ${JSON.stringify(data)}`
+    );
+  }
+
+  return data;
+};
+
+const isProgressMessageResponse = (data: ProgressResponseData): data is ProgressMessageResponse => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as Partial<ProgressMessageResponse>;
+
+  return typeof candidate.message === 'string';
+};
+
+const asProgressMessageResponse = (data: ProgressResponseData): ProgressMessageResponse => {
+  if (!isProgressMessageResponse(data)) {
+    throw new Error(
+      `Bulk task handler returned unexpected data shape: ${JSON.stringify(data)}`
     );
   }
 
@@ -391,6 +435,12 @@ describe('Progress API Contract Tests', () => {
           }),
         })
       );
+
+      const responseData = readProgressResponse(res);
+      const taskResponse = asProgressTaskResponse(responseData.data);
+      expect(taskResponse.taskId).toBe('task-123');
+      expect(['completed', 'uncompleted']).toContain(taskResponse.state);
+      expect(taskResponse.message.length).toBeGreaterThan(0);
     });
   });
 
@@ -450,6 +500,10 @@ describe('Progress API Contract Tests', () => {
           }),
         })
       );
+
+      const responseData = readProgressResponse(res);
+      const messageResponse = asProgressMessageResponse(responseData.data);
+      expect(messageResponse.message.length).toBeGreaterThan(0);
     });
   });
 
