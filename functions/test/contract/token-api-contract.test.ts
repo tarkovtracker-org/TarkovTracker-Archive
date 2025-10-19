@@ -150,46 +150,71 @@ describe('Token API Contract Tests', () => {
       }
     });
 
-    it('validates permission strings are valid types', () => {
-      const permissions = ['GP', 'WP', 'TP'];
+    it('validates permission strings are valid types by calling handler', async () => {
+      // Call handler with known permissions and validate they have correct types
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
+        owner: 'user-id',
+        token: 'test-token',
+        permissions: ['GP', 'WP', 'TP'],
+        note: 'test',
+        gameMode: 'pvp',
+      });
+      const res = createMockResponse();
+
+      await tokenHandler.getTokenInfo(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+      const permissions = responseData.permissions;
       
-      permissions.forEach(permission => {
+      expect(Array.isArray(permissions)).toBe(true);
+      permissions.forEach((permission: string) => {
         expect(typeof permission).toBe('string');
         expect(permission.length).toBeGreaterThan(0);
+        // Common permission values are 2-char codes
+        expect(['GP', 'WP', 'TP']).toContain(permission);
       });
     });
   });
 
   describe('Error Response Contracts', () => {
     it('validates standardized error response format', () => {
-      const errorResponse = {
-        success: false,
-        error: 'Invalid permissions provided',
-      };
-
-      expect(errorResponse).toMatchObject({
-        success: false,
-        error: expect.any(String),
-      });
-
-      expect(errorResponse.success).toBe(false);
-      expect(errorResponse.error.length).toBeGreaterThan(0);
-    });
-
-    it('validates error structure for various error types', () => {
-      const errors = [
+      // Error responses must always follow this format when returned to clients
+      const errorResponses = [
         { success: false, error: 'Invalid permissions provided' },
         { success: false, error: 'Authentication required' },
         { success: false, error: 'Token not found' },
         { success: false, error: 'Invalid game mode' },
       ];
 
-      errors.forEach(error => {
-        expect(error).toHaveProperty('success');
-        expect(error).toHaveProperty('error');
-        expect(error.success).toBe(false);
-        expect(typeof error.error).toBe('string');
-        expect(error.error.length).toBeGreaterThan(0);
+      errorResponses.forEach(response => {
+        expect(response).toMatchObject({
+          success: false,
+          error: expect.any(String),
+        });
+
+        expect(response.success).toBe(false);
+        expect(response.error.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('validates error structure for various error types', () => {
+      // All error responses must follow consistent format
+      const errorFormats = [
+        { success: false, error: 'Invalid permissions provided' },
+        { success: false, error: 'Authentication required' },
+        { success: false, error: 'Token not found' },
+        { success: false, error: 'Invalid game mode' },
+        { success: false, error: 'Token revoked' },
+        { success: false, error: 'Internal error' },
+      ];
+
+      errorFormats.forEach(errorFormat => {
+        expect(errorFormat).toHaveProperty('success');
+        expect(errorFormat).toHaveProperty('error');
+        expect(errorFormat.success).toBe(false);
+        expect(typeof errorFormat.error).toBe('string');
+        expect(errorFormat.error.length).toBeGreaterThan(0);
       });
     });
   });
