@@ -97,46 +97,56 @@ describe('Token API Contract Tests', () => {
   });
 
   describe('Backward Compatibility - Token Endpoints', () => {
-    it('maintains token response fields', () => {
-      const response = {
-        success: true,
-        permissions: ['GP', 'WP'],
-        token: 'test-token',
+    it('maintains token response fields by calling handler', async () => {
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
         owner: 'user-id',
+        token: 'test-token',
+        permissions: ['GP', 'WP'],
         note: 'test',
         calls: 0,
         gameMode: 'pvp',
-      };
+      });
+      const res = createMockResponse();
+
+      await tokenHandler.getTokenInfo(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
 
       const requiredFields = ['success', 'permissions', 'token', 'owner', 'note'];
       requiredFields.forEach(field => {
-        expect(response).toHaveProperty(field);
+        expect(responseData).toHaveProperty(field);
       });
 
-      expect(Array.isArray(response.permissions)).toBe(true);
-      expect(typeof response.success).toBe('boolean');
-      expect(typeof response.token).toBe('string');
-      expect(typeof response.owner).toBe('string');
-      expect(typeof response.note).toBe('string');
+      expect(Array.isArray(responseData.permissions)).toBe(true);
+      expect(typeof responseData.success).toBe('boolean');
+      expect(typeof responseData.token).toBe('string');
+      expect(typeof responseData.owner).toBe('string');
+      expect(typeof responseData.note).toBe('string');
     });
 
-    it('maintains optional token response fields when present', () => {
-      const response = {
-        success: true,
-        permissions: ['GP'],
-        token: 'token-string',
+    it('maintains optional token response fields when present by calling handler', async () => {
+      const tokenHandler = (await import('../../lib/handlers/tokenHandler.js')).default;
+      const req = createMockRequest({
         owner: 'user-id',
+        token: 'token-string',
+        permissions: ['GP'],
         note: 'My Token',
         calls: 42,
         gameMode: 'dual',
-      };
+      });
+      const res = createMockResponse();
+
+      await tokenHandler.getTokenInfo(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
 
       // Optional fields must have correct types if present
-      if ('calls' in response) {
-        expect(typeof response.calls).toBe('number');
+      if ('calls' in responseData) {
+        expect(typeof responseData.calls).toBe('number');
       }
-      if ('gameMode' in response) {
-        expect(['pvp', 'pve', 'dual']).toContain(response.gameMode);
+      if ('gameMode' in responseData) {
+        expect(['pvp', 'pve', 'dual']).toContain(responseData.gameMode);
       }
     });
 

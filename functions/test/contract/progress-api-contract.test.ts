@@ -455,37 +455,45 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates standardized error response format', () => {
-      // Error response schema validation
-      const errorResponse = {
-        success: false,
-        error: 'Invalid task ID provided',
-      };
-
-      expect(errorResponse).toMatchObject({
-        success: false,
-        error: expect.any(String),
-      });
-      
-      expect(errorResponse.success).toBe(false);
-      expect(errorResponse.error.length).toBeGreaterThan(0);
-    });
-
-    it('validates error structure for various error types', () => {
-      // Different error responses should have consistent structure
-      const errors = [
-        { success: false, error: 'Invalid request' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Insufficient permissions' },
+    it('validates error response format structure', () => {
+      // Error responses should have consistent format
+      const errorResponses = [
+        { success: false, error: 'Invalid task ID' },
+        { success: false, error: 'Unauthorized access' },
         { success: false, error: 'Resource not found' },
+        { success: false, error: 'Validation failed' },
       ];
 
-      errors.forEach(error => {
-        expect(error).toHaveProperty('success');
-        expect(error).toHaveProperty('error');
-        expect(error.success).toBe(false);
-        expect(typeof error.error).toBe('string');
-        expect(error.error.length).toBeGreaterThan(0);
+      errorResponses.forEach(response => {
+        expect(response).toHaveProperty('success');
+        expect(response).toHaveProperty('error');
+        expect(response.success).toBe(false);
+        expect(typeof response.error).toBe('string');
+        expect(response.error.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('validates all error responses have required fields', () => {
+      // Ensure error contract consistency
+      const errorSchemas = [
+        { success: false, error: 'Field validation failed' },
+        { success: false, error: 'Authentication required' },
+        { success: false, error: 'Permission denied' },
+        { success: false, error: 'Internal server error' },
+      ];
+
+      errorSchemas.forEach(schema => {
+        // Every error must have these fields
+        expect(schema).toHaveProperty('success');
+        expect(schema).toHaveProperty('error');
+        
+        // Types must be correct
+        expect(typeof schema.success).toBe('boolean');
+        expect(typeof schema.error).toBe('string');
+        
+        // Values must be correct
+        expect(schema.success).toBe(false);
+        expect(schema.error.length).toBeGreaterThan(0);
       });
     });
   });

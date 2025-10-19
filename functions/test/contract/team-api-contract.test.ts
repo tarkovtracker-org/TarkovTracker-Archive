@@ -187,52 +187,110 @@ describe('Team API Contract Tests', () => {
   });
 
   describe('Backward Compatibility - Team Endpoints', () => {
-    it('maintains team creation response fields', () => {
-      const response = {
-        team: 'team-id',
-        password: 'team-password',
-      };
-
-      const requiredFields = ['team', 'password'];
-      requiredFields.forEach(field => {
-        expect(response).toHaveProperty(field);
-        expect(typeof response[field as keyof typeof response]).toBe('string');
+    it('maintains team creation response fields by calling handler', async () => {
+      const { TeamService } = await import('../../lib/services/TeamService.js');
+      vi.spyOn(TeamService.prototype, 'createTeam').mockResolvedValue({
+        teamId: 'team-123',
+        password: 'secure-password',
+        leader: 'user-123',
       });
+
+      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const req = createMockRequest(
+        { owner: 'user-123' },
+        {},
+        { name: 'MyTeam' }
+      );
+      const res = createMockResponse();
+
+      await teamHandler.createTeam(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+
+      // Validate response structure
+      expect(responseData).toHaveProperty('success');
+      expect(responseData).toHaveProperty('data');
+
+      // Check that team creation response has expected fields
+      if (responseData.data && typeof responseData.data === 'object') {
+        // Must have either 'team' or 'teamId' (backward compatibility)
+        expect(
+          responseData.data.hasOwnProperty('team') || 
+          responseData.data.hasOwnProperty('teamId')
+        ).toBe(true);
+
+        // Must have password
+        expect(responseData.data).toHaveProperty('password');
+        expect(typeof responseData.data.password).toBe('string');
+      }
     });
 
-    it('maintains team progress member structure', () => {
-      const memberStructure = {
-        userId: 'user-id',
-        displayName: 'display-name',
-        playerLevel: 42,
-        gameEdition: 3,
-        pmcFaction: 'USEC',
-        tasksProgress: [],
-        taskObjectivesProgress: [],
-        hideoutModulesProgress: [],
-        hideoutPartsProgress: [],
-      };
-
-      const requiredFields = [
-        'userId',
-        'displayName',
-        'playerLevel',
-        'gameEdition',
-        'pmcFaction',
-        'tasksProgress',
-        'taskObjectivesProgress',
-        'hideoutModulesProgress',
-        'hideoutPartsProgress',
-      ];
-
-      requiredFields.forEach(field => {
-        expect(memberStructure).toHaveProperty(field);
+    it('maintains team progress member structure by calling handler', async () => {
+      const { TeamService } = await import('../../lib/services/TeamService.js');
+      vi.spyOn(TeamService.prototype, 'getTeamProgress').mockResolvedValue({
+        data: [
+          {
+            userId: 'user-id',
+            displayName: 'display-name',
+            playerLevel: 42,
+            gameEdition: 3,
+            pmcFaction: 'USEC',
+            tasksProgress: [],
+            taskObjectivesProgress: [],
+            hideoutModulesProgress: [],
+            hideoutPartsProgress: [],
+          },
+        ],
+        meta: {
+          self: 'user-id',
+          hiddenTeammates: [],
+        },
       });
 
-      expect(Array.isArray(memberStructure.tasksProgress)).toBe(true);
-      expect(Array.isArray(memberStructure.taskObjectivesProgress)).toBe(true);
-      expect(Array.isArray(memberStructure.hideoutModulesProgress)).toBe(true);
-      expect(Array.isArray(memberStructure.hideoutPartsProgress)).toBe(true);
+      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const req = createMockRequest({ owner: 'user-id' });
+      const res = createMockResponse();
+
+      await teamHandler.getTeamProgress(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+
+      // Data should be an array of members
+      expect(Array.isArray(responseData.data)).toBe(true);
+
+      // Each member should have required fields
+      responseData.data.forEach((member: any) => {
+        const requiredFields = [
+          'userId',
+          'displayName',
+          'playerLevel',
+          'gameEdition',
+          'pmcFaction',
+          'tasksProgress',
+          'taskObjectivesProgress',
+          'hideoutModulesProgress',
+          'hideoutPartsProgress',
+        ];
+
+        requiredFields.forEach(field => {
+          expect(member).toHaveProperty(field);
+        });
+
+        // Verify types for array fields
+        expect(Array.isArray(member.tasksProgress)).toBe(true);
+        expect(Array.isArray(member.taskObjectivesProgress)).toBe(true);
+        expect(Array.isArray(member.hideoutModulesProgress)).toBe(true);
+        expect(Array.isArray(member.hideoutPartsProgress)).toBe(true);
+
+        // Verify types for scalar fields
+        expect(typeof member.userId).toBe('string');
+        expect(typeof member.displayName).toBe('string');
+        expect(typeof member.playerLevel).toBe('number');
+        expect(typeof member.gameEdition).toBe('number');
+        expect(typeof member.pmcFaction).toBe('string');
+      });
     });
   });
 });
