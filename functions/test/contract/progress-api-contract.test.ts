@@ -366,9 +366,7 @@ describe('Progress API Contract Tests', () => {
   describe('Backward Compatibility Tests', () => {
     it('maintains backward compatibility: no fields are removed', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
         hideoutModulesProgress: [],
@@ -380,10 +378,26 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      // CRITICAL: These fields must always be present for backward compatibility
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+
+      // CRITICAL: These fields must always be present in the API response for backward compatibility
       const requiredFields = [
+        'success',
+        'data',
+        'meta',
+      ];
+
+      requiredFields.forEach(field => {
+        expect(responseData).toHaveProperty(field);
+      });
+
+      const requiredDataFields = [
         'tasksProgress',
         'taskObjectivesProgress',
         'hideoutModulesProgress',
@@ -395,17 +409,14 @@ describe('Progress API Contract Tests', () => {
         'pmcFaction',
       ];
 
-      requiredFields.forEach(field => {
-        expect(result).toHaveProperty(field);
-        expect(result[field as keyof FormattedProgress]).not.toBeUndefined();
+      requiredDataFields.forEach(field => {
+        expect(responseData.data).toHaveProperty(field);
       });
     });
 
     it('maintains backward compatibility: field types remain consistent', async () => {
       const { ProgressService } = await import('../../lib/services/ProgressService.js');
-      const progressService = new ProgressService();
-
-      vi.spyOn(progressService, 'getUserProgress').mockResolvedValue({
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
         hideoutModulesProgress: [],
@@ -417,18 +428,29 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const result = await progressService.getUserProgress('test-user-123', 'pvp');
+      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
+      const res = createMockResponse();
 
-      // CRITICAL: These types must never change for backward compatibility
-      expect(Array.isArray(result.tasksProgress)).toBe(true);
-      expect(Array.isArray(result.taskObjectivesProgress)).toBe(true);
-      expect(Array.isArray(result.hideoutModulesProgress)).toBe(true);
-      expect(Array.isArray(result.hideoutPartsProgress)).toBe(true);
-      expect(typeof result.displayName).toBe('string');
-      expect(typeof result.userId).toBe('string');
-      expect(typeof result.playerLevel).toBe('number');
-      expect(typeof result.gameEdition).toBe('number');
-      expect(typeof result.pmcFaction).toBe('string');
+      await progressHandler.getPlayerProgress(req, res);
+
+      const responseData = res.json.mock.calls[0][0];
+
+      // CRITICAL: Response wrapper types must never change
+      expect(typeof responseData.success).toBe('boolean');
+      expect(typeof responseData.data).toBe('object');
+      expect(typeof responseData.meta).toBe('object');
+
+      // CRITICAL: Data field types must never change for backward compatibility
+      expect(Array.isArray(responseData.data.tasksProgress)).toBe(true);
+      expect(Array.isArray(responseData.data.taskObjectivesProgress)).toBe(true);
+      expect(Array.isArray(responseData.data.hideoutModulesProgress)).toBe(true);
+      expect(Array.isArray(responseData.data.hideoutPartsProgress)).toBe(true);
+      expect(typeof responseData.data.displayName).toBe('string');
+      expect(typeof responseData.data.userId).toBe('string');
+      expect(typeof responseData.data.playerLevel).toBe('number');
+      expect(typeof responseData.data.gameEdition).toBe('number');
+      expect(typeof responseData.data.pmcFaction).toBe('string');
     });
   });
 
