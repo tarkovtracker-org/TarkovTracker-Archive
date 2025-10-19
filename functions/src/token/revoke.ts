@@ -1,7 +1,6 @@
 import { logger } from 'firebase-functions/v2';
 import { onRequest, Request as FirebaseRequest } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
-import cors from 'cors';
 import {
   Firestore,
   DocumentReference,
@@ -9,6 +8,7 @@ import {
   Transaction,
 } from 'firebase-admin/firestore';
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
+import { setCorsHeaders } from '../config/corsConfig.js';
 // Define interfaces for data structures
 interface RevokeTokenData {
   token: string;
@@ -152,18 +152,16 @@ async function _revokeTokenLogic(
   }
 }
 
-const corsHandler = cors({ 
-  origin: true, // reflect request origin (allow all) to work with credentials
-  credentials: true
-});
 export const revokeToken = onRequest(
   {
     memory: '256MiB',
     timeoutSeconds: 20,
-    cors: true,
   },
-  (req: FirebaseRequest, res) => {
-  corsHandler(req, res, async () => {
+  async (req: FirebaseRequest, res) => {
+    if (!setCorsHeaders(req, res)) {
+      res.status(403).send('Origin not allowed');
+      return;
+    }
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
       return;
@@ -242,5 +240,5 @@ export const revokeToken = onRequest(
         res.status(500).json({ error: messageToSend });
       }
     }
-  });
-});
+  }
+);

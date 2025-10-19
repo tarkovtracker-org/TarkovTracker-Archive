@@ -56,23 +56,14 @@ async function getApiApp(): Promise<Express> {
   const { errorHandler, notFoundHandler, asyncHandler } = await import(
     './middleware/errorHandler.js'
   );
+  const { getExpressCorsOptions } = await import('./config/corsConfig.js');
   const progressHandler = (await import('./handlers/progressHandler.js')).default;
   const teamHandler = (await import('./handlers/teamHandler.js')).default;
   const tokenHandler = (await import('./handlers/tokenHandler.js')).default;
   const { deleteUserAccountHandler } = await import('./handlers/userDeletionHandler.js');
 
   const app = expressModule.default();
-  app.use(
-    corsModule.default({
-      // Reflect the request origin to support credentials across any origin
-      origin: true,
-      credentials: true,
-      optionsSuccessStatus: 200,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    })
-  );
-  // CORS is already handled globally above and by individual route handlers
+  app.use(corsModule.default(getExpressCorsOptions()));
   app.use(bodyParserModule.default.json({ limit: '1mb' }));
   app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
   if (process.env.NODE_ENV !== 'production') {
@@ -171,20 +162,12 @@ export const api = onRequest(
     maxInstances: 3,
   },
   async (req, res) => {
-    // Top-level CORS handling for preflight and safety-net for regular requests
-    const originHeader = req.headers.origin;
-    const origin = typeof originHeader === 'string' ? originHeader : undefined;
-    if (origin) {
-      res.set('Access-Control-Allow-Origin', origin);
-      res.set('Vary', 'Origin');
+    const { setCorsHeaders } = await import('./config/corsConfig.js');
+    if (!setCorsHeaders(req, res)) {
+      res.status(403).send('Origin not allowed');
+      return;
     }
-    res.set('Access-Control-Allow-Credentials', 'true');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    if (typeof req.headers['access-control-request-headers'] === 'string') {
-      res.set('Access-Control-Allow-Headers', req.headers['access-control-request-headers']);
-    } else {
-      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    }
+
     if (req.method === 'OPTIONS') {
       res.status(204).send('');
       return;
@@ -498,19 +481,11 @@ export const createTeamHttp = onRequest(
     minInstances: 0,
   },
   async (req, res) => {
-    // CORS headers aligned with Express middleware; reflect any origin for credentials support
-    const originHeader = req.headers.origin;
-    const origin = typeof originHeader === 'string' ? originHeader : undefined;
-    if (origin) {
-      res.set('Access-Control-Allow-Origin', origin);
-      res.set('Vary', 'Origin');
+    const { setCorsHeaders } = await import('./config/corsConfig.js');
+    if (!setCorsHeaders(req, res)) {
+      res.status(403).send('Origin not allowed');
+      return;
     }
-
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.set('Access-Control-Allow-Credentials', 'true');
-
-    // Preflight handling
     if (req.method === 'OPTIONS') {
       res.status(200).send('');
       return;
@@ -565,20 +540,12 @@ export const createTokenHttp = onRequest(
     minInstances: 0,
   },
   async (req, res) => {
-    // CORS headers: reflect any origin for credentials support
-    const originHeader = req.headers.origin;
-    const origin = typeof originHeader === 'string' ? originHeader : undefined;
-    if (origin) {
-      res.set('Access-Control-Allow-Origin', origin);
-      res.set('Vary', 'Origin');
+    const { setCorsHeaders } = await import('./config/corsConfig.js');
+    if (!setCorsHeaders(req, res)) {
+      res.status(403).send('Origin not allowed');
+      return;
     }
-
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.set('Access-Control-Allow-Credentials', 'true');
     res.set('Access-Control-Max-Age', '3600');
-
-    // Preflight handling
     if (req.method === 'OPTIONS') {
       res.status(200).send('');
       return;
