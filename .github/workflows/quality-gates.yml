@@ -35,3 +35,47 @@ jobs:
             echo "Bundle exceeds 500kb (actual: $SIZE bytes)";
             exit 1;
           fi
+
+  api-contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          cd functions
+          npm install
+      - name: Build functions
+        run: |
+          cd functions
+          npm run build
+      - name: Run API Contract Tests
+        run: |
+          cd functions
+          npm test -- test/contract --run
+      - name: Contract Test Failure Warning
+        if: failure()
+        run: |
+          echo "⚠️ API CONTRACT TESTS FAILED"
+          echo "Breaking API changes detected!"
+          echo ""
+          echo "This means you've modified the API response structure in a way that could break third-party integrations."
+          echo ""
+          echo "Please review:"
+          echo "  1. Are you removing or renaming response fields?"
+          echo "  2. Are you changing field types (e.g., string → number)?"
+          echo "  3. Are you modifying array structures?"
+          echo ""
+          echo "Options:"
+          echo "  A) Fix the code to maintain backward compatibility"
+          echo "  B) If the breaking change is intentional:"
+          echo "     - Bump the API version (v2 → v3)"
+          echo "     - Update contract tests with explanatory comments"
+          echo "     - Document the breaking change in CHANGELOG.md"
+          echo "     - Create a migration guide for API consumers"
+          echo ""
+          echo "See TESTING_STRATEGY.md for detailed guidance."
+          exit 1
