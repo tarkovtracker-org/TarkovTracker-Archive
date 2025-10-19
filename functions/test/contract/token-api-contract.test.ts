@@ -189,23 +189,43 @@ describe('Token API Contract Tests', () => {
         headers: {},
       };
 
+      const unauthorizedError = errors.unauthorized('Authentication required');
       delete req.apiToken;
+      let firstAccess = true;
       Object.defineProperty(req, 'apiToken', {
         configurable: true,
         get() {
-          throw errors.unauthorized('Authentication required');
+          if (firstAccess) {
+            firstAccess = false;
+            throw unauthorizedError;
+          }
+          return undefined;
         },
       });
 
       const res = createMockResponse();
 
-      await new Promise(resolve => {
-        const next = (err: unknown) => {
-          errorHandler(err as Error, req, res, vi.fn());
-          resolve(undefined);
+      await new Promise<void>(async resolve => {
+        let settled = false;
+        const finish = () => {
+          if (!settled) {
+            settled = true;
+            resolve();
+          }
+        };
+        const next = (err?: unknown) => {
+          if (err) {
+            errorHandler(err as Error, req, res, vi.fn());
+          }
+          finish();
         };
 
-        tokenHandler.getTokenInfo(req, res, next);
+        try {
+          await tokenHandler.getTokenInfo(req, res, next);
+          finish();
+        } catch (err) {
+          next(err);
+        }
       });
 
       expect(res.status).toHaveBeenCalledWith(401);
@@ -237,23 +257,43 @@ describe('Token API Contract Tests', () => {
         headers: {},
       };
 
+      const unexpectedError = new Error('Token decoding failure');
       delete req.apiToken;
+      let firstAccess = true;
       Object.defineProperty(req, 'apiToken', {
         configurable: true,
         get() {
-          throw new Error('Token decoding failure');
+          if (firstAccess) {
+            firstAccess = false;
+            throw unexpectedError;
+          }
+          return undefined;
         },
       });
 
       const res = createMockResponse();
 
-      await new Promise(resolve => {
-        const next = (err: unknown) => {
-          errorHandler(err as Error, req, res, vi.fn());
-          resolve(undefined);
+      await new Promise<void>(async resolve => {
+        let settled = false;
+        const finish = () => {
+          if (!settled) {
+            settled = true;
+            resolve();
+          }
+        };
+        const next = (err?: unknown) => {
+          if (err) {
+            errorHandler(err as Error, req, res, vi.fn());
+          }
+          finish();
         };
 
-        tokenHandler.getTokenInfo(req, res, next);
+        try {
+          await tokenHandler.getTokenInfo(req, res, next);
+          finish();
+        } catch (err) {
+          next(err);
+        }
       });
 
       expect(res.status).toHaveBeenCalledWith(500);
