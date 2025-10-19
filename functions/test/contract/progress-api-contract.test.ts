@@ -99,6 +99,53 @@ const asFormattedProgress = (data: ProgressResponseData): FormattedProgress => {
   return data;
 };
 
+const isProgressLevelResponse = (data: ProgressResponseData): data is ProgressLevelResponse => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as Partial<ProgressLevelResponse>;
+
+  return typeof candidate.level === 'number' && Number.isFinite(candidate.level) && typeof candidate.message === 'string';
+};
+
+const asProgressLevelResponse = (data: ProgressResponseData): ProgressLevelResponse => {
+  if (!isProgressLevelResponse(data)) {
+    throw new Error(
+      `Level handler returned unexpected data shape: ${JSON.stringify(data)}`
+    );
+  }
+
+  return data;
+};
+
+const isProgressObjectiveResponse = (
+  data: ProgressResponseData
+): data is ProgressObjectiveResponse => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as Partial<ProgressObjectiveResponse>;
+
+  return (
+    typeof candidate.objectiveId === 'string' &&
+    typeof candidate.message === 'string' &&
+    (candidate.state === undefined || typeof candidate.state === 'string') &&
+    (candidate.count === undefined || typeof candidate.count === 'number')
+  );
+};
+
+const asProgressObjectiveResponse = (data: ProgressResponseData): ProgressObjectiveResponse => {
+  if (!isProgressObjectiveResponse(data)) {
+    throw new Error(
+      `Objective handler returned unexpected data shape: ${JSON.stringify(data)}`
+    );
+  }
+
+  return data;
+};
+
 const readProgressResponse = (res: MockResponse): ProgressResponse =>
   res.json.mock.calls[0][0] as ProgressResponse;
 
@@ -373,7 +420,7 @@ describe('Progress API Contract Tests', () => {
       );
 
       const responseData = readProgressResponse(res);
-      const levelResponse = responseData.data as ProgressLevelResponse;
+      const levelResponse = asProgressLevelResponse(responseData.data);
       expect(levelResponse.level).toBeGreaterThanOrEqual(1);
       expect(levelResponse.level).toBeLessThanOrEqual(79);
     });
@@ -432,7 +479,7 @@ describe('Progress API Contract Tests', () => {
         }),
       });
 
-      const objectiveResponse = responseData.data as ProgressObjectiveResponse;
+      const objectiveResponse = asProgressObjectiveResponse(responseData.data);
       // State and count are optional but must be correct type if present
       if ('state' in objectiveResponse) {
         expect(['completed', 'uncompleted']).toContain(objectiveResponse.state);
