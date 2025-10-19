@@ -68,6 +68,11 @@ vi.mock('firebase-admin', () => {
   admin.default = admin;
   return { default: admin, admin };
 });
+vi.mock('firebase-admin/firestore', () => ({
+  Firestore: class {},
+  DocumentReference: class {},
+  FieldValue: firestoreMock.FieldValue,
+}));
 // Mock both v1 and default functions paths
 vi.mock('firebase-functions', () => {
   const fn = { ...functionsMock, default: functionsMock };
@@ -131,6 +136,15 @@ vi.mock('firebase-functions/v2/scheduler', () => {
   };
   return { onSchedule };
 });
+vi.mock('uid-generator', () => ({
+  default: class UIDGenerator {
+    constructor() {}
+
+    async generate() {
+      return 'mock-uid';
+    }
+  },
+}));
 // --- Global Hooks ---
 beforeEach(() => {
   // Reset all mocks provided by vitest vi.fn()
