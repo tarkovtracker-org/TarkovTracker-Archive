@@ -32,27 +32,25 @@ describe('Team API Contract Tests', () => {
 
   describe('GET /api/v2/team/progress - Response Structure', () => {
     it('returns correct team progress structure', async () => {
-      // Mock the TeamService - it returns {data, meta} structure
+      // Mock the TeamService - it returns {data: FormattedProgress[], meta: {self, hiddenTeammates}}
       const { TeamService } = await import('../../lib/services/TeamService.js');
       vi.spyOn(TeamService.prototype, 'getTeamProgress').mockResolvedValue({
-        data: {
-          members: [
-            {
-              userId: 'user-1',
-              displayName: 'Player1',
-              playerLevel: 42,
-              gameEdition: 3,
-              pmcFaction: 'USEC',
-              tasksProgress: [],
-              taskObjectivesProgress: [],
-              hideoutModulesProgress: [],
-              hideoutPartsProgress: [],
-            },
-          ],
-          teamId: 'team-123',
-        },
+        data: [
+          {
+            userId: 'user-1',
+            displayName: 'Player1',
+            playerLevel: 42,
+            gameEdition: 3,
+            pmcFaction: 'USEC',
+            tasksProgress: [],
+            taskObjectivesProgress: [],
+            hideoutModulesProgress: [],
+            hideoutPartsProgress: [],
+          },
+        ],
         meta: {
-          memberCount: 1,
+          self: 'user-1',
+          hiddenTeammates: [],
         },
       });
 
@@ -69,17 +67,15 @@ describe('Team API Contract Tests', () => {
 
       expect(responseData).toMatchObject({
         success: true,
-        data: expect.objectContaining({
-          members: expect.any(Array),
-          teamId: expect.any(String),
-        }),
+        data: expect.any(Array),
         meta: expect.objectContaining({
-          memberCount: expect.any(Number),
+          self: expect.any(String),
+          hiddenTeammates: expect.any(Array),
         }),
       });
 
-      // Validate member structure
-      responseData.data.members.forEach((member: any) => {
+      // Validate member structure - data is an array of FormattedProgress objects
+      responseData.data.forEach((member: any) => {
         expect(member).toHaveProperty('userId');
         expect(member).toHaveProperty('displayName');
         expect(member).toHaveProperty('playerLevel');
