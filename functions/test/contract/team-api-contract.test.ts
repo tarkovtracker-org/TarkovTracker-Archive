@@ -216,8 +216,8 @@ describe('Team API Contract Tests', () => {
       if (responseData.data && typeof responseData.data === 'object') {
         // Must have either 'team' or 'teamId' (backward compatibility)
         expect(
-          responseData.data.hasOwnProperty('team') || 
-          responseData.data.hasOwnProperty('teamId')
+          'team' in responseData.data || 
+          'teamId' in responseData.data
         ).toBe(true);
 
         // Must have password
