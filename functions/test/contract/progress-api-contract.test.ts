@@ -11,6 +11,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { FormattedProgress } from '../../src/types/api.ts';
+
+type MockResponse = {
+  status: ReturnType<typeof vi.fn>;
+  json: ReturnType<typeof vi.fn>;
+};
 
 // Helper to create mock Express request
 const createMockRequest = (apiToken: any, params = {}, body = {}, query = {}) => ({
@@ -21,12 +27,21 @@ const createMockRequest = (apiToken: any, params = {}, body = {}, query = {}) =>
 });
 
 // Helper to create mock Express response
-const createMockResponse = () => {
-  const res: any = {};
+const createMockResponse = (): MockResponse => {
+  const res = {} as MockResponse;
   res.status = vi.fn().mockReturnValue(res);
   res.json = vi.fn().mockReturnValue(res);
   return res;
 };
+
+type ProgressResponse = {
+  success: boolean;
+  data: FormattedProgress;
+  meta: Record<string, unknown>;
+};
+
+const readProgressResponse = (res: MockResponse): ProgressResponse =>
+  res.json.mock.calls[0][0] as ProgressResponse;
 
 describe('Progress API Contract Tests', () => {
   beforeEach(() => {
@@ -36,7 +51,7 @@ describe('Progress API Contract Tests', () => {
   describe('GET /api/v2/progress - Response Structure', () => {
     it('returns the correct API response structure with all required fields', async () => {
       // Mock the service layer (infrastructure)
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [
           { id: 'task-1', complete: true, failed: false },
@@ -59,7 +74,7 @@ describe('Progress API Contract Tests', () => {
       });
 
       // Import and call the actual handler
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
@@ -89,7 +104,7 @@ describe('Progress API Contract Tests', () => {
       );
 
       // Verify the actual response data structure
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
       expect(responseData.success).toBe(true);
       expect(responseData.data).toHaveProperty('tasksProgress');
       expect(responseData.data).toHaveProperty('taskObjectivesProgress');
@@ -105,7 +120,7 @@ describe('Progress API Contract Tests', () => {
     });
 
     it('ensures tasksProgress items have required fields', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [
           { id: 'task-1', complete: true, failed: false },
@@ -122,13 +137,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
       
       // Every task must have id and complete fields
       responseData.data.tasksProgress.forEach((task: any) => {
@@ -145,7 +160,7 @@ describe('Progress API Contract Tests', () => {
     });
 
     it('ensures taskObjectivesProgress items have correct schema', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [
@@ -162,13 +177,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
 
       responseData.data.taskObjectivesProgress.forEach((objective: any) => {
         expect(objective).toHaveProperty('id');
@@ -184,7 +199,7 @@ describe('Progress API Contract Tests', () => {
     });
 
     it('ensures playerLevel is a valid number', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
@@ -197,13 +212,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
 
       expect(typeof responseData.data.playerLevel).toBe('number');
       expect(responseData.data.playerLevel).toBeGreaterThanOrEqual(1);
@@ -212,7 +227,7 @@ describe('Progress API Contract Tests', () => {
     });
 
     it('ensures pmcFaction is a valid value', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
@@ -225,13 +240,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
 
       expect(typeof responseData.data.pmcFaction).toBe('string');
       expect(['USEC', 'BEAR']).toContain(responseData.data.pmcFaction);
@@ -240,10 +255,10 @@ describe('Progress API Contract Tests', () => {
 
   describe('POST /api/v2/progress/task/:taskId - Response Structure', () => {
     it('returns standardized success response', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'updateSingleTask').mockResolvedValue(undefined);
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'test-user', permissions: ['WP'] },
         { taskId: 'task-123' },
@@ -270,10 +285,10 @@ describe('Progress API Contract Tests', () => {
 
   describe('POST /api/v2/progress/level/:levelValue - Response Structure', () => {
     it('returns standardized success response with level confirmation', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'setPlayerLevel').mockResolvedValue(undefined);
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'test-user', permissions: ['WP'] },
         { levelValue: '42' }
@@ -293,7 +308,7 @@ describe('Progress API Contract Tests', () => {
         })
       );
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
       expect(responseData.data.level).toBeGreaterThanOrEqual(1);
       expect(responseData.data.level).toBeLessThanOrEqual(79);
     });
@@ -301,10 +316,10 @@ describe('Progress API Contract Tests', () => {
 
   describe('POST /api/v2/progress/tasks - Response Structure', () => {
     it('returns standardized success response with updated task list', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'updateMultipleTasks').mockResolvedValue(undefined);
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'test-user', permissions: ['WP'] },
         {},
@@ -328,10 +343,10 @@ describe('Progress API Contract Tests', () => {
 
   describe('POST /api/v2/progress/task/objective/:objectiveId - Response Structure', () => {
     it('returns standardized success response with objective update confirmation', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'updateTaskObjective').mockResolvedValue(undefined);
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'test-user', permissions: ['WP'] },
         { objectiveId: 'obj-123' },
@@ -342,7 +357,7 @@ describe('Progress API Contract Tests', () => {
       await progressHandler.updateTaskObjective(req, res);
 
       expect(res.status).toHaveBeenCalledWith(200);
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
       
       expect(responseData).toMatchObject({
         success: true,
@@ -365,7 +380,7 @@ describe('Progress API Contract Tests', () => {
 
   describe('Backward Compatibility Tests', () => {
     it('maintains backward compatibility: no fields are removed', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
@@ -378,13 +393,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
 
       // CRITICAL: These fields must always be present in the API response for backward compatibility
       const requiredFields = [
@@ -415,7 +430,7 @@ describe('Progress API Contract Tests', () => {
     });
 
     it('maintains backward compatibility: field types remain consistent', async () => {
-      const { ProgressService } = await import('../../lib/services/ProgressService.js');
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
       vi.spyOn(ProgressService.prototype, 'getUserProgress').mockResolvedValue({
         tasksProgress: [],
         taskObjectivesProgress: [],
@@ -428,13 +443,13 @@ describe('Progress API Contract Tests', () => {
         pmcFaction: 'USEC',
       });
 
-      const progressHandler = (await import('../../lib/handlers/progressHandler.js')).default;
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
       const req = createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' });
       const res = createMockResponse();
 
       await progressHandler.getPlayerProgress(req, res);
 
-      const responseData = res.json.mock.calls[0][0];
+      const responseData = readProgressResponse(res);
 
       // CRITICAL: Response wrapper types must never change
       expect(typeof responseData.success).toBe('boolean');
@@ -455,49 +470,93 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates error response format specification', () => {
-      // Error responses must always follow this format when returned to clients
-      const errorResponses = [
-        { success: false, error: 'Validation failed' },
-        { success: false, error: 'Unauthorized' },
-        { success: false, error: 'Not found' },
-        { success: false, error: 'Internal server error' },
-      ];
+    it('returns standardized error payloads when the progress service throws an ApiError', async () => {
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
+      const { errorHandler, errors } = await import('../../src/middleware/errorHandler.ts');
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
 
-      errorResponses.forEach(response => {
-        // Error responses must have this exact format
-        expect(response).toHaveProperty('success');
-        expect(response).toHaveProperty('error');
-        expect(response.success).toBe(false);
-        expect(typeof response.error).toBe('string');
-        expect(response.error.length).toBeGreaterThan(0);
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockRejectedValue(
+        errors.serviceUnavailable('Progress temporarily unavailable')
+      );
+
+      const req: any = {
+        ...createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' }),
+        method: 'GET',
+        originalUrl: '/api/v2/progress',
+        headers: {},
+      };
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        progressHandler.getPlayerProgress(req, res, next);
       });
+
+      expect(res.status).toHaveBeenCalledWith(503);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Progress temporarily unavailable',
+          meta: expect.objectContaining({
+            code: 'SERVICE_UNAVAILABLE',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const errorPayload = res.json.mock.calls[0][0];
+      expect(errorPayload.success).toBe(false);
+      expect(typeof errorPayload.error).toBe('string');
+      expect(typeof errorPayload.meta.timestamp).toBe('string');
+      expect(errorPayload.meta.code).toBe('SERVICE_UNAVAILABLE');
     });
 
-    it('validates error format consistency across error types', () => {
-      // All error responses must follow consistent format
-      const errorFormats = [
-        { success: false, error: 'Invalid request' },
-        { success: false, error: 'Authentication required' },
-        { success: false, error: 'Permission denied' },
-        { success: false, error: 'Resource not found' },
-        { success: false, error: 'Conflict' },
-        { success: false, error: 'Internal error' },
-      ];
+    it('falls back to the generic error contract for unexpected failures', async () => {
+      const { ProgressService } = await import('../../src/services/ProgressService.ts');
+      const { errorHandler } = await import('../../src/middleware/errorHandler.ts');
+      const progressHandler = (await import('../../src/handlers/progressHandler.ts')).default;
 
-      errorFormats.forEach(errorFormat => {
-        // All error responses must have these required fields
-        expect(errorFormat).toHaveProperty('success');
-        expect(errorFormat).toHaveProperty('error');
-        
-        // Validate types
-        expect(typeof errorFormat.success).toBe('boolean');
-        expect(typeof errorFormat.error).toBe('string');
-        
-        // Validate values
-        expect(errorFormat.success).toBe(false);
-        expect(errorFormat.error.length).toBeGreaterThan(0);
+      vi.spyOn(ProgressService.prototype, 'getUserProgress').mockRejectedValue(
+        new Error('Database unavailable')
+      );
+
+      const req: any = {
+        ...createMockRequest({ owner: 'test-user-123', gameMode: 'pvp' }),
+        method: 'GET',
+        originalUrl: '/api/v2/progress',
+        headers: {},
+      };
+      const res = createMockResponse();
+
+      await new Promise(resolve => {
+        const next = (err: unknown) => {
+          errorHandler(err as Error, req, res, vi.fn());
+          resolve(undefined);
+        };
+
+        progressHandler.getPlayerProgress(req, res, next);
       });
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: 'Internal server error',
+          meta: expect.objectContaining({
+            code: 'INTERNAL_ERROR',
+            timestamp: expect.any(String),
+          }),
+        })
+      );
+
+      const errorPayload = res.json.mock.calls[0][0];
+      expect(errorPayload.success).toBe(false);
+      expect(errorPayload.meta.code).toBe('INTERNAL_ERROR');
+      expect(typeof errorPayload.meta.timestamp).toBe('string');
     });
   });
 });

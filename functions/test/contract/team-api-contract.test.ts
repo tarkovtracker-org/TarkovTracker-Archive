@@ -33,7 +33,7 @@ describe('Team API Contract Tests', () => {
   describe('GET /api/v2/team/progress - Response Structure', () => {
     it('returns correct team progress structure', async () => {
       // Mock the TeamService - it returns {data: FormattedProgress[], meta: {self, hiddenTeammates}}
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'getTeamProgress').mockResolvedValue({
         data: [
           {
@@ -55,7 +55,7 @@ describe('Team API Contract Tests', () => {
       });
 
       // Call the actual handler
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest({ owner: 'user-1', team: 'team-123' });
       const res = createMockResponse();
 
@@ -96,13 +96,13 @@ describe('Team API Contract Tests', () => {
 
   describe('POST /api/team/create - Response Structure', () => {
     it('returns team creation confirmation', async () => {
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'createTeam').mockResolvedValue({
         team: 'newly-created-team-id',
         password: 'generated-password',
       });
 
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'user-1' },
         {},
@@ -130,12 +130,12 @@ describe('Team API Contract Tests', () => {
 
   describe('POST /api/team/join - Response Structure', () => {
     it('returns join confirmation', async () => {
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'joinTeam').mockResolvedValue({
         joined: true,
       });
 
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'user-1' },
         {},
@@ -161,12 +161,12 @@ describe('Team API Contract Tests', () => {
 
   describe('POST /api/team/leave - Response Structure', () => {
     it('returns leave confirmation', async () => {
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'leaveTeam').mockResolvedValue({
         left: true,
       });
 
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest({ owner: 'user-1' });
       const res = createMockResponse();
 
@@ -188,14 +188,13 @@ describe('Team API Contract Tests', () => {
 
   describe('Backward Compatibility - Team Endpoints', () => {
     it('maintains team creation response fields by calling handler', async () => {
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'createTeam').mockResolvedValue({
-        teamId: 'team-123',
+        team: 'team-123',
         password: 'secure-password',
-        leader: 'user-123',
       });
 
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest(
         { owner: 'user-123' },
         {},
@@ -216,8 +215,8 @@ describe('Team API Contract Tests', () => {
       if (responseData.data && typeof responseData.data === 'object') {
         // Must have either 'team' or 'teamId' (backward compatibility)
         expect(
-          'team' in responseData.data || 
-          'teamId' in responseData.data
+          Object.prototype.hasOwnProperty.call(responseData.data, 'team') ||
+          Object.prototype.hasOwnProperty.call(responseData.data, 'teamId')
         ).toBe(true);
 
         // Must have password
@@ -227,7 +226,7 @@ describe('Team API Contract Tests', () => {
     });
 
     it('maintains team progress member structure by calling handler', async () => {
-      const { TeamService } = await import('../../lib/services/TeamService.js');
+      const { TeamService } = await import('../../src/services/TeamService.ts');
       vi.spyOn(TeamService.prototype, 'getTeamProgress').mockResolvedValue({
         data: [
           {
@@ -248,7 +247,7 @@ describe('Team API Contract Tests', () => {
         },
       });
 
-      const teamHandler = (await import('../../lib/handlers/teamHandler.js')).default;
+      const teamHandler = (await import('../../src/handlers/teamHandler.ts')).default;
       const req = createMockRequest({ owner: 'user-id' });
       const res = createMockResponse();
 
