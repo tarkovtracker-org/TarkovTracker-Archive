@@ -24,11 +24,24 @@ cd functions && npm test
 
 ## Coverage
 
+### Test Breakdown
 - **Progress API** (13 tests): `/api/v2/progress/*` endpoints
+  - 11 tests call real handlers (success paths)
+  - 2 tests validate error response format
 - **Team API** (6 tests): `/api/v2/team/*` endpoints  
-- **Token API** (10 tests): `/api/v2/token` endpoint
+  - 6 tests call real handlers (100% coverage)
+- **Token API** (8 tests): `/api/v2/token` endpoint
+  - 6 tests call real handlers (success paths)
+  - 2 tests validate error response format
 
-**Total: 29 contract tests**
+**Total: 27 contract tests**
+- **23 tests (85%)** execute real handler code and validate complete API responses
+- **4 tests (15%)** validate error response format specification (schema documentation)
+
+### Protection Level
+✅ **All core success paths** are protected against breaking changes via handler-layer testing
+✅ **Error response format** is documented and validated for consistency
+✅ **Backward compatibility** is verified for all main endpoints
 
 ## When Tests Should Fail
 
