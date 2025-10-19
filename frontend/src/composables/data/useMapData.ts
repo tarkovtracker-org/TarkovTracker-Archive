@@ -72,6 +72,12 @@ export function useMapData() {
             svg: staticData.svg,
           };
         }
+        if (staticData?.unavailableMessage) {
+          return {
+            ...map,
+            unavailableMessage: staticData.unavailableMessage,
+          };
+        }
         if (!staticData) {
           if (!missingStaticDataWarnings.has(mapKey)) {
             missingStaticDataWarnings.add(mapKey);

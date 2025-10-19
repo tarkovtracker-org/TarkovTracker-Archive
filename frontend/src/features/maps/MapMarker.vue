@@ -104,7 +104,8 @@
       z = -originalX;
     }
 
-    // Use original bounds (not rotated) - the bounds are in the original coordinate space
+    // Use bounds to calculate percentage-based positioning
+    // (transform matrix is for tarkov.dev's Leaflet system, not for our SVG percentages)
     let mapLeft = bounds[0][0];
     let mapTop = bounds[0][1];
     let mapWidth = Math.abs(bounds[1][0] - bounds[0][0]);
