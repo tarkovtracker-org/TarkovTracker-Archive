@@ -69,8 +69,35 @@ type ProgressResponse = {
   meta: Record<string, unknown>;
 };
 
-const asFormattedProgress = (data: ProgressResponseData): FormattedProgress =>
-  data as FormattedProgress;
+const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgress => {
+  if (!data || typeof data !== 'object') {
+    return false;
+  }
+
+  const candidate = data as Partial<FormattedProgress>;
+
+  return (
+    Array.isArray(candidate.tasksProgress) &&
+    Array.isArray(candidate.taskObjectivesProgress) &&
+    Array.isArray(candidate.hideoutModulesProgress) &&
+    Array.isArray(candidate.hideoutPartsProgress) &&
+    typeof candidate.displayName === 'string' &&
+    typeof candidate.userId === 'string' &&
+    typeof candidate.playerLevel === 'number' &&
+    typeof candidate.gameEdition === 'number' &&
+    typeof candidate.pmcFaction === 'string'
+  );
+};
+
+const asFormattedProgress = (data: ProgressResponseData): FormattedProgress => {
+  if (!isFormattedProgress(data)) {
+    throw new Error(
+      `Progress handler returned unexpected data shape for formatted progress assertions: ${JSON.stringify(data)}`
+    );
+  }
+
+  return data;
+};
 
 const readProgressResponse = (res: MockResponse): ProgressResponse =>
   res.json.mock.calls[0][0] as ProgressResponse;
