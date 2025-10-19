@@ -455,16 +455,17 @@ describe('Progress API Contract Tests', () => {
   });
 
   describe('Error Response Contracts', () => {
-    it('validates error response format structure', () => {
-      // Error responses should have consistent format
+    it('validates error response format specification', () => {
+      // Error responses must always follow this format when returned to clients
       const errorResponses = [
-        { success: false, error: 'Invalid task ID' },
-        { success: false, error: 'Unauthorized access' },
-        { success: false, error: 'Resource not found' },
         { success: false, error: 'Validation failed' },
+        { success: false, error: 'Unauthorized' },
+        { success: false, error: 'Not found' },
+        { success: false, error: 'Internal server error' },
       ];
 
       errorResponses.forEach(response => {
+        // Error responses must have this exact format
         expect(response).toHaveProperty('success');
         expect(response).toHaveProperty('error');
         expect(response.success).toBe(false);
@@ -473,27 +474,29 @@ describe('Progress API Contract Tests', () => {
       });
     });
 
-    it('validates all error responses have required fields', () => {
-      // Ensure error contract consistency
-      const errorSchemas = [
-        { success: false, error: 'Field validation failed' },
+    it('validates error format consistency across error types', () => {
+      // All error responses must follow consistent format
+      const errorFormats = [
+        { success: false, error: 'Invalid request' },
         { success: false, error: 'Authentication required' },
         { success: false, error: 'Permission denied' },
-        { success: false, error: 'Internal server error' },
+        { success: false, error: 'Resource not found' },
+        { success: false, error: 'Conflict' },
+        { success: false, error: 'Internal error' },
       ];
 
-      errorSchemas.forEach(schema => {
-        // Every error must have these fields
-        expect(schema).toHaveProperty('success');
-        expect(schema).toHaveProperty('error');
+      errorFormats.forEach(errorFormat => {
+        // All error responses must have these required fields
+        expect(errorFormat).toHaveProperty('success');
+        expect(errorFormat).toHaveProperty('error');
         
-        // Types must be correct
-        expect(typeof schema.success).toBe('boolean');
-        expect(typeof schema.error).toBe('string');
+        // Validate types
+        expect(typeof errorFormat.success).toBe('boolean');
+        expect(typeof errorFormat.error).toBe('string');
         
-        // Values must be correct
-        expect(schema.success).toBe(false);
-        expect(schema.error.length).toBeGreaterThan(0);
+        // Validate values
+        expect(errorFormat.success).toBe(false);
+        expect(errorFormat.error.length).toBeGreaterThan(0);
       });
     });
   });
