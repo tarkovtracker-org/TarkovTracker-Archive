@@ -222,6 +222,10 @@ const readProgressResponse = (res: MockResponse): ProgressResponse => {
     throw new Error('No json mock calls on response');
   }
 
+  if (res.status.mock.calls.length === 0) {
+    throw new Error('Response status was never set on mock response');
+  }
+
   return res.json.mock.calls[callCount - 1][0] as ProgressResponse;
 };
 
