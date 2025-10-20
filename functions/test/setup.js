@@ -174,22 +174,34 @@ beforeEach(() => {
   // --- Reset specific mock implementations/return values ---
   // Reset top-level Firestore spies to basic chainable mocks
   // This ensures tests start with a consistent baseline
-  const mockDocMethods = {
+  const baseDocMethods = {
     get: vi.fn().mockResolvedValue({ exists: false, data: () => undefined }),
     set: vi.fn().mockResolvedValue(undefined),
     update: vi.fn().mockResolvedValue(undefined),
     delete: vi.fn().mockResolvedValue(undefined),
-    collection: vi.fn(() => mockCollectionMethods), // Chain back to collection
   };
-  const mockCollectionMethods = {
-    doc: vi.fn(() => mockDocMethods),
+  const baseCollectionMethods = {
     get: vi.fn().mockResolvedValue({ docs: [], empty: true, size: 0 }),
     where: vi.fn().mockReturnThis(),
     orderBy: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
   };
-  firestoreMock.collection.mockImplementation(() => mockCollectionMethods);
-  firestoreMock.doc.mockImplementation(() => mockDocMethods);
+  function createCollection(collectionPath) {
+    return {
+      ...baseCollectionMethods,
+      path: collectionPath,
+      doc: vi.fn((id) => createDoc(`${collectionPath}/${id}`)),
+    };
+  }
+  function createDoc(path) {
+    return {
+      ...baseDocMethods,
+      path,
+      collection: vi.fn((collectionPath) => createCollection(`${path}/${collectionPath}`)),
+    };
+  }
+  firestoreMock.collection.mockImplementation((collectionPath) => createCollection(collectionPath));
+  firestoreMock.doc.mockImplementation((path) => createDoc(path));
   // Reset transaction mock to provide basic spied methods
   firestoreMock.runTransaction.mockImplementation(async (callback) => {
     const transaction = {
