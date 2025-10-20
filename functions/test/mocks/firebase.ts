@@ -2,20 +2,41 @@ import { vi } from 'vitest';
 
 const adminMock = { initializeApp: vi.fn() };
 
+const createSentinel = (type: string, payload: Record<string, unknown> = {}) => ({
+  __fieldValue: type,
+  ...payload,
+});
+
 const firestoreMock = {
   collection: vi.fn(),
   doc: vi.fn(),
   runTransaction: vi.fn(),
   FieldValue: {
-    serverTimestamp: vi.fn().mockReturnValue('serverTimestamp'),
-    arrayUnion: vi.fn((item: unknown) => `arrayUnion(${item})`),
-    arrayRemove: vi.fn((item: unknown) => `arrayRemove(${item})`),
-    increment: vi.fn((value: unknown) => `increment(${value})`),
-    delete: vi.fn().mockReturnValue('delete()'),
+    serverTimestamp: vi.fn(() => createSentinel('serverTimestamp')),
+    arrayUnion: vi.fn((...items: unknown[]) => createSentinel('arrayUnion', { values: items })),
+    arrayRemove: vi.fn((...items: unknown[]) => createSentinel('arrayRemove', { values: items })),
+    increment: vi.fn((value: unknown) => createSentinel('increment', { value })),
+    delete: vi.fn(() => createSentinel('delete')),
   },
   Timestamp: {
-    now: vi.fn().mockReturnValue('now'),
-    fromDate: vi.fn((date: Date) => ({ toDate: () => date })),
+    now: vi.fn(() => {
+      const now = new Date();
+      return {
+        toDate: () => now,
+        toMillis: () => now.getTime(),
+      };
+    }),
+    fromDate: vi.fn((date: Date) => ({
+      toDate: () => date,
+      toMillis: () => date.getTime(),
+    })),
+    fromMillis: vi.fn((millis: number) => {
+      const date = new Date(millis);
+      return {
+        toDate: () => date,
+        toMillis: () => millis,
+      };
+    }),
   },
 };
 
