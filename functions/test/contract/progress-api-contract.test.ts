@@ -95,7 +95,7 @@ const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgr
     typeof candidate.playerLevel === 'number' &&
     Number.isFinite(candidate.playerLevel) &&
     Number.isInteger(candidate.playerLevel) &&
-    candidate.playerLevel >= 0 &&
+    candidate.playerLevel >= 1 &&
     candidate.playerLevel <= MAX_PLAYER_LEVEL &&
     typeof candidate.gameEdition === 'number' &&
     Number.isFinite(candidate.gameEdition) &&
