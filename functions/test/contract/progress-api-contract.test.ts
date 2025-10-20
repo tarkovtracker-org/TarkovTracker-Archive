@@ -13,6 +13,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FormattedProgress } from '../../src/types/api.ts';
 
+const allowedPmcFactions = ['USEC', 'BEAR'] as const;
+type AllowedPmcFaction = (typeof allowedPmcFactions)[number];
+
 type ProgressLevelResponse = {
   level: number;
   message: string;
@@ -87,7 +90,8 @@ const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgr
     Number.isFinite(candidate.playerLevel) &&
     typeof candidate.gameEdition === 'number' &&
     Number.isFinite(candidate.gameEdition) &&
-    typeof candidate.pmcFaction === 'string'
+    typeof candidate.pmcFaction === 'string' &&
+    allowedPmcFactions.includes(candidate.pmcFaction as AllowedPmcFaction)
   );
 };
 
