@@ -37,16 +37,14 @@ const runHandlerWithErrorPipeline = async (
     }
   };
 
-  try {
-    const maybePromise = handler(req, res, next);
-    if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
-      await (maybePromise as PromiseLike<void>).catch(err => {
-        next(err);
-      });
-    }
-  } catch (err) {
-    next(err);
-  }
+  await Promise.resolve()
+    .then(() => handler(req, res, next))
+    .then(() => {
+      /* noop */
+    })
+    .catch(err => {
+      next(err);
+    });
 };
 
 describe('Token API Contract Tests', () => {
