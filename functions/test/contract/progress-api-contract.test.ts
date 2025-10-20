@@ -11,6 +11,127 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { adminMock, firestoreMock, functionsMock, loggerMock } from '../mocks/firebase.ts';
+
+vi.mock(
+  'firebase-admin',
+  () => {
+    const admin = {
+      ...adminMock,
+      firestore: vi.fn(() => firestoreMock),
+      auth: vi.fn(() => ({
+        verifyIdToken: vi.fn().mockResolvedValue({ uid: 'test-user' }),
+        createCustomToken: vi.fn().mockResolvedValue('test-custom-token'),
+      })),
+      credential: { cert: vi.fn() },
+    } as any;
+    admin.default = admin;
+    return { default: admin, admin };
+  },
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-admin/firestore',
+  () => ({
+    Firestore: class {},
+    DocumentReference: class {},
+    DocumentSnapshot: class {},
+    FieldValue: firestoreMock.FieldValue,
+    Timestamp: firestoreMock.Timestamp,
+    default: {
+      FieldValue: firestoreMock.FieldValue,
+      Timestamp: firestoreMock.Timestamp,
+    },
+  }),
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions',
+  () => ({ ...functionsMock, default: functionsMock }),
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions/v1',
+  () => ({ ...functionsMock, default: functionsMock }),
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions/logger',
+  () => ({ ...loggerMock, default: loggerMock }),
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions/v2',
+  () => ({ logger: loggerMock, default: { logger: loggerMock } }),
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions/v2/https',
+  () => {
+    class HttpsError extends Error {
+      code: string;
+      details: unknown;
+
+      constructor(code: string, message: string, details?: unknown) {
+        super(message);
+        this.code = code;
+        this.details = details;
+      }
+    }
+
+    const wrapHandler = (optionsOrHandler: any, maybeHandler: any) =>
+      typeof optionsOrHandler === 'function' && !maybeHandler ? optionsOrHandler : maybeHandler;
+
+    const onCall = (optionsOrHandler: any, maybeHandler?: any) => {
+      const handler = wrapHandler(optionsOrHandler, maybeHandler);
+      return async (requestOrData = {}, maybeContext = {}) => {
+        if (requestOrData && typeof requestOrData === 'object' && 'data' in requestOrData) {
+          return handler(requestOrData);
+        }
+        return handler({
+          data: requestOrData,
+          auth: maybeContext.auth,
+          params: maybeContext.params || {},
+          headers: maybeContext.headers || {},
+          rawRequest: maybeContext.rawRequest,
+          acceptsStreaming: maybeContext.acceptsStreaming ?? false,
+        });
+      };
+    };
+
+    const onRequest = (optionsOrHandler: any, maybeHandler?: any) => {
+      const handler = wrapHandler(optionsOrHandler, maybeHandler);
+      return async (req: any, res: any) => handler(req, res);
+    };
+
+    return {
+      onCall,
+      onRequest,
+      HttpsError,
+      Request: class {},
+      CallableRequest: class {},
+    };
+  },
+  { virtual: true }
+);
+
+vi.mock(
+  'firebase-functions/v2/scheduler',
+  () => ({
+    onSchedule: (optionsOrHandler: any, maybeHandler?: any) => {
+      const handler =
+        typeof optionsOrHandler === 'function' && !maybeHandler ? optionsOrHandler : maybeHandler;
+      return async (...args: any[]) => handler?.(...args);
+    },
+  }),
+  { virtual: true }
+);
 import type { FormattedProgress } from '../../src/types/api.ts';
 import {
   ALLOWED_PMC_FACTIONS,
@@ -92,6 +213,9 @@ const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgr
     typeof candidate.userId === 'string' &&
     typeof candidate.playerLevel === 'number' &&
     Number.isFinite(candidate.playerLevel) &&
+    Number.isInteger(candidate.playerLevel) &&
+    candidate.playerLevel >= 0 &&
+    candidate.playerLevel <= MAX_PLAYER_LEVEL &&
     typeof candidate.gameEdition === 'number' &&
     Number.isFinite(candidate.gameEdition) &&
     typeof candidate.pmcFaction === 'string' &&
