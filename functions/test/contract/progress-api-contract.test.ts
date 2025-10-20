@@ -240,7 +240,14 @@ const isProgressLevelResponse = (data: ProgressResponseData): data is ProgressLe
 
   const candidate = data as Partial<ProgressLevelResponse>;
 
-  return typeof candidate.level === 'number' && Number.isFinite(candidate.level) && typeof candidate.message === 'string';
+  return (
+    typeof candidate.level === 'number' &&
+    Number.isFinite(candidate.level) &&
+    Number.isInteger(candidate.level) &&
+    candidate.level >= 1 &&
+    candidate.level <= MAX_PLAYER_LEVEL &&
+    typeof candidate.message === 'string'
+  );
 };
 
 const asProgressLevelResponse = (data: ProgressResponseData): ProgressLevelResponse => {
