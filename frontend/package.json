@@ -25,7 +25,7 @@
     "test:all": "npm run test:run && npm run test:e2e"
   },
   "dependencies": {
-    "@apollo/client": "^3.14.0",
+    "@apollo/client": "^3.13.0",
     "@mdi/font": "^7.4.47",
     "@vue/apollo-composable": "^4.2.2",
     "@vueuse/core": "^13.9.0",

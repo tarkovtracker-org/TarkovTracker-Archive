@@ -15,13 +15,16 @@ All of the following upgrades have been successfully completed, tested, and vali
 
 All builds passing, all tests passing (192 frontend unit tests, 75 functions unit tests).
 
-## 🚫 Blocked Upgrades
+## ⚠️ Partially Upgraded / Blocked
 
-| Area | Package | Current | Target | Status | Blocker |
-|------|---------|---------|--------|--------|---------|
-| Frontend GraphQL | `@apollo/client` | 3.14.0 | 4.x | **BLOCKED** | `@vue/apollo-composable@4.2.2` requires Apollo Client ^3.4.13. Apollo Client 4.x is not compatible with current Vue Apollo integration. Waiting for @vue/apollo-composable v5.x release with Apollo 4.x support. |
+| Area | Package | Current | Target | Status | Notes |
+|------|---------|---------|--------|--------|-------|
+| Frontend GraphQL | `@apollo/client` | 3.13.0 | 4.x | **BLOCKED** | Currently at 3.13.0 (not 3.14.0 due to `rehackt`/React dependency issue in Vue apps). Apollo 4.x blocked by `@vue/apollo-composable@4.2.2` requiring ^3.4.13. Waiting for @vue/apollo-composable v5.x with Apollo 4.x support. |
 
-**Action Required:** Monitor https://github.com/vuejs/apollo for @vue/apollo-composable v5.x release that adds Apollo Client 4.x compatibility.
+**Known Issues:**
+- **Apollo Client 3.14.0**: Introduces `rehackt` dependency that expects React as optional peer dependency, causing errors in Vue applications. Staying on 3.13.0 until resolved or 4.x becomes available.
+
+**Action Required:** Monitor <https://github.com/vuejs/apollo> for @vue/apollo-composable v5.x release that adds Apollo Client 4.x compatibility.
 
 ## Upgrade Checklists
 
