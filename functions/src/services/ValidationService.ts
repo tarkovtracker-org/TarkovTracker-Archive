@@ -1,11 +1,12 @@
-import { 
-  TaskStatus, 
-  TaskUpdateRequest, 
-  MultipleTaskUpdateRequest, 
+import {
+  TaskStatus,
+  TaskUpdateRequest,
+  MultipleTaskUpdateRequest,
   ObjectiveUpdateRequest,
-  ApiToken 
+  ApiToken
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
+import { MAX_PLAYER_LEVEL } from '../constants/player.js';
 
 export class ValidationService {
   /**
@@ -141,8 +142,8 @@ export class ValidationService {
    */
   static validateLevel(level: unknown): number {
     const levelNum = parseInt(String(level), 10);
-    if (isNaN(levelNum) || levelNum < 1 || levelNum > 79) {
-      throw errors.badRequest('Level must be a number between 1 and 79');
+    if (isNaN(levelNum) || levelNum < 1 || levelNum > MAX_PLAYER_LEVEL) {
+      throw errors.badRequest(`Level must be a number between 1 and ${MAX_PLAYER_LEVEL}`);
     }
     return levelNum;
   }

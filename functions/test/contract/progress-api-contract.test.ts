@@ -12,9 +12,13 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FormattedProgress } from '../../src/types/api.ts';
-
-const allowedPmcFactions = ['USEC', 'BEAR'] as const;
-type AllowedPmcFaction = (typeof allowedPmcFactions)[number];
+import {
+  ALLOWED_PMC_FACTIONS,
+  type AllowedPmcFaction,
+  MAX_PLAYER_LEVEL,
+  OBJECTIVE_PROGRESS_STATES,
+  type ObjectiveProgressState,
+} from '../../src/constants/player.ts';
 
 type ProgressLevelResponse = {
   level: number;
@@ -91,7 +95,7 @@ const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgr
     typeof candidate.gameEdition === 'number' &&
     Number.isFinite(candidate.gameEdition) &&
     typeof candidate.pmcFaction === 'string' &&
-    allowedPmcFactions.includes(candidate.pmcFaction as AllowedPmcFaction)
+    ALLOWED_PMC_FACTIONS.includes(candidate.pmcFaction as AllowedPmcFaction)
   );
 };
 
@@ -161,8 +165,13 @@ const isProgressObjectiveResponse = (
   return (
     typeof candidate.objectiveId === 'string' &&
     typeof candidate.message === 'string' &&
-    (candidate.state === undefined || typeof candidate.state === 'string') &&
-    (candidate.count === undefined || Number.isFinite(candidate.count))
+    (candidate.state === undefined ||
+      (typeof candidate.state === 'string' &&
+        OBJECTIVE_PROGRESS_STATES.includes(candidate.state as ObjectiveProgressState))) &&
+    (candidate.count === undefined ||
+      (Number.isFinite(candidate.count) &&
+        Number.isInteger(candidate.count) &&
+        candidate.count >= 0))
   );
 };
 
@@ -188,16 +197,20 @@ const isProgressMessageResponse = (data: ProgressResponseData): data is Progress
 
 const asProgressMessageResponse = (data: ProgressResponseData): ProgressMessageResponse => {
   if (!isProgressMessageResponse(data)) {
-    throw new Error(
-      `Bulk task handler returned unexpected data shape: ${JSON.stringify(data)}`
-    );
+    throw new Error(`Unexpected response shape: expected ProgressMessageResponse but received ${JSON.stringify(data)}`);
   }
 
   return data;
 };
 
-const readProgressResponse = (res: MockResponse): ProgressResponse =>
-  res.json.mock.calls[0][0] as ProgressResponse;
+const readProgressResponse = (res: MockResponse): ProgressResponse => {
+  const callCount = res.json.mock.calls.length;
+  if (callCount === 0) {
+    throw new Error('No json mock calls on response');
+  }
+
+  return res.json.mock.calls[callCount - 1][0] as ProgressResponse;
+};
 
 describe('Progress API Contract Tests', () => {
   beforeEach(() => {
@@ -382,7 +395,7 @@ describe('Progress API Contract Tests', () => {
 
       expect(typeof formattedProgress.playerLevel).toBe('number');
       expect(formattedProgress.playerLevel).toBeGreaterThanOrEqual(1);
-      expect(formattedProgress.playerLevel).toBeLessThanOrEqual(79);
+      expect(formattedProgress.playerLevel).toBeLessThanOrEqual(MAX_PLAYER_LEVEL);
       expect(Number.isInteger(formattedProgress.playerLevel)).toBe(true);
     });
 
@@ -410,7 +423,7 @@ describe('Progress API Contract Tests', () => {
       const formattedProgress = asFormattedProgress(responseData.data);
 
       expect(typeof formattedProgress.pmcFaction).toBe('string');
-      expect(['USEC', 'BEAR']).toContain(formattedProgress.pmcFaction);
+      expect(ALLOWED_PMC_FACTIONS).toContain(formattedProgress.pmcFaction);
     });
   });
 
@@ -478,7 +491,7 @@ describe('Progress API Contract Tests', () => {
       const responseData = readProgressResponse(res);
       const levelResponse = asProgressLevelResponse(responseData.data);
       expect(levelResponse.level).toBeGreaterThanOrEqual(1);
-      expect(levelResponse.level).toBeLessThanOrEqual(79);
+      expect(levelResponse.level).toBeLessThanOrEqual(MAX_PLAYER_LEVEL);
     });
   });
 
@@ -542,10 +555,11 @@ describe('Progress API Contract Tests', () => {
       const objectiveResponse = asProgressObjectiveResponse(responseData.data);
       // State and count are optional but must be correct type if present
       if ('state' in objectiveResponse) {
-        expect(['completed', 'uncompleted']).toContain(objectiveResponse.state);
+        expect(OBJECTIVE_PROGRESS_STATES).toContain(objectiveResponse.state);
       }
       if ('count' in objectiveResponse) {
         expect(typeof objectiveResponse.count).toBe('number');
+        expect(Number.isInteger(objectiveResponse.count)).toBe(true);
         expect(objectiveResponse.count).toBeGreaterThanOrEqual(0);
       }
     });
