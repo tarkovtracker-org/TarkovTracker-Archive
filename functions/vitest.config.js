@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./test/setup'],
+    setupFiles: ['./test/setup.js'],
     deps: {
       optimizer: {
         ssr: {

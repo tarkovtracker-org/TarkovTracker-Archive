@@ -54,6 +54,8 @@ type MockResponse = {
   json: ReturnType<typeof vi.fn>;
 };
 
+const ALLOWED_TASK_STATES = OBJECTIVE_PROGRESS_STATES;
+
 // Helper to create mock Express request
 const createMockRequest = (apiToken: any, params = {}, body = {}, query = {}) => ({
   apiToken,
@@ -149,6 +151,7 @@ const isProgressTaskResponse = (data: ProgressResponseData): data is ProgressTas
   return (
     typeof candidate.taskId === 'string' &&
     typeof candidate.state === 'string' &&
+    ALLOWED_TASK_STATES.includes(candidate.state as ObjectiveProgressState) &&
     typeof candidate.message === 'string'
   );
 };
