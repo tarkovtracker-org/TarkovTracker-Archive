@@ -84,7 +84,9 @@ const isFormattedProgress = (data: ProgressResponseData): data is FormattedProgr
     typeof candidate.displayName === 'string' &&
     typeof candidate.userId === 'string' &&
     typeof candidate.playerLevel === 'number' &&
+    Number.isFinite(candidate.playerLevel) &&
     typeof candidate.gameEdition === 'number' &&
+    Number.isFinite(candidate.gameEdition) &&
     typeof candidate.pmcFaction === 'string'
   );
 };
@@ -156,7 +158,7 @@ const isProgressObjectiveResponse = (
     typeof candidate.objectiveId === 'string' &&
     typeof candidate.message === 'string' &&
     (candidate.state === undefined || typeof candidate.state === 'string') &&
-    (candidate.count === undefined || typeof candidate.count === 'number')
+    (candidate.count === undefined || Number.isFinite(candidate.count))
   );
 };
 
