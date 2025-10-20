@@ -145,8 +145,14 @@ export class ValidationService {
    * Validates player level
    */
   static validateLevel(level: unknown): number {
-    const levelNum = parseInt(String(level), 10);
-    if (isNaN(levelNum) || levelNum < 1 || levelNum > MAX_PLAYER_LEVEL) {
+    const levelString = String(level).trim();
+
+    if (!/^\d+$/.test(levelString)) {
+      throw errors.badRequest(`Level must be a number between 1 and ${MAX_PLAYER_LEVEL}`);
+    }
+
+    const levelNum = Number(levelString);
+    if (!Number.isInteger(levelNum) || levelNum < 1 || levelNum > MAX_PLAYER_LEVEL) {
       throw errors.badRequest(`Level must be a number between 1 and ${MAX_PLAYER_LEVEL}`);
     }
     return levelNum;
