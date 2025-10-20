@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { MAX_PLAYER_LEVEL } from '../../../../functions/src/constants/player.ts';
+import { MAX_PLAYER_LEVEL } from '@tarkov-tracker/shared/constants/player';
 import { useTarkovDataQuery, useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import { isMapVariant } from '@/utils/mapNormalization';

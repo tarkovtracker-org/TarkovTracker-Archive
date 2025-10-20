@@ -5,7 +5,8 @@
   "type": "module",
   "workspaces": [
     "functions",
-    "frontend"
+    "frontend",
+    "packages/shared"
   ],
   "browserslist": [
     "> 1%",

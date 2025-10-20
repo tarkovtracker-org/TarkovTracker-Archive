@@ -1,0 +1,16 @@
+{
+  "name": "@tarkov-tracker/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "types": "./index.d.ts"
+    },
+    "./constants/player": {
+      "import": "./constants/player.js",
+      "types": "./constants/player.d.ts"
+    }
+  }
+}
