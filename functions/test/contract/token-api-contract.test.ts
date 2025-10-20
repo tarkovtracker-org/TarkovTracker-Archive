@@ -25,6 +25,28 @@ const createMockResponse = () => {
   return res;
 };
 
+const runHandlerWithErrorPipeline = async (
+  handler: (req: any, res: any, next?: (err?: unknown) => void) => unknown,
+  req: any,
+  res: any,
+  errorHandler: (err: Error, req: any, res: any, next: (err?: unknown) => void) => void
+) => {
+  const next = (err?: unknown) => {
+    if (err) {
+      errorHandler(err as Error, req, res, vi.fn());
+    }
+  };
+
+  await Promise.resolve()
+    .then(() => handler(req, res, next))
+    .then(() => {
+      /* noop */
+    })
+    .catch(err => {
+      next(err);
+    });
+};
+
 describe('Token API Contract Tests', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -205,32 +227,7 @@ describe('Token API Contract Tests', () => {
 
       const res = createMockResponse();
 
-      await new Promise<void>(resolve => {
-        let settled = false;
-        const finish = () => {
-          if (!settled) {
-            settled = true;
-            resolve();
-          }
-        };
-        const next = (err?: unknown) => {
-          if (err) {
-            errorHandler(err as Error, req, res, vi.fn());
-          }
-          finish();
-        };
-
-        try {
-          const maybePromise = tokenHandler.getTokenInfo(req, res, next);
-          if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
-            (maybePromise as PromiseLike<void>).then(finish).catch(next);
-          } else {
-            finish();
-          }
-        } catch (err) {
-          next(err);
-        }
-      });
+      await runHandlerWithErrorPipeline(tokenHandler.getTokenInfo.bind(tokenHandler), req, res, errorHandler);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith(
@@ -277,32 +274,7 @@ describe('Token API Contract Tests', () => {
 
       const res = createMockResponse();
 
-      await new Promise<void>(resolve => {
-        let settled = false;
-        const finish = () => {
-          if (!settled) {
-            settled = true;
-            resolve();
-          }
-        };
-        const next = (err?: unknown) => {
-          if (err) {
-            errorHandler(err as Error, req, res, vi.fn());
-          }
-          finish();
-        };
-
-        try {
-          const maybePromise = tokenHandler.getTokenInfo(req, res, next);
-          if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
-            (maybePromise as PromiseLike<void>).then(finish).catch(next);
-          } else {
-            finish();
-          }
-        } catch (err) {
-          next(err);
-        }
-      });
+      await runHandlerWithErrorPipeline(tokenHandler.getTokenInfo.bind(tokenHandler), req, res, errorHandler);
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith(
