@@ -9,13 +9,13 @@ export { useHideoutData } from '@/composables/data/useHideoutData';
 export { useMapData, useTraderData, usePlayerLevelData } from '@/composables/data/useMapData';
 // Re-export types for backward compatibility
 export type { Task } from '@/types/tarkov';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
+import { MAX_PLAYER_LEVEL } from '../../../functions/src/constants/player.ts';
 import { DISABLED_TASK_IDS } from '@/config/gameConstants';
 import { useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTaskData } from '@/composables/data/useTaskData';
 import { useHideoutData } from '@/composables/data/useHideoutData';
 import { useMapData, useTraderData, usePlayerLevelData } from '@/composables/data/useMapData';
-import { createGraph } from '@/composables/utils/graphHelpers';
 import type {
   TarkovDataComposable,
   Task,
@@ -27,24 +27,8 @@ import type {
   HideoutModule,
   NeededItemTaskObjective,
   NeededItemHideoutModule,
-  ObjectiveMapInfo,
-  ObjectiveGPSInfo,
 } from '@/types/tarkov';
-import type Graph from 'graphology';
-
-type SyncSource<T> = { readonly value: T };
-type SyncTarget<T> = { value: T };
-
-// These watchers intentionally live for the app lifetime to keep module-level state in sync.
-// For tests or HMR teardown we expose optional cleanup by returning the watcher stop handle.
-const sync = <T>(source: SyncSource<T>, target: SyncTarget<T>) =>
-  watch(
-    () => source.value,
-    (value) => {
-      target.value = value;
-    },
-    { immediate: true }
-  );
+import type { AbstractGraph } from 'graphology-types';
 // Global state variables for backward compatibility
 // These will be initialized when useTarkovData is first called
 let globalTaskData: ReturnType<typeof useTaskData> | null = null;
@@ -53,9 +37,6 @@ let globalMapData: ReturnType<typeof useMapData> | null = null;
 let globalTraderData: ReturnType<typeof useTraderData> | null = null;
 let globalPlayerData: ReturnType<typeof usePlayerLevelData> | null = null;
 let globalApiData: ReturnType<typeof useTarkovApi> | null = null;
-// Ensure sync watchers are registered only once across composable invocations
-let syncInitialized = false;
-const syncStops: Array<() => void> = [];
 // Initialize function to be called within setup context
 function initializeGlobalData() {
   if (!globalTaskData) {
@@ -65,20 +46,18 @@ function initializeGlobalData() {
     globalTraderData = useTraderData();
     globalPlayerData = usePlayerLevelData();
     globalApiData = useTarkovApi();
-
-    // Global composables initialize synchronously; non-null assertions are safe
   }
 }
 // Re-export for backward compatibility - these will be empty until useTarkovData is called
 export const hideoutStations = ref<HideoutStation[]>([]);
 export const hideoutModules = ref<HideoutModule[]>([]);
-export const hideoutGraph = ref<Graph>(createGraph());
+export const hideoutGraph = ref<AbstractGraph | null>(null);
 export const tasks = ref<Task[]>([]);
-export const taskGraph = ref<Graph>(createGraph());
-export const objectiveMaps = ref<Record<string, ObjectiveMapInfo[]>>({});
-export const alternativeTasks = ref<Record<string, string[]>>({});
-export const objectiveGPS = ref<Record<string, ObjectiveGPSInfo[]>>({});
-export const mapTasks = ref<Record<string, string[]>>({});
+export const taskGraph = ref<AbstractGraph | null>(null);
+export const objectiveMaps = ref<Record<string, unknown>>({});
+export const alternativeTasks = ref<Record<string, unknown>>({});
+export const objectiveGPS = ref<Record<string, unknown>>({});
+export const mapTasks = ref<Record<string, unknown>>({});
 export const neededItemTaskObjectives = ref<NeededItemTaskObjective[]>([]);
 export const neededItemHideoutModules = ref<NeededItemHideoutModule[]>([]);
 export const loading = ref<boolean>(false);
@@ -95,55 +74,7 @@ export const maps = ref<TarkovMap[]>([]);
 export const traders = ref<Trader[]>([]);
 export const playerLevels = ref<PlayerLevel[]>([]);
 const minPlayerLevel = ref<number>(1);
-const maxPlayerLevel = ref<number>(79);
-
-function initializeSyncWatchers() {
-  if (syncInitialized) {
-    return;
-  }
-
-  initializeGlobalData();
-
-  const localStops: Array<() => void> = [];
-  try {
-    const taskData = globalTaskData!;
-    const hideoutData = globalHideoutData!;
-    const mapData = globalMapData!;
-    const traderData = globalTraderData!;
-    const playerData = globalPlayerData!;
-
-    localStops.push(sync(hideoutData.hideoutStations, hideoutStations));
-    localStops.push(sync(hideoutData.hideoutModules, hideoutModules));
-    localStops.push(sync(hideoutData.hideoutGraph, hideoutGraph));
-    localStops.push(sync(taskData.tasks, tasks));
-    localStops.push(sync(taskData.taskGraph, taskGraph));
-    localStops.push(sync(taskData.objectiveMaps, objectiveMaps));
-    localStops.push(sync(taskData.alternativeTasks, alternativeTasks));
-    localStops.push(sync(taskData.objectiveGPS, objectiveGPS));
-    localStops.push(sync(taskData.mapTasks, mapTasks));
-    localStops.push(sync(taskData.neededItemTaskObjectives, neededItemTaskObjectives));
-    localStops.push(sync(hideoutData.neededItemHideoutModules, neededItemHideoutModules));
-    localStops.push(sync(taskData.loading, loading));
-    localStops.push(sync(hideoutData.loading, hideoutLoading));
-    localStops.push(sync(taskData.objectives, objectives));
-    localStops.push(sync(mapData.maps, maps));
-    localStops.push(sync(traderData.traders, traders));
-    localStops.push(sync(playerData.playerLevels, playerLevels));
-    localStops.push(sync(playerData.minPlayerLevel, minPlayerLevel));
-    localStops.push(sync(playerData.maxPlayerLevel, maxPlayerLevel));
-
-    syncStops.push(...localStops);
-    syncInitialized = true;
-  } catch (error) {
-    localStops.forEach((stop) => stop());
-    throw error;
-  }
-}
-
-export function stopAllSyncWatchers() {
-  while (syncStops.length) syncStops.pop()?.();
-  syncInitialized = false;
-}
+const maxPlayerLevel = ref<number>(MAX_PLAYER_LEVEL);
 /**
  * Main composable that provides backward compatibility
  * while using the new modular structure under the hood
@@ -158,7 +89,26 @@ export function useTarkovData(): TarkovDataComposable {
   const mapData = globalMapData!;
   const traderData = globalTraderData!;
   const playerData = globalPlayerData!;
-  initializeSyncWatchers();
+  // Update the exported refs with the real data
+  hideoutStations.value = hideoutData.hideoutStations.value;
+  hideoutModules.value = hideoutData.hideoutModules.value;
+  hideoutGraph.value = hideoutData.hideoutGraph.value;
+  tasks.value = taskData.tasks.value;
+  taskGraph.value = taskData.taskGraph.value;
+  objectiveMaps.value = taskData.objectiveMaps.value;
+  alternativeTasks.value = taskData.alternativeTasks.value;
+  objectiveGPS.value = taskData.objectiveGPS.value;
+  mapTasks.value = taskData.mapTasks.value;
+  objectives.value = taskData.objectives.value;
+  maps.value = mapData.maps.value;
+  traders.value = traderData.traders.value;
+  playerLevels.value = playerData.playerLevels.value;
+  minPlayerLevel.value = playerData.minPlayerLevel.value;
+  maxPlayerLevel.value = playerData.maxPlayerLevel.value;
+  neededItemTaskObjectives.value = taskData.neededItemTaskObjectives.value;
+  neededItemHideoutModules.value = hideoutData.neededItemHideoutModules.value;
+  loading.value = taskData.loading.value;
+  hideoutLoading.value = hideoutData.loading.value;
   // Return the combined interface for backward compatibility
   return {
     availableLanguages: api.availableLanguages,

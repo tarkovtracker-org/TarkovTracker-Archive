@@ -1,4 +1,5 @@
 import { computed } from 'vue';
+import { MAX_PLAYER_LEVEL } from '../../../../functions/src/constants/player.ts';
 import { useTarkovDataQuery, useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import { isMapVariant } from '@/utils/mapNormalization';
@@ -232,7 +233,7 @@ export function usePlayerLevelData() {
     return Math.min(...playerLevels.value.map((l) => l.level));
   });
   const maxPlayerLevel = computed<number>(() => {
-    if (!playerLevels.value.length) return 79;
+    if (!playerLevels.value.length) return MAX_PLAYER_LEVEL;
     return Math.max(...playerLevels.value.map((l) => l.level));
   });
   const levelRange = computed(() => ({
