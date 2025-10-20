@@ -1,5 +1,15 @@
 import { defineConfig } from 'vitest/config';
+import { fileURLToPath } from 'node:url';
+
+const sharedIndexPath = fileURLToPath(new URL('../packages/shared/index.js', import.meta.url));
+const sharedConstantsPath = fileURLToPath(new URL('../packages/shared/constants/', import.meta.url));
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@tarkov-tracker/shared': sharedIndexPath,
+      '@tarkov-tracker/shared/constants': sharedConstantsPath,
+    },
+  },
   test: {
     globals: true,
     environment: 'node',

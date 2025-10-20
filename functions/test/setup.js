@@ -120,6 +120,16 @@ vi.mock(
   }),
   { virtual: true }
 );
+
+vi.mock(
+  '@tarkov-tracker/shared/constants/player',
+  () => ({
+    MAX_PLAYER_LEVEL: 79,
+    ALLOWED_PMC_FACTIONS: Object.freeze(['USEC', 'BEAR']),
+    OBJECTIVE_PROGRESS_STATES: Object.freeze(['completed', 'uncompleted']),
+  }),
+  { virtual: true }
+);
 vi.mock('uid-generator', () => ({
   default: class UIDGenerator {
     constructor() {}
