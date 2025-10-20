@@ -139,7 +139,7 @@ import {
   MAX_PLAYER_LEVEL,
   OBJECTIVE_PROGRESS_STATES,
   type ObjectiveProgressState,
-} from '../../src/constants/player.ts';
+} from '@tarkov-tracker/shared/constants/player';
 
 type ProgressLevelResponse = {
   level: number;
