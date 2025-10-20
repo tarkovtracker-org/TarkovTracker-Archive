@@ -108,7 +108,7 @@ All routine patch and minor upgrades have been applied. The items below are the 
 
 ## Rollback guidance
 
-- Keep backup copies of `package.json` and `package-lock.json` for each workspace prior to upgrading.
+- Keep backup copies of `package.json` and `package-lock.json` for each workspace before upgrading.
 - If an upgrade fails, restore the backups, run `npm install`, and repeat the validation commands above.
 
 ---
