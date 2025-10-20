@@ -76,20 +76,48 @@ vi.mock(
     const wrapHandler = (optionsOrHandler, maybeHandler) =>
       typeof optionsOrHandler === 'function' && !maybeHandler ? optionsOrHandler : maybeHandler;
 
+    const normalizeContext = (ctx = {}) => ({
+      auth: ctx?.auth,
+      params: ctx?.params ?? {},
+      headers: ctx?.headers ?? {},
+      rawRequest: ctx?.rawRequest,
+      acceptsStreaming: ctx?.acceptsStreaming ?? false,
+    });
+
     const onCall = (optionsOrHandler, maybeHandler) => {
       const handler = wrapHandler(optionsOrHandler, maybeHandler);
-      return async (requestOrData = {}, maybeContext = {}) => {
-        if (requestOrData && typeof requestOrData === 'object' && 'data' in requestOrData) {
-          return handler(requestOrData);
+      return async (...invocationArgs) => {
+        let request;
+        let context;
+
+        if (
+          invocationArgs.length === 1 &&
+          invocationArgs[0] &&
+          typeof invocationArgs[0] === 'object' &&
+          'data' in invocationArgs[0]
+        ) {
+          const shapedRequest = {
+            ...invocationArgs[0],
+            params: invocationArgs[0].params ?? {},
+            headers: invocationArgs[0].headers ?? {},
+            acceptsStreaming: invocationArgs[0].acceptsStreaming ?? false,
+          };
+          request = shapedRequest;
+          context = normalizeContext(shapedRequest);
+        } else {
+          const [data, ctx = {}] = invocationArgs;
+          context = normalizeContext(ctx);
+          request = {
+            data,
+            ...context,
+          };
         }
-        return handler({
-          data: requestOrData,
-          auth: maybeContext.auth,
-          params: maybeContext.params || {},
-          headers: maybeContext.headers || {},
-          rawRequest: maybeContext.rawRequest,
-          acceptsStreaming: maybeContext.acceptsStreaming ?? false,
-        });
+
+        if (handler.length >= 2) {
+          return handler(request.data, context);
+        }
+
+        return handler(request);
       };
     };
 
