@@ -10,6 +10,7 @@ export { useMapData, useTraderData, usePlayerLevelData } from '@/composables/dat
 // Re-export types for backward compatibility
 export type { Task } from '@/types/tarkov';
 import { computed, ref } from 'vue';
+import { MAX_PLAYER_LEVEL } from '../../../functions/src/constants/player.ts';
 import { DISABLED_TASK_IDS } from '@/config/gameConstants';
 import { useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTaskData } from '@/composables/data/useTaskData';
@@ -73,7 +74,7 @@ export const maps = ref<TarkovMap[]>([]);
 export const traders = ref<Trader[]>([]);
 export const playerLevels = ref<PlayerLevel[]>([]);
 const minPlayerLevel = ref<number>(1);
-const maxPlayerLevel = ref<number>(79);
+const maxPlayerLevel = ref<number>(MAX_PLAYER_LEVEL);
 /**
  * Main composable that provides backward compatibility
  * while using the new modular structure under the hood
