@@ -1,20 +1,27 @@
 # TarkovTracker Dependency Upgrade Strategy
 
 **Updated:** 2025-02-15  
-**Scope:** Outstanding upgrades still requiring major or breaking change work
+**Status:** 5 of 6 major upgrades completed ✅
 
-All routine patch and minor upgrades have been applied. The items below are the remaining dependency updates that need dedicated effort.
+## ✅ Completed Upgrades (2025-02-15)
 
-## Remaining Major/Broadcast Updates
+All of the following upgrades have been successfully completed, tested, and validated:
 
-| Area | Package | Current | Target | Risk | Notes |
-|------|---------|---------|--------|------|-------|
-| Frontend GraphQL | `@apollo/client` | 3.14.0 | 4.x | High | Requires RxJS peer dependency and codemod; regression-test GraphQL features |
-| Frontend Firebase | `firebase` | 11.10.0 | 12.x | Medium | Align with root workspace; verify auth + Firestore listeners |
-| Frontend i18n tooling | `@intlify/unplugin-vue-i18n` | 6.0.8 | 11.x | High | Replace `tc`/`$tc` usage and remove any `v-t` directives before upgrade |
-| Frontend utility | `uuid` | 11.1.0 | 13.x | Medium | CommonJS removed; ensure all imports use ESM |
-| Frontend test env | `jsdom` | 26.1.0 | 27.x | Low | Dev-only bump; re-run Vitest after upgrade |
-| Functions typings | `@types/node` | 22.18.11 | 24.x | Low | Update TypeScript references and rebuild functions |
+- **@types/node** (functions): 22.18.11 → 24.x
+- **jsdom** (frontend): 26.1.0 → 27.x
+- **uuid** (frontend): 11.1.0 → 13.x
+- **firebase** (frontend): 11.10.0 → 12.x
+- **@intlify/unplugin-vue-i18n** (frontend): 6.0.8 → 11.x
+
+All builds passing, all tests passing (192 frontend unit tests, 75 functions unit tests).
+
+## 🚫 Blocked Upgrades
+
+| Area | Package | Current | Target | Status | Blocker |
+|------|---------|---------|--------|--------|---------|
+| Frontend GraphQL | `@apollo/client` | 3.14.0 | 4.x | **BLOCKED** | `@vue/apollo-composable@4.2.2` requires Apollo Client ^3.4.13. Apollo Client 4.x is not compatible with current Vue Apollo integration. Waiting for @vue/apollo-composable v5.x release with Apollo 4.x support. |
+
+**Action Required:** Monitor https://github.com/vuejs/apollo for @vue/apollo-composable v5.x release that adds Apollo Client 4.x compatibility.
 
 ## Upgrade Checklists
 
