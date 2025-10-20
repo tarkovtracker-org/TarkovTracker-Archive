@@ -10,7 +10,7 @@ export { useMapData, useTraderData, usePlayerLevelData } from '@/composables/dat
 // Re-export types for backward compatibility
 export type { Task } from '@/types/tarkov';
 import { computed, ref } from 'vue';
-import { MAX_PLAYER_LEVEL } from '../../../functions/src/constants/player.ts';
+import { MAX_PLAYER_LEVEL } from '@tarkov-tracker/shared/constants/player';
 import { DISABLED_TASK_IDS } from '@/config/gameConstants';
 import { useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTaskData } from '@/composables/data/useTaskData';

@@ -6,7 +6,7 @@ import {
   ApiToken
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
-import { MAX_PLAYER_LEVEL } from '../constants/player.js';
+import { MAX_PLAYER_LEVEL } from '@tarkov-tracker/shared/constants/player';
 
 export class ValidationService {
   /**
