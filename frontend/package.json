@@ -25,7 +25,7 @@
     "test:all": "npm run test:run && npm run test:e2e"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.0",
+    "@apollo/client": "^3.14.0",
     "@mdi/font": "^7.4.47",
     "@vue/apollo-composable": "^4.2.2",
     "@vueuse/core": "^13.9.0",
@@ -38,6 +38,7 @@
     "pinia": "^3.0.3",
     "qrcode": "^1.5.4",
     "swagger-ui": "^5.29.5",
+    "throttle-debounce": "^5.0.2",
     "uuid": "^13.0.0",
     "vue": "^3.5.22",
     "vue-i18n": "^11.1.12",

@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client/core";
 
 // Create Apollo client with simplified configuration
 const apolloClient = new ApolloClient({
