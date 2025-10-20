@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
 import { execSync } from 'child_process';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // Get the directory name in an ESM context
 const __filename = fileURLToPath(import.meta.url);
@@ -66,6 +67,27 @@ const matchChunk = (
   return matcher?.name;
 };
 
+const shouldAnalyze = process.env.ANALYZE === 'true';
+
+const plugins = [
+  vue(),
+  vueI18n({
+    include: path.resolve(__dirname, './src/locales/**'),
+  }),
+  vuetify({ autoImport: true }),
+];
+
+if (shouldAnalyze) {
+  plugins.push(
+    visualizer({
+      filename: path.resolve(__dirname, 'dist/stats.html'),
+      template: 'treemap',
+      brotliSize: true,
+      gzipSize: true,
+    })
+  );
+}
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -97,13 +119,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [
-    vue(),
-    vueI18n({
-      include: path.resolve(__dirname, './src/locales/**'),
-    }),
-    vuetify({ autoImport: true }),
-  ],
+  plugins,
   server: {
     port: 3000,
   },

@@ -1,4 +1,11 @@
-import { ref, computed, watch } from 'vue';
+import {
+  ref,
+  computed,
+  watch,
+  onBeforeUnmount,
+  getCurrentInstance,
+  type ComponentInternalInstance,
+} from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
@@ -29,6 +36,8 @@ import { logger } from '@/utils/logger';
  */
 export function useTaskData() {
   const store = useTarkovStore();
+  const instance = getCurrentInstance() as ComponentInternalInstance | null;
+  let cancelDeferredProcessing: (() => void) | null = null;
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
@@ -43,6 +52,7 @@ export function useTaskData() {
   const objectiveGPS = ref<{ [taskId: string]: ObjectiveGPSInfo[] }>({});
   const mapTasks = ref<{ [mapId: string]: string[] }>({});
   const neededItemTaskObjectives = ref<NeededItemTaskObjective[]>([]);
+  const isDerivingTaskData = ref(false);
   // Computed properties
   const objectives = computed<TaskObjective[]>(() => {
     if (!tasks.value.length) return [];
@@ -207,6 +217,15 @@ export function useTaskData() {
       tempNeededObjectives,
     };
   };
+  const resetTaskState = () => {
+    tasks.value = [];
+    taskGraph.value = createGraph();
+    mapTasks.value = {};
+    objectiveMaps.value = {};
+    objectiveGPS.value = {};
+    alternativeTasks.value = {};
+    neededItemTaskObjectives.value = [];
+  };
   /**
    * Collects required keys from task objectives to replace deprecated neededKeys
    * Falls back to legacy neededKeys if no requiredKeys found on objectives
@@ -272,46 +291,84 @@ export function useTaskData() {
     }));
   };
   // Watch for query result changes
+  const scheduleTaskProcessing = (taskList: Task[]) => {
+    if (cancelDeferredProcessing) {
+      cancelDeferredProcessing();
+      cancelDeferredProcessing = null;
+    }
+    if (!taskList || taskList.length === 0) {
+      resetTaskState();
+      isDerivingTaskData.value = false;
+      return;
+    }
+    const runProcessing = () => {
+      try {
+        const newGraph = buildTaskGraph(taskList);
+        const processedData = processTaskData(taskList);
+        const enhancedTasks = enhanceTasksWithRelationships(taskList, newGraph);
+        tasks.value = enhancedTasks;
+        taskGraph.value = newGraph;
+        mapTasks.value = processedData.tempMapTasks;
+        objectiveMaps.value = processedData.tempObjectiveMaps;
+        objectiveGPS.value = processedData.tempObjectiveGPS;
+        alternativeTasks.value = processedData.tempAlternativeTasks;
+        neededItemTaskObjectives.value = processedData.tempNeededObjectives;
+      } catch (error) {
+        logger.error('Error processing task data:', error);
+        resetTaskState();
+      } finally {
+        isDerivingTaskData.value = false;
+        cancelDeferredProcessing = null;
+      }
+    };
+    if (instance?.isUnmounted) {
+      return;
+    }
+    isDerivingTaskData.value = true;
+    if (typeof window === 'undefined') {
+      runProcessing();
+      return;
+    }
+    const browserWindow = window as Window & typeof globalThis;
+    const idleWindow = browserWindow as typeof browserWindow & {
+      requestIdleCallback?: (
+        callback: IdleRequestCallback,
+        options?: IdleRequestOptions
+      ) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    if (typeof idleWindow.requestIdleCallback === 'function' && typeof idleWindow.cancelIdleCallback === 'function') {
+      const handle = idleWindow.requestIdleCallback(
+        () => {
+          runProcessing();
+        },
+        { timeout: 200 }
+      );
+      cancelDeferredProcessing = () => {
+        idleWindow.cancelIdleCallback!(handle);
+      };
+      return;
+    }
+    const timeoutHandle = browserWindow.setTimeout(() => {
+      runProcessing();
+    }, 0);
+    cancelDeferredProcessing = () => {
+      browserWindow.clearTimeout(timeoutHandle);
+    };
+  };
   watch(
     queryResult,
     (newResult) => {
-      try {
-        if (newResult?.tasks) {
-          const newGraph = buildTaskGraph(newResult.tasks);
-          const processedData = processTaskData(newResult.tasks);
-          const enhancedTasks = enhanceTasksWithRelationships(newResult.tasks, newGraph);
-          // Update reactive state
-          tasks.value = enhancedTasks;
-          taskGraph.value = newGraph;
-          mapTasks.value = processedData.tempMapTasks;
-          objectiveMaps.value = processedData.tempObjectiveMaps;
-          objectiveGPS.value = processedData.tempObjectiveGPS;
-          alternativeTasks.value = processedData.tempAlternativeTasks;
-          neededItemTaskObjectives.value = processedData.tempNeededObjectives;
-        } else {
-          // Reset state if no data
-          tasks.value = [];
-          taskGraph.value = createGraph();
-          mapTasks.value = {};
-          objectiveMaps.value = {};
-          objectiveGPS.value = {};
-          alternativeTasks.value = {};
-          neededItemTaskObjectives.value = [];
-        }
-      } catch (error) {
-        logger.error('Error processing task data:', error);
-        // Reset to safe state on error to prevent stuck loading
-        tasks.value = [];
-        taskGraph.value = createGraph();
-        mapTasks.value = {};
-        objectiveMaps.value = {};
-        objectiveGPS.value = {};
-        alternativeTasks.value = {};
-        neededItemTaskObjectives.value = [];
-      }
+      scheduleTaskProcessing(newResult?.tasks ?? []);
     },
-    { immediate: true }
+    { immediate: true, flush: 'post' }
   );
+  onBeforeUnmount(() => {
+    if (cancelDeferredProcessing) {
+      cancelDeferredProcessing();
+      cancelDeferredProcessing = null;
+    }
+  });
   /**
    * Get task by ID
    */
@@ -359,5 +416,6 @@ export function useTaskData() {
     isPrerequisiteFor,
     // Constants
     disabledTasks: [...DISABLED_TASK_IDS],
+    derivedTaskLoading: isDerivingTaskData,
   };
 }
