@@ -22,6 +22,7 @@ All builds passing, all tests passing (192 frontend unit tests, 75 functions uni
 | Frontend GraphQL | `@apollo/client` | 3.14.0 | 4.x | **BLOCKED** | Upgraded to 3.14.0 using `@apollo/client/core` imports (framework-agnostic). Apollo 4.x blocked by `@vue/apollo-composable@4.2.2` requiring ^3.4.13. Waiting for @vue/apollo-composable v5.x with Apollo 4.x support. |
 
 **Important Notes:**
+
 - **Apollo Client in Vue**: Must import from `@apollo/client/core` instead of `@apollo/client` to avoid React-specific dependencies and rehackt issues.
 - **throttle-debounce**: Added as dependency (required by @vue/apollo-composable).
 
