@@ -6,7 +6,11 @@ import {
   ApiToken
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
-import { MAX_PLAYER_LEVEL } from '@tarkov-tracker/shared/constants/player';
+import {
+  ALLOWED_PMC_FACTIONS,
+  MAX_PLAYER_LEVEL,
+  type AllowedPmcFaction,
+} from '@tarkov-tracker/shared/constants/player';
 
 export class ValidationService {
   /**
@@ -207,8 +211,8 @@ export class ValidationService {
   /**
    * Validates PMC faction
    */
-  static validatePmcFaction(faction: unknown): 'USEC' | 'BEAR' {
-    if (faction !== 'USEC' && faction !== 'BEAR') {
+  static validatePmcFaction(faction: AllowedPmcFaction): AllowedPmcFaction {
+    if (!ALLOWED_PMC_FACTIONS.includes(faction)) {
       throw errors.badRequest('PMC faction must be either "USEC" or "BEAR"');
     }
     return faction;
