@@ -78,7 +78,7 @@ The root `package.json` exposes helpful scripts for daily development:
 | `npm run build` | Builds the Vue frontend (`frontend/dist`) and Firebase Functions bundle. |
 | `npm run lint` | Runs ESLint across the monorepo. |
 | `npm run format` | Formats the codebase using Prettier. |
-| `npm run docs` | Generates the OpenAPI spec and Swagger UI assets in the `docs/` directory. |
+| `npm run docs` | Generates the OpenAPI spec at `functions/swaggerui/openapi.json` and uses the static assets in `functions/swaggerui/`. |
 | `npm run emulators` | Builds functions and launches the Firebase Emulator Suite. |
 
 ## Project structure
@@ -87,7 +87,8 @@ The root `package.json` exposes helpful scripts for daily development:
 TarkovTracker/
 ├── frontend/           # Vue application (pages, components, assets)
 ├── functions/          # Firebase Cloud Functions (TypeScript)
-├── docs/               # Generated API documentation (OpenAPI + Swagger UI)
+├── docs/               # Project docs (guides, ops, CI notes)
+├── functions/swaggerui # Swagger UI static assets (source + generated openapi.json)
 ├── firestore.rules     # Firestore security rules
 ├── firestore.indexes.json
 ├── database.rules.json # Realtime Database rules (if needed for features)
@@ -98,8 +99,8 @@ TarkovTracker/
 
 ## Documentation
 
-- **User & feature guides** – Work-in-progress documentation lives in the [`docs/`](docs/) directory and at <https://tarkovtracker.org/docs> when deployed.
-- **API reference** – View the generated OpenAPI specification (`docs/openapi.json`) or open the embedded Swagger UI (`docs/index.html`).
+- **User & feature guides** – Work-in-progress documentation lives in the [`docs/`](docs/) directory (not tied to API docs hosting).
+- **API reference** – Generate locally via `npm run docs` and open `functions/swaggerui/index.html`, or visit the published GitHub Pages site.
 - **Changelog** – Review notable updates in [CHANGELOG.md](CHANGELOG.md).
 
 We welcome additional documentation improvements! Open an issue or pull request if you find gaps.

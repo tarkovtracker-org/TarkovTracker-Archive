@@ -161,8 +161,7 @@ npm run docs:serve # Generate docs + serve instructions
 
 **Generated Files:**
 
-- `/docs/openapi.json` - OpenAPI 3.0 specification
-- `/docs/openapi.js` - Browser-ready JavaScript export
+- `/functions/swaggerui/openapi.json` - OpenAPI 3.0 specification (consumed by Swagger UI)
 
 **Documentation Features:**
 

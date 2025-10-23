@@ -34,4 +34,3 @@ All configuration values are clamped to sensible bounds to avoid accidental disa
 - **Future Enhancements** – Once baseline traffic is known, graduate to per-endpoint quotas, adaptive limits, or external rate-limiting infrastructure without replacing this guard.
 
 Legitimate realtime users should never see a 429 during normal gameplay updates. If they do, capture the event document and adjust thresholds accordingly.
-

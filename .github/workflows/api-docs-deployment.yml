@@ -4,9 +4,18 @@ name: Update API Documentation
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["master"]
+    branches: ['main']
     paths:
-      - 'docs/**'
+      # Deploy when sources for API docs change (Swagger config or function sources)
+      - 'functions/src/openapi/**'
+      - 'functions/swaggerui/**'
+      # Only trigger on handlers, routes, and API surface definitions
+      - 'functions/src/index.ts'
+      - 'functions/src/handlers/**/*.ts'
+      - 'functions/src/routes/**/*.ts'
+      - 'functions/src/controllers/**/*.ts'
+      - 'functions/src/schemas/**/*.ts'
+      - 'functions/src/types/**/*.ts'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -20,7 +29,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: 'pages'
   cancel-in-progress: false
 
 jobs:
@@ -33,13 +42,22 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate API docs
+        run: npm run docs
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the docs folder
-          path: './docs'
+          # Upload the Swagger UI folder with generated openapi.json
+          path: './functions/swaggerui'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
