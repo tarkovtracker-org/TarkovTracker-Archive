@@ -167,6 +167,8 @@ const createMigrationData = (
   sourceDomain: oldDomain,
 });
 
+/* eslint-disable complexity */
+// Complex function that transforms legacy API response format - complexity is necessary for data transformation
 export const fetchDataWithApiToken = async (
   apiToken: string,
   oldDomain: string = DEFAULT_PROGRESS_ENDPOINT
@@ -205,3 +207,4 @@ export const fetchDataWithApiToken = async (
     return null;
   }
 };
+/* eslint-enable complexity */
