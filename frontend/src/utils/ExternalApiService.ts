@@ -72,7 +72,7 @@ const buildTaskCompletions = (
       return acc;
     }
 
-    acc[task.id] = {
+    acc![task.id] = {
       complete: Boolean(task.complete),
       timestamp,
       failed: Boolean(task.failed),
@@ -96,7 +96,7 @@ const buildHideoutModules = (
       return acc;
     }
 
-    acc[module.id] = {
+    acc![module.id] = {
       complete: true,
       timestamp,
     };
@@ -117,7 +117,7 @@ const buildHideoutParts = (
       return acc;
     }
 
-    acc[part.id] = {
+    acc![part.id] = {
       complete: Boolean(part.complete),
       count: part.count ?? 0,
       timestamp: part.complete ? Date.now() : null,
@@ -139,7 +139,7 @@ const buildTaskObjectives = (
       return acc;
     }
 
-    acc[objective.id] = {
+    acc![objective.id] = {
       complete: Boolean(objective.complete),
       count: objective.count ?? 0,
       timestamp: objective.complete ? Date.now() : null,
@@ -167,8 +167,7 @@ const createMigrationData = (
   sourceDomain: oldDomain,
 });
 
-/* eslint-disable complexity */
-// Complex function that transforms legacy API response format - complexity is necessary for data transformation
+// Fetches and transforms legacy API data format
 export const fetchDataWithApiToken = async (
   apiToken: string,
   oldDomain: string = DEFAULT_PROGRESS_ENDPOINT
@@ -207,4 +206,3 @@ export const fetchDataWithApiToken = async (
     return null;
   }
 };
-/* eslint-enable complexity */
