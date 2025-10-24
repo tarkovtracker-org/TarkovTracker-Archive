@@ -217,10 +217,13 @@ export class ValidationService {
   /**
    * Validates PMC faction
    */
-  static validatePmcFaction(faction: AllowedPmcFaction): AllowedPmcFaction {
-    if (!ALLOWED_PMC_FACTIONS.includes(faction)) {
+  static validatePmcFaction(faction: unknown): AllowedPmcFaction {
+    const factionValue = typeof faction === 'string' ? faction.trim().toUpperCase() : '';
+
+    if (!ALLOWED_PMC_FACTIONS.includes(factionValue as AllowedPmcFaction)) {
       throw errors.badRequest('PMC faction must be either "USEC" or "BEAR"');
     }
-    return faction;
+
+    return factionValue as AllowedPmcFaction;
   }
 }
