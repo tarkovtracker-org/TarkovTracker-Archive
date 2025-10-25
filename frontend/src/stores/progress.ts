@@ -30,23 +30,7 @@ type FactionMap = Record<string, string>;
 type TaskAvailabilityMap = Record<string, Record<string, boolean>>;
 type ObjectiveCompletionsMap = Record<string, Record<string, boolean>>;
 type HideoutLevelMap = Record<string, Record<string, number>>;
-/*
-type ProgressGetters = {
-  teamStores: TeamStoresMap;
-  visibleTeamStores: TeamStoresMap;
-  tasksCompletions: CompletionsMap;
-  gameEditionData: GameEdition[];
-  traderLevelsAchieved: TraderLevelsMap;
-  playerFaction: FactionMap;
-  unlockedTasks: TaskAvailabilityMap;
-  objectiveCompletions: ObjectiveCompletionsMap;
-  hideoutLevels: HideoutLevelMap;
-  getTeamIndex: (teamId: string) => number;
-  getDisplayName: (teamId: string) => string;
-  getLevel: (teamId: string) => number;
-  getFaction: (teamId: string) => string;
-};
-*/
+
 // Define the Fireswap configuration type expected by the plugin
 interface FireswapConfig {
   path: string;
