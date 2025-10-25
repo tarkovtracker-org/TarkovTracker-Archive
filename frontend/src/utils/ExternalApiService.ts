@@ -66,20 +66,21 @@ const buildTaskCompletions = (
   }
 
   const timestamp = Date.now();
+  const result: ProgressData['taskCompletions'] = {};
 
-  return tasks.reduce<ProgressData['taskCompletions']>((acc, task) => {
+  tasks.forEach((task) => {
     if (!task?.id || (!task.complete && !task.failed)) {
-      return acc;
+      return;
     }
 
-    acc![task.id] = {
+    result[task.id] = {
       complete: Boolean(task.complete),
       timestamp,
       failed: Boolean(task.failed),
     };
+  });
 
-    return acc;
-  }, {});
+  return result;
 };
 
 const buildHideoutModules = (
@@ -90,19 +91,20 @@ const buildHideoutModules = (
   }
 
   const timestamp = Date.now();
+  const result: ProgressData['hideoutModules'] = {};
 
-  return modules.reduce<ProgressData['hideoutModules']>((acc, module) => {
+  modules.forEach((module) => {
     if (!module?.id || module.complete !== true) {
-      return acc;
+      return;
     }
 
-    acc![module.id] = {
+    result[module.id] = {
       complete: true,
       timestamp,
     };
+  });
 
-    return acc;
-  }, {});
+  return result;
 };
 
 const buildHideoutParts = (
@@ -112,19 +114,21 @@ const buildHideoutParts = (
     return {};
   }
 
-  return parts.reduce<ProgressData['hideoutParts']>((acc, part) => {
+  const result: ProgressData['hideoutParts'] = {};
+
+  parts.forEach((part) => {
     if (!part?.id) {
-      return acc;
+      return;
     }
 
-    acc![part.id] = {
+    result[part.id] = {
       complete: Boolean(part.complete),
       count: part.count ?? 0,
-      timestamp: part.complete ? Date.now() : null,
+      ...(part.complete ? { timestamp: Date.now() } : {}),
     };
+  });
 
-    return acc;
-  }, {});
+  return result;
 };
 
 const buildTaskObjectives = (
@@ -134,19 +138,21 @@ const buildTaskObjectives = (
     return {};
   }
 
-  return objectives.reduce<ProgressData['taskObjectives']>((acc, objective) => {
+  const result: ProgressData['taskObjectives'] = {};
+
+  objectives.forEach((objective) => {
     if (!objective?.id) {
-      return acc;
+      return;
     }
 
-    acc![objective.id] = {
+    result[objective.id] = {
       complete: Boolean(objective.complete),
       count: objective.count ?? 0,
-      timestamp: objective.complete ? Date.now() : null,
+      ...(objective.complete ? { timestamp: Date.now() } : {}),
     };
+  });
 
-    return acc;
-  }, {});
+  return result;
 };
 
 const createMigrationData = (
@@ -188,7 +194,10 @@ export const fetchDataWithApiToken = async (
     });
 
     if (!response.ok) {
-      logger.error(`[ExternalApiService] API token fetch failed: ${response.status}`);
+      const body = await response.text().catch(() => '');
+      logger.error(
+        `[ExternalApiService] Fetch failed ${response.status} ${response.statusText}. Body: ${body.slice(0, 200)}`
+      );
       return null;
     }
 
@@ -202,7 +211,8 @@ export const fetchDataWithApiToken = async (
 
     return createMigrationData(dataFromApi, oldDomain);
   } catch (error) {
-    logger.error('[ExternalApiService] Error fetching data with API token:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error(`[ExternalApiService] Error fetching data with API token: ${errorMessage}`, error);
     return null;
   }
 };
