@@ -53,11 +53,11 @@ const pinia = createPinia();
 config.global.plugins = [vuetify, testI18n, pinia];
 
 // Global test helpers
-global.ResizeObserver = vi.fn(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
