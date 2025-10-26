@@ -13,7 +13,7 @@ This guide explains how we manage branches in the TarkovTracker repository to av
 
 ## Branch Structure
 
-```
+```bash
 main (production)
   └── staging (integration/testing)
        └── feature/* (short-lived features)
@@ -35,7 +35,7 @@ main (production)
 
 ### Anti-Pattern: Long-Lived Feature Branches
 
-```
+```bash
 staging ─────o─────o─────o─────o
               \           \
 feature/A      o───o───o───o (3 weeks old)
@@ -52,7 +52,7 @@ Result: When merging, you get conflicts like:
 
 ### Solution: Short-Lived Branches + Feature Flags
 
-```
+```lua
 staging ─o─o─o─o─o─o─o─o
           └┬─┘ └┬─┘ └┬─┘
          feat1 feat2 feat3
@@ -91,6 +91,7 @@ git branch -d feature/add-trader-filters
 ```
 
 **Rules:**
+
 - ✅ Merge to `staging` within 3 days
 - ✅ Update from `staging` daily
 - ✅ Delete branch after merge
@@ -149,6 +150,7 @@ git commit -m "feat: complete map renderer migration, remove flag"
 ```
 
 **Benefits:**
+
 - ✅ Merge to staging daily/weekly
 - ✅ No merge conflicts (everyone has latest code)
 - ✅ Feature can be tested in staging before production
@@ -187,6 +189,7 @@ git push origin deps/weekly-updates-2025-10
 ### Scenario 1: "I need to work on a feature for 2 weeks"
 
 ❌ **Don't do this:**
+
 ```bash
 git checkout -b feature/big-feature
 # ... 2 weeks of work ...
@@ -195,6 +198,7 @@ git merge staging  # CONFLICT HELL
 ```
 
 ✅ **Do this instead:**
+
 ```bash
 # Break into smaller pieces with feature flags
 
@@ -239,6 +243,7 @@ git push --force-with-lease
 This is the situation you just experienced! Here's how to prevent it:
 
 ❌ **What happened:**
+
 - `feature/bmm-api-docs` - 3 weeks old
 - `feature/perf-first-load` - 2 weeks old
 - `deps/baseline-updates` - 1 week old
@@ -300,7 +305,7 @@ git merge staging
 
 Use conventional commits for automatic changelog generation:
 
-```
+```yaml
 feat: add new map renderer
 fix: resolve authentication timeout
 chore: update dependencies
@@ -330,7 +335,7 @@ test: add tests for team management
 
 ### 5. Release Strategy
 
-```
+```lua
 staging → (weekly) → main → production
 ```
 
@@ -401,12 +406,14 @@ git push origin fix/broken-build
 See [frontend/src/config/featureFlags.ts](../../frontend/src/config/featureFlags.ts) for implementation details.
 
 **When to use:**
+
 - ✅ Feature needs > 3 days to complete
 - ✅ Feature is experimental
 - ✅ Feature has external dependencies
 - ✅ Feature needs gradual rollout
 
 **When NOT to use:**
+
 - ❌ Simple bug fixes
 - ❌ Documentation changes
 - ❌ Dependency updates
@@ -437,6 +444,7 @@ Add to your `~/.gitconfig`:
 ```
 
 Usage:
+
 ```bash
 git sync           # Update current branch from staging
 git merged         # See what can be cleaned up

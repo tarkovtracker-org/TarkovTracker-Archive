@@ -9,7 +9,9 @@ import { writeFileSync, readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
+// eslint-disable-next-line no-redeclare
 const __filename = fileURLToPath(import.meta.url);
+// eslint-disable-next-line no-redeclare
 const __dirname = dirname(__filename);
 
 const TARKOV_DEV_MAPS_URL = 'https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json';
@@ -182,7 +184,7 @@ async function main() {
         const existingData = readFileSync(OUTPUT_PATH, 'utf-8');
         existingMaps = JSON.parse(existingData);
         console.log('✓ Loaded existing maps.json to preserve coordinateRotation values\n');
-      } catch (err) {
+      } catch {
         console.log('⚠ Could not parse existing maps.json, using fresh data\n');
       }
     } else {
@@ -206,7 +208,7 @@ async function main() {
     
     // Show what's new
     const mapsWithTransform = Object.entries(converted)
-      .filter(([_, data]) => data.svg.transform)
+      .filter(([, data]) => data.svg.transform)
       .map(([key]) => key);
       
     if (mapsWithTransform.length > 0) {

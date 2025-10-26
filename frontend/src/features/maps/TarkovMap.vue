@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" style="position: relative;">
+      <v-col cols="12" style="position: relative">
         <div v-if="mapHasSvg" class="map-viewport">
           <div :id="randomMapId" class="map-container">
             <div class="map-content-wrapper">
@@ -56,10 +56,15 @@
               size="small"
               :color="floor === selectedFloor ? 'primary' : ''"
               :variant="floor === selectedFloor ? 'flat' : 'tonal'"
-              @click="setFloor(floor)"
               class="floor-button"
+              @click="setFloor(floor)"
             >
-              {{ floor.replace('_', ' ').replace(/Floor|Level/g, '').trim() || floor }}
+              {{
+                floor
+                  .replace('_', ' ')
+                  .replace(/Floor|Level/g, '')
+                  .trim() || floor
+              }}
             </v-btn>
           </v-btn-group>
         </div>
@@ -70,23 +75,18 @@
             <v-btn
               icon="mdi-plus"
               size="small"
-              @click="zoomIn"
               :disabled="currentZoom >= maxZoom"
               title="Zoom In"
+              @click="zoomIn"
             />
             <v-btn
               icon="mdi-minus"
               size="small"
-              @click="zoomOut"
               :disabled="currentZoom <= minZoom"
               title="Zoom Out"
+              @click="zoomOut"
             />
-            <v-btn
-              icon="mdi-restore"
-              size="small"
-              @click="resetZoom"
-              title="Reset View"
-            />
+            <v-btn icon="mdi-restore" size="small" title="Reset View" @click="resetZoom" />
           </v-btn-group>
         </div>
 
@@ -97,18 +97,26 @@
 
         <!-- Scroll Hint -->
         <transition name="fade">
-          <div v-if="mapHasSvg && showScrollHint" class="scroll-hint">
-            Use Alt+Scroll to zoom
-          </div>
+          <div v-if="mapHasSvg && showScrollHint" class="scroll-hint">Use Alt+Scroll to zoom</div>
         </transition>
       </v-col>
     </v-row>
   </v-container>
 </template>
 <script setup lang="ts">
-  import { ref, onMounted, onBeforeUnmount, watch, defineAsyncComponent, withDefaults, computed } from 'vue';
+  import {
+    ref,
+    onMounted,
+    onBeforeUnmount,
+    watch,
+    defineAsyncComponent,
+    withDefaults,
+    computed,
+  } from 'vue';
   import { v4 as uuidv4 } from 'uuid';
   import * as d3 from 'd3';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type D3Selection = any;
   import type { TarkovMap } from '@/types/tarkov';
   import type {
     MapSvgDefinition,
@@ -133,12 +141,13 @@
   const currentZoom = ref(1);
   const minZoom = 1; // 100% - no zoom out (prevent empty space around map)
   const maxZoom = 5; // 500% - max zoom in
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let zoomBehavior: any = null;
   let svgElement: SVGSVGElement | null = null;
-  
+
   // Cache for loaded SVG elements (to avoid re-fetching)
   const svgCache = new Map<string, SVGSVGElement>();
-  
+
   // Scroll hint state
   const showScrollHint = ref(false);
   let scrollHintTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -168,7 +177,7 @@
   });
 
   const svgFloors = computed(() => mapSvg.value?.floors ?? []);
-  
+
   const initialFloor = computed(() => {
     if (!mapSvg.value) return undefined;
     return mapSvg.value.defaultFloor ?? svgFloors.value[svgFloors.value.length - 1];
@@ -176,16 +185,16 @@
   const selectedFloor = ref<
     string | undefined // Changed from string | null
   >(initialFloor.value);
-  
+
   const svgFileName = computed(() => {
     const svg = props.map?.svg;
     if (typeof svg === 'string') {
       return svg;
     }
-    
+
     const baseFile = svg?.file;
     if (!baseFile) return undefined;
-    
+
     // If there are multiple floors and a floor is selected, construct the filename
     const floors = svgFloors.value;
     if (floors.length > 1 && selectedFloor.value) {
@@ -199,7 +208,7 @@
         return `${baseName}-${selectedFloor.value}.svg`;
       }
     }
-    
+
     return baseFile;
   });
 
@@ -247,7 +256,7 @@
   const teardownZoom = () => {
     const mapContainer = document.getElementById(randomMapId.value);
     if (zoomBehavior && mapContainer?.parentElement) {
-      const viewport = d3.select(mapContainer.parentElement) as any;
+      const viewport = d3.select(mapContainer.parentElement) as D3Selection;
       viewport.on('.zoom', null);
       viewport.on('mousedown.cursor', null);
       viewport.on('mouseup.cursor', null);
@@ -310,12 +319,12 @@
     }
     const mapContainer = document.getElementById(randomMapId.value);
     if (!mapContainer) return;
-    
+
     const wrapper = mapContainer.querySelector('.map-content-wrapper') as HTMLElement;
     if (!wrapper) return;
 
     const floors = svgFloors.value;
-    
+
     // If there are multiple floors, load and stack all of them
     if (floors.length > 1) {
       const svg = props.map?.svg;
@@ -323,35 +332,37 @@
         logger.warn('Map SVG file info missing, skipping draw.');
         return;
       }
-      
+
       const baseFile = svg.file;
       const match = baseFile.match(/^(.+?)(-[\w_]+)?\.svg$/);
       if (!match) {
         logger.warn('Could not parse base file name:', baseFile);
         return;
       }
-      
+
       const baseName = match[1];
-      const selectedFloorIndex = selectedFloor.value ? floors.indexOf(selectedFloor.value) : floors.length - 1;
-      
+      const selectedFloorIndex = selectedFloor.value
+        ? floors.indexOf(selectedFloor.value)
+        : floors.length - 1;
+
       // Check if all floors are already loaded (in cache or DOM)
       const existingSvgs = wrapper.querySelectorAll('svg');
       const allFloorsLoaded = existingSvgs.length === floors.length;
-      
+
       if (allFloorsLoaded) {
         // Just update opacity without re-fetching
-        updateFloorOpacity(wrapper, floors, selectedFloorIndex);
+        updateFloorOpacity(wrapper, selectedFloorIndex);
       } else {
         // Initial load - fetch and add all floors
         for (let i = 0; i < floors.length; i++) {
           const floor = floors[i];
           const floorFileName = `${baseName}-${floor}.svg`;
-          
+
           // Calculate opacity based on position relative to selected floor
           let opacity = 1.0;
           const isMainLayer = i === selectedFloorIndex;
           const isFirstLayer = i === 0; // First layer defines wrapper height
-          
+
           if (i < selectedFloorIndex) {
             opacity = 0.4;
           } else if (isMainLayer) {
@@ -359,15 +370,21 @@
           } else {
             opacity = 0.05;
           }
-          
-          const loadedSvg = await drawFloorLayer(wrapper, floorFileName, opacity, isMainLayer, isFirstLayer);
-          
+
+          const loadedSvg = await drawFloorLayer(
+            wrapper,
+            floorFileName,
+            opacity,
+            isMainLayer,
+            isFirstLayer
+          );
+
           // Store the main layer as svgElement for zoom reference
           if (isMainLayer && loadedSvg) {
             svgElement = loadedSvg;
           }
         }
-        
+
         // Initialize zoom after all floors are loaded
         if (svgElement) {
           initializeZoom();
@@ -387,13 +404,13 @@
   /**
    * Update opacity of existing floor SVGs without re-fetching
    */
-  const updateFloorOpacity = (wrapper: HTMLElement, floors: string[], selectedFloorIndex: number) => {
+  const updateFloorOpacity = (wrapper: HTMLElement, selectedFloorIndex: number) => {
     const svgs = wrapper.querySelectorAll('svg');
-    
+
     svgs.forEach((svg, index) => {
       let opacity = 1.0;
       const isMainLayer = index === selectedFloorIndex;
-      
+
       if (index < selectedFloorIndex) {
         opacity = 0.4; // Floors below
       } else if (isMainLayer) {
@@ -401,11 +418,11 @@
       } else {
         opacity = 0.05; // Floors above
       }
-      
+
       const currentSvg = svg as SVGSVGElement;
       currentSvg.style.opacity = opacity.toString();
       currentSvg.style.pointerEvents = isMainLayer ? 'auto' : 'none';
-      
+
       // Update svgElement reference for main layer
       if (isMainLayer) {
         svgElement = currentSvg;
@@ -416,26 +433,32 @@
   /**
    * Draw a single floor layer with specified opacity
    */
-  const drawFloorLayer = async (wrapper: HTMLElement, fileName: string, opacity: number, isMainLayer: boolean = false, isFirstLayer: boolean = false): Promise<SVGSVGElement | null> => {
+  const drawFloorLayer = async (
+    wrapper: HTMLElement,
+    fileName: string,
+    opacity: number,
+    isMainLayer: boolean = false,
+    isFirstLayer: boolean = false
+  ): Promise<SVGSVGElement | null> => {
     // Check cache first
     if (svgCache.has(fileName)) {
       const cachedSvg = svgCache.get(fileName)!;
-      
+
       // Update opacity and pointer events
       cachedSvg.style.opacity = opacity.toString();
       cachedSvg.style.pointerEvents = isMainLayer ? 'auto' : 'none';
-      
+
       // If not already in DOM, append it
       if (!wrapper.contains(cachedSvg)) {
         wrapper.appendChild(cachedSvg);
       }
-      
+
       return cachedSvg;
     }
-    
+
     // Not in cache - fetch it
     const isLab = props.map.name?.toLowerCase() === 'the lab';
-    
+
     const svgUrl = isLab
       ? `https://raw.githubusercontent.com/TarkovTracker/tarkovdata/master/maps/${fileName}`
       : `https://assets.tarkov.dev/maps/svg/${fileName}`;
@@ -447,14 +470,14 @@
         logger.warn('Unexpected SVG root element', rootElement);
         return null;
       }
-      
+
       // Set proper scaling attributes
       rootElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       rootElement.setAttribute('data-floor-file', fileName); // Add identifier
       rootElement.style.width = '100%';
       rootElement.style.height = 'auto';
       rootElement.style.display = 'block';
-      
+
       // First layer is relative (defines height), others are absolute (overlay)
       if (isFirstLayer) {
         rootElement.style.position = 'relative';
@@ -463,7 +486,7 @@
         rootElement.style.top = '0';
         rootElement.style.left = '0';
       }
-      
+
       rootElement.style.opacity = opacity.toString();
       // All SVG layers should not intercept pointer events - let markers handle clicks
       rootElement.style.pointerEvents = 'none';
@@ -471,9 +494,9 @@
 
       // Cache the SVG element
       svgCache.set(fileName, rootElement);
-      
+
       wrapper.appendChild(rootElement);
-      
+
       return rootElement;
     } catch (err) {
       logger.error(`Failed to load floor: ${fileName}`, err);
@@ -485,7 +508,7 @@
     // Lab uses old tarkovdata CDN (uses PNG tiles on tarkov.dev)
     // All others use tarkov.dev CDN
     const isLab = props.map.name?.toLowerCase() === 'the lab';
-    
+
     const svgUrl = isLab
       ? `https://raw.githubusercontent.com/TarkovTracker/tarkovdata/master/maps/${fileName}`
       : `https://assets.tarkov.dev/maps/svg/${fileName}`;
@@ -550,8 +573,8 @@
     const wrapper = mapContainer.querySelector('.map-content-wrapper') as HTMLElement;
     if (!wrapper) return;
 
-    const wrapperSelection = d3.select(wrapper) as any;
-    const viewport = d3.select(mapContainer.parentElement) as any;
+    const wrapperSelection = d3.select(wrapper) as D3Selection;
+    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
 
     // Get viewport and content dimensions for pan constraints
     const viewportWidth = mapContainer.parentElement?.clientWidth || 800;
@@ -560,27 +583,35 @@
     const contentHeight = wrapper.clientHeight || viewportHeight;
 
     // Create zoom behavior
-    zoomBehavior = (d3.zoom as any)()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    zoomBehavior = (d3 as any)
+      .zoom()
       .scaleExtent([minZoom, maxZoom])
       // Set extent to viewport size (what user can see)
-      .extent([[0, 0], [viewportWidth, viewportHeight]])
+      .extent([
+        [0, 0],
+        [viewportWidth, viewportHeight],
+      ])
       // Constrain panning - tight bounds to keep map always visible
       // Allow minimal overflow (10%) to reach edges comfortably
       .translateExtent([
-        [-contentWidth * 0.1, -contentHeight * 0.1],  // Allow 10% overflow on top-left
-        [contentWidth * 1.1, contentHeight * 1.1]      // Allow 10% overflow on bottom-right
+        [-contentWidth * 0.1, -contentHeight * 0.1], // Allow 10% overflow on top-left
+        [contentWidth * 1.1, contentHeight * 1.1], // Allow 10% overflow on bottom-right
       ])
       // Filter wheel events - only zoom with Alt key (prevent accidental zoom while scrolling page)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((event: any) => {
         // Allow all non-wheel events (drag pan, programmatic zoom, etc.)
         if (event.type !== 'wheel') return true;
-        
+
         // For wheel events, require Alt key (doesn't conflict with browser zoom)
         return event.altKey;
       })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .on('zoom', (event: any) => {
         // Apply transform to the wrapper (which contains both SVG and markers)
-        wrapperSelection.style('transform', 
+        wrapperSelection.style(
+          'transform',
           `translate(${event.transform.x}px, ${event.transform.y}px) scale(${event.transform.k})`
         );
         wrapperSelection.style('transform-origin', '0 0');
@@ -598,19 +629,19 @@
         if (!event.altKey) {
           // User scrolled without Alt key - show hint
           showScrollHint.value = true;
-          
+
           // Clear existing timeout
           if (scrollHintTimeout) {
             clearTimeout(scrollHintTimeout);
           }
-          
+
           // Hide hint after 2 seconds
           scrollHintTimeout = setTimeout(() => {
             showScrollHint.value = false;
           }, 2000);
         }
       };
-      
+
       viewportElement.addEventListener('wheel', wheelEventHandler, { passive: true });
     }
 
@@ -627,10 +658,7 @@
     viewport.on('dblclick.zoom', null);
     viewport.on('dblclick', () => {
       if (!zoomBehavior) return;
-      viewport
-        .transition()
-        .duration(300)
-        .call(zoomBehavior.scaleBy, 1.5);
+      viewport.transition().duration(300).call(zoomBehavior.scaleBy, 1.5);
     });
   }
 
@@ -641,33 +669,24 @@
     if (!zoomBehavior) return;
     const mapContainer = document.getElementById(randomMapId.value);
     if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as any;
-    viewport
-      .transition()
-      .duration(300)
-      .call(zoomBehavior.scaleBy, 1.3);
+    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
+    viewport.transition().duration(300).call(zoomBehavior.scaleBy, 1.3);
   }
 
   function zoomOut() {
     if (!zoomBehavior) return;
     const mapContainer = document.getElementById(randomMapId.value);
     if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as any;
-    viewport
-      .transition()
-      .duration(300)
-      .call(zoomBehavior.scaleBy, 0.7);
+    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
+    viewport.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
   }
 
   function resetZoom() {
     if (!zoomBehavior) return;
     const mapContainer = document.getElementById(randomMapId.value);
     if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as any;
-    viewport
-      .transition()
-      .duration(500)
-      .call(zoomBehavior.transform, (d3.zoomIdentity as any));
+    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
+    viewport.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity);
   }
 
   onMounted(() => {
@@ -685,141 +704,143 @@
 </script>
 
 <style lang="scss" scoped>
-.map-viewport {
-  position: relative;
-  width: 100%;
-  background: #1a1a1a;
-  border-radius: 4px;
-  overflow: hidden;
-  cursor: grab;
-}
+  .map-viewport {
+    position: relative;
+    width: 100%;
+    background: #1a1a1a;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: grab;
+  }
 
-.map-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 320px;
-  background: #1f1f1f;
-  border-radius: 4px;
-  padding: 24px;
-  text-align: center;
-}
+  .map-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    background: #1f1f1f;
+    border-radius: 4px;
+    padding: 24px;
+    text-align: center;
+  }
 
-.map-placeholder-alert {
-  --v-border-opacity: 1;
-  background-color: rgba(255, 214, 0, 0.16);
-  border-color: rgba(255, 214, 0, 0.8) !important;
-  font-weight: 600;
-}
+  .map-placeholder-alert {
+    --v-border-opacity: 1;
+    background-color: rgba(255, 214, 0, 0.16);
+    border-color: rgba(255, 214, 0, 0.8) !important;
+    font-weight: 600;
+  }
 
-.map-placeholder-alert :deep(.v-alert__prepend .v-icon) {
-  color: #ffea00;
-}
+  .map-placeholder-alert :deep(.v-alert__prepend .v-icon) {
+    color: #ffea00;
+  }
 
-.map-placeholder-alert :deep(.v-alert__content) {
-  color: #fff59d;
-}
+  .map-placeholder-alert :deep(.v-alert__content) {
+    color: #fff59d;
+  }
 
-.map-viewport:active {
-  cursor: grabbing;
-}
+  .map-viewport:active {
+    cursor: grabbing;
+  }
 
-.map-container {
-  position: relative;
-  width: 100%;
-  line-height: 0;
-}
+  .map-container {
+    position: relative;
+    width: 100%;
+    line-height: 0;
+  }
 
-.map-content-wrapper {
-  position: relative;
-  width: 100%;
-  transform-origin: 0 0;
-}
+  .map-content-wrapper {
+    position: relative;
+    width: 100%;
+    transform-origin: 0 0;
+  }
 
-.markers-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10; /* Above SVG layers */
-  pointer-events: none; /* Don't block SVG, but children can have pointer-events: auto */
-  line-height: normal;
-}
+  .markers-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Above SVG layers */
+    pointer-events: none; /* Don't block SVG, but children can have pointer-events: auto */
+    line-height: normal;
+  }
 
-.markers-overlay > * {
-  pointer-events: auto; /* Markers and zones are clickable */
-}
+  .markers-overlay > * {
+    pointer-events: auto; /* Markers and zones are clickable */
+  }
 
-.floor-controls {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  max-width: 140px;
-}
+  .floor-controls {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    max-width: 140px;
+  }
 
-.floor-button {
-  font-size: 11px;
-  text-transform: capitalize;
-  min-width: 100px !important;
-}
+  .floor-button {
+    font-size: 11px;
+    text-transform: capitalize;
+    min-width: 100px !important;
+  }
 
-.zoom-controls {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
+  .zoom-controls {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
 
-.zoom-indicator {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
+  .zoom-indicator {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
 
-.scroll-hint {
-  position: absolute;
-  bottom: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1001;
-  background: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
+  .scroll-hint {
+    position: absolute;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
 
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: opacity 0.3s ease;
+  }
 
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
+  .fade-enter-from,
+  .fade-leave-to {
+    opacity: 0;
+  }
 
-:deep(svg) {
-  cursor: grab;
-}
+  :deep(svg) {
+    cursor: grab;
+  }
 
-:deep(svg:active) {
-  cursor: grabbing;
-}
+  :deep(svg:active) {
+    cursor: grabbing;
+  }
 </style>

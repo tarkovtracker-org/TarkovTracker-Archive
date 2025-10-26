@@ -8,7 +8,7 @@ This document explains why we use a `staging` branch as an intermediary between 
 
 **Before staging branch existed:**
 
-```
+```bash
 main (production)
   └── feature/new-feature (merge directly)
       └── 💥 Bug deployed to production
@@ -17,6 +17,7 @@ main (production)
 ```
 
 **Issues we experienced:**
+
 - Features merged to `main` without adequate testing
 - Production deployments with critical bugs
 - No ability to test in a production-like environment
@@ -24,7 +25,7 @@ main (production)
 
 ### The Solution: Staging as Integration Branch
 
-```
+```lua
 main (production - stable, deployed)
   ↑
   └── merge weekly (after testing)
@@ -37,6 +38,7 @@ staging (integration - deployed to preview channel)
 ```
 
 **Benefits:**
+
 - ✅ Test features in production-like environment before release
 - ✅ Catch integration issues between multiple features
 - ✅ Quick rollback if something breaks (just don't merge to main)
@@ -50,6 +52,7 @@ staging (integration - deployed to preview channel)
 **Purpose:** Deployed to production (tarkovtracker.org)
 
 **Rules:**
+
 - ⚠️ Never commit directly to `main`
 - ⚠️ Never merge feature branches directly to `main`
 - ✅ Only merge from `staging` after thorough testing
@@ -57,6 +60,7 @@ staging (integration - deployed to preview channel)
 - ✅ Protected branch (requires PR + passing CI)
 
 **Deployment:**
+
 ```bash
 # Only after staging has been tested for 24-48 hours
 npm run deploy:prod
@@ -67,6 +71,7 @@ npm run deploy:prod
 **Purpose:** Deployed to staging preview channel for testing
 
 **Rules:**
+
 - ⚠️ Avoid committing directly (use feature branches)
 - ✅ Merge feature branches here first
 - ✅ Can contain incomplete features (use feature flags)
@@ -74,6 +79,7 @@ npm run deploy:prod
 - ✅ Represents "next version" of production
 
 **Deployment:**
+
 ```bash
 # Automatically deployed on push via GitHub Actions
 # Or manually:
@@ -85,6 +91,7 @@ npm run deploy:staging
 **Purpose:** Development of new features, bug fixes, refactors
 
 **Rules:**
+
 - ✅ Branch from `staging`
 - ✅ Merge back to `staging` (NOT `main`)
 - ✅ Keep up to date with `staging` daily
@@ -123,6 +130,7 @@ git push origin feature/add-hideout-tracker
 ### 3. Test in Staging
 
 **Testing checklist:**
+
 - [ ] Feature works as expected
 - [ ] No console errors
 - [ ] Performance is acceptable
@@ -131,6 +139,7 @@ git push origin feature/add-hideout-tracker
 - [ ] Firebase costs are reasonable (check console)
 
 **How long to test?**
+
 - Small fixes: 2-4 hours
 - New features: 24-48 hours
 - Breaking changes: 1 week
@@ -165,9 +174,9 @@ npm run deploy:prod
 
 | Day | Activity |
 |-----|----------|
-| **Monday** | Merge staging → main (if stable)<br>Deploy to production<br>Monitor production |
-| **Tuesday-Thursday** | Merge features to staging<br>Test in staging environment |
-| **Friday** | Code freeze for staging<br>Final testing of staging<br>Bug fixes only |
+| **Monday** | Merge staging → main (if stable)  \nDeploy to production  \nMonitor production |
+| **Tuesday-Thursday** | Merge features to staging  \nTest in staging environment |
+| **Friday** | Code freeze for staging  \nFinal testing of staging  \nBug fixes only |
 | **Weekend** | Staging soaks, monitor for issues |
 
 ### Hotfix Process
@@ -203,12 +212,13 @@ git push origin staging
 
 ### Production (main branch)
 
-- **URL:** https://tarkovtracker.org
+- **URL:** <https://tarkovtracker.org>
 - **Firebase Project:** tarkovtracker-org (production)
 - **Deploy Command:** `npm run deploy:prod`
 - **CI/CD:** GitHub Actions on push to `main`
 
 **Environment Variables:**
+
 ```bash
 # Production values (from GitHub Secrets)
 VITE_FIREBASE_PROJECT_ID=tarkovtracker-org
@@ -217,13 +227,14 @@ VITE_FEATURE_FLAGS=false  # All flags OFF in production initially
 
 ### Staging (staging branch)
 
-- **URL:** https://staging--tarkovtracker-org.web.app
+- **URL:** <https://staging--tarkovtracker-org.web.app>
 - **Firebase Project:** tarkovtracker-org (staging channel)
 - **Deploy Command:** `npm run deploy:staging`
 - **CI/CD:** GitHub Actions on push to `staging`
 - **Expires:** 7 days (auto-refreshed on new deploys)
 
 **Environment Variables:**
+
 ```bash
 # Staging values (same project, different channel)
 VITE_FIREBASE_PROJECT_ID=tarkovtracker-org
@@ -232,7 +243,7 @@ VITE_FEATURE_FLAGS=true  # Test flags ON in staging
 
 ### Pull Request Previews (feature branches)
 
-- **URL:** https://pr123--tarkovtracker-org.web.app
+- **URL:** <https://pr123--tarkovtracker-org.web.app>
 - **Firebase Project:** tarkovtracker-org (preview channel)
 - **Deploy Command:** Automatic via GitHub Actions
 - **Expires:** 7 days after PR closes
@@ -287,7 +298,7 @@ git push origin staging
 
 ### Rollback Production
 
-**Option 1: Revert via Git (preferred)**
+#### Option 1: Revert via Git (preferred)
 
 ```bash
 # Identify bad commit on main
@@ -300,7 +311,7 @@ git push origin main
 npm run deploy:prod
 ```
 
-**Option 2: Rollback via Firebase Console (emergency)**
+#### Option 2: Rollback via Firebase Console (emergency)
 
 1. Go to Firebase Console
 2. Navigate to Hosting → tarkovtracker.org
@@ -308,7 +319,7 @@ npm run deploy:prod
 4. Find previous working release
 5. Click "Rollback"
 
-**Option 3: Deploy Previous Version**
+#### Option 3: Deploy Previous Version
 
 ```bash
 # Checkout previous working version
@@ -327,22 +338,26 @@ git push --force origin main  # ⚠️ Dangerous!
 ### Staging Environment
 
 **Firebase Console:**
+
 - Functions logs: Check for errors after deployment
 - Firestore: Staging uses production data (be careful!)
 - Auth: Same users as production
 
 **Testing Tools:**
-- **Swagger UI:** https://staging--tarkovtracker-org.web.app/api-docs
-- **Emulator UI:** http://localhost:4999 (local testing)
+
+- **Swagger UI:** <https://staging--tarkovtracker-org.web.app/api-docs>
+- **Emulator UI:** <http://localhost:4999> (local testing)
 
 ### Production Environment
 
 **Monitoring:**
+
 - Firebase Console → Functions → Logs
 - Firebase Console → Hosting → Usage
 - Browser DevTools → Console (check for errors)
 
 **Alerting (future):**
+
 - Set up Firebase Monitoring
 - Configure error reporting to Slack/Discord
 - Monitor API response times
@@ -352,6 +367,7 @@ git push --force origin main  # ⚠️ Dangerous!
 ### Q: Can I test with production data?
 
 **A:** Yes, but be careful:
+
 - Staging uses the same Firebase project as production
 - Changes to Firestore affect real users
 - Use feature flags to prevent accidental changes
@@ -360,6 +376,7 @@ git push --force origin main  # ⚠️ Dangerous!
 ### Q: How do I test team features?
 
 **A:**
+
 ```bash
 # Option 1: Use emulators locally
 npm run dev:full  # Includes auth, firestore, functions
@@ -372,6 +389,7 @@ npm run dev:full  # Includes auth, firestore, functions
 ### Q: What if staging breaks?
 
 **A:**
+
 ```bash
 # 1. Check Firebase Functions logs
 # 2. Check browser console
@@ -386,6 +404,7 @@ git push --force origin staging
 ### Q: When should I merge to main?
 
 **A:** When ALL of these are true:
+
 - ✅ Staging has been stable for 24+ hours
 - ✅ All features tested and working
 - ✅ No critical bugs reported
@@ -395,6 +414,7 @@ git push --force origin staging
 ### Q: Can I skip staging and merge directly to main?
 
 **A:** Only for:
+
 - Documentation changes (*.md files)
 - GitHub Actions workflow fixes
 - Emergency hotfixes (still prefer to test in staging first)
