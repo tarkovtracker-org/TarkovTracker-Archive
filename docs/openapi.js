@@ -718,8 +718,7 @@ window.openapi = {
                         }
                       }
                     }
-                  },
-                  "$ref": "#/components/schemas/TeamProgress"
+                  }
                 }
               }
             }
