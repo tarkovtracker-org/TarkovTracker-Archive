@@ -81,28 +81,22 @@ if (!projectRoot) {
 }
 const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
-const outputPath = path.join(projectRoot, 'docs/openapi.json');
-const jsOutputPath = path.join(projectRoot, 'docs/openapi.js');
-const outputDir = path.dirname(outputPath); // This will be projectRoot/docs
+const outputPath = path.join(projectRoot, 'functions/swaggerui/openapi.json');
+const outputDir = path.dirname(outputPath); // This will be projectRoot/functions/swaggerui
+const swaggerUiSourceDir = path.join(projectRoot, 'functions/swaggerui');
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
-// Write the specification to a JSON file
-fs.writeFile(outputPath, JSON.stringify(openapiSpecification, null, 2), (err) => {
-  if (err) {
-    console.error('Error writing OpenAPI specification:', err);
-    process.exit(1);
-  } else {
-    console.log(`OpenAPI specification created successfully at ${outputPath}`);
-    const jsContent = `window.openapi = ${JSON.stringify(openapiSpecification, null, 2)};`;
-    fs.writeFile(jsOutputPath, jsContent, (err) => {
-      if (err) {
-        console.error('Error writing OpenAPI JS file:', err);
-        process.exit(1);
-      } else {
-        console.log(`OpenAPI JS file created successfully at ${jsOutputPath}`);
-      }
-    });
-  }
-});
+if (!fs.existsSync(swaggerUiSourceDir)) {
+  console.error(`Swagger UI output directory missing at ${swaggerUiSourceDir}`);
+  process.exit(1);
+}
+// Write the specification to the JSON file used by Swagger UI
+try {
+  fs.writeFileSync(outputPath, JSON.stringify(openapiSpecification, null, 2));
+  console.log(`OpenAPI specification created successfully at ${outputPath}`);
+} catch (error) {
+  console.error('Error writing OpenAPI specification:', error);
+  process.exit(1);
+}

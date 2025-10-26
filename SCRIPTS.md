@@ -93,7 +93,7 @@ npm run deploy:prod      # Deploy to production environment
 
 - **Purpose**: Build functions + generate docs + show viewing instructions
 - **Process**: Builds functions, generates Swagger docs, and shows how to view them
-- **Output**: `docs/openapi.json` and `docs/openapi.js`
+- **Output**: `functions/swaggerui/openapi.json`
 - **Best for**: Complete documentation workflow
 
 ### Deployment Scripts
@@ -149,10 +149,9 @@ TarkovTracker/
 │   └── package.json      # Frontend-specific scripts
 ├── functions/
 │   └── package.json      # Functions-specific scripts
-└── docs/                 # Generated API documentation
+└── functions/swaggerui/  # Swagger UI (published by GitHub Pages)
     ├── index.html        # Swagger UI
-    ├── openapi.json      # OpenAPI specification
-    └── openapi.js        # Browser-ready OpenAPI
+    └── openapi.json      # OpenAPI specification (generated)
 ```
 
 ## Best Practices

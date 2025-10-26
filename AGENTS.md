@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The root `package.json` orchestrates two workspaces: `frontend/` for the Vue 3 + Vite client and `functions/` for Firebase Cloud Functions written in TypeScript. Generated artifacts live in `frontend/dist/` and `functions/lib/`; keep these out of commits. API documentation is emitted into `docs/` via the functions swagger task, and operational playbooks are collected in `REPORTS/`. Shared tooling scripts are under `scripts/`, while Firebase configuration (`firebase.json`, `firestore.rules`, indexes) stays at the repo root.
+The root `package.json` orchestrates two workspaces: `frontend/` for the Vue 3 + Vite client and `functions/` for Firebase Cloud Functions written in TypeScript. Generated artifacts live in `frontend/dist/` and `functions/lib/`; keep these out of commits. API documentation source lives under `functions/swaggerui/` and the `npm run docs` task writes `openapi.json` there; CI publishes that folder to GitHub Pages. Operational playbooks are collected in `REPORTS/`. Shared tooling scripts are under `scripts/`, while Firebase configuration (`firebase.json`, `firestore.rules`, indexes) stays at the repo root.
 
 ## Build, Test, and Development Commands
 
@@ -18,4 +18,4 @@ UI logic relies on `vitest` with Vue Test Utils (`npm run test:run`), while e2e 
 
 ## Commit & Pull Request Guidelines
 
-History mixes merge commits with Conventional Commit messages (`chore(deps-dev): …`), so follow conventional prefixes (`feat`, `fix`, `chore`, `docs`) for clarity. Reference GitHub issues as `TT-123` or `Fixes #123` when applicable. Pull requests must explain scope, include screenshots or terminal output for UI/CLI changes, and note any Firebase config updates. If API docs change, attach the generated diff from `docs/openapi.json`.
+History mixes merge commits with Conventional Commit messages (`chore(deps-dev): …`), so follow conventional prefixes (`feat`, `fix`, `chore`, `docs`) for clarity. Reference GitHub issues as `TT-123` or `Fixes #123` when applicable. Pull requests must explain scope, include screenshots or terminal output for UI/CLI changes, and note any Firebase config updates. If API docs change, attach the generated diff from `functions/swaggerui/openapi.json`.

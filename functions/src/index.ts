@@ -20,29 +20,19 @@ import {
   Firestore,
   FieldValue,
 } from 'firebase-admin/firestore';
-// Defer Express-related imports until the API endpoint is invoked
 import type {
   Express,
   Request as ExpressRequest,
   Response as ExpressResponse,
   NextFunction,
 } from 'express';
-
-// Import legacy functions for backward compatibility
 import { createToken, _createTokenLogic } from './token/create.js';
 import { revokeToken } from './token/revoke.js';
-
 admin.initializeApp();
 export { createToken, revokeToken };
-
-// Lazily construct and cache the Express app used by the `api` HTTP function
 let cachedApp: Express | undefined;
-
-// Reuse UID generators across invocations to avoid reallocation overhead
 const PASSWORD_UID_GEN = new UIDGenerator(48, UIDGenerator.BASE62);
 const TEAM_UID_GEN = new UIDGenerator(32);
-
-// Hoist regex to avoid per-call compilation
 const ITEM_ID_SANITIZER_REGEX = /[/\\*?[\]]/g;
 async function getApiApp(): Promise<Express> {
   if (cachedApp) return cachedApp;
@@ -60,11 +50,9 @@ async function getApiApp(): Promise<Express> {
   const teamHandler = (await import('./handlers/teamHandler.js')).default;
   const tokenHandler = (await import('./handlers/tokenHandler.js')).default;
   const { deleteUserAccountHandler } = await import('./handlers/userDeletionHandler.js');
-
   const app = expressModule.default();
   app.use(
     corsModule.default({
-      // Reflect the request origin to support credentials across any origin
       origin: true,
       credentials: true,
       optionsSuccessStatus: 200,
@@ -72,7 +60,6 @@ async function getApiApp(): Promise<Express> {
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     })
   );
-  // CORS is already handled globally above and by individual route handlers
   app.use(bodyParserModule.default.json({ limit: '1mb' }));
   app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
   if (process.env.NODE_ENV !== 'production') {
@@ -162,7 +149,6 @@ async function getApiApp(): Promise<Express> {
   return app;
 }
 export const rawApp = getApiApp;
-
 export const api = onRequest(
   {
     memory: '256MiB',
@@ -171,7 +157,6 @@ export const api = onRequest(
     maxInstances: 3,
   },
   async (req, res) => {
-    // Top-level CORS handling for preflight and safety-net for regular requests
     const originHeader = req.headers.origin;
     const origin = typeof originHeader === 'string' ? originHeader : undefined;
     if (origin) {
@@ -205,15 +190,12 @@ interface TeamDocData {
   members?: string[];
   createdAt?: admin.firestore.Timestamp;
 }
-
-// Utility functions for common team operations
 function validateAuth(request: CallableRequest<unknown>): string {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Authentication required.');
   }
   return request.auth.uid;
 }
-
 function handleTeamError(
   operation: string,
   error: unknown,
@@ -226,7 +208,6 @@ function handleTeamError(
   const message = error instanceof Error ? error.message : String(error);
   throw new HttpsError('internal', `Error during ${operation}`, message);
 }
-
 async function generateSecurePassword(): Promise<string> {
   try {
     const generated = await PASSWORD_UID_GEN.generate();
@@ -370,11 +351,9 @@ async function _createTeamLogic(
           .doc(userUid) as DocumentReference<SystemDocData>;
         const systemDoc: DocumentSnapshot<SystemDocData> = await transaction.get(systemRef);
         const systemData = systemDoc?.data();
-
         if (systemData?.team) {
           throw new HttpsError('failed-precondition', 'User is already in a team.');
         }
-
         if (systemData?.lastLeftTeam) {
           const now = admin.firestore.Timestamp.now();
           const fiveMinutesAgo = admin.firestore.Timestamp.fromMillis(
@@ -387,14 +366,11 @@ async function _createTeamLogic(
             );
           }
         }
-
         const teamId = await TEAM_UID_GEN.generate();
         const teamPassword = data.password || (await generateSecurePassword());
-
         finalTeamPassword = teamPassword;
         createdTeam = teamId;
         const teamRef = db.collection('team').doc(teamId);
-
         transaction.set(teamRef, {
           owner: userUid,
           password: teamPassword,
@@ -402,7 +378,6 @@ async function _createTeamLogic(
           members: [userUid],
           createdAt: FieldValue.serverTimestamp(),
         });
-
         transaction.set(systemRef, { team: teamId }, { merge: true });
       } catch (err) {
         logger.error('[createTeam] Error inside transaction:', err);
@@ -428,14 +403,12 @@ async function _kickTeamMemberLogic(
   const db: Firestore = admin.firestore();
   const userUid = validateAuth(request);
   const data = request.data;
-
   if (!data.kicked) {
     throw new HttpsError('invalid-argument', 'Kicked user ID required.');
   }
   if (data.kicked === userUid) {
     throw new HttpsError('invalid-argument', "You can't kick yourself.");
   }
-
   try {
     await db.runTransaction(async (transaction: Transaction) => {
       const systemRef: DocumentReference<SystemDocData> = db
@@ -487,9 +460,6 @@ export const createTeam = onCall(
   },
   _createTeamLogic
 );
-
-// Alternative HTTPS endpoint for createTeam with explicit CORS handling
-// HTTP mirror for createTeam callable with explicit CORS handling
 export const createTeamHttp = onRequest(
   {
     memory: '256MiB',
@@ -498,40 +468,30 @@ export const createTeamHttp = onRequest(
     minInstances: 0,
   },
   async (req, res) => {
-    // CORS headers aligned with Express middleware; reflect any origin for credentials support
     const originHeader = req.headers.origin;
     const origin = typeof originHeader === 'string' ? originHeader : undefined;
     if (origin) {
       res.set('Access-Control-Allow-Origin', origin);
       res.set('Vary', 'Origin');
     }
-
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.set('Access-Control-Allow-Credentials', 'true');
-
-    // Preflight handling
     if (req.method === 'OPTIONS') {
       res.status(200).send('');
       return;
     }
-
     if (req.method !== 'POST') {
       res.status(405).send('Method Not Allowed');
       return;
     }
-
     try {
-      // Verify Firebase ID token from Authorization header
       const authToken = req.headers.authorization?.replace('Bearer ', '');
       if (!authToken) {
         res.status(401).json({ error: 'Authentication required' });
         return;
       }
-
       const decodedToken = await admin.auth().verifyIdToken(authToken);
-
-      // Reuse callable logic
       const callableRequest: CallableRequest<CreateTeamData> = {
         auth: {
           uid: decodedToken.uid,
@@ -554,8 +514,6 @@ export const createTeamHttp = onRequest(
     }
   }
 );
-
-// HTTP mirror for createToken callable with explicit CORS handling
 export const createTokenHttp = onRequest(
   {
     memory: '256MiB',
@@ -565,32 +523,25 @@ export const createTokenHttp = onRequest(
     minInstances: 0,
   },
   async (req, res) => {
-    // CORS headers: reflect any origin for credentials support
     const originHeader = req.headers.origin;
     const origin = typeof originHeader === 'string' ? originHeader : undefined;
     if (origin) {
       res.set('Access-Control-Allow-Origin', origin);
       res.set('Vary', 'Origin');
     }
-
     res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
     res.set('Access-Control-Allow-Credentials', 'true');
     res.set('Access-Control-Max-Age', '3600');
-
-    // Preflight handling
     if (req.method === 'OPTIONS') {
       res.status(200).send('');
       return;
     }
-
     if (req.method !== 'POST') {
       res.status(405).send('Method Not Allowed');
       return;
     }
-
     try {
-      // Minimal request diagnostics
       logger.log('CreateTokenHttp request received', {
         method: req.method,
         origin: req.headers.origin,
@@ -598,19 +549,14 @@ export const createTokenHttp = onRequest(
         hasAuth: !!req.headers.authorization,
         bodyKeys: req.body ? Object.keys(req.body) : 'no body',
       });
-
-      // Verify Firebase ID token
       const authToken = req.headers.authorization?.replace('Bearer ', '');
       if (!authToken) {
         logger.warn('No auth token provided in createTokenHttp');
         res.status(401).json({ error: 'Authentication required' });
         return;
       }
-
       const decodedToken = await admin.auth().verifyIdToken(authToken);
       logger.log('Token verified for user', { uid: decodedToken.uid });
-
-      // Reuse callable logic
       const callableRequest: CallableRequest<{ note: string; permissions: string[] }> = {
         auth: {
           uid: decodedToken.uid,
@@ -621,7 +567,6 @@ export const createTokenHttp = onRequest(
         rawRequest: req as unknown as FirebaseRequest,
         acceptsStreaming: false,
       };
-
       const result = await _createTokenLogic(callableRequest);
       logger.log('Token created successfully via HTTP', { uid: decodedToken.uid });
       res.status(200).json(result);
@@ -631,7 +576,6 @@ export const createTokenHttp = onRequest(
         stack: error instanceof Error ? error.stack : undefined,
         type: error instanceof HttpsError ? 'HttpsError' : typeof error,
       });
-
       if (error instanceof HttpsError) {
         const statusMap: Record<string, number> = {
           'invalid-argument': 400,
@@ -659,7 +603,6 @@ export const createTokenHttp = onRequest(
     }
   }
 );
-
 export const joinTeam = onCall(
   {
     memory: '256MiB',
@@ -669,7 +612,6 @@ export const joinTeam = onCall(
   },
   _joinTeamLogic
 );
-
 export const leaveTeam = onCall(
   {
     memory: '256MiB',
@@ -679,7 +621,6 @@ export const leaveTeam = onCall(
   },
   _leaveTeamLogic
 );
-
 export const kickTeamMember = onCall(
   {
     memory: '256MiB',
@@ -689,8 +630,6 @@ export const kickTeamMember = onCall(
   },
   _kickTeamMemberLogic
 );
-
-// Account deletion callable function
 export const deleteUserAccount = onCall(
   {
     memory: '256MiB',
@@ -699,36 +638,26 @@ export const deleteUserAccount = onCall(
     minInstances: 0,
   },
   async (request: CallableRequest) => {
-    // Require authentication and explicit confirmation text
     if (!request.auth?.uid) {
       throw new HttpsError('unauthenticated', 'Authentication required');
     }
-
     const { confirmationText } = request.data || {};
-
     if (confirmationText !== 'DELETE MY ACCOUNT') {
       throw new HttpsError('invalid-argument', 'Invalid confirmation text');
     }
-
     logger.info('Account deletion requested', {
       userId: request.auth.uid,
       email: request.auth.token.email,
     });
-
     try {
-      // Use the service directly instead of going through HTTP handler
       const { UserDeletionService } = await import('./handlers/userDeletionHandler.js');
       const userDeletionService = new UserDeletionService();
-
       const result = await userDeletionService.deleteUserAccount(request.auth.uid, {
         confirmationText,
       });
-
       return result;
     } catch (error) {
       logger.error('Account deletion error:', error);
-
-      // Map ApiError-like shapes to HttpsError
       if (error instanceof Error && 'statusCode' in error) {
         const apiError = error as Error & { statusCode: number };
         if (apiError.statusCode === 400) {
@@ -739,7 +668,6 @@ export const deleteUserAccount = onCall(
           throw new HttpsError('permission-denied', apiError.message);
         }
       }
-
       throw new HttpsError(
         'internal',
         error instanceof Error ? error.message : 'Account deletion failed'
@@ -790,8 +718,6 @@ interface TarkovItem {
 interface TarkovDataResponse {
   items: TarkovItem[];
 }
-
-// Hoist GraphQL query to avoid per-call allocation
 const TARKOV_ITEMS_QUERY = gql`
   {
     items {
@@ -879,7 +805,6 @@ async function saveTarkovData(data: TarkovDataResponse | undefined) {
     );
   }
 }
-
 export const updateTarkovdataHTTPS = onRequest(
   {
     memory: '256MiB',
@@ -900,7 +825,6 @@ export const updateTarkovdataHTTPS = onRequest(
     }
   }
 );
-// Nightly data sync from Tarkov API -> Firestore
 export const scheduledTarkovDataFetch = onSchedule(
   {
     schedule: 'every day 00:00',

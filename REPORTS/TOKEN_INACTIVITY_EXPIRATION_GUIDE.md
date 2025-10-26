@@ -1,4 +1,5 @@
 # Token Inactivity-Based Expiration Implementation Guide
+
 ## TarkovTracker API Tokens
 
 **Created:** 2025-10-15
@@ -25,6 +26,7 @@
 **User Feedback:** "Users create API tokens, set them and forget them. If they no longer need them they can delete them."
 
 **Solution:** Inactivity-based expiration is perfect for "set and forget" tokens because:
+
 1. Active scripts/integrations keep working forever
 2. Forgotten tokens don't accumulate security risk
 3. Simple mental model: "use it or lose it"
@@ -734,6 +736,7 @@ export const notifyExpiringTokens = onSchedule({
 ### Analytics Dashboard
 
 Track token usage patterns:
+
 - Average token lifespan
 - Number of expired tokens
 - Most active tokens
