@@ -1,0 +1,34 @@
+name: Setup Node and Install Dependencies
+description: Checks out code, sets up Node.js with caching, and installs npm dependencies
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '22'
+  cache-dependency-path:
+    description: 'Path to package-lock.json for cache key (optional)'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Working directory for npm ci command'
+    required: false
+    default: '.'
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.cache-dependency-path || format('{0}/package-lock.json', inputs.working-directory) }}
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci

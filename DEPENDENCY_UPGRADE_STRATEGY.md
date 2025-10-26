@@ -5,9 +5,9 @@
 
 ## ✅ Completed Upgrades (2025-02-15)
 
-All of the following upgrades have been successfully completed, tested, and validated:
+All the following upgrades have been successfully completed, tested, and validated:
 
-- **@types/node** (functions): 22.18.11 → 24.x
+- **@types/node** (functions): 22.18.11 → 22.x (kept aligned with Node.js 22 runtime to prevent type/runtime API drift)
 - **jsdom** (frontend): 26.1.0 → 27.x
 - **uuid** (frontend): 11.1.0 → 13.x
 - **firebase** (frontend): 11.10.0 → 12.x
@@ -101,16 +101,20 @@ All builds passing, all tests passing (192 frontend unit tests, 75 functions uni
    npm run test:run
    ```
 
-### 6. @types/node 24.x (functions)
+### 6. @types/node 22.x (functions)
 
-1. Upgrade typings and rebuild:
+**Note:** Type definitions are kept aligned with Node.js 22 runtime to prevent type/runtime API drift. Upgrading to @types/node 24.x would expose Node.js 24-only APIs that don't exist in the Node.js 22 runtime, causing potential runtime failures.
+
+1. ✅ **Completed:** Upgraded to @types/node@^22.0.0 to match Node.js 22 runtime
 
    ```bash
    cd functions
-   npm install @types/node@^24.0.0 --save-dev
+   npm install @types/node@^22.0.0 --save-dev
    npm run build
    npm test
    ```
+
+**Future consideration:** When Firebase Cloud Functions supports Node.js 24 (expected after October 2025 when Node.js 24 enters LTS), upgrade both the runtime engine in package.json and @types/node together.
 
 ## Post-upgrade validation
 
