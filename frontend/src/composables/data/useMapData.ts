@@ -85,6 +85,13 @@ export function useMapData() {
           }
           return map;
         }
+        if (!staticData.svg) {
+          if (!missingSvgWarnings.has(mapKey)) {
+            missingSvgWarnings.add(mapKey);
+            logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
+          }
+          return map;
+        }
         return map;
       });
     // Sort by game display order instead of alphabetically
