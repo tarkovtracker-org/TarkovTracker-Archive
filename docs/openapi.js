@@ -664,7 +664,7 @@ window.openapi = {
       "get": {
         "summary": "Returns progress data of all members of the team",
         "tags": [
-          "Team"
+          "Progress"
         ],
         "security": [
           {
@@ -718,7 +718,8 @@ window.openapi = {
                         }
                       }
                     }
-                  }
+                  },
+                  "$ref": "#/components/schemas/TeamProgress"
                 }
               }
             }
