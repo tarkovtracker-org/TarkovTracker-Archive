@@ -181,10 +181,13 @@ export interface TarkovMap {
     | {
         file: string;
         floors: string[];
-        defaultFloor: string;
+        defaultFloor?: string;
         coordinateRotation: number;
         bounds: number[][];
+        transform?: number[];
+        heightRange?: number[];
       };
+  unavailableMessage?: string;
 }
 
 export interface Trader {
@@ -259,29 +262,21 @@ export interface ObjectiveGPSInfo {
   y?: number;
 }
 
-export interface StaticMapData {
-  [key: string]: {
-    id: number;
-    tdevId: string;
-    locale: {
-      en: string;
-      ru?: string;
-    };
-    wiki?: string;
-    description?: string;
-    enemies?: string[];
-    raidDuration?: {
-      day: number;
-      night: number;
-    };
-    svg: {
-      file: string;
-      floors: string[];
-      defaultFloor: string;
-      coordinateRotation: number;
-      bounds: number[][];
-    };
+export interface StaticMapDefinition {
+  svg?: {
+    file: string;
+    floors: string[];
+    defaultFloor?: string;
+    coordinateRotation: number;
+    bounds: number[][];
+    transform?: number[];
+    heightRange?: number[];
   };
+  unavailableMessage?: string;
+}
+
+export interface StaticMapData {
+  [key: string]: StaticMapDefinition;
 }
 
 // Store Types
