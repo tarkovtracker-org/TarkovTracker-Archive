@@ -1,5 +1,5 @@
 import type Graph from 'graphology';
-import type { ApolloError } from '@apollo/client/core';
+import type { ApolloError } from '@apollo/client';
 import type { Store, StateTree } from 'pinia';
 import type { Ref, ComputedRef } from 'vue';
 import type { _GettersTree } from 'pinia';

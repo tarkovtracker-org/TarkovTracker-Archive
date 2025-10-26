@@ -38,7 +38,8 @@ interface OldApiRawData {
   [key: string]: unknown;
 }
 
-// eslint-disable-next-line complexity
+/* eslint-disable complexity */
+// Complex function that transforms legacy API response format - complexity is necessary for data transformation
 export const fetchDataWithApiToken = async (
   apiToken: string,
   oldDomain: string = 'https://tarkovtracker.io/api/v2/progress'
@@ -144,3 +145,4 @@ export const fetchDataWithApiToken = async (
     return null;
   }
 };
+/* eslint-enable complexity */

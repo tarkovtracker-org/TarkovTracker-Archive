@@ -4,22 +4,55 @@
 name: Deploy to Firebase Hosting on PR
 on: pull_request
 permissions:
+  checks: write
   contents: read
   pull-requests: write
 jobs:
   build_and_preview:
+    # Only run for PRs from the same repository (not forks) to access secrets
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Validate Firebase service account
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG }}
+        run: |
+          if [ -z "$FIREBASE_SA" ]; then
+            echo "ERROR: FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG secret is not set"
+            exit 1
+          fi
+          # Validate JSON structure (redirect to /dev/null to avoid logging secrets)
+          echo "$FIREBASE_SA" | python3 -m json.tool > /dev/null 2>&1 || {
+            echo "ERROR: Firebase service account is not valid JSON"
+            exit 1
+          }
+          echo "✓ Firebase service account is valid JSON"
+      
       - name: Install dependencies
         run: npm ci
+      
       - name: Type-check Firebase functions
         run: npm run type-check --workspace=functions
+      
       - name: Build project
         run: npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+      
+      - name: Deploy to Firebase Hosting preview channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG }}
           projectId: tarkovtracker-org
+          channelId: pr${{ github.event.pull_request.number }}
+          expires: 7d
