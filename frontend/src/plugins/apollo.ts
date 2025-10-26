@@ -1,8 +1,8 @@
-import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core';
+import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client/core";
 
 // Create Apollo client with simplified configuration
 const apolloClient = new ApolloClient({
-  link: createHttpLink({
+  link: new HttpLink({
     uri: 'https://api.tarkov.dev/graphql',
     fetchOptions: { timeout: 10000 },
   }),
@@ -10,3 +10,4 @@ const apolloClient = new ApolloClient({
 });
 
 export default apolloClient;
+

@@ -11,7 +11,7 @@ export type ImportedData = ProgressData;
 export function useDataMigration() {
   // API migration state
   const apiToken = ref('');
-  const apiEndpoint = ref('https://tarkovtracker.io/api/v2/progress');
+  const apiEndpoint = ref(import.meta.env.VITE_PROGRESS_ENDPOINT || 'https://tarkovtracker.io/api/v2/progress');
   const apiError = ref('');
   const apiEndpointError = ref('');
   const fetchingApi = ref(false);
