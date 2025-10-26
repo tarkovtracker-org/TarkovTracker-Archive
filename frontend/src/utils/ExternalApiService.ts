@@ -58,6 +58,9 @@ const extractApiData = (apiJsonResponse: unknown): OldApiRawData | null => {
   return apiJsonResponse as OldApiRawData;
 };
 
+const MODULE_IMPORT_TIMESTAMP = Date.now();
+type TaskCompletions = NonNullable<ProgressData['taskCompletions']>;
+
 const buildTaskCompletions = (
   tasks?: OldTaskProgress[]
 ): ProgressData['taskCompletions'] => {
@@ -65,22 +68,21 @@ const buildTaskCompletions = (
     return {};
   }
 
-  const timestamp = Date.now();
-  const result: ProgressData['taskCompletions'] = {};
+  const initialAcc: TaskCompletions = {};
 
-  tasks.forEach((task) => {
+  return tasks.reduce<TaskCompletions>((acc, task) => {
     if (!task?.id || (!task.complete && !task.failed)) {
-      return;
+      return acc;
     }
 
-    result[task.id] = {
+    acc[task.id] = {
       complete: Boolean(task.complete),
-      timestamp,
+      timestamp: MODULE_IMPORT_TIMESTAMP,
       failed: Boolean(task.failed),
     };
-  });
 
-  return result;
+    return acc;
+  }, initialAcc);
 };
 
 const buildHideoutModules = (
