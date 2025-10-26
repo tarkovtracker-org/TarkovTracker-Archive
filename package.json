@@ -22,7 +22,7 @@
     "emulators:backend": "npm run build:functions && firebase emulators:start --only auth,firestore,functions",
     "emulators:local": "firebase emulators:start --import=./local_data --export-on-exit=./local_data",
     "docs": "npm run build:functions && npm run swagger --workspace=functions && echo 'API docs generated! Open docs/index.html in your browser to view the Swagger UI.'",
-    "docs:generate": "npm run swagger --workspace=functions && mkdir -p frontend/public/api && cp docs/openapi.json frontend/public/api/openapi.json",
+    "docs:generate": "npm run swagger --workspace=functions && mkdir -p frontend/public/api && cp functions/swaggerui/openapi.json frontend/public/api/openapi.json",
     "deploy:staging": "npm run build:functions && npm run docs && npm run build:frontend && firebase hosting:channel:deploy staging --expires 7d",
     "deploy:prod": "npm run build:functions && npm run docs && npm run build:frontend && firebase deploy",
     "lint": "eslint . && npm run type-check --workspace=frontend && npm run type-check --workspace=functions",
