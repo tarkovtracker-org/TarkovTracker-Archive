@@ -35,12 +35,6 @@ describe('usePrivacyConsent', () => {
       },
     };
 
-    Object.defineProperty(global, 'localStorage', {
-      value: storage,
-      writable: true,
-      configurable: true,
-    });
-
     Object.defineProperty(window, 'localStorage', {
       value: storage,
       writable: true,
@@ -48,10 +42,10 @@ describe('usePrivacyConsent', () => {
     });
 
     // Mock window.clarity
-    global.window.clarity = undefined;
+    globalThis.window.clarity = undefined;
 
     // Mock document
-    global.document = {
+    globalThis.document = {
       createElement: vi.fn(() => ({
         async: false,
         src: '',
@@ -123,7 +117,7 @@ describe('usePrivacyConsent', () => {
       const firstStatus = consent.consentStatus.value;
 
       // Try to reinitialize with different storage value
-      global.localStorage.getItem = vi.fn(() => 'accepted');
+      globalThis.window.localStorage.getItem = vi.fn(() => 'accepted');
       consent.initializeConsent();
 
       // Should still have the original status (already initialized)
@@ -138,7 +132,7 @@ describe('usePrivacyConsent', () => {
         throw new Error('Storage access denied');
       });
 
-      Object.defineProperty(global, 'localStorage', {
+      Object.defineProperty(globalThis, 'localStorage', {
         get: () => ({
           getItem: throwingGetItem,
           setItem: vi.fn(),
@@ -299,7 +293,7 @@ describe('usePrivacyConsent', () => {
   describe('Clarity integration', () => {
     it('calls clarity consent when enabled', () => {
       const mockClarity = vi.fn();
-      global.window.clarity = mockClarity;
+      globalThis.window.clarity = mockClarity;
 
       __privacyConsentInternals.enableClarity();
 
@@ -308,7 +302,7 @@ describe('usePrivacyConsent', () => {
 
     it('calls clarity consent when disabled', () => {
       const mockClarity = vi.fn();
-      global.window.clarity = mockClarity;
+      globalThis.window.clarity = mockClarity;
 
       __privacyConsentInternals.disableClarity();
 
@@ -316,24 +310,24 @@ describe('usePrivacyConsent', () => {
     });
 
     it('handles missing window gracefully', () => {
-      const originalWindow = global.window;
+      const originalWindow = globalThis.window;
       // @ts-expect-error - Testing undefined window
-      global.window = undefined;
+      globalThis.window = undefined;
 
       expect(() => __privacyConsentInternals.enableClarity()).not.toThrow();
       expect(() => __privacyConsentInternals.disableClarity()).not.toThrow();
 
-      global.window = originalWindow;
+      globalThis.window = originalWindow;
     });
 
     it('handles missing document gracefully', () => {
-      const originalDocument = global.document;
+      const originalDocument = globalThis.document;
       // @ts-expect-error - Testing undefined document
-      global.document = undefined;
+      globalThis.document = undefined;
 
       expect(() => __privacyConsentInternals.enableClarity()).not.toThrow();
 
-      global.document = originalDocument;
+      globalThis.document = originalDocument;
     });
   });
 

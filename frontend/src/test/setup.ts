@@ -53,7 +53,7 @@ const pinia = createPinia();
 config.global.plugins = [vuetify, testI18n, pinia];
 
 // Global test helpers
-global.ResizeObserver = class ResizeObserver {
+globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}

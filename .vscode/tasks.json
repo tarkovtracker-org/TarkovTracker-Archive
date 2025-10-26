@@ -12,6 +12,57 @@
         "code": 4,
         "message": 5
       }
+    },
+    {
+      "name": "typescript-problem-matcher-dev",
+      "owner": "custom",
+      "pattern": {
+        "regexp": "^([^\\s].*)\\((\\d+|\\d+,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+        "file": 1,
+        "location": 2,
+        "severity": 3,
+        "code": 4,
+        "message": 5
+      },
+      "background": {
+        "activeOnStart": true,
+        "beginsPattern": ".*",
+        "endsPattern": "(Local:|Network:).*http://localhost:3000"
+      }
+    },
+    {
+      "name": "typescript-problem-matcher-dev-full",
+      "owner": "custom",
+      "pattern": {
+        "regexp": "^([^\\s].*)\\((\\d+|\\d+,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+        "file": 1,
+        "location": 2,
+        "severity": 3,
+        "code": 4,
+        "message": 5
+      },
+      "background": {
+        "activeOnStart": true,
+        "beginsPattern": ".*",
+        "endsPattern": "(All emulators ready|Local:|Network:)"
+      }
+    },
+    {
+      "name": "typescript-problem-matcher-emulators",
+      "owner": "custom",
+      "pattern": {
+        "regexp": "^([^\\s].*)\\((\\d+|\\d+,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+        "file": 1,
+        "location": 2,
+        "severity": 3,
+        "code": 4,
+        "message": 5
+      },
+      "background": {
+        "activeOnStart": true,
+        "beginsPattern": ".*",
+        "endsPattern": "All emulators ready"
+      }
     }
   ],
   "tasks": [
@@ -21,14 +72,7 @@
       "label": "npm: dev",
       "detail": "Start Vite dev server (frontend only)",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$typescript-problem-matcher",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": "(Local:|Network:).*http://localhost:3000"
-        }
-      }
+      "problemMatcher": "$typescript-problem-matcher-dev"
     },
     {
       "type": "npm",
@@ -36,14 +80,7 @@
       "label": "npm: dev:full",
       "detail": "Start Vite + Firebase emulators",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$typescript-problem-matcher",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": "(All emulators ready|Local:|Network:)"
-        }
-      }
+      "problemMatcher": "$typescript-problem-matcher-dev-full"
     },
     {
       "type": "npm",
@@ -51,14 +88,7 @@
       "label": "npm: dev:firebase",
       "detail": "Build and serve production build with Firebase emulators",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$typescript-problem-matcher",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": "All emulators ready"
-        }
-      }
+      "problemMatcher": "$typescript-problem-matcher-emulators"
     },
     {
       "type": "npm",
@@ -66,14 +96,7 @@
       "label": "npm: emulators:backend",
       "detail": "Start Firebase emulators (auth, firestore, functions)",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$typescript-problem-matcher",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": "All emulators ready"
-        }
-      }
+      "problemMatcher": "$typescript-problem-matcher-emulators"
     }
   ]
 }
