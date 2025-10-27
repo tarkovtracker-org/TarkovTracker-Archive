@@ -100,7 +100,7 @@ const UPDATE_ITEMS_QUERY = gql`
 const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
   try {
     logger.info('Starting scheduled Tarkov data update');
-    
+
     const db = admin.firestore();
     const batch = db.batch();
 

@@ -22,8 +22,6 @@ interface CorsOptions {
   allowedOrigins?: string[];
 }
 
-
-
 /** Validates origin, blocks dangerous patterns, logs suspicious activity */
 export function validateOrigin(
   origin: string | undefined,

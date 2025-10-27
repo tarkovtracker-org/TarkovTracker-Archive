@@ -88,7 +88,9 @@ export const migrateLocalDataToUser = async (
     if (!isDevAuthEnabled) {
       await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
     } else {
-      logger.debug(`[FirestoreMigrationService] Skipped Firestore write to ${progressRef.path} due to dev auth`);
+      logger.debug(
+        `[FirestoreMigrationService] Skipped Firestore write to ${progressRef.path} due to dev auth`
+      );
     }
 
     backupLocalProgress(enrichedData);
@@ -190,7 +192,9 @@ export const importDataToUser = async (
     if (!isDevAuthEnabled) {
       await setDoc(progressRef, newUserState as DocumentData, { merge: true });
     } else {
-      logger.debug(`[FirestoreMigrationService] Skipped Firestore write for user ${uid} due to dev auth`);
+      logger.debug(
+        `[FirestoreMigrationService] Skipped Firestore write for user ${uid} due to dev auth`
+      );
     }
 
     saveLocalUserState(newUserState);

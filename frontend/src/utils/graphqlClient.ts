@@ -34,9 +34,7 @@ function setupAbortSignal(
 }
 
 // Helper to convert query to string
-function queryToString(
-  query: string | import('graphql').DocumentNode
-): string {
+function queryToString(query: string | import('graphql').DocumentNode): string {
   if (typeof query === 'string') {
     return query;
   }

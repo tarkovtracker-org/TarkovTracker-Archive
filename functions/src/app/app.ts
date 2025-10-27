@@ -1,5 +1,10 @@
 // Express app configuration and route setup
-import type { Express, Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
+import type {
+  Express,
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+  NextFunction,
+} from 'express';
 import { logger } from 'firebase-functions/v2';
 import { verifyBearer } from '../middleware/auth.js';
 import { abuseGuard } from '../middleware/abuseGuard.js';
@@ -18,12 +23,12 @@ export async function createApp(): Promise<Express> {
   const bodyParserModule = await import('body-parser');
 
   const app = expressModule.default();
-  
+
   // Middleware setup
   app.use(corsModule.default(getExpressCorsOptions()));
   app.use(bodyParserModule.default.json({ limit: '1mb' }));
   app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
-  
+
   // Request logging in non-production
   if (process.env.NODE_ENV !== 'production') {
     app.use((req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => {
@@ -63,34 +68,54 @@ function setupRoutes(app: Express) {
   // Progress endpoints
   app.get('/api/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
   app.get('/api/v2/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
-  
-  app.post('/api/progress/level/:levelValue', requirePermission('WP'), progressHandler.setPlayerLevel);
-  app.post('/api/v2/progress/level/:levelValue', requirePermission('WP'), progressHandler.setPlayerLevel);
-  
+
+  app.post(
+    '/api/progress/level/:levelValue',
+    requirePermission('WP'),
+    progressHandler.setPlayerLevel
+  );
+  app.post(
+    '/api/v2/progress/level/:levelValue',
+    requirePermission('WP'),
+    progressHandler.setPlayerLevel
+  );
+
   app.post('/api/progress/task/:taskId', requirePermission('WP'), progressHandler.updateSingleTask);
-  app.post('/api/v2/progress/task/:taskId', requirePermission('WP'), progressHandler.updateSingleTask);
-  
+  app.post(
+    '/api/v2/progress/task/:taskId',
+    requirePermission('WP'),
+    progressHandler.updateSingleTask
+  );
+
   app.post('/api/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
   app.post('/api/v2/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
-  
-  app.post('/api/progress/task/objective/:objectiveId', requirePermission('WP'), progressHandler.updateTaskObjective);
-  app.post('/api/v2/progress/task/objective/:objectiveId', requirePermission('WP'), progressHandler.updateTaskObjective);
+
+  app.post(
+    '/api/progress/task/objective/:objectiveId',
+    requirePermission('WP'),
+    progressHandler.updateTaskObjective
+  );
+  app.post(
+    '/api/v2/progress/task/objective/:objectiveId',
+    requirePermission('WP'),
+    progressHandler.updateTaskObjective
+  );
 
   // Team endpoints
   app.get('/api/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
   app.get('/api/v2/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
-  
+
   // Team management with CORS preflight
   app.options('/api/team/create', (_req: ExpressRequest, res: ExpressResponse) => {
     res.status(200).send();
   });
   app.post('/api/team/create', teamHandler.createTeam);
-  
+
   app.options('/api/team/join', (_req: ExpressRequest, res: ExpressResponse) => {
     res.status(200).send();
   });
   app.post('/api/team/join', teamHandler.joinTeam);
-  
+
   app.options('/api/team/leave', (_req: ExpressRequest, res: ExpressResponse) => {
     res.status(200).send();
   });

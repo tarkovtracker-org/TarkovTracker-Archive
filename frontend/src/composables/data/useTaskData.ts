@@ -33,9 +33,9 @@ import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
 
 type IdleCallbackWindow = Window & {
-    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-    cancelIdleCallback?: (handle: number) => void;
-  };
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 /**
  * Composable for managing task data, relationships, and derived information
  */

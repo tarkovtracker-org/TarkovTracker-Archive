@@ -23,7 +23,7 @@ class ErrorHandler {
   handleError(error: unknown, context?: string, details?: unknown): string {
     const errorId = this.generateErrorId();
     const errorMessage = this.extractErrorMessage(error);
-    
+
     const errorInfo: ErrorInfo = {
       id: errorId,
       message: errorMessage,
@@ -35,7 +35,7 @@ class ErrorHandler {
 
     // Add to errors list
     this.errors.value.unshift(errorInfo);
-    
+
     // Keep only the most recent errors
     if (this.errors.value.length > this.maxErrors) {
       this.errors.value = this.errors.value.slice(0, this.maxErrors);
@@ -122,7 +122,7 @@ class ErrorHandler {
 
   private logError(errorInfo: ErrorInfo): void {
     const logMessage = `[${errorInfo.id}] ${errorInfo.message}`;
-    
+
     if (errorInfo.context) {
       logger.error(`${logMessage} (Context: ${errorInfo.context})`, errorInfo.details);
     } else {

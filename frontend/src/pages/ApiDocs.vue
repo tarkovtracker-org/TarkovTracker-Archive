@@ -45,7 +45,15 @@
 </template>
 
 <script setup lang="ts">
-  import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent, defineComponent, h } from 'vue';
+  import {
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    computed,
+    defineAsyncComponent,
+    defineComponent,
+    h,
+  } from 'vue';
   import '@scalar/api-reference/style.css';
 
   // Lazy load Scalar to keep it out of the main bundle
@@ -53,11 +61,9 @@
     name: 'ApiReferenceLoading',
     setup() {
       return () =>
-        h(
-          'div',
-          { class: 'd-flex justify-center align-center pa-8' },
-          [h('v-progress-circular', { indeterminate: '', color: 'primary' })],
-        );
+        h('div', { class: 'd-flex justify-center align-center pa-8' }, [
+          h('v-progress-circular', { indeterminate: '', color: 'primary' }),
+        ]);
     },
   });
 
@@ -65,16 +71,12 @@
     name: 'ApiReferenceError',
     setup() {
       return () =>
-        h(
-          'div',
-          { class: 'd-flex justify-center align-center pa-8' },
-          [
-            h('v-alert', {
-              type: 'error',
-              text: 'Failed to load API documentation',
-            }),
-          ],
-        );
+        h('div', { class: 'd-flex justify-center align-center pa-8' }, [
+          h('v-alert', {
+            type: 'error',
+            text: 'Failed to load API documentation',
+          }),
+        ]);
     },
   });
 
@@ -87,7 +89,7 @@
     onError(error, retry, _fail) {
       console.error('Failed to load ApiReference component:', error);
       retry(); // Retry once
-    }
+    },
   });
 
   const loading = ref(true);

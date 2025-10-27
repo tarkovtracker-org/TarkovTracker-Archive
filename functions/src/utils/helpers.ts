@@ -1,15 +1,8 @@
 // Shared utility functions
-import {
-  HttpsError,
-  CallableRequest,
-} from 'firebase-functions/v2/https';
+import { HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import functions from 'firebase-functions';
 import admin from 'firebase-admin';
-import {
-  DocumentReference,
-  WriteBatch,
-  FieldValue,
-} from 'firebase-admin/firestore';
+import { DocumentReference, WriteBatch, FieldValue } from 'firebase-admin/firestore';
 import UIDGenerator from 'uid-generator';
 
 // Shared UID generators

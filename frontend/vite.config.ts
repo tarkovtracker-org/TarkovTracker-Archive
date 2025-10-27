@@ -49,27 +49,27 @@ export default defineConfig({
         manualChunks(id) {
           // Only split the heaviest vendors to improve performance
           // Everything else uses Vite's automatic chunking
-          
+
           // Firebase (very heavy - split into own chunk)
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
             return 'firebase-vendor';
           }
-          
+
           // Vuetify (heavy UI framework - split into own chunk)
           if (id.includes('node_modules/vuetify') || id.includes('vite-plugin-vuetify')) {
             return 'vuetify-vendor';
           }
-          
+
           // Scalar API Reference (very heavy - only loads on API docs page)
           if (id.includes('node_modules/@scalar')) {
             return 'scalar-vendor';
           }
-          
+
           // D3 (heavy graphing library)
           if (id.includes('node_modules/d3')) {
             return 'd3-vendor';
           }
-          
+
           // Let Vite handle everything else automatically
         },
       },

@@ -28,7 +28,11 @@
     </div>
 
     <!-- Load more trigger -->
-    <div v-if="hasMore && !isInitialLoading" ref="loadMoreTrigger" class="task-card-stack__sentinel">
+    <div
+      v-if="hasMore && !isInitialLoading"
+      ref="loadMoreTrigger"
+      class="task-card-stack__sentinel"
+    >
       <v-progress-circular
         v-if="supportsIntersectionObserver"
         indeterminate
