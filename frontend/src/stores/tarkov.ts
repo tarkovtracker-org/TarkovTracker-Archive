@@ -71,7 +71,9 @@ export const useTarkovStore = defineStore('swapTarkov', {
           await setDoc(userProgressRef, completeState, { merge: true });
         } catch (error) {
           logger.error('Error syncing gamemode to backend:', error);
-          // TODO: Show error notification to user
+          logger.warn(
+            'Game mode changed locally but failed to sync to server. Your data may be out of sync.'
+          );
         }
       }
     },

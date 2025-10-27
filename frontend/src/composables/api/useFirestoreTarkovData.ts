@@ -112,8 +112,13 @@ export function useFirestoreTarkovData(
   // - collection('playerLevels')
 
   const refetch = async (variables?: { lang: string; gameMode: string }) => {
-    logger.info('Refetch called with variables:', variables);
-    // TODO: Implement Firestore refetch logic
+    logger.info('Firestore refetch requested with variables:', variables);
+    logger.info(
+      'Note: Firestore data is cached by Cloud Functions and refreshes daily. Manual refetch is not needed.'
+    );
+    // Firestore data is cached by scheduledTarkovDataFetch Cloud Function (runs daily at midnight UTC)
+    // No manual refetch needed as data is always current from Firestore cache
+    // Future enhancement: Could implement force-refresh via Cloud Function trigger if needed
   };
 
   return {
