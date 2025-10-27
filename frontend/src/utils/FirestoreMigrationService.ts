@@ -12,6 +12,9 @@ import {
 } from './DataTransformService';
 import { backupLocalProgress, saveLocalUserState } from './LocalDataService';
 
+// Check if dev auth is enabled - if so, skip Firestore writes
+const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+
 const getProgressRef = (uid: string) => doc(firestore, 'progress', uid);
 
 const hasMeaningfulProgress = (data: ProgressData): boolean =>
@@ -80,7 +83,12 @@ export const migrateLocalDataToUser = async (
     }
 
     const enrichedData = enrichLocalDataForMigration({ ...localData });
-    await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
+
+    // Skip Firestore write when dev auth is enabled
+    if (!isDevAuthEnabled) {
+      await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
+    }
+
     backupLocalProgress(enrichedData);
     return true;
   } catch (error) {
@@ -175,7 +183,12 @@ export const importDataToUser = async (
     }
 
     const newUserState = buildImportedUserState(importedData, existingData);
-    await setDoc(progressRef, newUserState as DocumentData, { merge: true });
+
+    // Skip Firestore write when dev auth is enabled
+    if (!isDevAuthEnabled) {
+      await setDoc(progressRef, newUserState as DocumentData, { merge: true });
+    }
+
     saveLocalUserState(newUserState);
     return true;
   } catch (error) {

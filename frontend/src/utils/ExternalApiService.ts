@@ -58,11 +58,11 @@ const extractApiData = (apiJsonResponse: unknown): OldApiRawData | null => {
   return apiJsonResponse as OldApiRawData;
 };
 
-const MODULE_IMPORT_TIMESTAMP = Date.now();
 type TaskCompletions = NonNullable<ProgressData['taskCompletions']>;
 
 const buildTaskCompletions = (
-  tasks?: OldTaskProgress[]
+  tasks?: OldTaskProgress[],
+  timestamp?: number
 ): ProgressData['taskCompletions'] => {
   if (!Array.isArray(tasks)) {
     return {};
@@ -77,7 +77,7 @@ const buildTaskCompletions = (
 
     acc[task.id] = {
       complete: Boolean(task.complete),
-      timestamp: MODULE_IMPORT_TIMESTAMP,
+      timestamp: timestamp ?? Date.now(),
       failed: Boolean(task.failed),
     };
 
@@ -86,13 +86,13 @@ const buildTaskCompletions = (
 };
 
 const buildHideoutModules = (
-  modules?: OldHideoutModuleProgress[]
+  modules?: OldHideoutModuleProgress[],
+  timestamp?: number
 ): ProgressData['hideoutModules'] => {
   if (!Array.isArray(modules)) {
     return {};
   }
 
-  const timestamp = Date.now();
   const result: ProgressData['hideoutModules'] = {};
 
   modules.forEach((module) => {
@@ -102,7 +102,7 @@ const buildHideoutModules = (
 
     result[module.id] = {
       complete: true,
-      timestamp,
+      timestamp: timestamp ?? Date.now(),
     };
   });
 
@@ -110,7 +110,8 @@ const buildHideoutModules = (
 };
 
 const buildHideoutParts = (
-  parts?: OldHideoutPartProgress[]
+  parts?: OldHideoutPartProgress[],
+  timestamp?: number
 ): ProgressData['hideoutParts'] => {
   if (!Array.isArray(parts)) {
     return {};
@@ -126,7 +127,7 @@ const buildHideoutParts = (
     result[part.id] = {
       complete: Boolean(part.complete),
       count: part.count ?? 0,
-      ...(part.complete ? { timestamp: Date.now() } : {}),
+      ...(part.complete ? { timestamp: timestamp ?? Date.now() } : {}),
     };
   });
 
@@ -134,7 +135,8 @@ const buildHideoutParts = (
 };
 
 const buildTaskObjectives = (
-  objectives?: OldTaskObjectiveProgress[]
+  objectives?: OldTaskObjectiveProgress[],
+  timestamp?: number
 ): ProgressData['taskObjectives'] => {
   if (!Array.isArray(objectives)) {
     return {};
@@ -150,30 +152,31 @@ const buildTaskObjectives = (
     result[objective.id] = {
       complete: Boolean(objective.complete),
       count: objective.count ?? 0,
-      ...(objective.complete ? { timestamp: Date.now() } : {}),
+      ...(objective.complete ? { timestamp: timestamp ?? Date.now() } : {}),
     };
   });
 
   return result;
 };
 
-const createMigrationData = (
-  dataFromApi: OldApiRawData,
-  oldDomain: string
-): ProgressData => ({
-  level: dataFromApi.playerLevel || dataFromApi.level || 1,
-  gameEdition: dataFromApi.gameEdition || 'standard',
-  pmcFaction: dataFromApi.pmcFaction || 'usec',
-  displayName: dataFromApi.displayName || '',
-  taskCompletions: buildTaskCompletions(dataFromApi.tasksProgress),
-  taskObjectives: buildTaskObjectives(dataFromApi.taskObjectivesProgress),
-  hideoutModules: buildHideoutModules(dataFromApi.hideoutModulesProgress),
-  hideoutParts: buildHideoutParts(dataFromApi.hideoutPartsProgress),
-  importedFromApi: true,
-  importDate: new Date().toISOString(),
-  sourceUserId: dataFromApi.userId,
-  sourceDomain: oldDomain,
-});
+const createMigrationData = (dataFromApi: OldApiRawData, oldDomain: string): ProgressData => {
+  const importTimestamp = Date.now();
+
+  return {
+    level: dataFromApi.playerLevel || dataFromApi.level || 1,
+    gameEdition: dataFromApi.gameEdition || 'standard',
+    pmcFaction: dataFromApi.pmcFaction || 'usec',
+    displayName: dataFromApi.displayName || '',
+    taskCompletions: buildTaskCompletions(dataFromApi.tasksProgress, importTimestamp),
+    taskObjectives: buildTaskObjectives(dataFromApi.taskObjectivesProgress, importTimestamp),
+    hideoutModules: buildHideoutModules(dataFromApi.hideoutModulesProgress, importTimestamp),
+    hideoutParts: buildHideoutParts(dataFromApi.hideoutPartsProgress, importTimestamp),
+    importedFromApi: true,
+    importDate: new Date(importTimestamp).toISOString(),
+    sourceUserId: dataFromApi.userId,
+    sourceDomain: oldDomain,
+  };
+};
 
 // Fetches and transforms legacy API data format
 export const fetchDataWithApiToken = async (

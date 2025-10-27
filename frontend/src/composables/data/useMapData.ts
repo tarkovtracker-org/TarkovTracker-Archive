@@ -62,38 +62,33 @@ export function useMapData() {
       // Show maps without SVG while static data loads
       return [...source].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));
     }
-    const mergedMaps = source
-      .map((map) => {
-        const mapKey = getStaticMapKey(map.name);
-        const staticData = staticMapData.value?.[mapKey];
-        if (staticData?.svg) {
-          return {
-            ...map,
-            svg: staticData.svg,
-          };
-        }
-        if (staticData?.unavailableMessage) {
-          return {
-            ...map,
-            unavailableMessage: staticData.unavailableMessage,
-          };
-        }
-        if (!staticData) {
-          if (!missingStaticDataWarnings.has(mapKey)) {
-            missingStaticDataWarnings.add(mapKey);
-            logger.warn(`Static map data not found for map: ${map.name} (lookup key: ${mapKey})`);
-          }
-          return map;
-        }
-        if (!staticData.svg) {
-          if (!missingSvgWarnings.has(mapKey)) {
-            missingSvgWarnings.add(mapKey);
-            logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
-          }
-          return map;
+    const mergedMaps = source.map((map) => {
+      const mapKey = getStaticMapKey(map.name);
+      const staticData = staticMapData.value?.[mapKey];
+
+      if (!staticData) {
+        if (!missingStaticDataWarnings.has(mapKey)) {
+          missingStaticDataWarnings.add(mapKey);
+          logger.warn(`Static map data not found for map: ${map.name} (lookup key: ${mapKey})`);
         }
         return map;
-      });
+      }
+
+      const mergedMap = { ...map };
+
+      if (staticData.svg) {
+        mergedMap.svg = staticData.svg;
+      } else if (!missingSvgWarnings.has(mapKey)) {
+        missingSvgWarnings.add(mapKey);
+        logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
+      }
+
+      if (staticData.unavailableMessage) {
+        mergedMap.unavailableMessage = staticData.unavailableMessage;
+      }
+
+      return mergedMap;
+    });
     // Sort by game display order instead of alphabetically
     return [...mergedMaps].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));
   });

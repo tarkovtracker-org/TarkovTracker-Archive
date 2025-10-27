@@ -31,6 +31,12 @@ import type {
 } from '@/types/tarkov';
 import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
+
+type IdleCallbackWindow = Window &
+  typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  };
 /**
  * Composable for managing task data, relationships, and derived information
  */
@@ -331,15 +337,11 @@ export function useTaskData() {
       runProcessing();
       return;
     }
-    const browserWindow = window as Window & typeof globalThis;
-    const idleWindow = browserWindow as typeof browserWindow & {
-      requestIdleCallback?: (
-        callback: IdleRequestCallback,
-        options?: IdleRequestOptions
-      ) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    if (typeof idleWindow.requestIdleCallback === 'function' && typeof idleWindow.cancelIdleCallback === 'function') {
+    const idleWindow = window as IdleCallbackWindow;
+    if (
+      typeof idleWindow.requestIdleCallback === 'function' &&
+      typeof idleWindow.cancelIdleCallback === 'function'
+    ) {
       const handle = idleWindow.requestIdleCallback(
         () => {
           runProcessing();
@@ -347,15 +349,15 @@ export function useTaskData() {
         { timeout: 200 }
       );
       cancelDeferredProcessing = () => {
-        idleWindow.cancelIdleCallback!(handle);
+        idleWindow.cancelIdleCallback?.(handle);
       };
       return;
     }
-    const timeoutHandle = browserWindow.setTimeout(() => {
+    const timeoutHandle = window.setTimeout(() => {
       runProcessing();
     }, 0);
     cancelDeferredProcessing = () => {
-      browserWindow.clearTimeout(timeoutHandle);
+      window.clearTimeout(timeoutHandle);
     };
   };
   watch(

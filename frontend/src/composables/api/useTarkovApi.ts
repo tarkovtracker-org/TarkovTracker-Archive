@@ -11,18 +11,30 @@ import type {
   TarkovHideoutQueryResult,
   StaticMapData,
 } from '@/types/tarkov';
-import mapsData from './maps.json';
+import { fetchTarkovDevMaps } from '@/utils/mapTransformUtils';
 import { logger } from '@/utils/logger';
+import fallbackMapsData from './maps.json';
+
 provideApolloClient(apolloClient);
+
 // Singleton state for caching
 const isInitialized = ref(false);
 const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
-// Map data - now served locally
+
+// Map data - fetched from tarkov.dev at runtime with fallback
 let mapPromise: Promise<StaticMapData> | null = null;
+
+/**
+ * Load map data from tarkov.dev at runtime
+ * Falls back to bundled maps.json if fetch fails
+ */
 async function loadStaticMaps(): Promise<StaticMapData> {
   if (!mapPromise) {
-    mapPromise = Promise.resolve(mapsData as StaticMapData);
+    mapPromise = fetchTarkovDevMaps().catch((error) => {
+      logger.warn('Failed to fetch maps from tarkov.dev, using fallback data:', error);
+      return fallbackMapsData as StaticMapData;
+    });
   }
   return mapPromise;
 }

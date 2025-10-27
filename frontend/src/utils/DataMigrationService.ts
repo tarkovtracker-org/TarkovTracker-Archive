@@ -60,7 +60,8 @@ export default class DataMigrationService {
 
   static async fetchDataWithApiToken(
     apiToken: string,
-    oldDomain: string = import.meta.env.VITE_PROGRESS_ENDPOINT || 'https://tarkovtracker.io/api/v2/progress'
+    oldDomain: string = import.meta.env.VITE_PROGRESS_ENDPOINT ||
+      'https://tarkovtracker.io/api/v2/progress'
   ): Promise<ProgressData | null> {
     return fetchDataWithApiToken(apiToken, oldDomain);
   }
