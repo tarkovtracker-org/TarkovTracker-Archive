@@ -86,12 +86,12 @@ Detailed exhaustive analysis of specific areas:
 
 ### Technical Reports
 
-- **[REPORTS/README.md](../REPORTS/README.md)** - Reports index
-- **[REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](../REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)** - Dependency management strategy
-- **[REPORTS/TOKEN_INACTIVITY_EXPIRATION_GUIDE.md](../REPORTS/TOKEN_INACTIVITY_EXPIRATION_GUIDE.md)** - Token expiration guide
-- **[REPORTS/APOLLO_CLIENT_V4_UPGRADE_GUIDE.md](../REPORTS/APOLLO_CLIENT_V4_UPGRADE_GUIDE.md)** - Apollo Client upgrade guide
-- **[REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](../REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)** - Quick start for dependency upgrades
-- **[REPORTS/ACTION_ITEMS.md](../REPORTS/ACTION_ITEMS.md)** - Tracked action items
+- **[REPORTS/README.md](./REPORTS/README.md)** - Reports index
+- **[REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](./REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)** - Dependency management strategy
+- **[REPORTS/TOKEN_INACTIVITY_EXPIRATION_GUIDE.md](./REPORTS/TOKEN_INACTIVITY_EXPIRATION_GUIDE.md)** - Token expiration guide
+- **[REPORTS/APOLLO_CLIENT_V4_UPGRADE_GUIDE.md](./REPORTS/APOLLO_CLIENT_V4_UPGRADE_GUIDE.md)** - Apollo Client upgrade guide
+- **[REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](./REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)** - Quick start for dependency upgrades
+- **[REPORTS/ACTION_ITEMS.md](./REPORTS/ACTION_ITEMS.md)** - Tracked action items
 
 ### Operational Documentation
 

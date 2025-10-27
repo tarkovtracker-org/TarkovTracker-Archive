@@ -79,11 +79,14 @@ TarkovTracker/                          # Monorepo root
 │   │   └── e2e-testing-strategy.md     # E2E test strategy
 │   └── bmm-*.md                        # BMM generated documentation
 │
-├── REPORTS/                            # Technical reports
-│   ├── DEPENDENCY_UPGRADE_STRATEGY.md  # Dependency management
-│   ├── TOKEN_INACTIVITY_EXPIRATION_GUIDE.md
-│   ├── APOLLO_CLIENT_V4_UPGRADE_GUIDE.md
-│   └── ACTION_ITEMS.md                 # Tracked action items
+├── docs/                               # Project documentation
+│   ├── REPORTS/                        # Technical reports
+│   │   ├── DEPENDENCY_UPGRADE_STRATEGY.md  # Dependency management
+│   │   ├── TOKEN_INACTIVITY_EXPIRATION_GUIDE.md
+│   │   ├── APOLLO_CLIENT_V4_UPGRADE_GUIDE.md
+│   │   └── ACTION_ITEMS.md             # Tracked action items
+│   ├── operations/                     # Operational docs
+│   └── development/                    # Development docs
 │
 ├── .github/                            # GitHub configuration
 │   ├── workflows/                      # CI/CD pipelines

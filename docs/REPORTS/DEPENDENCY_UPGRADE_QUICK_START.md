@@ -25,132 +25,109 @@ For full details, see [DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRA
 ls -la .upgrade-snapshots/
 ```
 
-### Step 2: Execute Batch Updates
+### Step 2: Execute Dependency Updates
 
-#### Week 1 - Patch Updates (Low Risk)
+#### Week 1-2 – Patch & Minor Updates (Low Risk)
+
+Use the interactive taze workflow to review and accept safe bumps:
 
 ```bash
-# Update safe patch versions
-./scripts/batch-update.sh 1
+# Launch taze (interactive)
+npm run deps
 
-# Verify health
+# Run the post-upgrade checks
 ./scripts/health-check.sh
 
-# Commit changes
+# Commit the accepted changes
 git add .
-git commit -m "chore: update patch versions (batch 1)
-
-- concurrently 9.2.0 → 9.2.1
-- vite 7.1.9 → 7.1.10
-- happy-dom 20.0.0 → 20.0.1
-- globals 16.3.0 → 16.4.0
-- taze 19.1.0 → 19.7.0"
+git commit -m "chore: update patch/minor dependencies"
 ```
 
-#### Week 2 - Minor Updates (Low Risk)
+Tips:
+- Prefer selecting patch/minor upgrades only on the first pass.
+- Keep a short list of accepted upgrades in the commit body for future reference.
+
+#### Week 3-4 – Firebase 12 (BREAKING)
 
 ```bash
-# Update minor versions
-./scripts/batch-update.sh 2
+# Create a feature branch before making breaking changes
+git checkout -b upgrade/firebase-12
 
-# Run health check
-./scripts/health-check.sh
+# Upgrade Firebase packages in both workspaces
+cd frontend
+npm install firebase@^12.4.0
+cd ..
+npm install firebase@^12.4.0
 
-# Commit
-git add .
-git commit -m "chore: update minor versions (batch 2)
-
-- eslint-plugin-vue 10.3.0 → 10.5.0
-- firebase-tools 14.11.1 → 14.19.1"
-```
-
-#### Week 3-4 - Firebase 12 (BREAKING)
-
-```bash
-# Update Firebase
-./scripts/batch-update.sh 3
-
-# Migrate .exists property to .exists() method
+# Migrate .exists property usage
 ./scripts/migrate-firebase-exists.sh
 
-# Review changes carefully
+# Verify the repo and tests
 git diff
-
-# Test thoroughly
 npm run build
 npm test
 npm run emulators
 
-# Manual testing (see checklist below)
-
-# Commit
+# Commit once satisfied
 git add .
-git commit -m "feat: upgrade Firebase to v12
-
-BREAKING CHANGES:
-- Firebase 11.10.0 → 12.4.0
-- Migrated DocumentSnapshot.exists property to method
-- Updated 20+ usages across functions codebase
-
-Migration details in DEPENDENCY_UPGRADE_STRATEGY.md"
+git commit -m "feat: upgrade Firebase to v12"
 ```
 
-#### Week 5-6 - Apollo Client 4 (BREAKING)
+Document breaking changes in the commit body and refer to `REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md` for the checklist.
+
+#### Week 5-6 – Apollo Client 4 (BREAKING)
 
 ```bash
-# Update Apollo Client
-./scripts/batch-update.sh 4
+# Create a feature branch
+git checkout -b upgrade/apollo-4
 
-# Run automated codemod
+# Install required packages
 cd frontend
+npm install @apollo/client@^4.0.7 rxjs@^7.8.1
+
+# Run the official codemod
 npx @apollo/client-codemod@latest migrate-to-4.0
 
-# Manual updates to apollo.ts (see migration guide)
+# Perform manual fixes as needed (see migration guide)
 
-# Test
+# Validate the upgrade
 npm run build
 npm test
 npm run dev
 
-# Commit
+# Commit when ready
 git add .
-git commit -m "feat: upgrade Apollo Client to v4
-
-BREAKING CHANGES:
-- @apollo/client 3.14.0 → 4.0.7
-- Added RxJS peer dependency
-- Updated Apollo client configuration
-- Migrated to new HttpLink API
-
-Migration details in DEPENDENCY_UPGRADE_STRATEGY.md"
+git commit -m "feat: upgrade Apollo Client to v4"
 ```
 
-#### Week 7+ - Remaining Updates
+#### Week 7+ – Remaining Majors
+
+Handle any remaining major upgrades manually, guided by taze reports or dependency release notes:
 
 ```bash
-# Update remaining packages
-./scripts/batch-update.sh 5
+# Example: update remaining majors in the frontend workspace
+cd frontend
+npm install uuid@^13.0.0 jsdom@^27.0.0 ts-essentials@^10.1.1
+npm install -D @intlify/unplugin-vue-i18n@^11.0.1
+cd ..
 
-# Test extensively
+# Update Node types in the root
+npm install -D @types/node@^24.7.2
+
+# Final verification
 npm run build
 npm test
 
-# Commit
+# Commit with a summary of package bumps
 git add .
-git commit -m "chore: update remaining dependencies (batch 5)
-
-- uuid 11.1.0 → 13.0.0
-- jsdom 26.1.0 → 27.0.0
-- ts-essentials 9.4.2 → 10.1.1
-- @intlify/unplugin-vue-i18n 6.0.8 → 11.0.1
-- @types/node 22.18.10 → 24.7.2"
+git commit -m "chore: update remaining major dependencies"
 ```
 
 ---
 
 ## Manual Testing Checklist
 
-After each major upgrade (batches 3+), verify:
+After each major upgrade (Firebase, Apollo, remaining majors), verify:
 
 ### Critical User Flows
 

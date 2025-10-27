@@ -824,60 +824,20 @@ const useApolloV4Features = import.meta.env.VITE_APOLLO_V4_FEATURES === 'true';
 
 ## Upgrade Automation Scripts
 
-### 1. Batch Update Script
+### 1. Interactive Dependency Review (taze)
+
+Use the cross-platform taze workflow to evaluate available updates. The root `npm run deps` script launches taze in interactive mode so you can accept or defer individual upgrades.
 
 ```bash
-#!/bin/bash
-# batch-update.sh - Automate batch updates
-
-set -e
-
-BATCH=$1
-
-if [ -z "$BATCH" ]; then
-  echo "Usage: ./batch-update.sh <batch-number>"
-  exit 1
-fi
-
-echo "🚀 Starting Batch $BATCH upgrade..."
-
-case $BATCH in
-  1)
-    echo "📦 Updating patch versions..."
-    npm update concurrently vite globals taze
-    cd frontend && npm update vite happy-dom
-    ;;
-  2)
-    echo "📦 Updating minor versions..."
-    npm update eslint-plugin-vue firebase-tools
-    ;;
-  3)
-    echo "📦 Updating Firebase to v12..."
-    cd frontend && npm install firebase@^12.4.0
-    cd .. && npm install firebase@^12.4.0
-    echo "⚠️  Run migration script: ./scripts/migrate-firebase-exists.sh"
-    ;;
-  4)
-    echo "📦 Updating Apollo Client to v4..."
-    cd frontend
-    npm install rxjs@^7.8.1
-    npm install @apollo/client@^4.0.7
-    ;;
-  5)
-    echo "📦 Updating remaining packages..."
-    cd frontend
-    npm install uuid@^13.0.0
-    ;;
-  *)
-    echo "❌ Invalid batch number"
-    exit 1
-    ;;
-esac
-
-echo "✅ Batch $BATCH upgrade complete!"
-echo "🧪 Running health check..."
-./scripts/health-check.sh
+# Runs: npx taze --recursive --interactive
+npm run deps
 ```
+
+Guidance:
+- Start with patch/minor upgrades and land them weekly to keep drift low.
+- Take notes on any major upgrades you defer so you can plan the required migration work.
+- After accepting changes, run `./scripts/health-check.sh` or the equivalent build/test commands.
+- For major upgrades, consult the dedicated guides in `REPORTS/` and follow the manual steps documented in the quick-start section above.
 
 ### 2. Pre-Upgrade Snapshot
 

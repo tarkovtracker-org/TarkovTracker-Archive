@@ -1,9 +1,0 @@
-{
-  "projects": {
-    "default": "{{VITE_FIREBASE_PROJECT_ID from frontend/.env.local}}",
-    "dev": "{{VITE_FIREBASE_PROJECT_ID from frontend/.env.local}}",
-    "prod": "{{VITE_FIREBASE_PROJECT_ID from frontend/.env.production}}"
-  },
-  "targets": {},
-  "etags": {}
-}
