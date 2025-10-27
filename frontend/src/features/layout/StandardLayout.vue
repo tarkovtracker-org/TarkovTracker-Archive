@@ -58,7 +58,7 @@
   import { useRoute } from 'vue-router';
   const route = useRoute();
   const backgroundImage = computed(() => {
-    if (route.meta.background) {
+    if (route?.meta?.background) {
       return `url(/img/background/${route.meta.background}.webp)`;
     } else {
       return '';

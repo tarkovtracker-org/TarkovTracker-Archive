@@ -1,6 +1,6 @@
 /**
  * CORS Configuration for Bearer Token API
- * 
+ *
  * Security: Bearer tokens aren't auto-sent by browsers (unlike cookies),
  * so traditional CSRF risks don't apply. Origin validation blocks dangerous
  * patterns while allowing legitimate third-party integrations.
@@ -11,6 +11,17 @@ import { logger } from 'firebase-functions';
 interface CorsOptions {
   trustNoOrigin?: boolean;
   allowedOrigins?: string[];
+}
+
+interface CorsRequest {
+  headers: {
+    origin?: string;
+    'access-control-request-headers'?: string;
+  };
+}
+
+interface CorsResponse {
+  set: (header: string, value: string) => void;
 }
 
 /** Validates origin, blocks dangerous patterns, logs suspicious activity */
@@ -83,12 +94,18 @@ export function getAllowedOrigins(): string[] {
 }
 export function getExpressCorsOptions() {
   return {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean | string) => void
+    ) => {
       const result = validateOrigin(origin, {
         trustNoOrigin: true,
         allowedOrigins: getAllowedOrigins(),
       });
-      callback(result === false ? new Error('Not allowed by CORS') : null, result as boolean | string);
+      callback(
+        result === false ? new Error('Not allowed by CORS') : null,
+        result as boolean | string
+      );
     },
     credentials: false,
     optionsSuccessStatus: 200,
@@ -96,11 +113,8 @@ export function getExpressCorsOptions() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   };
 }
-export function setCorsHeaders(
-  req: { headers: { origin?: string | string[]; 'access-control-request-headers'?: string } },
-  res: { set: (header: string, value: string) => void }
-): boolean {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
+  const origin = req.headers.origin;
   const validatedOrigin = validateOrigin(origin, {
     trustNoOrigin: true,
     allowedOrigins: getAllowedOrigins(),
@@ -116,7 +130,8 @@ export function setCorsHeaders(
   }
 
   res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.set('Access-Control-Allow-Headers',
+  res.set(
+    'Access-Control-Allow-Headers',
     req.headers['access-control-request-headers'] || 'Content-Type, Authorization, X-Requested-With'
   );
 

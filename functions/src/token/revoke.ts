@@ -180,7 +180,7 @@ export const revokeToken = onRequest(
       } catch (err: unknown) {
         logger.warn('Token verification failed for revokeToken', {
           error: err instanceof Error ? err.message : err,
-          tokenUsed: idToken ? idToken.substring(0, 10) + '...' : 'null',
+          tokenLength: idToken ? idToken.length : 0,
         });
         res
           .status(401)

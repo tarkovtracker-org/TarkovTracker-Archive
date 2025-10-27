@@ -11,9 +11,13 @@ import {
 import { debounce, set, get } from '@/utils/debounce';
 import type { PiniaPluginContext, Store, StateTree, SubscriptionCallbackMutation } from 'pinia';
 import type { StateTree as PiniaStateTree } from 'pinia';
+
 const db: Firestore = firestore;
 
-interface FireswapSettingInternal {
+// Check if dev auth is enabled - if so, skip Firestore connections
+const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+
+export interface FireswapSettingInternal {
   document: string;
   localKey: string;
   path?: string;
@@ -38,6 +42,7 @@ interface FireswapStoreExtensions {
   firebindAll?: () => void;
   fireunbind?: { [key: number]: () => void };
   fireunbindAll?: () => void;
+  _fireswapSettings?: FireswapSettingInternal[];
 }
 // Helper type for store instance with extensions
 export type StoreWithFireswapExt<StoreType extends Store> = StoreType & FireswapStoreExtensions;
@@ -57,6 +62,8 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
   if (context.options.fireswap && Array.isArray(context.options.fireswap)) {
     const fireswapSettings = context.options.fireswap;
     const storeExt = store as StoreWithFireswapExt<typeof store>;
+    // Store reference to settings so they can be accessed from actions
+    storeExt._fireswapSettings = fireswapSettings;
     fireswapSettings.forEach((fireswapSetting, fsIndex) => {
       if (fireswapSetting.document && fireswapSetting.localKey) {
         const path = fireswapSetting.path || '.'; // Default path to root
@@ -109,6 +116,10 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
         fireswapSetting.loadLocal();
         if (!storeExt.firebind) storeExt.firebind = {};
         storeExt.firebind[fsIndex] = () => {
+          // Skip Firestore binding when dev auth is enabled
+          if (isDevAuthEnabled) {
+            return;
+          }
           storeExt.fireunbind?.[fsIndex]?.();
           try {
             const docRef = parseDoc(fireswapSetting.document);
@@ -178,7 +189,8 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
           } catch {
             /* Intentionally ignored */
           }
-          if (fireuser.loggedIn && fireuser.uid) {
+          // Skip Firestore writes when dev auth is enabled
+          if (fireuser.loggedIn && fireuser.uid && !isDevAuthEnabled) {
             try {
               const docRef = parseDoc(fireswapSetting.document);
               setDoc(docRef, stateToSave as Record<string, unknown>, { merge: true })

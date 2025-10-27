@@ -83,13 +83,13 @@ const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
 const outputPath = path.join(projectRoot, 'functions/swaggerui/openapi.json');
 const outputDir = path.dirname(outputPath); // This will be projectRoot/functions/swaggerui
-const swaggerUiSourceDir = path.join(projectRoot, 'functions/swaggerui');
 // Ensure the output directory exists
-if (!fs.existsSync(outputDir)) {
-  fs.mkdirSync(outputDir, { recursive: true });
-}
-if (!fs.existsSync(swaggerUiSourceDir)) {
-  console.error(`Swagger UI output directory missing at ${swaggerUiSourceDir}`);
+try {
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+} catch (error) {
+  console.error('Error ensuring Swagger UI output directory:', error);
   process.exit(1);
 }
 // Write the specification to the JSON file used by Swagger UI

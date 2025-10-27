@@ -13,13 +13,20 @@
   import { useTarkovStore } from '@/stores/tarkov';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { logger } from '@/utils/logger';
-  const appStore = useAppStore();
+
   const { locale } = useI18n({ useScope: 'global' });
+
+  // Initialize composable
   useTarkovData();
+
   onMounted(async () => {
+    // Access store only after component is mounted
+    const appStore = useAppStore();
+
     if (appStore.localeOverride) {
       locale.value = appStore.localeOverride;
     }
+
     const wasMigrated = sessionStorage.getItem('tarkovDataMigrated') === 'true';
     if (wasMigrated && fireuser.loggedIn) {
       markDataMigrated();

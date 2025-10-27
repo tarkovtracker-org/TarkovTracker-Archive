@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client/core";
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client/core';
 
 // Create Apollo client with simplified configuration
 const apolloClient = new ApolloClient({
@@ -10,4 +10,3 @@ const apolloClient = new ApolloClient({
 });
 
 export default apolloClient;
-
