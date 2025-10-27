@@ -15,6 +15,9 @@ import type { Store } from 'pinia';
 import type { UserState } from '@/shared_state';
 import { logger } from '@/utils/logger';
 
+// Check if dev auth is enabled - if so, skip Firestore connections
+const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+
 /**
  * Team store definition with getters for team info and members
  */
@@ -148,6 +151,14 @@ export function useTeammateStores() {
 
       const storeInstance = storeDefinition();
       teammateStores.value[teammateId] = storeInstance;
+
+      // Skip Firebase listener setup when dev auth is enabled
+      if (isDevAuthEnabled) {
+        logger.info(
+          `[Team Store] Dev auth enabled - skipping Firebase listener for teammate ${teammateId}`
+        );
+        return;
+      }
 
       // Setup Firebase listener for this teammate
       teammateUnsubscribes.value[teammateId] = onSnapshot(

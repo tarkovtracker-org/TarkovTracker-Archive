@@ -14,6 +14,18 @@ import {
 } from '@/shared_state';
 import { wasDataMigrated } from '@/plugins/store-initializer';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
+import {
+  preserveLocalStorageKeys,
+  restoreLocalStorageKeys,
+  getPrimaryFireswapSetting,
+  setFireswapLock,
+  cancelPendingUpload,
+  scheduleLockRelease,
+  saveToLocalStorage,
+} from '@/utils/fireswapHelpers';
+
+// Check if dev auth is enabled - if so, skip Firestore writes
+const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
 
 // Define the Fireswap configuration type
 interface FireswapConfig {
@@ -59,19 +71,22 @@ export const useTarkovStore = defineStore('swapTarkov', {
 
       // If user is logged in, sync the gamemode change to backend
       if (fireuser.uid) {
-        try {
-          const userProgressRef = doc(firestore, 'progress', fireuser.uid);
-          // Send complete state to satisfy Firestore security rules validation
-          const completeState = {
-            currentGameMode: mode,
-            gameEdition: this.gameEdition,
-            pvp: this.pvp,
-            pve: this.pve,
-          };
-          await setDoc(userProgressRef, completeState, { merge: true });
-        } catch (error) {
-          logger.error('Error syncing gamemode to backend:', error);
-          // TODO: Show error notification to user
+        // Skip Firestore sync when dev auth is enabled
+        if (!isDevAuthEnabled) {
+          try {
+            const userProgressRef = doc(firestore, 'progress', fireuser.uid);
+            // Send complete state to satisfy Firestore security rules validation
+            const completeState = {
+              currentGameMode: mode,
+              gameEdition: this.gameEdition,
+              pvp: this.pvp,
+              pve: this.pve,
+            };
+            await setDoc(userProgressRef, completeState, { merge: true });
+          } catch (error) {
+            logger.error('Error syncing gamemode to backend:', error);
+            // TODO: Show error notification to user
+          }
         }
       }
     },
@@ -90,7 +105,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
         this.$patch(migratedData);
 
         // If user is logged in, save the migrated structure to Firestore
-        if (fireuser.uid) {
+        if (fireuser.uid && !isDevAuthEnabled) {
           try {
             const userProgressRef = doc(firestore, 'progress', fireuser.uid);
             setDoc(userProgressRef, migratedData);
@@ -105,18 +120,46 @@ export const useTarkovStore = defineStore('swapTarkov', {
         logger.error('User not logged in. Cannot reset online profile.');
         return;
       }
-      const userProgressRef = doc(firestore, 'progress', fireuser.uid);
       try {
-        // Set the Firestore document to a fresh defaultState
         const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
-        await setDoc(userProgressRef, freshDefaultState);
+
+        // Only write to Firestore if dev auth is not enabled
+        if (!isDevAuthEnabled) {
+          const userProgressRef = doc(firestore, 'progress', fireuser.uid);
+          await setDoc(userProgressRef, freshDefaultState);
+        }
+
+        // Preserve user settings before clearing localStorage
+        const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
+
+        // Get access to the Fireswap plugin's lock mechanism
+        const extendedStore = this as unknown as StoreWithFireswapExt<typeof this>;
+        const primarySetting = getPrimaryFireswapSetting(extendedStore);
+        setFireswapLock(primarySetting, true);
 
         // Clear ALL localStorage data for full account reset
         localStorage.clear();
 
-        // Reset the local Pinia store state to default using $patch
-        // This ensures the in-memory state reflects the reset immediately.
-        this.$patch(JSON.parse(JSON.stringify(defaultState)));
+        // Restore preserved user settings
+        restoreLocalStorageKeys(preservedData);
+
+        // Save the fresh default state to localStorage
+        saveToLocalStorage(
+          'progress',
+          freshDefaultState,
+          'Error saving default state to localStorage after reset:'
+        );
+
+        // Cancel any pending debounced saves before updating state
+        cancelPendingUpload(primarySetting);
+
+        // Directly replace the entire state to ensure all reactive dependencies update
+        this.$state = freshDefaultState as UserState;
+
+        // Ensure Vue has processed the state change before releasing the lock
+        scheduleLockRelease(primarySetting);
+
+        logger.info('Online profile reset successfully');
       } catch (error) {
         logger.error('Error resetting online profile:', error);
       }
@@ -131,13 +174,57 @@ export const useTarkovStore = defineStore('swapTarkov', {
         return;
       }
 
-      const userProgressRef = doc(firestore, 'progress', fireuser.uid);
       try {
         const freshProgressData = JSON.parse(JSON.stringify(defaultState[mode]));
         const updateData = { [mode]: freshProgressData };
-        await setDoc(userProgressRef, updateData, { merge: true });
+
+        // Only write to Firestore if dev auth is not enabled
+        if (!isDevAuthEnabled) {
+          const userProgressRef = doc(firestore, 'progress', fireuser.uid);
+          await setDoc(userProgressRef, updateData, { merge: true });
+        }
+
+        // Create the new complete state with the reset game mode
+        const otherMode = mode === 'pvp' ? 'pve' : 'pvp';
+        const newCompleteState = {
+          currentGameMode: this.currentGameMode,
+          gameEdition: this.gameEdition,
+          [mode]: freshProgressData,
+          [otherMode]: JSON.parse(JSON.stringify(this[otherMode])), // Preserve other mode
+        };
+
+        // Preserve user settings before clearing localStorage
+        const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
+
+        // Get access to the Fireswap plugin's lock mechanism
+        const extendedStore = this as unknown as StoreWithFireswapExt<typeof this>;
+        const primarySetting = getPrimaryFireswapSetting(extendedStore);
+        setFireswapLock(primarySetting, true);
+
+        // Clear all localStorage to ensure no stale data remains
         localStorage.clear();
-        this.$patch({ [mode]: freshProgressData });
+
+        // Restore preserved user settings
+        restoreLocalStorageKeys(preservedData);
+
+        // Save the new complete state directly to localStorage
+        saveToLocalStorage(
+          'progress',
+          newCompleteState,
+          'Error saving state to localStorage after reset:'
+        );
+
+        // Cancel any pending debounced saves before updating state
+        cancelPendingUpload(primarySetting);
+
+        // Directly replace the entire state to ensure all reactive dependencies update
+        // This is more reliable than $patch for deep nested object changes
+        this.$state = newCompleteState as UserState;
+
+        // Ensure Vue has processed the state change before releasing the lock
+        scheduleLockRelease(primarySetting);
+
+        logger.info(`${mode.toUpperCase()} game mode data reset successfully`);
       } catch (error) {
         logger.error(`Error resetting ${mode} game mode data:`, error);
       }
