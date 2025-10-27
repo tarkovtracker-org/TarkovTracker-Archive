@@ -99,9 +99,7 @@ export function isFeatureEnabled(flag: FeatureFlagName): boolean {
  * Get all enabled features (useful for debugging/logging)
  */
 export function getEnabledFeatures(): FeatureFlagName[] {
-  return (Object.keys(featureFlags) as FeatureFlagName[]).filter(
-    (key) => featureFlags[key]
-  );
+  return (Object.keys(featureFlags) as FeatureFlagName[]).filter((key) => featureFlags[key]);
 }
 
 // Log enabled features in development
