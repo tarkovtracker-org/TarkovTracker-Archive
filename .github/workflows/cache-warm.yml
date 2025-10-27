@@ -15,6 +15,8 @@ jobs:
   warm-root-cache:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Setup and install root dependencies
         uses: ./.github/actions/setup-node-and-install
         with:
@@ -24,6 +26,8 @@ jobs:
   warm-frontend-cache:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Setup and install frontend dependencies
         uses: ./.github/actions/setup-node-and-install
         with:

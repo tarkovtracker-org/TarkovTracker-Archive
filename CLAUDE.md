@@ -205,6 +205,11 @@ This is a **monorepo** with two main workspaces:
 ### API Integration Points
 
 - **Tarkov.dev GraphQL API**: Game data synchronization
+- **Tarkov.dev Maps Data**: Map metadata fetched at runtime from GitHub
+  - Primary: Runtime fetch from `https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json`
+  - Fallback: Bundled `maps.json` used if fetch fails
+  - Transformation: `mapTransformUtils.ts` converts to TarkovTracker format
+  - Benefits: Always fresh data, ~3.6KB bundle reduction, lazy loading
 - **Firebase APIs**: Auth, Firestore, Cloud Functions
 - **Third-party API tokens**: User-generated tokens for external access
 

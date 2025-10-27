@@ -6,20 +6,25 @@ This is a monorepo with two main workspaces: `frontend` and `functions`. Scripts
 
 ### Upgrade Automation
 
-- **`./scripts/snapshot.sh`** - Create pre-upgrade snapshot with git tags and baselines
-- **`./scripts/batch-update.sh <batch-number>`** - Execute batch dependency updates (1-5)
-- **`./scripts/health-check.sh`** - Post-upgrade health verification
-- **`./scripts/migrate-firebase-exists.sh`** - Migrate Firestore `.exists` property to method
+- **`npm run deps`** - Interactive dependency upgrade tool powered by taze (works across platforms)
 
-**Quick Start:** See [DEPENDENCY_UPGRADE_QUICK_START.md](./DEPENDENCY_UPGRADE_QUICK_START.md)
+**Note:** Legacy upgrade scripts (`snapshot.sh`, `health-check.sh`, `batch-update.sh`) have been archived after completing the Firebase 12 and dependency upgrade cycle.
 
-**Full Strategy:** See [DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRATEGY.md)
+**Quick Start:** See [docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](./docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)
+
+**Full Strategy:** See [docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](./docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)
 
 ### Manual Dependency Checks
 
 - **`npm outdated`** - Check for outdated packages
 - **`npm audit`** - Check for security vulnerabilities
-- **`npm run deps`** - Interactive dependency upgrade tool (uses taze)
+
+### Map Data Management
+
+- **`npm run maps:sync`** - Update fallback maps.json from tarkov.dev (rarely needed)
+  - **Note:** Maps are fetched at runtime from tarkov.dev automatically
+  - This only updates the fallback file used when tarkov.dev is unreachable
+  - Run occasionally to keep fallback data current
 
 ## Quick Reference
 

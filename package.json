@@ -28,14 +28,17 @@
     "lint": "eslint . && npm run type-check --workspace=frontend && npm run type-check --workspace=functions",
     "format": "prettier --write --no-error-on-unmatched-pattern \"frontend/**/*.vue\" \"frontend/**/*.js\" \"frontend/**/*.ts\" \"functions/**/*.js\" \"functions/**/*.ts\"",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"frontend/**/*.vue\" \"frontend/**/*.js\" \"frontend/**/*.ts\" \"functions/**/*.js\" \"functions/**/*.ts\"",
+    "maps:sync": "node scripts/update-maps-from-tarkovdev.js",
     "test": "npm run test:functions && npm run test:frontend",
     "test:frontend": "npm run test --workspace=frontend",
     "test:functions": "npm run test --workspace=functions",
     "clean": "rm -rf firebase-export-* *-debug.log firebase-debug*.log",
     "deps": "npx taze --r --I"
   },
+  "overrides": {
+    "prismjs": "1.30.0"
+  },
   "devDependencies": {
-    "@types/swagger-ui": "^5.21.1",
     "concurrently": "^9.2.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",

@@ -6,7 +6,7 @@ Thanks for your interest in TarkovTracker! We want to make it easy to find answe
 
 - **Documentation** – Start with the [README](README.md) for an overview and check the [`docs/`](docs/) directory for API references.
 - **Changelog** – Review [CHANGELOG.md](CHANGELOG.md) to see what has changed between releases.
-- **Discussions** – Browse [GitHub Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) for community Q&A, feature ideas, and announcements.
+- **Discussions** – Browse [GitHub Discussions](https://github.com/tarkovtracker-org/TarkovTracker/discussions) for community Q&A, feature ideas, and announcements.
 
 ## Ask the community
 
@@ -17,7 +17,7 @@ Thanks for your interest in TarkovTracker! We want to make it easy to find answe
 
 ## Report a bug
 
-- Search [existing issues](https://github.com/TarkovTracker/tarkovtracker/issues) to avoid duplicates.
+- Search [existing issues](https://github.com/tarkovtracker-org/TarkovTracker/issues) to avoid duplicates.
 - If no issue exists, open a new one and include reproduction steps, screenshots, browser/OS versions, and any relevant logs.
 - Clearly label the issue (e.g., `bug`, `enhancement`, `documentation`) to help maintainers triage quickly.
 

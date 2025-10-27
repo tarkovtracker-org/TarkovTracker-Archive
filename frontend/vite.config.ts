@@ -44,6 +44,7 @@ const vendorChunkMatchers = [
   { name: 'vue-i18n', match: (id: string) => includesAny(id, ['vue-i18n', '@intlify']) },
   { name: 'vuefire', match: (id: string) => includesAny(id, ['vuefire', 'rxfire']) },
   { name: 'graphology', match: (id: string) => id.includes('graphology') },
+  // Scalar is dynamically imported in ApiDocs.vue, so it will be code-split automatically
 ];
 
 const appChunkMatchers = [

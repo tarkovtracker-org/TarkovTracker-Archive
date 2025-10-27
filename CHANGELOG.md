@@ -90,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Previous Versions
 
-This changelog documents changes from the fork point. For earlier history, see the original [TarkovTracker repository](https://github.com/TarkovTracker/TarkovTracker).
+This changelog documents changes from the fork point. For earlier history, see the original [TarkovTracker.io repository](https://github.com/TarkovTracker/TarkovTracker).
 
 ---
 

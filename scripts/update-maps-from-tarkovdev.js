@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Script to fetch map data from tarkov.dev and update local maps.json
- * Run: node scripts/update-maps-from-tarkovdev.js
+ * Script to generate fallback maps.json from tarkov.dev
+ * 
+ * NOTE: Maps are now fetched at runtime from tarkov.dev (see mapTransformUtils.ts).
+ * This script is ONLY needed to update the fallback maps.json that's used when
+ * tarkov.dev is unreachable. Run this occasionally to keep the fallback up-to-date.
+ * 
+ * Run: npm run maps:sync
+ * Or: node scripts/update-maps-from-tarkovdev.js
  */
 
 import { writeFileSync, readFileSync, existsSync } from 'fs';

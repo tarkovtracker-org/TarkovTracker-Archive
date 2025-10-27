@@ -5,7 +5,7 @@ A community-maintained web application for planning and tracking your Escape Fro
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/N4N31IEP8Z)
 
 > **Project Status**
-> This repository is a community fork of the original [TarkovTracker project](https://github.com/TarkovTracker/TarkovTracker). The official production instance continues to live at <https://tarkovtracker.io> and this fork is developed and hosted by volunteers at <https://tarkovtracker.org> while the original maintainer is inactive. If the original owner returns, stewardship will gladly be transferred back.
+> This repository is a community fork of the original [TarkovTracker.io project](https://github.com/TarkovTracker/TarkovTracker). The official production instance continues to live at <https://tarkovtracker.io> and this fork is developed and hosted by volunteers at <https://tarkovtracker.org> while the original maintainer is inactive. If the original owner returns, stewardship will gladly be transferred back.
 
 ---
 
@@ -56,7 +56,7 @@ TarkovTracker is built as a modern Jamstack-style application:
 
 ```bash
 # Clone the repository
-git clone https://github.com/TarkovTracker/tarkovtracker.git
+git clone https://github.com/tarkovtracker-org/TarkovTracker.git
 cd tarkovtracker
 
 # Install dependencies for all workspaces
@@ -113,7 +113,7 @@ We welcome additional documentation improvements! Open an issue or pull request 
 
 ## Community & support
 
-- **Questions & ideas** – Use [GitHub Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) or open an issue.
+- **Questions & ideas** – Use [GitHub Discussions](https://github.com/tarkovtracker-org/TarkovTracker/discussions) or open an issue.
 - **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) to coordinate raids, ask questions in real time, or hang out with fellow Tarkov fans.
 - **Bug reports** – File an issue with clear reproduction steps and screenshots/logs when possible.
 - **Security concerns** – Follow our [security policy](SECURITY.md) for responsible disclosure.
