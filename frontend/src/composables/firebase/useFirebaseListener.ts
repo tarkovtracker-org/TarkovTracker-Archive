@@ -15,6 +15,9 @@ import {
   devWarn,
 } from '@/composables/utils/storeHelpers';
 import { logger } from '@/utils/logger';
+
+// Check if dev auth is enabled - if so, skip Firestore connections
+const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
 export interface FirebaseListenerConfig {
   store: Store;
   docRef: ComputedRef<DocumentReference<DocumentData> | null>;
@@ -78,6 +81,13 @@ export function useFirebaseListener({
     docRef,
     async (newRef) => {
       const storeIdForLogging = storeId || store.$id;
+
+      // Skip Firebase subscriptions when dev auth is enabled
+      if (isDevAuthEnabled) {
+        devLog(`[${storeIdForLogging}] Dev auth enabled - skipping Firebase subscription`);
+        return;
+      }
+
       if (newRef) {
         // Cleanup previous subscription
         if (unsubscribe.value) {
