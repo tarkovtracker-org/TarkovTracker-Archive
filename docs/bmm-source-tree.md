@@ -67,7 +67,7 @@ TarkovTracker/                          # Monorepo root
 │   │   ├── utils/                      # Utility functions
 │   │   └── index.ts                    # Cloud Functions entry point → Bootstrap Express app
 │   ├── test/                           # Backend tests
-│   ├── swaggerui/                      # Generated API documentation
+│   ├── openapi/                        # Generated OpenAPI specification
 │   ├── package.json                    # Backend dependencies
 │   ├── tsconfig.json                   # TypeScript configuration
 │   └── README.md                       # Backend documentation
@@ -172,7 +172,7 @@ TarkovTracker/                          # Monorepo root
 **API Documentation:**
 
 - `functions/src/openapi/` - Swagger/OpenAPI generation
-- `functions/swaggerui/` - Generated Swagger UI (view at swaggerui/index.html)
+- `functions/openapi/` - Generated OpenAPI specification (consumed by Scalar UI)
 
 ## Integration Points
 

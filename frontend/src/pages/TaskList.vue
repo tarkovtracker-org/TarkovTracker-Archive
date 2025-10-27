@@ -54,6 +54,7 @@
           :show-next-tasks="showNextTasks"
           :show-previous-tasks="showPreviousTasks"
           :has-more="hasMoreTasks"
+          :loading="loadingTasks || reloadingTasks"
           @load-more="loadMoreTasks"
         />
       </v-row>

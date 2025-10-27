@@ -45,20 +45,57 @@
 </template>
 
 <script setup lang="ts">
-  import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent } from 'vue';
+  import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent, defineComponent, h } from 'vue';
+  import '@scalar/api-reference/style.css';
 
   // Lazy load Scalar to keep it out of the main bundle
-  const ApiReference = defineAsyncComponent(() =>
-    import('@scalar/api-reference').then((module) => module.ApiReference)
-  );
+  const LoadingComponent = defineComponent({
+    name: 'ApiReferenceLoading',
+    setup() {
+      return () =>
+        h(
+          'div',
+          { class: 'd-flex justify-center align-center pa-8' },
+          [h('v-progress-circular', { indeterminate: '', color: 'primary' })],
+        );
+    },
+  });
 
-  const scalarContainer = ref<HTMLElement | null>(null);
+  const ErrorComponent = defineComponent({
+    name: 'ApiReferenceError',
+    setup() {
+      return () =>
+        h(
+          'div',
+          { class: 'd-flex justify-center align-center pa-8' },
+          [
+            h('v-alert', {
+              type: 'error',
+              text: 'Failed to load API documentation',
+            }),
+          ],
+        );
+    },
+  });
+
+  const ApiReference = defineAsyncComponent({
+    loader: () => import('@scalar/api-reference').then((module) => module.ApiReference),
+    loadingComponent: LoadingComponent,
+    errorComponent: ErrorComponent,
+    delay: 200,
+    timeout: 10000,
+    onError(error, retry, _fail) {
+      console.error('Failed to load ApiReference component:', error);
+      retry(); // Retry once
+    }
+  });
+
   const loading = ref(true);
   const error = ref<string | null>(null);
   const fetchAbortController = ref<AbortController | null>(null);
   const fetchTimeoutId = ref<ReturnType<typeof setTimeout> | undefined>(undefined);
   const FETCH_TIMEOUT_MS = 15000;
-  const specData = ref<any>(null);
+  const specData = ref<Record<string, unknown> | null>(null);
 
   const handleAlertClose = () => {
     error.value = null;
@@ -66,9 +103,8 @@
 
   // Scalar configuration with TarkovTracker theme
   const scalarConfig = computed(() => ({
-    spec: {
-      content: specData.value,
-    },
+    // Updated to latest Scalar API - remove spec wrapper
+    content: specData.value,
     theme: 'none' as const, // Use 'none' to apply custom CSS
     darkMode: true,
     layout: 'modern' as const,

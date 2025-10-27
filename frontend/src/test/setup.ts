@@ -31,16 +31,6 @@ vi.mock('firebase/firestore', () => ({
   onSnapshot: vi.fn(),
 }));
 
-// Mock Apollo Client
-vi.mock('@apollo/client/core', () => ({
-  ApolloClient: vi.fn(() => ({
-    query: vi.fn(),
-    mutate: vi.fn(),
-  })),
-  InMemoryCache: vi.fn(),
-  gql: vi.fn(),
-}));
-
 // Create global test plugins
 const vuetify = createVuetify({
   components,

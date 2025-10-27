@@ -70,6 +70,11 @@ const firebaseConfig: FirebaseOptions = {
 };
 const measurementId = firebaseConfig.measurementId;
 
+// Only enable Analytics if:
+// 1. We have a measurement ID configured
+// 2. We're in production mode (not dev/staging)
+const shouldEnableAnalytics = Boolean(measurementId) && import.meta.env.PROD;
+
 type WindowWithGaDisable = Window &
   typeof globalThis & {
     [key: `ga-disable-${string}`]: boolean;
@@ -82,6 +87,7 @@ const setGaTrackingEnabled = (enabled: boolean) => {
   (window as WindowWithGaDisable)[`ga-disable-${measurementId}`] = !enabled;
 };
 
+// Disable tracking by default, will be enabled only if user consents and we're in production
 setGaTrackingEnabled(false);
 
 // Initialize Firebase services
@@ -150,12 +156,16 @@ if (['localhost', '127.0.0.1'].includes(window.location.hostname) && !isDevAuthE
 let analyticsInstance: Analytics | undefined;
 
 const ensureAnalytics = () => {
-  if (!import.meta.env.PROD) {
+  // Don't initialize Analytics if:
+  // - We don't have a measurement ID configured
+  // - We're not in production mode
+  if (!shouldEnableAnalytics) {
     return undefined;
   }
   if (!analyticsInstance) {
     try {
       analyticsInstance = getAnalytics(app);
+      logger.info('Firebase Analytics initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize Firebase Analytics:', error);
       analyticsInstance = undefined;
@@ -165,7 +175,10 @@ const ensureAnalytics = () => {
 };
 
 const enableAnalyticsCollection = async () => {
-  if (!import.meta.env.PROD) {
+  if (!shouldEnableAnalytics) {
+    logger.debug(
+      'Analytics collection not enabled: Missing measurement ID or not in production mode'
+    );
     return undefined;
   }
   setGaTrackingEnabled(true);
@@ -173,6 +186,7 @@ const enableAnalyticsCollection = async () => {
   if (instance) {
     try {
       setAnalyticsCollectionEnabled(instance, true);
+      logger.info('Analytics collection enabled');
     } catch (error) {
       logger.error('Unable to enable Firebase Analytics collection:', error);
     }
@@ -185,6 +199,7 @@ const disableAnalyticsCollection = () => {
   if (analyticsInstance) {
     try {
       setAnalyticsCollectionEnabled(analyticsInstance, false);
+      logger.info('Analytics collection disabled');
     } catch (error) {
       logger.error('Unable to disable Firebase Analytics collection:', error);
     }

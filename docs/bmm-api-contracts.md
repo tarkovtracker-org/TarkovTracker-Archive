@@ -10,7 +10,7 @@
 
 The TarkovTracker REST API provides programmatic access to progress tracking, team management, and API token operations. All endpoints require authentication via Bearer tokens and implement permission-based access control.
 
-**API Documentation:** Full Swagger UI available at `functions/swaggerui/index.html`
+**API Documentation:** Full Scalar UI available in the app at `/api-docs` or generate OpenAPI spec at `functions/openapi/openapi.json`
 
 ---
 
@@ -1046,4 +1046,4 @@ def get_team_progress():
 
 ---
 
-*For the complete interactive API documentation with request/response examples, generate and open `functions/swaggerui/index.html` after running `npm run docs`.*
+*For the complete interactive API documentation with request/response examples, run `npm run docs` to generate the OpenAPI spec at `functions/openapi/openapi.json`, which is consumed by Scalar UI in the app.*

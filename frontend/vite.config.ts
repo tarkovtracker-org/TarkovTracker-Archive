@@ -5,7 +5,6 @@ import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
 import { execSync } from 'child_process';
-import { visualizer } from 'rollup-plugin-visualizer';
 
 // Get the directory name in an ESM context
 const __filename = fileURLToPath(import.meta.url);
@@ -25,76 +24,10 @@ const getBuildTime = () => {
   return new Date().toISOString();
 };
 
-const includesAny = (value: string, substrings: string[]) => {
-  return substrings.some((substring) => value.includes(substring));
-};
-
-const vendorChunkMatchers = [
-  // Ensure Vue core/reactivity land in a vendor chunk to avoid TDZ issues in prod
-  {
-    name: 'vue',
-    match: (id: string) => includesAny(id, ['node_modules/vue/', 'node_modules/@vue/']),
-  },
-  { name: 'vuetify', match: (id: string) => id.includes('vuetify') },
-  { name: 'apollo-graphql', match: (id: string) => includesAny(id, ['@apollo', 'graphql']) },
-  { name: 'firebase', match: (id: string) => id.includes('firebase') },
-  { name: 'd3', match: (id: string) => id.includes('d3') },
-  { name: 'pinia', match: (id: string) => id.includes('pinia') },
-  { name: 'vue-router', match: (id: string) => id.includes('vue-router') },
-  { name: 'vue-i18n', match: (id: string) => includesAny(id, ['vue-i18n', '@intlify']) },
-  { name: 'vuefire', match: (id: string) => includesAny(id, ['vuefire', 'rxfire']) },
-  { name: 'graphology', match: (id: string) => id.includes('graphology') },
-  // Scalar is dynamically imported in ApiDocs.vue, so it will be code-split automatically
-];
-
-const appChunkMatchers = [
-  { name: 'stores', match: (id: string) => id.includes('/src/stores/') },
-  {
-    name: 'composables',
-    match: (id: string) => id.includes('/src/composables/') && !id.includes('tarkovdata'),
-  },
-  {
-    name: 'tarkov-data',
-    match: (id: string) =>
-      includesAny(id, [
-        '/src/composables/tarkovdata',
-        '/src/composables/api/',
-        '/src/composables/data/',
-      ]),
-  },
-  { name: 'services', match: (id: string) => id.includes('/src/services/') },
-];
-
-const matchChunk = (
-  id: string,
-  matchers: { name: string; match: (value: string) => boolean }[]
-) => {
-  const matcher = matchers.find(({ match }) => match(id));
-  return matcher?.name;
-};
-
-const shouldAnalyze = process.env.ANALYZE === 'true';
-
-const plugins = [
-  vue(),
-  vueI18n({
-    include: path.resolve(__dirname, './src/locales/**'),
-  }),
-  vuetify({ autoImport: true }),
-];
-
-if (shouldAnalyze) {
-  plugins.push(
-    visualizer({
-      filename: path.resolve(__dirname, 'dist/stats.html'),
-      template: 'treemap',
-      brotliSize: true,
-      gzipSize: true,
-    })
-  );
-}
-
 export default defineConfig({
+  optimizeDeps: {
+    include: ['qrcode'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -103,29 +36,52 @@ export default defineConfig({
   },
   define: {
     __VUE_OPTIONS_API__: 'true',
-    __VUE_PROD_DEVTOOLS__: 'false',
+    __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV !== 'production',
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
     'import.meta.env.VITE_COMMIT_HASH': JSON.stringify(getCommitHash()),
     'import.meta.env.VITE_BUILD_TIME': JSON.stringify(getBuildTime()),
   },
   build: {
     sourcemap: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            const vendorChunk = matchChunk(id, vendorChunkMatchers);
-            if (vendorChunk) {
-              return vendorChunk;
-            }
+          // Only split the heaviest vendors to improve performance
+          // Everything else uses Vite's automatic chunking
+          
+          // Firebase (very heavy - split into own chunk)
+          if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
+            return 'firebase-vendor';
           }
-          const appChunk = matchChunk(id, appChunkMatchers);
-          return appChunk;
+          
+          // Vuetify (heavy UI framework - split into own chunk)
+          if (id.includes('node_modules/vuetify') || id.includes('vite-plugin-vuetify')) {
+            return 'vuetify-vendor';
+          }
+          
+          // Scalar API Reference (very heavy - only loads on API docs page)
+          if (id.includes('node_modules/@scalar')) {
+            return 'scalar-vendor';
+          }
+          
+          // D3 (heavy graphing library)
+          if (id.includes('node_modules/d3')) {
+            return 'd3-vendor';
+          }
+          
+          // Let Vite handle everything else automatically
         },
       },
     },
   },
-  plugins,
+  plugins: [
+    vue(),
+    vueI18n({
+      include: path.resolve(__dirname, './src/locales/**'),
+    }),
+    vuetify({ autoImport: true }),
+  ],
   server: {
     port: 3000,
   },

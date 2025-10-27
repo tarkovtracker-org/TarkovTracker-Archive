@@ -1,5 +1,4 @@
-import gql from 'graphql-tag';
-export default gql`
+const tarkovDataQuery = /* GraphQL */ `
   fragment ItemData on Item {
     id
     shortName
@@ -660,3 +659,5 @@ export default gql`
     }
   }
 `;
+
+export default tarkovDataQuery;

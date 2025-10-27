@@ -1,4 +1,4 @@
-import '@mdi/font/css/materialdesignicons.css';
+// Note: @mdi/font is now loaded via CDN in index.html
 import 'vuetify/styles';
 import colors from 'vuetify/util/colors';
 import { useI18n } from 'vue-i18n';

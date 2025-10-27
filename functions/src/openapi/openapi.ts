@@ -81,18 +81,18 @@ if (!projectRoot) {
 }
 const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
-const outputPath = path.join(projectRoot, 'functions/swaggerui/openapi.json');
-const outputDir = path.dirname(outputPath); // This will be projectRoot/functions/swaggerui
+const outputPath = path.join(projectRoot, 'functions/openapi/openapi.json');
+const outputDir = path.dirname(outputPath); // This will be projectRoot/functions/openapi
 // Ensure the output directory exists
 try {
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
   }
 } catch (error) {
-  console.error('Error ensuring Swagger UI output directory:', error);
+  console.error('Error ensuring OpenAPI output directory:', error);
   process.exit(1);
 }
-// Write the specification to the JSON file used by Swagger UI
+// Write the specification to the JSON file used by Scalar
 try {
   fs.writeFileSync(outputPath, JSON.stringify(openapiSpecification, null, 2));
   console.log(`OpenAPI specification created successfully at ${outputPath}`);

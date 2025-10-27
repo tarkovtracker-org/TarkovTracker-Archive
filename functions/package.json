@@ -17,7 +17,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "swagger": "npm run build && node lib/openapi/swagger.js"
+    "openapi": "npm run build && node lib/openapi/openapi.js"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -38,6 +38,6 @@
     "eslint": "^9.38.0",
     "swagger-jsdoc": "^6.2.8",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.3"
+    "vitest": "^4.0.4"
   }
 }

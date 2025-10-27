@@ -1,5 +1,4 @@
 import type Graph from 'graphology';
-import type { ApolloError } from '@apollo/client';
 import type { Store, StateTree } from 'pinia';
 import type { Ref, ComputedRef } from 'vue';
 import type { _GettersTree } from 'pinia';
@@ -318,12 +317,12 @@ export interface FirebaseListenerConfig {
 export interface TarkovDataComposable {
   availableLanguages: Ref<string[] | null>;
   languageCode: ComputedRef<string>;
-  queryErrors: Ref<ApolloError | null>;
+  queryErrors: Ref<Error | null>;
   queryResults: Ref<TarkovDataQueryResult | null>;
   lastQueryTime: Ref<number | null>;
   loading: Ref<boolean>;
   hideoutLoading: Ref<boolean>;
-  queryHideoutErrors: Ref<ApolloError | null>;
+  queryHideoutErrors: Ref<Error | null>;
   queryHideoutResults: Ref<TarkovHideoutQueryResult | null>;
   lastHideoutQueryTime: Ref<number | null>;
   hideoutStations: Ref<HideoutStation[]>;

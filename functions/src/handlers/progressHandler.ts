@@ -4,8 +4,15 @@ import { ProgressService } from '../services/ProgressService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
-// Reuse a single service instance across requests
-const progressService = new ProgressService();
+// Lazy-initialized service instance to ensure Firebase Admin is initialized first
+let progressService: ProgressService | undefined;
+
+function getProgressService(): ProgressService {
+  if (!progressService) {
+    progressService = new ProgressService();
+  }
+  return progressService;
+}
 
 // Enhanced request interface
 interface AuthenticatedRequest extends Request {
@@ -81,7 +88,7 @@ export const getPlayerProgress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
-    const progressData = await progressService.getUserProgress(userId, gameMode);
+    const progressData = await getProgressService().getUserProgress(userId, gameMode);
 
     const response: ApiResponse = {
       success: true,
@@ -150,7 +157,7 @@ export const setPlayerLevel = asyncHandler(
 
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-    await progressService.setPlayerLevel(userId, level, gameMode);
+    await getProgressService().setPlayerLevel(userId, level, gameMode);
 
     const response: ApiResponse = {
       success: true,
@@ -237,7 +244,7 @@ export const updateSingleTask = asyncHandler(
 
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-    await progressService.updateSingleTask(userId, taskId, state, gameMode);
+    await getProgressService().updateSingleTask(userId, taskId, state, gameMode);
 
     const response: ApiResponse = {
       success: true,
@@ -315,7 +322,7 @@ export const updateMultipleTasks = asyncHandler(
 
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-    await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
+    await getProgressService().updateMultipleTasks(userId, taskUpdates, gameMode);
 
     const response: ApiResponse = {
       success: true,
@@ -410,7 +417,7 @@ export const updateTaskObjective = asyncHandler(
 
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-    await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
+    await getProgressService().updateTaskObjective(userId, objectiveId, updateData, gameMode);
 
     const response: ApiResponse = {
       success: true,

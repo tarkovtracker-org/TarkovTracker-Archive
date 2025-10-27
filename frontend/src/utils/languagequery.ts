@@ -1,6 +1,4 @@
-import gql from 'graphql-tag';
-
-export default gql`
+const languageQuery = /* GraphQL */ `
   query GetLanguageCodes {
     __type(name: "LanguageCode") {
       enumValues {
@@ -9,3 +7,5 @@ export default gql`
     }
   }
 `;
+
+export default languageQuery;

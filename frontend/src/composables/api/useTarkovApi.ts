@@ -1,34 +1,63 @@
-import { ref, computed, watch, onMounted, type ComputedRef } from 'vue';
-import { useQuery, provideApolloClient } from '@vue/apollo-composable';
-import apolloClient from '@/plugins/apollo';
+import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
 import tarkovDataQuery from '@/utils/tarkovdataquery';
 import tarkovHideoutQuery from '@/utils/tarkovhideoutquery';
 import languageQuery from '@/utils/languagequery';
 import { useSafeLocale, extractLanguageCode } from '@/composables/utils/i18nHelpers';
 import type {
   LanguageQueryResult,
+  StaticMapData,
   TarkovDataQueryResult,
   TarkovHideoutQueryResult,
-  StaticMapData,
 } from '@/types/tarkov';
 import { fetchTarkovDevMaps } from '@/utils/mapTransformUtils';
+import { executeGraphQL } from '@/utils/graphqlClient';
 import { logger } from '@/utils/logger';
 import fallbackMapsData from './maps.json';
 
-provideApolloClient(apolloClient);
-
-// Singleton state for caching
-const isInitialized = ref(false);
 const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
 
-// Map data - fetched from tarkov.dev at runtime with fallback
+let languageFetchPromise: Promise<void> | null = null;
 let mapPromise: Promise<StaticMapData> | null = null;
+let apiInitialized = false;
 
-/**
- * Load map data from tarkov.dev at runtime
- * Falls back to bundled maps.json if fetch fails
- */
+const DEFAULT_LANGUAGE = 'en';
+
+function normalizeError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+  if (typeof error === 'string') {
+    return new Error(error);
+  }
+  try {
+    return new Error(JSON.stringify(error));
+  } catch {
+    return new Error('Unknown error');
+  }
+}
+
+async function ensureAvailableLanguages(): Promise<void> {
+  if (languageFetchPromise) {
+    return languageFetchPromise;
+  }
+
+  languageFetchPromise = (async () => {
+    try {
+      const data = await executeGraphQL<LanguageQueryResult>(languageQuery);
+      const languages = data.__type?.enumValues?.map((enumValue) => enumValue.name) ?? [
+        DEFAULT_LANGUAGE,
+      ];
+      availableLanguages.value = languages;
+    } catch (error) {
+      logger.error('Language query failed:', error);
+      availableLanguages.value = [DEFAULT_LANGUAGE];
+    }
+  })();
+
+  return languageFetchPromise;
+}
+
 async function loadStaticMaps(): Promise<StaticMapData> {
   if (!mapPromise) {
     mapPromise = fetchTarkovDevMaps().catch((error) => {
@@ -38,110 +67,145 @@ async function loadStaticMaps(): Promise<StaticMapData> {
   }
   return mapPromise;
 }
-// Language extraction moved to @/composables/utils/i18nHelpers.ts
-/**
- * Composable for managing Tarkov API queries and language detection
- */
+
+function useGraphQLResource<T, V extends Record<string, unknown>>(
+  query: string | import('graphql').DocumentNode,
+  variablesSource: ComputedRef<V>
+) {
+  const result = ref<T | null>(null);
+  const error = ref<Error | null>(null);
+  const loading = ref(false);
+  let activeController: AbortController | null = null;
+
+  const startFetch = (variables: V, existingController?: AbortController) => {
+    activeController?.abort();
+    const controller = existingController ?? new AbortController();
+    activeController = controller;
+    loading.value = true;
+
+    // Convert query to string for execution
+    const queryString = typeof query === 'string' ? query : (query.loc?.source.body ?? '');
+    const promise = executeGraphQL<T, V>(queryString, variables, { signal: controller.signal })
+      .then((data) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        result.value = data;
+        error.value = null;
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        error.value = normalizeError(err);
+      })
+      .finally(() => {
+        if (controller.signal.aborted) {
+          return;
+        }
+        if (activeController === controller) {
+          activeController = null;
+        }
+        loading.value = false;
+      });
+
+    return promise;
+  };
+
+  watch(
+    variablesSource,
+    (vars, _prev, onCleanup) => {
+      const controller = new AbortController();
+      void startFetch(vars, controller);
+      onCleanup(() => controller.abort());
+    },
+    { immediate: true, deep: true }
+  );
+
+  const refetch = async (override?: Partial<V>) => {
+    const merged = { ...variablesSource.value, ...override } as V;
+    await startFetch(merged);
+  };
+
+  return { result, error, loading, refetch } as const;
+}
+
 export function useTarkovApi() {
+  if (!apiInitialized) {
+    apiInitialized = true;
+    void ensureAvailableLanguages();
+  }
+
   const locale = useSafeLocale();
   const languageCode = computed(() =>
-    extractLanguageCode(locale.value, availableLanguages.value || ['en'])
+    extractLanguageCode(locale.value, availableLanguages.value || [DEFAULT_LANGUAGE])
   );
-  // Load static map data on mount
+
   onMounted(async () => {
     if (!staticMapData.value) {
       staticMapData.value = await loadStaticMaps();
     }
   });
-  // Initialize queries only once
-  if (!isInitialized.value) {
-    isInitialized.value = true;
-    // Language Query - Get available languages
-    const { onResult: onLanguageResult, onError: onLanguageError } = useQuery<LanguageQueryResult>(
-      languageQuery,
-      null,
-      {
-        fetchPolicy: 'cache-first',
-        notifyOnNetworkStatusChange: true,
-        errorPolicy: 'all',
-      }
-    );
-    onLanguageResult((result) => {
-      availableLanguages.value = result.data?.__type?.enumValues.map(
-        (enumValue) => enumValue.name
-      ) ?? ['en'];
-    });
-    onLanguageError((error) => {
-      logger.error('Language query failed:', error);
-      availableLanguages.value = ['en'];
-    });
-  }
+
   return {
-    availableLanguages: availableLanguages,
+    availableLanguages,
     languageCode,
     staticMapData,
     loadStaticMaps,
-  };
+  } as const;
 }
-/**
- * Composable for Tarkov main data queries (tasks, maps, traders, player levels)
- */
+
 export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
-  // Get language code from the API composable to ensure consistency
-  const { languageCode: apiLanguageCode } = useTarkovApi();
-  const { result, error, loading, refetch } = useQuery<
+  const { languageCode } = useTarkovApi();
+
+  const variables = computed(() => ({
+    lang: languageCode.value,
+    gameMode: gameMode.value,
+  }));
+
+  const { result, error, loading, refetch } = useGraphQLResource<
     TarkovDataQueryResult,
     { lang: string; gameMode: string }
-  >(tarkovDataQuery, () => ({ lang: apiLanguageCode.value, gameMode: gameMode.value }), {
-    fetchPolicy: 'cache-first',
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all',
-    // Allow query to execute immediately, don't wait for availableLanguages
-    // The languageCode computed will default to 'en' if languages aren't loaded yet
-  });
-  // Watch for language and gameMode changes and refetch
-  watch([apiLanguageCode, gameMode], ([newLang, newGameMode], [oldLang, oldGameMode]) => {
-    if ((oldLang !== newLang || oldGameMode !== newGameMode) && availableLanguages.value) {
-      refetch({ lang: newLang, gameMode: newGameMode });
-    }
-  });
+  >(tarkovDataQuery, variables);
+
   return {
     result,
     error,
     loading,
     refetch,
-    languageCode: apiLanguageCode,
+    languageCode,
     gameMode,
-  };
+  } as const;
 }
-/**
- * Composable for Tarkov hideout data queries
- */
+
 export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
-  // Get language code from the API composable to ensure consistency
-  const { languageCode: apiLanguageCode } = useTarkovApi();
-  const { result, error, loading, refetch } = useQuery<
+  const { languageCode } = useTarkovApi();
+
+  const variables = computed(() => ({
+    gameMode: gameMode.value,
+  }));
+
+  const { result, error, loading, refetch } = useGraphQLResource<
     TarkovHideoutQueryResult,
-    { lang: string; gameMode: string }
-  >(tarkovHideoutQuery, () => ({ lang: apiLanguageCode.value, gameMode: gameMode.value }), {
-    fetchPolicy: 'cache-and-network',
-    notifyOnNetworkStatusChange: true,
-    errorPolicy: 'all',
-    // Allow query to execute immediately, don't wait for availableLanguages
-    // The languageCode computed will default to 'en' if languages aren't loaded yet
+    { gameMode: string }
+  >(tarkovHideoutQuery, variables);
+
+  const refetchWithLanguage = async () => {
+    await refetch();
+  };
+
+  watch(languageCode, () => {
+    void refetchWithLanguage();
   });
-  // Watch for language and gameMode changes and refetch
-  watch([apiLanguageCode, gameMode], ([newLang, newGameMode], [oldLang, oldGameMode]) => {
-    if ((oldLang !== newLang || oldGameMode !== newGameMode) && availableLanguages.value) {
-      refetch({ lang: newLang, gameMode: newGameMode });
-    }
-  });
+
   return {
     result,
     error,
     loading,
-    refetch,
-    languageCode: apiLanguageCode,
+    refetch: refetchWithLanguage,
+    languageCode,
     gameMode,
-  };
+  } as const;
 }
+
+export { loadStaticMaps };

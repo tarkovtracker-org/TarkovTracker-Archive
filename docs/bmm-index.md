@@ -166,7 +166,7 @@ TarkovTracker/
 │   │   ├── handlers/      # API endpoints (4 handlers)
 │   │   ├── services/      # Business logic
 │   │   └── ...
-│   └── swaggerui/         # API documentation
+│   └── openapi/           # API documentation
 │
 ├── docs/                  # Documentation
 ├── REPORTS/               # Technical reports

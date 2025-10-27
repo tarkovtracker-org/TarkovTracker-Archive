@@ -35,7 +35,7 @@
         {{ $t('page.settings.card.apitokens.streamer_mode_qr') }}
       </template>
       <template v-else>
-        <canvas :id="props.token + '-tc'"></canvas>
+        <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" />
       </template>
     </div>
     <div class="mt-1">
@@ -84,7 +84,7 @@
   import { firestore, functions } from '@/plugins/firebase';
   import { doc, getDoc } from '@/plugins/firebase';
   import { httpsCallable } from '@/plugins/firebase';
-  import { computed, nextTick, ref } from 'vue';
+  import { computed, ref } from 'vue';
   import QRCode from 'qrcode';
   import { useUserStore } from '@/stores/user';
   import { useI18n } from 'vue-i18n';
@@ -221,28 +221,25 @@
     }
   };
   const showQR = ref(false);
-  const qrGenerated = ref(false);
+  const qrDataUrl = ref('');
   const tokenVisible = ref(false);
-  const generateQR = () => {
-    const canvasId = props.token + '-tc';
-    const canvasElement = document.getElementById(canvasId);
-    if (canvasElement && !qrGenerated.value) {
-      QRCode.toCanvas(canvasElement, props.token, {}, function (error) {
-        if (error) {
-          logger.error('QR code generation failed', error);
-        } else {
-          qrGenerated.value = true;
-        }
-      });
+  const generateQR = async () => {
+    if (!qrDataUrl.value) {
+      try {
+        qrDataUrl.value = await QRCode.toDataURL(props.token, {
+          errorCorrectionLevel: 'M',
+          type: 'image/png',
+          width: 256,
+        });
+      } catch (error) {
+        logger.error('QR code generation failed', error);
+      }
     }
   };
   const toggleQR = () => {
     showQR.value = !showQR.value;
     if (showQR.value) {
-      // Use nextTick to ensure the canvas is rendered before generating QR
-      nextTick(() => {
-        generateQR();
-      });
+      generateQR();
     }
   };
   const toggleTokenVisibility = () => {

@@ -62,11 +62,14 @@ cd tarkovtracker
 # Install dependencies for all workspaces
 npm install
 
-# Run the frontend and Firebase emulators together
+# Choose your development mode:
+# npm run dev          # Frontend only (UI development)
+# npm run dev:full     # Frontend + backend (features/auth)
+# npm run dev:firebase # Full stack with hosting (production testing)
 npm run dev
 ```
 
-The application will start a Vite development server (default `http://localhost:5173`) alongside local Firebase emulators.
+The application will start a Vite development server (default `http://localhost:3000`). With `npm run dev:full` or `npm run dev:firebase`, Firebase emulators will also start.
 
 ### Available scripts
 
@@ -74,12 +77,15 @@ The root `package.json` exposes helpful scripts for daily development:
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Starts the frontend dev server and Firebase emulators concurrently. |
-| `npm run build` | Builds the Vue frontend (`frontend/dist`) and Firebase Functions bundle. |
-| `npm run lint` | Runs ESLint across the monorepo. |
+| `npm run dev` | Starts frontend dev server only (port 3000). |
+| `npm run dev:full` | Starts frontend + Firebase backend emulators. |
+| `npm run dev:firebase` | Builds everything + starts all emulators including hosting. |
+| `npm run build` | Builds both frontend and functions. |
+| `npm run lint` | Runs ESLint and TypeScript checks across the monorepo. |
 | `npm run format` | Formats the codebase using Prettier. |
-| `npm run docs` | Generates the OpenAPI spec at `functions/swaggerui/openapi.json` and uses the static assets in `functions/swaggerui/`. |
-| `npm run emulators` | Builds functions and launches the Firebase Emulator Suite. |
+| `npm run docs` | Builds functions + generates API docs. |
+| `npm run test` | Runs all tests (frontend + functions). |
+| See SCRIPTS.md for complete scripts reference. |
 
 ## Project structure
 
@@ -87,8 +93,9 @@ The root `package.json` exposes helpful scripts for daily development:
 TarkovTracker/
 ├── frontend/           # Vue application (pages, components, assets)
 ├── functions/          # Firebase Cloud Functions (TypeScript)
+│   └── openapi/        # OpenAPI specification (output: openapi.json)
 ├── docs/               # Project docs (guides, ops, CI notes)
-├── functions/swaggerui # Swagger UI static assets (source + generated openapi.json)
+├── scripts/            # Utility scripts (maps sync, etc.)
 ├── firestore.rules     # Firestore security rules
 ├── firestore.indexes.json
 ├── database.rules.json # Realtime Database rules (if needed for features)
@@ -100,7 +107,8 @@ TarkovTracker/
 ## Documentation
 
 - **User & feature guides** – Work-in-progress documentation lives in the [`docs/`](docs/) directory (not tied to API docs hosting).
-- **API reference** – Generate locally via `npm run docs` and open `functions/swaggerui/index.html`, or visit the published GitHub Pages site.
+- **API reference** – Generate locally via `npm run docs` which creates `functions/openapi/openapi.json`, which is consumed by Scalar UI in the app.
+- **Development scripts** – Complete reference for all available npm scripts in [SCRIPTS.md](SCRIPTS.md).
 - **Changelog** – Review notable updates in [CHANGELOG.md](CHANGELOG.md).
 
 We welcome additional documentation improvements! Open an issue or pull request if you find gaps.

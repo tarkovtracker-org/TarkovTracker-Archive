@@ -378,6 +378,10 @@
   .taskContainer {
     position: relative;
     overflow: hidden;
+    /* CLS optimization: Set explicit minimum height to prevent layout shift */
+    min-height: 203px;
+    /* CSS containment to isolate layout calculations */
+    contain: layout style paint;
   }
 
   .taskContainerBackground {

@@ -18,6 +18,7 @@ interface TarkovDevMapLayer {
 interface TarkovDevInteractiveMap {
   projection: string;
   svgPath?: string;
+  name?: string;
   bounds?: number[][];
   coordinateRotation?: number;
   transform?: number[];
@@ -93,6 +94,11 @@ function extractSvgFileName(ourKey: string, interactive: TarkovDevInteractiveMap
 /**
  * Build floor array from interactive map data
  */
+function extractFloorFromSvgPath(svgPath: string): string {
+  const match = svgPath.match(/-([\w_]+)\.svg$/);
+  return match ? match[1] : 'Ground_Level';
+}
+
 function buildFloorArray(ourKey: string, interactive: TarkovDevInteractiveMap): string[] {
   const floors: string[] = [];
 
@@ -102,23 +108,26 @@ function buildFloorArray(ourKey: string, interactive: TarkovDevInteractiveMap): 
   } else {
     // Determine main floor name from SVG filename
     if (interactive.svgPath) {
-      const mainFloorMatch = interactive.svgPath.match(/-([\w_]+)\.svg$/);
-      const mainFloorName = mainFloorMatch ? mainFloorMatch[1] : 'Ground_Level';
-      floors.push(mainFloorName);
+      floors.push(extractFloorFromSvgPath(interactive.svgPath));
     }
 
     // Add layers as additional floors
     if (interactive.layers) {
       for (const layer of interactive.layers) {
         if (layer.svgPath) {
-          const layerMatch = layer.svgPath.match(/-([\w_]+)\.svg$/);
-          const layerName = layerMatch ? layerMatch[1] : layer.name.replace(/\s+/g, '_');
+          const layerName = extractFloorFromSvgPath(layer.svgPath);
           if (!floors.includes(layerName)) {
             floors.push(layerName);
           }
         }
       }
     }
+  }
+
+  // Safety check: ensure at least one floor is returned
+  if (floors.length === 0) {
+    const defaultFloor = interactive.name ? interactive.name.replace(/\s+/g, '_') : 'Ground_Level';
+    floors.push(defaultFloor);
   }
 
   return floors;
@@ -228,7 +237,17 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
 
   try {
     logger.info('Fetching maps from tarkov.dev...');
-    const response = await fetch(TARKOV_DEV_MAPS_URL);
+    
+    // Set up timeout controller
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 8000); // 8 second timeout
+    
+    const response = await fetch(TARKOV_DEV_MAPS_URL, { signal: controller.signal });
+    
+    // Clear timeout once fetch resolves
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch: ${response.statusText}`);
@@ -240,7 +259,12 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
     logger.info(`Successfully loaded ${Object.keys(converted).length} maps from tarkov.dev`);
     return converted;
   } catch (error) {
-    logger.error('Failed to fetch maps from tarkov.dev:', error);
-    throw error;
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.error('Failed to fetch maps from tarkov.dev: Request timed out after 8 seconds');
+      throw new Error('Request timed out while fetching maps from tarkov.dev');
+    } else {
+      logger.error('Failed to fetch maps from tarkov.dev:', error);
+      throw error;
+    }
   }
 }

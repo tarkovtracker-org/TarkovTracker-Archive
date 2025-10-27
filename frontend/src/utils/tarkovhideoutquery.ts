@@ -1,6 +1,4 @@
-import gql from 'graphql-tag';
-
-export default gql`
+const tarkovHideoutQuery = /* GraphQL */ `
   query TarkovDataHideout($gameMode: GameMode) {
     hideoutStations(gameMode: $gameMode) {
       id
@@ -92,3 +90,5 @@ export default gql`
     }
   }
 `;
+
+export default tarkovHideoutQuery;

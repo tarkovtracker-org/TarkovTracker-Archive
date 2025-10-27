@@ -7,22 +7,22 @@
  */
 
 import { logger } from 'firebase-functions';
+import type { Request as FunctionsRequest } from 'firebase-functions/v2/https';
+
+type CorsRequest = {
+  headers: FunctionsRequest['headers'];
+};
+
+type CorsResponse = {
+  set(field: string, value: string | readonly string[]): unknown;
+};
 
 interface CorsOptions {
   trustNoOrigin?: boolean;
   allowedOrigins?: string[];
 }
 
-interface CorsRequest {
-  headers: {
-    origin?: string;
-    'access-control-request-headers'?: string;
-  };
-}
 
-interface CorsResponse {
-  set: (header: string, value: string) => void;
-}
 
 /** Validates origin, blocks dangerous patterns, logs suspicious activity */
 export function validateOrigin(

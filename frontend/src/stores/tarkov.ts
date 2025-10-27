@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import { watch } from 'vue';
+import { doc, setDoc } from 'firebase/firestore';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
-import { doc, setDoc } from 'firebase/firestore';
+import { wasDataMigrated } from '@/plugins/store-initializer';
+import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 import {
   getters,
   actions,
@@ -12,8 +14,6 @@ import {
   type UserActions,
   type GameMode,
 } from '@/shared_state';
-import { wasDataMigrated } from '@/plugins/store-initializer';
-import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 import {
   preserveLocalStorageKeys,
   restoreLocalStorageKeys,

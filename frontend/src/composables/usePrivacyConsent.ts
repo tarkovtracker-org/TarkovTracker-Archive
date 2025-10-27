@@ -5,7 +5,12 @@ import { logger } from '@/utils/logger';
 export type ConsentStatus = 'accepted' | 'rejected' | 'unknown';
 
 const STORAGE_KEY = 'tt-analytics-consent';
-const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID || 'qw2qze9js7';
+const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
+
+// Only enable Clarity if:
+// 1. We have a project ID configured
+// 2. We're in production mode (optional but recommended)
+const shouldEnableClarity = Boolean(CLARITY_PROJECT_ID);
 
 const consentStatus = ref<ConsentStatus>('unknown');
 const bannerVisible = ref(false);
@@ -25,6 +30,10 @@ const getStorage = () => {
 };
 
 const bootstrapClarity = () => {
+  if (!shouldEnableClarity) {
+    logger.debug('Microsoft Clarity not enabled: Missing project ID');
+    return;
+  }
   if (clarityBootstrapped || typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
@@ -48,24 +57,33 @@ const bootstrapClarity = () => {
   } else {
     document.head.appendChild(script);
   }
+  logger.info('Microsoft Clarity initialized');
 };
 
 const enableClarity = () => {
+  if (!shouldEnableClarity) {
+    return;
+  }
   if (typeof window === 'undefined') {
     return;
   }
   bootstrapClarity();
   if (typeof window.clarity === 'function') {
     window.clarity('consent', true);
+    logger.info('Microsoft Clarity consent enabled');
   }
 };
 
 const disableClarity = () => {
+  if (!shouldEnableClarity) {
+    return;
+  }
   if (typeof window === 'undefined') {
     return;
   }
   if (typeof window.clarity === 'function') {
     window.clarity('consent', false);
+    logger.info('Microsoft Clarity consent disabled');
   }
 };
 

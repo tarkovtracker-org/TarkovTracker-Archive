@@ -75,7 +75,7 @@ This project supports three distinct development modes optimized for different w
 
 ### API Documentation
 
-- `npm run docs` - Generate API documentation (open `functions/swaggerui/index.html` to view Swagger UI)
+- `npm run docs` - Generate OpenAPI specification at `functions/openapi/openapi.json` for consumption by Scalar UI in the app
 
 ### Deployment
 

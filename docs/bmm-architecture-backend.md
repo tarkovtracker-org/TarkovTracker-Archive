@@ -928,14 +928,14 @@ logger.error('Error occurred', error);
 
 - **Tool:** Swagger JSDoc
 - **Source:** JSDoc comments in handler files
-- **Output:** `swaggerui/` directory
-- **Access:** Open `swaggerui/index.html` in browser
+- **Output:** `openapi/` directory
+- **Access:** Scalar UI in the app at `/api-docs` or view `openapi.json`
 
 **Generation Command:**
 
 ```bash
 npm run docs
-# Runs: build functions → generate swagger → create UI
+# Runs: build functions → generate openapi → consume in Scalar UI
 ```
 
 **Documentation Includes:**

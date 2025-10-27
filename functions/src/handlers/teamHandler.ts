@@ -4,8 +4,15 @@ import { TeamService } from '../services/TeamService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 
-// Reuse a single service instance across requests
-const teamService = new TeamService();
+// Lazy-initialized service instance to ensure Firebase Admin is initialized first
+let teamService: TeamService | undefined;
+
+function getTeamService(): TeamService {
+  if (!teamService) {
+    teamService = new TeamService();
+  }
+  return teamService;
+}
 
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
@@ -71,7 +78,7 @@ export const getTeamProgress = asyncHandler(
       gameMode = (req.query.gameMode as string) || 'pvp';
     }
 
-    const result = await teamService.getTeamProgress(userId, gameMode);
+    const result = await getTeamService().getTeamProgress(userId, gameMode);
 
     const response: ApiResponse = {
       success: true,
@@ -154,7 +161,7 @@ export const createTeam = asyncHandler(
       data.maximumMembers = maxMembers;
     }
 
-    const result = await teamService.createTeam(userId, data);
+    const result = await getTeamService().createTeam(userId, data);
 
     const response: ApiResponse = {
       success: true,
@@ -235,7 +242,7 @@ export const joinTeam = asyncHandler(
       throw new Error('Team ID and password cannot be empty');
     }
 
-    const result = await teamService.joinTeam(userId, data);
+    const result = await getTeamService().joinTeam(userId, data);
 
     const response: ApiResponse = {
       success: true,
@@ -279,7 +286,7 @@ export const leaveTeam = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
 
-    const result = await teamService.leaveTeam(userId);
+    const result = await getTeamService().leaveTeam(userId);
 
     const response: ApiResponse = {
       success: true,

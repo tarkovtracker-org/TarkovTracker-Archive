@@ -52,7 +52,7 @@ export const featureFlags = {
   /**
    * Example: New API Documentation System
    *
-   * When true: Uses new Swagger UI embedded in app
+   * When true: Uses new Scalar UI embedded in app
    * When false: Uses legacy static docs
    *
    * Env var: VITE_FEATURE_NEW_API_DOCS

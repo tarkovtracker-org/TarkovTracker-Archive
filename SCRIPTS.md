@@ -31,8 +31,12 @@ This is a monorepo with two main workspaces: `frontend` and `functions`. Scripts
 ### Development
 
 ```bash
-npm run dev         # Start frontend + functions emulators
-npm run emulators   # Start emulators with local data (backend only)
+npm run dev         # Start frontend only (Vite dev server)
+npm run dev:full    # Start frontend + Firebase emulators (auth, firestore, functions)
+npm run dev:firebase # Build everything + start all Firebase emulators including hosting
+npm run emulators   # Build functions + start all Firebase emulators
+npm run emulators:backend # Build functions + start backend emulators only (auth, firestore, functions)
+npm run emulators:local # Start emulators with imported local data
 ```
 
 ### Building
@@ -47,6 +51,15 @@ npm run build:frontend   # Build frontend only
 
 ```bash
 npm run docs             # Build functions + generate docs + show viewing instructions
+npm run docs:generate    # Generate docs and copy to frontend/public/api/
+```
+
+### Testing
+
+```bash
+npm run test             # Run all tests (functions + frontend)
+npm run test:frontend    # Run frontend tests only
+npm run test:functions   # Run functions tests only
 ```
 
 ### Deployment
@@ -62,15 +75,40 @@ npm run deploy:prod      # Deploy to production environment
 
 #### `npm run dev`
 
-- **Purpose**: Full development setup
-- **Process**: Starts frontend dev server + Firebase emulators concurrently
-- **Best for**: Daily development workflow
+- **Purpose**: Frontend-only development setup
+- **Process**: Starts Vite dev server only (port 3000)
+- **Best for**: UI development, component work, styling, routing
+- **Note**: No Firebase backend - use mock auth with VITE_DEV_AUTH=true
+
+#### `npm run dev:full`
+
+- **Purpose**: Full development setup with backend
+- **Process**: Starts frontend dev server + Firebase emulators (auth, firestore, functions) concurrently
+- **Best for**: Team features, auth flows, real-time sync
+
+#### `npm run dev:firebase`
+
+- **Purpose**: Production build testing
+- **Process**: Builds everything + starts all Firebase emulators including hosting (port 5000)
+- **Best for**: Pre-deployment testing, build verification
 
 #### `npm run emulators`
 
-- **Purpose**: Start Firebase emulators with local data (backend only)
-- **Process**: Builds functions + starts emulators with imported data
-- **Best for**: Backend development or testing with existing test data
+- **Purpose**: Start all Firebase emulators
+- **Process**: Builds functions + starts all Firebase emulators
+- **Best for**: Full backend testing including hosting
+
+#### `npm run emulators:backend`
+
+- **Purpose**: Start backend Firebase emulators only
+- **Process**: Builds functions + starts auth, firestore, functions emulators
+- **Best for**: Backend development without hosting
+
+#### `npm run emulators:local`
+
+- **Purpose**: Start emulators with local data import
+- **Process**: Starts emulators with imported data from ./local_data
+- **Best for**: Testing with existing test data
 
 ### Build Scripts
 
@@ -100,6 +138,13 @@ npm run deploy:prod      # Deploy to production environment
 - **Process**: Builds functions, generates Swagger docs, and shows how to view them
 - **Output**: `functions/swaggerui/openapi.json`
 - **Best for**: Complete documentation workflow
+
+#### `npm run docs:generate`
+
+- **Purpose**: Generate docs and copy to frontend
+- **Process**: Generates Swagger docs and copies to frontend/public/api/
+- **Output**: `frontend/public/api/openapi.json`
+- **Best for**: Making API docs available in deployed frontend
 
 ### Deployment Scripts
 
@@ -145,6 +190,26 @@ npm run deploy:prod      # Deploy to production environment
 - **Process**: Uses `taze` to update package dependencies
 - **Best for**: Dependency management
 
+### Testing Scripts
+
+#### `npm run test`
+
+- **Purpose**: Run all tests
+- **Process**: Runs functions tests then frontend tests
+- **Best for**: Full test suite verification
+
+#### `npm run test:frontend`
+
+- **Purpose**: Run frontend tests only
+- **Process**: Runs Vitest tests in frontend workspace
+- **Best for**: Frontend-only development
+
+#### `npm run test:functions`
+
+- **Purpose**: Run functions tests only
+- **Process**: Runs Vitest tests in functions workspace
+- **Best for**: Backend/API development
+
 ## Workspace Structure
 
 ```bash
@@ -172,7 +237,9 @@ TarkovTracker/
 ### 1. Daily Development
 
 ```bash
-npm run dev  # Starts everything you need
+npm run dev            # Frontend only (UI work)
+npm run dev:full       # Frontend + backend (features/auth)
+npm run dev:firebase   # Full stack with hosting (production testing)
 ```
 
 ### 2. API Development
@@ -180,23 +247,40 @@ npm run dev  # Starts everything you need
 ```bash
 npm run build:functions  # Build functions
 npm run docs             # Generate and view API docs
+npm run test:functions   # Run backend tests
 ```
 
-### 3. Pre-deployment
+### 3. Frontend Development
 
 ```bash
-npm run lint            # Check code quality
-npm run format:check    # Check formatting
-npm run build           # Build everything
+npm run dev            # Start frontend dev server
+npm run test:frontend  # Run frontend tests
+npm run build:frontend # Build frontend only
 ```
 
-### 4. Deploy to Staging Preview
+### 4. Testing
+
+```bash
+npm run test           # Run all tests
+npm run lint           # Check code quality
+npm run format:check   # Check formatting
+```
+
+### 5. Pre-deployment
+
+```bash
+npm run test           # Run full test suite
+npm run build          # Build everything
+npm run lint           # Final code quality check
+```
+
+### 6. Deploy to Staging Preview
 
 ```bash
 npm run deploy:staging  # One command deployment to staging channel
 ```
 
-### 5. Deploy to Production
+### 7. Deploy to Production
 
 ```bash
 npm run deploy:prod     # One command deployment

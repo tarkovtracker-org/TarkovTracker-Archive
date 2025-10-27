@@ -1,20 +1,21 @@
 import { createApp } from 'vue';
 import type { ComponentPublicInstance } from 'vue'; // Import type for vm
-import { DefaultApolloClient } from '@vue/apollo-composable';
 import router from './router';
 import i18n from './plugins/i18n';
 import vuetify from './plugins/vuetify';
-import pinia from './plugins/pinia';
-import apolloClient from './plugins/apollo';
 import { VueFire } from 'vuefire';
-import { app as fireapp } from './plugins/firebase';
-import { initDevAuth } from './plugins/dev-auth';
 import { markInitialized } from './plugins/store-initializer';
 import { markI18nReady } from '@/composables/utils/i18nHelpers';
 import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
 import { logger } from '@/utils/logger';
 // Base app component
 import App from './App.vue';
+
+// Import Firebase and Pinia BEFORE dev auth to avoid circular dependency
+import { app as fireapp } from './plugins/firebase';
+import pinia from './plugins/pinia';
+// Import dev auth AFTER Firebase is initialized
+import { initDevAuth } from './plugins/dev-auth';
 
 // Define custom window property
 declare global {
@@ -57,7 +58,6 @@ app
     firebaseApp: fireapp,
     modules: [],
   })
-  .provide(DefaultApolloClient, apolloClient)
   .mount('#app');
 
 // Mark the store system as initialized

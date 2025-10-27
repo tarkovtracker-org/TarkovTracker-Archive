@@ -6,9 +6,9 @@ on:
   push:
     branches: ['main']
     paths:
-      # Deploy when sources for API docs change (Swagger config or function sources)
+      # Deploy when sources for API docs change (OpenAPI config or function sources)
       - 'functions/src/openapi/**'
-      - 'functions/swaggerui/**'
+      - 'functions/openapi/**'
       # Only trigger on handlers, routes, and API surface definitions
       - 'functions/src/index.ts'
       - 'functions/src/handlers/**/*.ts'
@@ -56,8 +56,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the Swagger UI folder with generated openapi.json
-          path: './functions/swaggerui'
+          # Upload the OpenAPI folder with generated openapi.json
+          path: './functions/openapi'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

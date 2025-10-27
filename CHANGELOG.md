@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Task Master AI project management integration
+- Map transformation utilities for Tarkov data processing
+- Fireswap plugin integration for enhanced Firebase functionality
+- Documentation restructure into organized hierarchy
 - Claude GitHub Actions workflows for automated code review and PR assistance
 - Ko-Fi support integration in redesigned footer
 - Support for Unheard+EOD Edition (6) game content
@@ -29,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Refactoring**: Enhanced Pinia stores with Fireswap plugin support
+- **Architecture**: Updated composables and services for improved data handling  
+- **Components**: Refactored TarkovMap.vue for improved readability and performance
+- **Testing**: Updated Firestore Tarkov data tests
+- **Configuration**: Updated feature flags configuration
+- **Frontend**: Enhanced frontend plugins and components functionality
 - **Major Refactoring**: Reorganized components into logical subdirectories
 - **Architecture**: Implemented composables architecture for improved code organization
 - **Performance**: Removed v-lazy components to improve rendering performance
