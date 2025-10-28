@@ -45,40 +45,9 @@
 </template>
 
 <script setup lang="ts">
-  import {
-    onBeforeUnmount,
-    onMounted,
-    ref,
-    computed,
-    defineAsyncComponent,
-    defineComponent,
-    h,
-  } from 'vue';
+  import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent } from 'vue';
+  import { LoadingComponent, ErrorComponent } from '@/pages/apiReferenceFallbackComponents';
   import '@scalar/api-reference/style.css';
-
-  // Lazy load Scalar to keep it out of the main bundle
-  const LoadingComponent = defineComponent({
-    name: 'ApiReferenceLoading',
-    setup() {
-      return () =>
-        h('div', { class: 'd-flex justify-center align-center pa-8' }, [
-          h('v-progress-circular', { indeterminate: '', color: 'primary' }),
-        ]);
-    },
-  });
-
-  const ErrorComponent = defineComponent({
-    name: 'ApiReferenceError',
-    setup() {
-      return () =>
-        h('div', { class: 'd-flex justify-center align-center pa-8' }, [
-          h('v-alert', {
-            type: 'error',
-            text: 'Failed to load API documentation',
-          }),
-        ]);
-    },
-  });
 
   const ApiReference = defineAsyncComponent({
     loader: () => import('@scalar/api-reference').then((module) => module.ApiReference),

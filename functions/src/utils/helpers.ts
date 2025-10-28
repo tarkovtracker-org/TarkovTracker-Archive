@@ -1,6 +1,6 @@
 // Shared utility functions
 import { HttpsError, CallableRequest } from 'firebase-functions/v2/https';
-import functions from 'firebase-functions';
+import { logger } from 'firebase-functions/v2';
 import admin from 'firebase-admin';
 import { DocumentReference, WriteBatch, FieldValue } from 'firebase-admin/firestore';
 import UIDGenerator from 'uid-generator';
@@ -34,7 +34,7 @@ export function validateAuth(request: CallableRequest<unknown>): string {
 }
 
 export function handleTeamError(error: unknown, context: string): never {
-  functions.logger.error(`Team operation error in ${context}:`, error);
+  logger.error(`Team operation error in ${context}:`, error);
   if (error instanceof HttpsError) {
     throw error;
   }

@@ -70,20 +70,22 @@ enforce: 'pre' | 'post' | undefined
 
 **Decision Matrix:**
 
-| File/Directory | Action | Reason |
-|---------------|--------|--------|
-| `frontend/src/utils/errorHandler.ts` | ✅ Commit | Complete, useful utility |
-| `functions/openapi/` | ✅ Commit | OpenAPI generation support |
-| `functions/src/app/` | ⚠️ Review | Check if needed or dead code |
-| `functions/src/openapi/openapi.ts` | ✅ Commit | OpenAPI generation |
-| `functions/src/scheduled/` | ⚠️ Review | Check scheduled tasks |
-| `functions/src/utils/helpers.ts` | ⚠️ Review | Check if duplicate of existing helpers |
+| File/Directory | Action | Reason | Verification Steps |
+|---------------|--------|--------|-------------------|
+| `frontend/src/utils/errorHandler.ts` | ✅ Commit | Complete, useful utility | ✓ Review complete implementation<br>✓ Verify imports in handlers<br>→ `git add && git commit` |
+| `functions/openapi/` | ✅ Commit | OpenAPI generation support | ✓ Check directory structure<br>✓ Verify generation scripts<br>→ `git add && git commit` |
+| `functions/src/app/` | ⚠️ Review | Check if needed or dead code | 1. Check imports in handlers:<br>   `grep -r "from ['\"]\\./app" functions/src/`<br>2. Search for references:<br>   `grep -r "src/app" functions/src/`<br>3. If ZERO matches → mark for deletion<br>4. Otherwise → commit |
+| `functions/src/openapi/openapi.ts` | ✅ Commit | OpenAPI generation | ✓ Verify implementation<br>✓ Check integration<br>→ `git add && git commit` |
+| `functions/src/scheduled/` | ⚠️ Review | Check scheduled tasks | 1. Check cron/task config in Cloud Tasks<br>2. Check deployment manifests<br>3. If NOT deployed → document as WIP<br>4. Otherwise → commit |
+| `functions/src/utils/helpers.ts` | ⚠️ Review | Check if duplicate of existing helpers | 1. Diff against existing helpers:<br>   `diff functions/src/utils/helpers.ts functions/src/utils/`<br>2. Detect duplicates<br>3. If duplicate → merge/replace existing<br>4. If new → commit |
 
 **Steps:**
-1. [ ] Review each untracked file for completeness
-2. [ ] Run: `git add <files-to-commit>`
-3. [ ] Run: `git commit -m "feat: add error handling and OpenAPI generation utilities"`
-4. [ ] For incomplete files: Move to `docs/INCOMPLETE.md` for later
+1. [ ] Perform verification checks from the table above
+2. [ ] Take action based on checklist results (Commit/Delete/Merge/Document)
+3. [ ] For "Review" items: Complete verification checklist before deciding
+4. [ ] Run: `git add <selected-files>`
+5. [ ] Run: `git commit -m "feat: add error handling and OpenAPI generation utilities"`
+6. [ ] For incomplete files: Move to `docs/INCOMPLETE.md` for later
 
 **Rollback Plan:** None (these are new files)
 
@@ -522,19 +524,20 @@ export const useUserStore = defineStore('user', () => {
   const ui = useUISettingsStore();
   // ... other stores
 
+  // Extract reactive refs for state and getters
   const { streamerMode } = storeToRefs(preferences);
   const { taskPrimaryView } = storeToRefs(ui);
 
+  // Explicitly expose refs and action functions
   return {
-    // Spread all state
-    ...preferences.$state,
-    ...ui.$state,
-    // Spread all getters
-    ...preferences.$ getters,
-    ...ui.$getters,
-    // Spread all actions
-    ...preferences.$actions,
-    ...ui.$actions,
+    // State refs
+    streamerMode,
+    taskPrimaryView,
+
+    // Action functions - call child store actions directly
+    setStreamerMode: preferences.setStreamerMode,
+    toggleTaskPrimaryView: ui.toggleTaskPrimaryView,
+    // ... other explicit mappings
   };
 });
 ```
@@ -770,14 +773,27 @@ state: { streamerMode: boolean }
 
 ### ✅ Task 5.1: Add Unit Tests
 **Priority:** 🟡 Medium
-**Estimated Time:** 16-20 hours
+**Estimated Time:** 24-32 hours (Single Developer) | 16-20 hours (Team of 2)
 **Status:** ⏳ Pending
 
-**Focus Areas:**
-- `progress/formatters/*` - Test all formatters
-- `progress/validation/*` - Test all validation
-- Composables in frontend
-- Vue components
+**Team Assumption:** Estimates assume single developer unless noted
+**Code Review:** Add 4-6 hours for peer review and iteration per phase
+**Testing:** Add 2-3 hours for integration testing after unit tests
+
+**Complexity-Based Breakdown:**
+- Formatter modules (`progress/formatters/*`): 6-8 hours
+  - 4 modules × 1.5-2 hours each (setup, edge cases, integration)
+- Validation modules (`progress/validation/*`): 6-8 hours
+  - 4 modules × 1.5-2 hours each (error cases, data validation)
+- Composables (frontend): 8-10 hours
+  - 6 composables × 1-1.5 hours each (reactive logic, watchers)
+- Vue components (critical path): 4-6 hours
+  - 3 components × 1-2 hours each (props, events, rendering)
+
+**Branch/Merge Strategy:**
+- Feature branches for each focus area (e.g., `test/formatters`)
+- Merge via PR with required review
+- Coordinate with team to avoid concurrent test writing
 
 **Target Coverage:** 80%+
 
@@ -793,8 +809,28 @@ state: { streamerMode: boolean }
 
 - [ ] **Remove console.log statements** - 30 min
   ```bash
-  find functions/src -name "*.ts" -exec sed -i 's/console\.log/functions.logger.log/g' {} \;
-  find functions/src -name "*.ts" -exec sed -i 's/console\.error/functions.logger.error/g' {} \;
+  # Safe workflow with backup and review
+  # Create timestamped backup of functions/src
+  cp -r functions/src "functions/src.backup.$(date +%Y%m%d_%H%M%S)"
+
+  # Preview changes with diff
+  find functions/src -name "*.ts" -exec sed -n 's/console\.\(\w\+\)/functions.logger.\1/p' {} \; | head -20
+
+  # Apply replacements with in-place backup (-i.bak)
+  find functions/src -name "*.ts" -exec sed -i.bak 's/console\.log/functions.logger.log/g' {} \;
+  find functions/src -name "*.ts" -exec sed -i.bak 's/console\.error/functions.logger.error/g' {} \;
+
+  # Review changes before committing
+  git diff functions/src
+
+  # Run tests and type checks
+  cd functions && npm test && npm run build
+
+  # Remove backup files after verification
+  find functions/src -name "*.ts.bak" -delete
+
+  # If issues found, restore from backup
+  # rm -rf functions/src && mv functions/src.backup.* functions/src
   ```
 
 - [ ] **Delete blank lines** - 15 min
@@ -907,9 +943,98 @@ rm -rf frontend/src/stores/user/
 
 ## Related Documentation
 
-- [API Contracts](../bmm-api-contracts.md)
-- [Backend Architecture](../bmm-architecture-backend.md)
-- [Source Tree Structure](../bmm-source-tree.md)
+### Required Doc Updates
+
+- [ ] **Architecture Documentation** (`../bmm-architecture-backend.md`)
+  - Update module maps showing refactored structure
+  - Add examples of new composable patterns
+  - Document component decomposition rationale
+
+- [ ] **API Documentation** (`../bmm-api-contracts.md`)
+  - Update any handler signature changes
+  - Document new endpoints or deprecated routes
+  - Add migration examples for breaking changes
+
+- [ ] **ADRs (Architecture Decision Records)**
+  - Create ADR for decomposition strategy
+  - Document Pinia store pattern changes
+  - Record decision to use composables vs mixins
+
+- [ ] **README Updates** (`../bmm-source-tree.md`)
+  - Update setup instructions if needed
+  - Add migration notes for developers
+  - Update development commands if affected
+
+### Deprecation Timeline & Communication
+
+- [ ] **Deprecation Period:** 2-4 weeks for internal APIs
+- [ ] **Communication Steps:**
+  1. Notify team via Slack #engineering channel
+  2. Create GitHub issue tracking breaking changes
+  3. Add DEPRECATED comments in code with removal date
+  4. Update API docs with deprecation notices
+  5. Send email to external API consumers (if applicable)
+
+**Consumer Notification:**
+- Internal teams: Direct Slack mention + GitHub issue
+- External consumers: Email + API version banner
+- Suggested deprecation period: 30 days for minor, 90 days for major
+
+### Performance Validation
+
+**Baseline Metrics (pre-refactor):**
+- [ ] Build time: `npm run build` (record seconds)
+- [ ] Bundle size: Check `frontend/dist/assets/` total size
+- [ ] Runtime performance: Chrome DevTools Lighthouse scores
+- [ ] Memory usage: Profile in Firebase emulator
+
+**Post-Refactor Checks:**
+- [ ] Rebuild and compare metrics to baseline
+- [ ] Run all unit tests and E2E tests
+- [ ] Profile critical user journeys (load times, interactions)
+- [ ] Monitor error rates in development
+
+**Acceptance Criteria:**
+- Build time: ±10% of baseline
+- Bundle size: No increase >5% without justification
+- Lighthouse performance score: Maintain or improve
+- All tests passing: 100% pass rate
+
+### Integration Strategy
+
+**Merge Strategy:**
+- [ ] Single PR approach: All changes in one large PR
+  - Pros: One review cycle, atomic commit
+  - Cons: Higher risk, harder to review
+- [ ] Incremental PRs: Multiple smaller PRs (RECOMMENDED)
+  - Phase 1: Utils and helpers
+  - Phase 2: Composables extraction
+  - Phase 3: Component refactoring
+  - Phase 4: Store consolidation
+  - Phase 5: Cleanup and documentation
+
+**Handling Concurrent Work:**
+- [ ] Feature freeze during major refactor phases
+- [ ] Coordinate with team before starting
+- [ ] Create tracking issue for the entire refactor
+- [ ] Daily standup updates on progress
+- [ ] Use feature flags for gradual rollout
+
+**Approval & Merge Owners:**
+- [ ] **Primary:** Tech Lead approval required
+- [ ] **Secondary:** Another senior engineer review
+- [ ] **Merge:** Only after all CI checks pass
+- [ ] **Rollback plan:** Must be documented before merge
+
+**Resource Estimates (Expanded):**
+- Code review/approval cycles: 8-12 hours
+  - 4 PRs × 2-3 hours each (review + iteration)
+- Communication tasks: 4-6 hours
+  - Team notifications, issue creation, status updates
+- Documentation updates: 6-10 hours
+  - ADRs, READMEs, API docs
+- Performance validation: 3-4 hours
+  - Baseline capture, testing, comparison
 
 ---
 

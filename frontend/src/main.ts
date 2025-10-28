@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+import '@fontsource/share-tech-mono';
 import type { ComponentPublicInstance } from 'vue'; // Import type for vm
 import router from './router';
 import i18n from './plugins/i18n';

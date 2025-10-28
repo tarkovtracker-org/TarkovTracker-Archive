@@ -235,29 +235,18 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
   const TARKOV_DEV_MAPS_URL =
     'https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json';
 
+  // Set up timeout controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 8000); // 8 second timeout
+
+  logger.info('Fetching maps from tarkov.dev...');
+
+  let response: Response;
+
   try {
-    logger.info('Fetching maps from tarkov.dev...');
-
-    // Set up timeout controller
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, 8000); // 8 second timeout
-
-    const response = await fetch(TARKOV_DEV_MAPS_URL, { signal: controller.signal });
-
-    // Clear timeout once fetch resolves
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.statusText}`);
-    }
-
-    const rawData: TarkovDevMapGroup[] = await response.json();
-    const converted = convertTarkovDevMaps(rawData);
-
-    logger.info(`Successfully loaded ${Object.keys(converted).length} maps from tarkov.dev`);
-    return converted;
+    response = await fetch(TARKOV_DEV_MAPS_URL, { signal: controller.signal });
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       logger.error('Failed to fetch maps from tarkov.dev: Request timed out after 8 seconds');
@@ -266,5 +255,18 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
       logger.error('Failed to fetch maps from tarkov.dev:', error);
       throw error;
     }
+  } finally {
+    // Always clear timeout regardless of success or error
+    clearTimeout(timeoutId);
   }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.statusText}`);
+  }
+
+  const rawData: TarkovDevMapGroup[] = await response.json();
+  const converted = convertTarkovDevMaps(rawData);
+
+  logger.info(`Successfully loaded ${Object.keys(converted).length} maps from tarkov.dev`);
+  return converted;
 }

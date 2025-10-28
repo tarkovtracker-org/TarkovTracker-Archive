@@ -39,7 +39,11 @@ function queryToString(query: string | import('graphql').DocumentNode): string {
     return query;
   }
   // Extract the query string from the DocumentNode
-  return query.loc?.source.body ?? '';
+  const body = query.loc?.source.body;
+  if (!body) {
+    throw new Error('Invalid GraphQL DocumentNode: missing query source body');
+  }
+  return body;
 }
 
 export async function executeGraphQL<T, V = Record<string, unknown>>(
@@ -83,3 +87,5 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
     detachAbortListener?.();
   }
 }
+
+export { queryToString };

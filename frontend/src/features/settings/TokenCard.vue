@@ -35,7 +35,7 @@
         {{ $t('page.settings.card.apitokens.streamer_mode_qr') }}
       </template>
       <template v-else>
-        <img v-if="qrDataUrl" :src="qrDataUrl" alt="QR Code" />
+        <img v-if="qrDataUrl" :src="qrDataUrl" alt="Authenticator setup QR code" />
       </template>
     </div>
     <div class="mt-1">

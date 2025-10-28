@@ -26,6 +26,7 @@
     "test:all": "npm run test:run && npm run test:e2e"
   },
   "dependencies": {
+    "@fontsource/share-tech-mono": "^5.2.7",
     "@mdi/font": "^7.4.47",
     "@scalar/api-reference": "^1.38.1",
     "@vueuse/core": "^14.0.0",

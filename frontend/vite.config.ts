@@ -55,8 +55,8 @@ export default defineConfig({
             return 'firebase-vendor';
           }
 
-          // Vuetify (heavy UI framework - split into own chunk)
-          if (id.includes('node_modules/vuetify') || id.includes('vite-plugin-vuetify')) {
+          // Vuetify runtime (heavy UI framework - split into own chunk)
+          if (id.includes('node_modules/vuetify')) {
             return 'vuetify-vendor';
           }
 

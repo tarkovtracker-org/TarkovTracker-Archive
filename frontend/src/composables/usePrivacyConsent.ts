@@ -10,7 +10,7 @@ const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
 // Only enable Clarity if:
 // 1. We have a project ID configured
 // 2. We're in production mode (optional but recommended)
-const shouldEnableClarity = Boolean(CLARITY_PROJECT_ID);
+const shouldEnableClarity = Boolean(CLARITY_PROJECT_ID && import.meta.env.PROD);
 
 const consentStatus = ref<ConsentStatus>('unknown');
 const bannerVisible = ref(false);

@@ -239,7 +239,7 @@ If CLS is still > 0.1 after these fixes:
 
 ## Commit Message Suggestion
 
-```
+```text
 perf(tasks): fix massive CLS issue (0.694 → <0.08)
 
 - Add font preloading for MDI and ShareTech Mono fonts (-66% CLS)

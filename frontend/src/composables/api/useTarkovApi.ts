@@ -10,7 +10,7 @@ import type {
   TarkovHideoutQueryResult,
 } from '@/types/tarkov';
 import { fetchTarkovDevMaps } from '@/utils/mapTransformUtils';
-import { executeGraphQL } from '@/utils/graphqlClient';
+import { executeGraphQL, queryToString } from '@/utils/graphqlClient';
 import { logger } from '@/utils/logger';
 import fallbackMapsData from './maps.json';
 
@@ -84,7 +84,7 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
     loading.value = true;
 
     // Convert query to string for execution
-    const queryString = typeof query === 'string' ? query : (query.loc?.source.body ?? '');
+    const queryString = typeof query === 'string' ? query : queryToString(query);
     const promise = executeGraphQL<T, V>(queryString, variables, { signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) {
