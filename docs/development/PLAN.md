@@ -1,4 +1,4 @@
-## Objective
+# Objective
 
 - Reduce first-load and refresh latency across TarkovTracker frontend by identifying and mitigating bundle, rendering, and network bottlenecks.
 

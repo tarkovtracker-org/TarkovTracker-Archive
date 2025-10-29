@@ -1,4 +1,5 @@
 # Dependency Upgrade Strategy
+
 ## TarkovTracker Monorepo
 
 **Generated:** 2025-10-14
@@ -34,6 +35,7 @@ This document outlines a safe, incremental approach to upgrading dependencies ac
 ### 1. Priority Matrix
 
 #### Batch 1: High Priority - Patch Updates (Safe, Quick Wins)
+
 **Timeline:** Week 1 | **Risk:** Minimal | **Testing:** Smoke Tests
 
 | Package | Current | Target | Type | Breaking Changes |
@@ -45,12 +47,14 @@ This document outlines a safe, incremental approach to upgrading dependencies ac
 | `taze` | 19.1.0 | 19.7.0 | minor | None |
 
 **Upgrade Command:**
+
 ```bash
 npm update concurrently vite globals taze
 cd frontend && npm update vite happy-dom
 ```
 
 **Testing Strategy:**
+
 - Run `npm run build` across all workspaces
 - Execute smoke tests: `npm test -- --run`
 - Verify development server: `npm run dev`
@@ -58,6 +62,7 @@ cd frontend && npm update vite happy-dom
 ---
 
 #### Batch 2: Medium Priority - Minor Updates
+
 **Timeline:** Week 2 | **Risk:** Low | **Testing:** Regression Suite
 
 | Package | Current | Target | Type | Breaking Changes |
@@ -66,11 +71,13 @@ cd frontend && npm update vite happy-dom
 | `firebase-tools` | 14.11.1 | 14.19.1 | minor | None expected |
 
 **Upgrade Command:**
+
 ```bash
 npm update eslint-plugin-vue firebase-tools
 ```
 
 **Testing Strategy:**
+
 - Full lint pass: `npm run lint`
 - Build and test: `npm run build && npm test`
 - Emulator test: `npm run emulators`
@@ -78,6 +85,7 @@ npm update eslint-plugin-vue firebase-tools
 ---
 
 #### Batch 3: High Impact - Firebase 11 → 12 (BREAKING)
+
 **Timeline:** Week 3-4 | **Risk:** Medium | **Testing:** Comprehensive
 
 | Package | Current | Target | Type | Breaking Changes |
@@ -86,11 +94,13 @@ npm update eslint-plugin-vue firebase-tools
 | `firebase` (root) | 12.2.1 | 12.4.0 | minor | None |
 
 **Breaking Changes:**
+
 1. **Node.js requirement:** Minimum v20 (✅ Current: v22.16.0)
 2. **Firestore API change:** `DocumentSnapshot.exists` property → `exists()` method
 3. **ES2020 target:** May require build configuration updates
 
 **Impact Assessment:**
+
 - 📊 **20+ occurrences** of `.exists` property in functions codebase
 - 🔧 **Automated fix available** via codemod
 - ⚠️ **Critical files affected:**
@@ -108,6 +118,7 @@ See **Migration Guide #1** below for detailed steps.
 ---
 
 #### Batch 4: Complex - Apollo Client 3 → 4 (BREAKING)
+
 **Timeline:** Week 5-6 | **Risk:** Medium-High | **Testing:** Full Integration
 
 | Package | Current | Target | Type | Breaking Changes |
@@ -115,6 +126,7 @@ See **Migration Guide #1** below for detailed steps.
 | `@apollo/client` | 3.14.0 | 4.0.7 | major | ⚠️ Yes |
 
 **Breaking Changes:**
+
 1. **RxJS dependency:** New peer dependency `rxjs@^7.3.0` required
 2. **Observable implementation:** Migrated from `zen-observable` to RxJS
 3. **Core/React split:** Framework-specific exports separated (Vue apps use `/core`)
@@ -122,8 +134,9 @@ See **Migration Guide #1** below for detailed steps.
 5. **TypeScript:** Stricter type requirements
 
 **Current Usage:**
+
 - 📁 `frontend/src/plugins/apollo.ts` - Core Apollo client setup
-- 📁 `frontend/src/types/tarkov.ts` - GraphQL type definitions
+- 📁 `frontend/src/types/tarkov.ts` - GraphQL type definitions  
 - 📁 `frontend/src/test/setup.ts` - Test configuration
 
 **Impact:** Moderate - Using `@apollo/client/core` (Vue-compatible), minimal React-specific code.
@@ -133,6 +146,7 @@ See **Migration Guide #2** below for detailed steps.
 ---
 
 #### Batch 5: Build Tools - Major Updates
+
 **Timeline:** Week 7+ | **Risk:** Variable | **Testing:** Comprehensive
 
 | Package | Current | Target | Type | Breaking Changes |
@@ -144,12 +158,14 @@ See **Migration Guide #2** below for detailed steps.
 | `@types/node` | 22.18.10 | 24.7.2 | major | ⚠️ Type changes |
 
 **UUID Breaking Changes:**
+
 - Browser exports now default
 - Dropped CommonJS support (ESM only)
 - Dropped Node.js 16 support (✅ using v22)
 - TypeScript 5.2+ required (✅ using v5.9.3)
 
 **Current Usage:**
+
 - 📁 `frontend/src/features/maps/TarkovMap.vue:49` - `import { v4 as uuidv4 } from 'uuid'`
 
 **Recommendation:** Defer until after Firebase and Apollo migrations are complete.
@@ -160,13 +176,14 @@ See **Migration Guide #2** below for detailed steps.
 
 ### Migration Guide #1: Firebase 11 → 12
 
-#### Overview
+#### Firebase 12 Migration Overview
+
 - **Estimated time:** 4-6 hours
 - **Risk level:** Medium
 - **Breaking changes:** 20+
 - **Rollback complexity:** Low
 
-#### Pre-Migration Checklist
+#### Firebase Pre-Migration Checklist
 
 - [ ] Current test suite passing (`npm test`)
 - [ ] Create git branch: `git checkout -b upgrade/firebase-12`
@@ -216,6 +233,7 @@ chmod +x scripts/migrate-firebase-exists.sh
 ```
 
 **Manual verification required for:**
+
 - `functions/src/progress/progressHandler.ts:157, 253, 274`
 - `functions/src/services/ProgressService.ts:53, 292, 315`
 - `functions/src/services/TeamService.ts:129, 274, 291`
@@ -230,6 +248,7 @@ chmod +x scripts/migrate-firebase-exists.sh
 #### Step 3: Code Pattern Updates
 
 **Before:**
+
 ```typescript
 const userDoc = await userRef.get();
 if (userDoc.exists) {  // ❌ Property access
@@ -238,6 +257,7 @@ if (userDoc.exists) {  // ❌ Property access
 ```
 
 **After:**
+
 ```typescript
 const userDoc = await userRef.get();
 if (userDoc.exists()) {  // ✅ Method call
@@ -288,7 +308,7 @@ ls -lh dist/assets/*.js | awk '{print $5, $9}'
 # Expected: Minimal change (<5%)
 ```
 
-#### Rollback Plan
+#### Firebase Rollback Plan
 
 If issues arise:
 
@@ -306,19 +326,24 @@ git branch -D upgrade/firebase-12
 firebase emulators:start --import=./local_data
 ```
 
-#### Common Issues & Solutions
+#### Firebase Common Issues & Solutions
 
-**Issue 1: Type errors after upgrade**
-```
+##### Issue 1: Type errors after upgrade
+
+```bash
 error TS2339: Property 'exists' does not exist on type 'DocumentSnapshot'
 ```
+
 **Solution:** Ensure all `.exists` calls use parentheses: `.exists()`
 
-**Issue 2: Test failures in mock Firestore**
-```
+##### Issue 2: Test failures in mock Firestore
+
+```bash
 TypeError: snapshot.exists is not a function
 ```
+
 **Solution:** Update test mocks to return functions instead of boolean properties:
+
 ```typescript
 // Before
 { exists: true, data: () => ({...}) }
@@ -326,30 +351,33 @@ TypeError: snapshot.exists is not a function
 { exists: () => true, data: () => ({...}) }
 ```
 
-**Issue 3: Emulator connection issues**
+##### Issue 3: Emulator connection issues
+
 **Solution:** Clear emulator data and restart:
+
 ```bash
 rm -rf .firebase/
 npm run emulators
 ```
 
-#### Resources
+#### Firebase Migration Resources
 
-- [Firebase JS SDK Release Notes](https://firebase.google.com/support/release-notes/js)
-- [Firebase v12 Breaking Changes](https://firebase.google.com/support/release-notes/js#version_1200_-_october_21_2025)
+- [Firebase JS SDK Release Notes](https://firebase.google.com/support/release-notes/js)  
+- [Firebase v12 Breaking Changes](https://firebase.google.com/support/release-notes/js#version_1200_-_october_21_2025)  
 - [Firestore DocumentSnapshot API](https://firebase.google.com/docs/reference/js/firestore_.documentsnapshot)
 
 ---
 
 ### Migration Guide #2: Apollo Client 3 → 4
 
-#### Overview
+#### Apollo Client 4 Migration Overview
+
 - **Estimated time:** 6-8 hours
 - **Risk level:** Medium-High
 - **Breaking changes:** Multiple API changes
 - **Rollback complexity:** Low
 
-#### Pre-Migration Checklist
+#### Apollo Pre-Migration Checklist
 
 - [ ] Firebase upgrade completed and tested
 - [ ] Current GraphQL queries documented
@@ -374,6 +402,7 @@ npm install @apollo/client@^4.0.7 @vue/apollo-composable@latest
 **File:** `frontend/src/plugins/apollo.ts`
 
 **Before (Apollo Client 3):**
+
 ```typescript
 import { ApolloClient, createHttpLink, InMemoryCache } from '@apollo/client/core';
 
@@ -387,6 +416,7 @@ const apolloClient = new ApolloClient({
 ```
 
 **After (Apollo Client 4):**
+
 ```typescript
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client/core';
 
@@ -403,7 +433,8 @@ const apolloClient = new ApolloClient({
 ```
 
 **Key changes:**
-1. `createHttpLink()` → `new HttpLink()` (function to class)
+
+1. `createHttpLink()` → `new HttpLink()` (function to class)  
 2. Added optional `name` and `version` for client identification
 
 #### Step 4: Update Error Handling
@@ -411,6 +442,7 @@ const apolloClient = new ApolloClient({
 Apollo Client 4 unified error handling. If using error boundaries:
 
 **Before:**
+
 ```typescript
 import { ApolloError } from '@apollo/client';
 
@@ -422,6 +454,7 @@ catch (error) {
 ```
 
 **After:**
+
 ```typescript
 import { isApolloError } from '@apollo/client';
 
@@ -437,12 +470,14 @@ catch (error) {
 Apollo Client 4 has stricter TypeScript requirements. Update query type definitions:
 
 **Before:**
+
 ```typescript
 const { data } = useQuery(QUERY);
 // data is possibly undefined
 ```
 
 **After:**
+
 ```typescript
 const { data } = useQuery<QueryResultType>(QUERY);
 // Explicit typing required
@@ -477,13 +512,13 @@ npm run dev
 
 #### Step 8: Manual Testing Checklist
 
-- [ ] GraphQL queries fetch data correctly
-- [ ] Tarkov.dev API connection works
-- [ ] Task data loads properly
-- [ ] Map data renders correctly
-- [ ] Error states display appropriately
-- [ ] Loading states work as expected
-- [ ] Cache updates trigger UI updates
+- [ ] GraphQL queries fetch data correctly  
+- [ ] Tarkov.dev API connection works  
+- [ ] Task data loads properly  
+- [ ] Map data renders correctly  
+- [ ] Error states display appropriately  
+- [ ] Loading states work as expected  
+- [ ] Cache updates trigger UI updates  
 - [ ] No console errors in browser
 
 #### Step 9: Bundle Size Analysis
@@ -495,7 +530,7 @@ npx vite-bundle-visualizer
 # Expected: 10-15% reduction in bundle size due to optimizations
 ```
 
-#### Rollback Plan
+#### Apollo Rollback Plan
 
 ```bash
 # Revert dependencies
@@ -507,26 +542,33 @@ npm install @apollo/client@^3.14.0
 npm uninstall rxjs  # If not used elsewhere
 ```
 
-#### Common Issues & Solutions
+#### Apollo Common Issues & Solutions
 
-**Issue 1: RxJS peer dependency warning**
-```
+##### Issue 1: RxJS peer dependency warning
+
+```bash
 npm WARN @apollo/client@4.0.7 requires a peer of rxjs@^7.3.0
 ```
+
 **Solution:** Install RxJS: `npm install rxjs@^7.8.1`
 
-**Issue 2: TypeScript errors on query hooks**
-```
+##### Issue 2: TypeScript errors on query hooks
+
+```bash
 error TS2345: Argument of type 'string' is not assignable to parameter of type 'DocumentNode'
 ```
+
 **Solution:** Ensure GraphQL queries use `gql` tag:
+
 ```typescript
 import { gql } from '@apollo/client';
 const QUERY = gql`query { ... }`;
 ```
 
-**Issue 3: Cache not updating after mutations**
+##### Issue 3: Cache not updating after mutations
+
 **Solution:** Update cache configuration:
+
 ```typescript
 cache: new InMemoryCache({
   typePolicies: {
@@ -535,7 +577,7 @@ cache: new InMemoryCache({
 })
 ```
 
-#### Resources
+#### Apollo Migration Resources
 
 - [Apollo Client 4.0 Migration Guide](https://www.apollographql.com/docs/react/migrating/apollo-client-4-migration)
 - [Apollo Client 4.0 Announcement](https://www.apollographql.com/blog/announcing-apollo-client-4-0)
@@ -545,15 +587,16 @@ cache: new InMemoryCache({
 
 ### Migration Guide #3: UUID 11 → 13
 
-#### Overview
-- **Estimated time:** 1-2 hours
-- **Risk level:** Low
-- **Breaking changes:** ESM-only, browser defaults
+#### UUID Migration Overview
+
+- **Estimated time:** 1-2 hours  
+- **Risk level:** Low  
+- **Breaking changes:** ESM-only, browser defaults  
 - **Rollback complexity:** Minimal
 
-#### Pre-Migration Checklist
+#### UUID Pre-Migration Checklist
 
-- [ ] Major upgrades (Firebase, Apollo) completed
+- [ ] Major upgrades (Firebase, Apollo) completed  
 - [ ] Create git branch: `git checkout -b upgrade/uuid-13`
 
 #### Step 1: Update Package
@@ -567,6 +610,7 @@ npm install -D @types/uuid@latest  # If needed
 #### Step 2: Verify Import Syntax
 
 Current usage in `frontend/src/features/maps/TarkovMap.vue:49`:
+
 ```typescript
 import { v4 as uuidv4 } from 'uuid';
 ```
@@ -589,12 +633,12 @@ npm run dev
 
 #### Step 4: Verification
 
-- [ ] Maps render without errors
-- [ ] Random IDs generated correctly
-- [ ] No TypeScript compilation errors
+- [ ] Maps render without errors  
+- [ ] Random IDs generated correctly  
+- [ ] No TypeScript compilation errors  
 - [ ] Tests pass
 
-#### Rollback Plan
+#### UUID Rollback Plan
 
 ```bash
 cd frontend
@@ -607,7 +651,7 @@ npm install uuid@^11.1.0
 
 ### Recommended Execution Timeline
 
-```
+```text
 Week 1: Batch 1 - Patch Updates
 ├── Day 1: Update packages
 ├── Day 2: Test and verify
@@ -639,6 +683,7 @@ Week 7+: Batch 5 - Remaining Major Updates
 ### Metrics to Track
 
 #### Performance Metrics
+
 ```javascript
 // Add to frontend build pipeline
 const metrics = {
@@ -658,9 +703,10 @@ const metrics = {
 ```
 
 #### Error Monitoring
-- Monitor Firebase errors in console
-- Track GraphQL query failures
-- Watch for Firestore transaction conflicts
+
+- Monitor Firebase errors in console  
+- Track GraphQL query failures  
+- Watch for Firestore transaction conflicts  
 - Monitor build failures in CI/CD
 
 #### Health Check Script
@@ -750,7 +796,7 @@ git branch -D upgrade/<package-name>
 
 ### Rollback Decision Tree
 
-```
+```text
 Issue Detected
   ├─ Build Failure?
   │   ├─ Yes → Investigate for 30min → Still failing? → Rollback
@@ -784,8 +830,9 @@ Issue Detected
 | `ts-essentials` | 9.4.2 | 10.1.1 | ✅ | ⚠️ | ✅ | ✅ | Research Needed |
 
 **Legend:**
-- ✅ Confirmed compatible
-- ⚠️ Needs verification
+
+- ✅ Confirmed compatible  
+- ⚠️ Needs verification  
 - ❌ Known incompatibility
 
 ---
@@ -793,31 +840,37 @@ Issue Detected
 ## Risk Mitigation Strategies
 
 ### 1. Incremental Rollout
-- Deploy to development environment first
-- Monitor for 48 hours before staging
+
+- Deploy to development environment first  
+- Monitor for 48 hours before staging  
 - Gradual rollout to production (canary deployment if possible)
 
 ### 2. Automated Testing
-- Expand test coverage before major upgrades
-- Add integration tests for critical paths
+
+- Expand test coverage before major upgrades  
+- Add integration tests for critical paths  
 - Implement E2E tests for user flows
 
 ### 3. Feature Flags
+
 Consider implementing feature flags for major dependency changes:
+
 ```typescript
 // Enable new Apollo Client 4 features gradually
 const useApolloV4Features = import.meta.env.VITE_APOLLO_V4_FEATURES === 'true';
 ```
 
 ### 4. Monitoring & Alerting
-- Set up error tracking (e.g., Sentry)
-- Monitor Firebase usage metrics
-- Track GraphQL query performance
+
+- Set up error tracking (e.g., Sentry)  
+- Monitor Firebase usage metrics  
+- Track GraphQL query performance  
 - Set up alerts for error rate spikes
 
 ### 5. Documentation
-- Document all configuration changes
-- Update team wiki/docs with upgrade notes
+
+- Document all configuration changes  
+- Update team wiki/docs with upgrade notes  
 - Create runbook for common issues
 
 ---
@@ -834,6 +887,7 @@ npm run deps
 ```
 
 Guidance:
+
 - Start with patch/minor upgrades and land them weekly to keep drift low.
 - Take notes on any major upgrades you defer so you can plan the required migration work.
 - After accepting changes, run `./scripts/health-check.sh` or the equivalent build/test commands.
@@ -879,6 +933,7 @@ echo "📌 Git tag: $TAG"
 ## Testing Strategy
 
 ### 1. Unit Tests
+
 ```bash
 # Functions
 cd functions && npm test
@@ -891,6 +946,7 @@ npm test -- --coverage --threshold 80
 ```
 
 ### 2. Integration Tests
+
 ```bash
 # Start emulators
 npm run emulators:local &
@@ -901,6 +957,7 @@ npm test -- --grep "integration"
 ```
 
 ### 3. E2E Tests
+
 ```bash
 cd frontend
 npm run test:e2e
@@ -912,50 +969,57 @@ npm run test:e2e -- --headed=false
 ### 4. Manual Testing Checklist
 
 **Critical User Flows:**
-- [ ] User registration and login
-- [ ] Progress tracking (tasks, hideout)
-- [ ] Team creation and joining
-- [ ] API token generation
-- [ ] Map viewing
-- [ ] Data synchronization across team members
-- [ ] Task filtering and search
+
+- [ ] User registration and login  
+- [ ] Progress tracking (tasks, hideout)  
+- [ ] Team creation and joining  
+- [ ] API token generation  
+- [ ] Map viewing  
+- [ ] Data synchronization across team members  
+- [ ] Task filtering and search  
 - [ ] Needed items calculation
 
 **Browser Testing:**
-- [ ] Chrome (latest)
-- [ ] Firefox (latest)
-- [ ] Safari (latest)
+
+- [ ] Chrome (latest)  
+- [ ] Firefox (latest)  
+- [ ] Safari (latest)  
 - [ ] Mobile browsers (iOS Safari, Chrome Mobile)
 
 ---
 
 ## Success Criteria
 
-### Upgrade Complete When:
+### Upgrade Complete When
 
 ✅ **All automated tests passing**
-- Unit tests: 100% pass rate
-- Integration tests: 100% pass rate
+
+- Unit tests: 100% pass rate  
+- Integration tests: 100% pass rate  
 - E2E tests: 100% pass rate
 
 ✅ **No regressions detected**
-- Bundle size increase <10%
-- Page load time increase <15%
+
+- Bundle size increase <10%  
+- Page load time increase <15%  
 - API response time increase <10%
 
 ✅ **Manual testing complete**
-- All critical user flows tested
-- Cross-browser testing complete
+
+- All critical user flows tested  
+- Cross-browser testing complete  
 - Mobile testing complete
 
 ✅ **Production deployment successful**
-- No error rate spikes
-- Performance metrics stable
+
+- No error rate spikes  
+- Performance metrics stable  
 - User feedback positive
 
 ✅ **Documentation updated**
-- README updated with new versions
-- Migration notes documented
+
+- README updated with new versions  
+- Migration notes documented  
 - Team trained on changes
 
 ---
@@ -980,9 +1044,9 @@ npm run deps:audit  # Custom script
 
 ### Recommended Tools
 
-- **Dependabot:** Automated dependency updates (GitHub)
-- **Renovate:** Advanced dependency management
-- **npm-check-updates:** Interactive upgrade tool
+- **Dependabot:** Automated dependency updates (GitHub)  
+- **Renovate:** Advanced dependency management  
+- **npm-check-updates:** Interactive upgrade tool  
 - **taze:** Fast dependency upgrade utility (already installed)
 
 ---
@@ -991,30 +1055,30 @@ npm run deps:audit  # Custom script
 
 This upgrade strategy prioritizes safety and stability while modernizing the TarkovTracker codebase. By following the incremental batch approach, you can:
 
-1. ✅ **Minimize risk** with small, testable updates
-2. ✅ **Maintain stability** through comprehensive testing
-3. ✅ **Learn iteratively** from each upgrade
-4. ✅ **Rollback easily** if issues arise
+1. ✅ **Minimize risk** with small, testable updates  
+2. ✅ **Maintain stability** through comprehensive testing  
+3. ✅ **Learn iteratively** from each upgrade  
+4. ✅ **Rollback easily** if issues arise  
 5. ✅ **Stay current** with security patches
 
 ### Next Steps
 
-1. **Week 1:** Execute Batch 1 (patch updates) - Quick wins
-2. **Week 2:** Execute Batch 2 (minor updates) - Low risk
-3. **Week 3-4:** Execute Batch 3 (Firebase 12) - First major upgrade
-4. **Review:** Assess Batch 3 outcomes before proceeding
-5. **Week 5-6:** Execute Batch 4 (Apollo 4) - If Batch 3 successful
+1. **Week 1:** Execute Batch 1 (patch updates) - quick-win  
+2. **Week 2:** Execute Batch 2 (minor updates) - low-risk  
+3. **Week 3-4:** Execute Batch 3 (Firebase 12) - first-major upgrade  
+4. **Review:** Assess Batch 3 outcomes before proceeding  
+5. **Week 5-6:** Execute Batch 4 (Apollo 4) - If Batch 3 successful  
 6. **Future:** Defer Batch 5 until other upgrades stabilized
 
 ### Support Resources
 
-- **Firebase Support:** https://firebase.google.com/support
-- **Apollo GraphQL:** https://community.apollographql.com/
-- **Vue.js Discord:** https://discord.com/invite/vue
-- **Project Issues:** https://github.com/TarkovTracker/tarkov-tracker/issues
+- **Firebase Support:** <https://firebase.google.com/support>  
+- **Apollo GraphQL:** <https://community.apollographql.com/>  
+- **Vue.js Discord:** <https://discord.com/invite/vue>  
+- **Project Issues:** <https://github.com/TarkovTracker/tarkov-tracker/issues>
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** 2025-10-14
+**Document Version:** 1.0  
+**Last Updated:** 2025-10-14  
 **Next Review:** After Batch 3 completion
