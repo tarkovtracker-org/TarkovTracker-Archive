@@ -2,7 +2,10 @@ import { computed, ref, watch } from 'vue';
 import type { Ref } from 'vue';
 import type { Task } from '@/types/tarkov';
 
-const INITIAL_BATCH = 24;
+// Performance optimization: Reduced from 24 → 12 → 8 to improve initial render time
+// TaskCard components are heavy (415 lines, 15+ computed properties each)
+// 8 cards × 15 computed properties = 120 evaluations vs 180 at 12 cards (33% reduction)
+const INITIAL_BATCH = 8;
 const BATCH_INCREMENT = 16;
 
 export function useVirtualTaskList(tasks: Ref<Task[]>) {

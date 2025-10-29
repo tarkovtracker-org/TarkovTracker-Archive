@@ -14,6 +14,119 @@ import { executeGraphQL, queryToString } from '@/utils/graphqlClient';
 import { logger } from '@/utils/logger';
 import fallbackMapsData from './maps.json';
 
+const TARKOV_DATA_CACHE_PREFIX = 'tt:tarkov-data:';
+const TARKOV_DATA_CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+
+interface TarkovDataCachePayload {
+  timestamp: number;
+  data: TarkovDataQueryResult;
+}
+
+const inMemoryTarkovDataCache = new Map<string, TarkovDataCachePayload>();
+interface TarkovDataCacheRecord extends TarkovDataCachePayload {
+  key: string;
+}
+
+let tarkovDataDbPromise: Promise<IDBDatabase | null> | null = null;
+
+async function getTarkovDataDb(): Promise<IDBDatabase | null> {
+  if (typeof window === 'undefined' || typeof window.indexedDB === 'undefined') {
+    return null;
+  }
+  if (!tarkovDataDbPromise) {
+    tarkovDataDbPromise = new Promise<IDBDatabase>((resolve, reject) => {
+      const request = window.indexedDB.open('tt-cache', 1);
+      request.onupgradeneeded = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('tarkovData')) {
+          db.createObjectStore('tarkovData', { keyPath: 'key' });
+        }
+      };
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
+    })
+      .catch((error) => {
+        logger.warn('Failed to open IndexedDB for Tarkov cache:', error);
+        return null;
+      })
+      .finally(() => {
+        // no-op
+      });
+  }
+  return tarkovDataDbPromise;
+}
+
+function resolveTarkovDataCacheKey(variables: TarkovDataVariables): string {
+  return `${TARKOV_DATA_CACHE_PREFIX}${variables.lang}:${variables.gameMode}`;
+}
+
+async function loadTarkovDataCache(key: string): Promise<TarkovDataCachePayload | null> {
+  if (inMemoryTarkovDataCache.has(key)) {
+    return inMemoryTarkovDataCache.get(key) ?? null;
+  }
+  const db = await getTarkovDataDb();
+  if (!db) {
+    return null;
+  }
+  return await new Promise<TarkovDataCachePayload | null>((resolve) => {
+    const tx = db.transaction('tarkovData', 'readonly');
+    const store = tx.objectStore('tarkovData');
+    const request = store.get(key);
+    request.onsuccess = () => {
+      const record = (request.result as TarkovDataCacheRecord | undefined) ?? null;
+      if (record) {
+        const payload: TarkovDataCachePayload = {
+          timestamp: record.timestamp,
+          data: record.data,
+        };
+        inMemoryTarkovDataCache.set(key, payload);
+        resolve(payload);
+      } else {
+        resolve(null);
+      }
+    };
+    request.onerror = () => {
+      logger.warn('Failed to read cached Tarkov data:', request.error);
+      resolve(null);
+    };
+  });
+}
+
+async function writeTarkovDataCache(key: string, payload: TarkovDataCachePayload): Promise<void> {
+  inMemoryTarkovDataCache.set(key, payload);
+  const db = await getTarkovDataDb();
+  if (!db) {
+    return;
+  }
+  await new Promise<void>((resolve) => {
+    const tx = db.transaction('tarkovData', 'readwrite');
+    const store = tx.objectStore('tarkovData');
+    const record: TarkovDataCacheRecord = { key, ...payload };
+    const request = store.put(record);
+    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      logger.warn('Failed to persist Tarkov data cache entry:', request.error);
+      resolve();
+    };
+  });
+}
+
+interface ResourceCacheEntry<T> {
+  data: T;
+  stale?: boolean;
+}
+
+interface ResourceCacheOptions<T, V> {
+  hydrate?: (variables: V) => ResourceCacheEntry<T> | Promise<ResourceCacheEntry<T> | null> | null;
+  persist?: (variables: V, data: T) => void | Promise<void>;
+}
+
+type TarkovDataVariables = { lang: string; gameMode: string };
+type GraphQLResource<T, V extends Record<string, unknown>> = ReturnType<
+  typeof useGraphQLResource<T, V>
+>;
+type SharedTarkovDataResource = GraphQLResource<TarkovDataQueryResult, TarkovDataVariables>;
+
 const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
 
@@ -70,7 +183,8 @@ async function loadStaticMaps(): Promise<StaticMapData> {
 
 function useGraphQLResource<T, V extends Record<string, unknown>>(
   query: string | import('graphql').DocumentNode,
-  variablesSource: ComputedRef<V>
+  variablesSource: ComputedRef<V>,
+  cacheOptions?: ResourceCacheOptions<T, V>
 ) {
   const result = ref<T | null>(null);
   const error = ref<Error | null>(null);
@@ -92,6 +206,12 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
         }
         result.value = data;
         error.value = null;
+        const persistResult = cacheOptions?.persist?.(variables, data);
+        if (persistResult instanceof Promise) {
+          persistResult.catch((persistError) => {
+            logger.warn('Failed to persist Tarkov data cache entry:', persistError);
+          });
+        }
       })
       .catch((err) => {
         if (controller.signal.aborted) {
@@ -116,7 +236,34 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
     variablesSource,
     (vars, _prev, onCleanup) => {
       const controller = new AbortController();
-      void startFetch(vars, controller);
+
+      const run = async () => {
+        try {
+          const cacheEntry =
+            cacheOptions?.hydrate !== undefined ? await cacheOptions.hydrate(vars) : null;
+          if (controller.signal.aborted) {
+            return;
+          }
+          if (cacheEntry?.data) {
+            result.value = cacheEntry.data;
+            error.value = null;
+            if (cacheEntry.stale === false) {
+              loading.value = false;
+              return;
+            }
+            loading.value = true;
+          }
+          await startFetch(vars, controller);
+        } catch (err) {
+          if (controller.signal.aborted) {
+            return;
+          }
+          error.value = normalizeError(err);
+          loading.value = false;
+        }
+      };
+
+      void run();
       onCleanup(() => controller.abort());
     },
     { immediate: true, deep: true }
@@ -155,24 +302,45 @@ export function useTarkovApi() {
   } as const;
 }
 
+let sharedTarkovDataQueryResource: SharedTarkovDataResource | null = null;
+
 export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   const { languageCode } = useTarkovApi();
 
-  const variables = computed(() => ({
+  const variables = computed<TarkovDataVariables>(() => ({
     lang: languageCode.value,
     gameMode: gameMode.value,
   }));
 
-  const { result, error, loading, refetch } = useGraphQLResource<
-    TarkovDataQueryResult,
-    { lang: string; gameMode: string }
-  >(tarkovDataQuery, variables);
+  if (!sharedTarkovDataQueryResource) {
+    const hydrate = async (
+      vars: TarkovDataVariables
+    ): Promise<ResourceCacheEntry<TarkovDataQueryResult> | null> => {
+      const key = resolveTarkovDataCacheKey(vars);
+      const cached = await loadTarkovDataCache(key);
+      if (!cached) {
+        return null;
+      }
+      const stale = Date.now() - cached.timestamp > TARKOV_DATA_CACHE_TTL_MS;
+      return { data: cached.data, stale };
+    };
+    const persist = async (vars: TarkovDataVariables, data: TarkovDataQueryResult) => {
+      const key = resolveTarkovDataCacheKey(vars);
+      await writeTarkovDataCache(key, { timestamp: Date.now(), data });
+    };
+
+    sharedTarkovDataQueryResource = useGraphQLResource<TarkovDataQueryResult, TarkovDataVariables>(
+      tarkovDataQuery,
+      variables,
+      { hydrate, persist }
+    );
+  }
 
   return {
-    result,
-    error,
-    loading,
-    refetch,
+    result: sharedTarkovDataQueryResource.result,
+    error: sharedTarkovDataQueryResource.error,
+    loading: sharedTarkovDataQueryResource.loading,
+    refetch: sharedTarkovDataQueryResource.refetch,
     languageCode,
     gameMode,
   } as const;

@@ -12,6 +12,25 @@ describe('usePrivacyConsent', () => {
   let usePrivacyConsent: typeof import('../usePrivacyConsent').usePrivacyConsent;
   let __privacyConsentInternals: typeof import('../usePrivacyConsent').__privacyConsentInternals;
 
+  const loadPrivacyConsentModule = async (options?: {
+    clarityProjectId?: string | null;
+    prod?: boolean;
+  }) => {
+    vi.resetModules();
+    vi.unstubAllEnvs();
+
+    if (options?.clarityProjectId !== undefined) {
+      const value = options.clarityProjectId ?? '';
+      vi.stubEnv('VITE_CLARITY_PROJECT_ID', value);
+    }
+
+    if (options?.prod !== undefined) {
+      vi.stubEnv('PROD', options.prod);
+    }
+
+    ({ usePrivacyConsent, __privacyConsentInternals } = await import('../usePrivacyConsent'));
+  };
+
   beforeEach(async () => {
     // Reset module state by reimporting
     vi.resetModules();
@@ -62,13 +81,14 @@ describe('usePrivacyConsent', () => {
       },
     } as unknown as Document;
 
-    ({ usePrivacyConsent, __privacyConsentInternals } = await import('../usePrivacyConsent'));
+    await loadPrivacyConsentModule();
 
     vi.clearAllMocks();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   describe('initializeConsent', () => {
@@ -291,22 +311,39 @@ describe('usePrivacyConsent', () => {
   });
 
   describe('Clarity integration', () => {
-    it('calls clarity consent when enabled', () => {
+    it('does not call clarity when not configured', () => {
       const mockClarity = vi.fn();
       globalThis.window.clarity = mockClarity;
 
       __privacyConsentInternals.enableClarity();
-
-      expect(mockClarity).toHaveBeenCalledWith('consent', true);
-    });
-
-    it('calls clarity consent when disabled', () => {
-      const mockClarity = vi.fn();
-      globalThis.window.clarity = mockClarity;
-
       __privacyConsentInternals.disableClarity();
 
-      expect(mockClarity).toHaveBeenCalledWith('consent', false);
+      expect(mockClarity).not.toHaveBeenCalled();
+    });
+
+    describe('when configured for production', () => {
+      beforeEach(async () => {
+        await loadPrivacyConsentModule({ clarityProjectId: 'test-clarity', prod: true });
+        vi.clearAllMocks();
+      });
+
+      it('calls clarity consent when enabled', () => {
+        const mockClarity = vi.fn();
+        globalThis.window.clarity = mockClarity;
+
+        __privacyConsentInternals.enableClarity();
+
+        expect(mockClarity).toHaveBeenCalledWith('consent', true);
+      });
+
+      it('calls clarity consent when disabled', () => {
+        const mockClarity = vi.fn();
+        globalThis.window.clarity = mockClarity;
+
+        __privacyConsentInternals.disableClarity();
+
+        expect(mockClarity).toHaveBeenCalledWith('consent', false);
+      });
     });
 
     it('handles missing window gracefully', () => {
