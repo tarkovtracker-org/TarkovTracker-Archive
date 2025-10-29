@@ -45,9 +45,7 @@
   .v-application {
     [class*='text-'] {
       font-family: 'Share Tech Mono', sans-serif !important;
-      font-display: swap;
     }
     font-family: 'Share Tech Mono', sans-serif !important;
-    font-display: swap;
   }
 </style>

@@ -104,10 +104,25 @@ export function getEnabledFeatures(): FeatureFlagName[] {
 
 // Log enabled features in development
 if (import.meta.env.DEV) {
+  // Get enabled features once to use in both success and error paths
   const enabled = getEnabledFeatures();
-  if (enabled.length > 0) {
-    console.log('🎌 Feature Flags Enabled:', enabled.join(', '));
-  } else {
-    console.log('🎌 Feature Flags: None enabled');
-  }
+
+  // Dynamic import to avoid bundling logger in production when this block is tree-shaken
+  import('@/utils/logger')
+    .then(({ logger }) => {
+      if (enabled.length > 0) {
+        logger.info('🎌 Feature Flags Enabled:', enabled.join(', '));
+      } else {
+        logger.info('🎌 Feature Flags: None enabled');
+      }
+    })
+    .catch((error) => {
+      console.error('Failed to import logger for feature flags:', error);
+      // Fallback to console logging so feature flag state is always visible
+      if (enabled.length > 0) {
+        console.info('🎌 Feature Flags Enabled:', enabled.join(', '));
+      } else {
+        console.info('🎌 Feature Flags: None enabled');
+      }
+    });
 }
