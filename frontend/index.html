@@ -6,23 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TarkovTracker</title>
 
-    <!-- Performance optimizations -->
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-
-    <!-- CRITICAL: Preload fonts to prevent layout shift (CLS optimization) -->
-    <link
-      rel="preload"
-      href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/fonts/materialdesignicons-webfont.woff2?v=7.4.47"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <!-- Material Design Icons via CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
-    />
+    <!-- Preconnect to third-party APIs used on initial load -->
+    <link rel="dns-prefetch" href="https://api.tarkov.dev" />
+    <link rel="preconnect" href="https://api.tarkov.dev" crossorigin />
+    <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
+    <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
   </head>
   <body>
     <div id="app"></div>

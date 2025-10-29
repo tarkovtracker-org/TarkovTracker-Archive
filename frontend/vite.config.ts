@@ -42,8 +42,17 @@ export default defineConfig({
     'import.meta.env.VITE_BUILD_TIME': JSON.stringify(getBuildTime()),
   },
   build: {
-    sourcemap: true,
+    sourcemap: false, // Disabled for production to reduce bundle size by ~7MB
     chunkSizeWarningLimit: 1000,
+    modulePreload: {
+      // Prevent heavy chunks from being preloaded on every page
+      // Only preload critical dependencies
+      resolveDependencies: (filename, deps, { hostId: _hostId, hostType: _hostType }) => {
+        // Filter out Scalar vendor chunk from preload (only needed on /api-docs route)
+        // This saves ~1.1MB gzipped on initial page load
+        return deps.filter((dep) => !dep.includes('scalar-vendor'));
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
