@@ -9,26 +9,50 @@
   "functions": {
     "runtime": "nodejs22",
     "source": "functions",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "src/"
-    ],
-    "predeploy": [
-      "npm --prefix \"$RESOURCE_DIR\" run build"
-    ]
+    "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "src/"],
+    "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
   },
   "hosting": {
-    "predeploy": [
-      "npm install --prefix ./frontend"
-    ],
+    "predeploy": ["npm install --prefix ./frontend"],
     "public": "frontend/dist",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=31536000,immutable"
+          }
+        ]
+      },
+      {
+        "source": "/img/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=31536000,immutable"
+          }
+        ]
+      },
+      {
+        "source": "/favicon.ico",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          }
+        ]
+      }
     ],
     "redirects": [
       {
