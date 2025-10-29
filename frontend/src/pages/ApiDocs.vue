@@ -47,6 +47,7 @@
 <script setup lang="ts">
   import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent } from 'vue';
   import { LoadingComponent, ErrorComponent } from '@/pages/apiReferenceFallbackComponents';
+  import { logger } from '@/utils/logger';
   import '@scalar/api-reference/style.css';
 
   const ApiReference = defineAsyncComponent({
@@ -56,7 +57,7 @@
     delay: 200,
     timeout: 10000,
     onError(error, retry, _fail) {
-      console.error('Failed to load ApiReference component:', error);
+      logger.error('Failed to load ApiReference component:', error);
       retry(); // Retry once
     },
   });
@@ -188,12 +189,12 @@
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         loading.value = false;
-        console.warn('API docs request aborted');
+        logger.warn('API docs request aborted');
         return;
       }
       error.value = err instanceof Error ? err.message : 'Failed to load API documentation';
       loading.value = false;
-      console.error('Error loading API docs:', err);
+      logger.error('Error loading API docs:', err);
     } finally {
       if (fetchTimeoutId.value) {
         clearTimeout(fetchTimeoutId.value);

@@ -382,6 +382,9 @@
     min-height: 203px;
     /* CSS containment to isolate layout calculations */
     contain: layout style paint;
+    /* GPU acceleration to prevent layout shifts from background changes */
+    will-change: background;
+    transform: translateZ(0);
   }
 
   .taskContainerBackground {
@@ -394,6 +397,8 @@
     transform: rotate(15deg);
     color: #c6afaf;
     opacity: 0.2;
+    /* GPU acceleration for icon background */
+    will-change: transform, opacity;
   }
 
   .task-complete {

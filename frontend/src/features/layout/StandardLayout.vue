@@ -52,11 +52,30 @@
     <consent-banner />
   </v-main>
 </template>
-<script setup>
-  import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-  import { defineAsyncComponent } from 'vue';
+<script setup lang="ts">
+  import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   const route = useRoute();
+  const preloadedBackgrounds = new Set<string>();
+  const preloadBackgroundImage = (backgroundKey: unknown) => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+    if (typeof backgroundKey !== 'string' || backgroundKey.length === 0) {
+      return;
+    }
+    const href = `/img/background/${backgroundKey}.webp`;
+    if (preloadedBackgrounds.has(href)) {
+      return;
+    }
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = href;
+    link.setAttribute('data-preload-background', backgroundKey);
+    document.head.appendChild(link);
+    preloadedBackgrounds.add(href);
+  };
   const backgroundImage = computed(() => {
     if (route?.meta?.background) {
       return `url(/img/background/${route.meta.background}.webp)`;
@@ -71,12 +90,19 @@
   //     return ''
   //   }
   // })
-  const NavDrawer = defineAsyncComponent(() => import('@/features/layout/NavDrawer'));
-  const AppFooter = defineAsyncComponent(() => import('@/features/layout/AppFooter'));
-  const AppBar = defineAsyncComponent(() => import('@/features/layout/AppBar'));
+  const NavDrawer = defineAsyncComponent(() => import('@/features/layout/NavDrawer.vue'));
+  const AppFooter = defineAsyncComponent(() => import('@/features/layout/AppFooter.vue'));
+  const AppBar = defineAsyncComponent(() => import('@/features/layout/AppBar.vue'));
   const ConsentBanner = defineAsyncComponent(() => import('@/features/layout/ConsentBanner.vue'));
   const showBackToTop = ref(false);
   const backToTopThreshold = 400;
+  watch(
+    () => route.meta?.background,
+    (newBackground) => {
+      preloadBackgroundImage(newBackground);
+    },
+    { immediate: true }
+  );
   const handleScroll = () => {
     if (typeof window === 'undefined') {
       return;

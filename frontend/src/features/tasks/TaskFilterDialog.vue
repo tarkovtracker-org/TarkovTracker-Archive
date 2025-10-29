@@ -281,6 +281,8 @@
 <style lang="scss">
   .task-settings-slide-enter-active,
   .task-settings-slide-leave-active {
+    /* GPU acceleration to prevent non-composited animations causing layout shifts */
+    will-change: opacity, transform;
     transition:
       opacity 160ms ease,
       transform 160ms ease;
@@ -288,6 +290,7 @@
 
   .task-settings-slide-enter-active :deep(.v-overlay__content),
   .task-settings-slide-leave-active :deep(.v-overlay__content) {
+    will-change: opacity, transform;
     transition:
       opacity 160ms ease,
       transform 160ms ease;

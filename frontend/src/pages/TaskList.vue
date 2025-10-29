@@ -20,10 +20,15 @@
         @open-filters="filtersDialog = true"
       />
 
-      <v-row justify="center">
-        <v-col v-if="loadingTasks || reloadingTasks" cols="12" align="center">
-          <v-progress-circular indeterminate color="secondary" class="mx-2" />
-          {{ $t('page.tasks.loading') }}
+      <!--
+        Performance optimization: Removed v-progress-circular spinner
+        - Was causing 0.1980 CLS (major layout shift) due to non-composited stroke-dasharray animation
+        - Skeleton loaders in TaskCardList provide better visual feedback without layout shifts
+        - Reserved min-height prevents content jump when loading completes
+      -->
+      <v-row v-if="loadingTasks || reloadingTasks" justify="center" style="min-height: 60px">
+        <v-col cols="12" align="center">
+          <div class="text-body-1 text-secondary">{{ $t('page.tasks.loading') }}</div>
           <RefreshButton />
         </v-col>
       </v-row>
