@@ -35,9 +35,6 @@
   const DrawerLinks = defineAsyncComponent(() => import('@/features/drawer/DrawerLinks'));
   const DrawerAccount = defineAsyncComponent(() => import('@/features/drawer/DrawerAccount'));
   const DrawerLevel = defineAsyncComponent(() => import('@/features/drawer/DrawerLevel'));
-  const DrawerTraderStandings = defineAsyncComponent(
-    () => import('@/features/drawer/DrawerTraderStandings')
-  );
   const DrawerExternalLinks = defineAsyncComponent(
     () => import('@/features/drawer/DrawerExternalLinks')
   );
