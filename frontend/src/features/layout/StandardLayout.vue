@@ -56,7 +56,7 @@
   import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
   import { useRoute } from 'vue-router';
   const route = useRoute();
-  const preloadedBackgrounds = new Set<string>();
+  const currentPreloadLink = ref<HTMLLinkElement | null>(null);
   const preloadBackgroundImage = (backgroundKey: unknown) => {
     if (typeof document === 'undefined') {
       return;
@@ -64,17 +64,19 @@
     if (typeof backgroundKey !== 'string' || backgroundKey.length === 0) {
       return;
     }
-    const href = `/img/background/${backgroundKey}.webp`;
-    if (preloadedBackgrounds.has(href)) {
-      return;
+    // Remove previous preload link if it exists
+    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
+      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+      currentPreloadLink.value = null;
     }
+    const href = `/img/background/${backgroundKey}.webp`;
     const link = document.createElement('link');
     link.rel = 'preload';
     link.as = 'image';
     link.href = href;
     link.setAttribute('data-preload-background', backgroundKey);
     document.head.appendChild(link);
-    preloadedBackgrounds.add(href);
+    currentPreloadLink.value = link;
   };
   const backgroundImage = computed(() => {
     if (route?.meta?.background) {
@@ -127,6 +129,11 @@
       return;
     }
     window.removeEventListener('scroll', handleScroll);
+    // Cleanup preload link on component unmount
+    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
+      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+      currentPreloadLink.value = null;
+    }
   });
 </script>
 <style lang="scss" scoped>

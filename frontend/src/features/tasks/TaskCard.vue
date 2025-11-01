@@ -378,13 +378,18 @@
   .taskContainer {
     position: relative;
     overflow: hidden;
-    /* CLS optimization: Set explicit minimum height to prevent layout shift */
-    min-height: 203px;
-    /* CSS containment to isolate layout calculations */
-    contain: layout style paint;
-    /* GPU acceleration to prevent layout shifts from background changes */
-    will-change: background;
-    transform: translateZ(0);
+    /* CLS optimization: Explicit min-height (203px) derived from typical card height
+       with quest info, objectives, and actions to prevent layout shift on initial render */
+    min-height: var(--task-card-min-height, 203px);
+    /* CSS containment to isolate layout calculations and reduce reflow costs */
+    contain: layout paint;
+  }
+
+  .task-card {
+    /* Temporary will-change for transitions to optimize GPU acceleration */
+    &.transitioning {
+      will-change: background;
+    }
   }
 
   .taskContainerBackground {
@@ -397,8 +402,6 @@
     transform: rotate(15deg);
     color: #c6afaf;
     opacity: 0.2;
-    /* GPU acceleration for icon background */
-    will-change: transform, opacity;
   }
 
   .task-complete {

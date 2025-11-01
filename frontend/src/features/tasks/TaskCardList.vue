@@ -69,21 +69,71 @@
 
   // CLS optimization: Show skeleton loaders during initial load
   const isInitialLoading = ref(false);
-  const skeletonCount = ref(10); // Show 10 skeleton cards initially
+  const CARD_HEIGHT = 203; // Height of skeleton card in pixels
+  const CARD_VERTICAL_SPACING = 16; // Approximate vertical spacing between cards
+  const MIN_SKELETONS = 3;
+  const MAX_SKELETONS = 20;
+  const MIN_SKELETON_DURATION = 400; // Minimum time (ms) to show skeleton to avoid flicker
 
-  // Track initial loading state
+  // Calculate dynamic skeleton count based on viewport height
+  const calculateSkeletonCount = () => {
+    if (typeof window === 'undefined') return MIN_SKELETONS;
+    const viewportHeight = window.innerHeight;
+    const count = Math.ceil(viewportHeight / (CARD_HEIGHT + CARD_VERTICAL_SPACING));
+    return Math.max(MIN_SKELETONS, Math.min(MAX_SKELETONS, count));
+  };
+
+  const skeletonCount = ref(calculateSkeletonCount());
+  let skeletonTimerId: ReturnType<typeof setTimeout> | null = null;
+  let cleanupTimerId: ReturnType<typeof setTimeout> | null = null;
+
+  // Track initial loading state with minimum duration to avoid flicker
   watch(
     () => props.loading,
     (newLoading, oldLoading) => {
       // Only show skeletons during the very first load (when we have no tasks yet)
       if (newLoading && props.tasks.length === 0) {
         isInitialLoading.value = true;
+        // Clear existing skeleton timer if any
+        if (skeletonTimerId) {
+          clearTimeout(skeletonTimerId);
+          skeletonTimerId = null;
+        }
+        // Start minimum duration timer
+        skeletonTimerId = setTimeout(() => {
+          skeletonTimerId = null;
+        }, MIN_SKELETON_DURATION);
       } else if (!newLoading && oldLoading) {
-        isInitialLoading.value = false;
+        // Clear existing cleanup timer if any
+        if (cleanupTimerId) {
+          clearTimeout(cleanupTimerId);
+          cleanupTimerId = null;
+        }
+        // Don't clear loading immediately if minimum duration hasn't passed
+        if (skeletonTimerId !== null) {
+          cleanupTimerId = setTimeout(() => {
+            cleanupTimerId = null;
+            isInitialLoading.value = false;
+          }, MIN_SKELETON_DURATION);
+        } else {
+          isInitialLoading.value = false;
+        }
       }
     },
     { immediate: true }
   );
+
+  // Clean up timers on unmount
+  onBeforeUnmount(() => {
+    if (skeletonTimerId !== null) {
+      clearTimeout(skeletonTimerId);
+      skeletonTimerId = null;
+    }
+    if (cleanupTimerId !== null) {
+      clearTimeout(cleanupTimerId);
+      cleanupTimerId = null;
+    }
+  });
 
   const emit = defineEmits<{
     (event: 'load-more'): void;
@@ -92,6 +142,15 @@
   const supportsIntersectionObserver = ref(false);
   const loadMoreTrigger = ref<HTMLElement | null>(null);
   let observer: IntersectionObserver | null = null;
+  let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  // Debounced resize handler to update skeleton count
+  const handleResize = () => {
+    if (resizeTimeout) clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      skeletonCount.value = calculateSkeletonCount();
+    }, 150);
+  };
 
   const setupObserver = () => {
     if (!supportsIntersectionObserver.value || !observer) {
@@ -123,12 +182,25 @@
       { rootMargin: '320px 0px' }
     );
     setupObserver();
+
+    // Add resize listener to update skeleton count dynamically
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', handleResize);
+    }
   });
 
   onBeforeUnmount(() => {
     if (observer) {
       observer.disconnect();
       observer = null;
+    }
+    // Remove resize listener
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', handleResize);
+    }
+    // Clear pending timeout
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
     }
   });
 

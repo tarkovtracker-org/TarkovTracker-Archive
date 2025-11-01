@@ -1,5 +1,5 @@
 <template>
-  <v-btn v-show="refreshEnabled" variant="tonal" @click="refresh()">{{
+  <v-btn v-show="refreshEnabled" variant="tonal" :disabled="disabled" @click="refresh()">{{
     t('common.refreshbutton')
   }}</v-btn>
 </template>
@@ -8,6 +8,14 @@
   import { useI18n } from 'vue-i18n';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useRouter } from 'vue-router';
+
+  const props = defineProps({
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+  });
+
   const { t } = useI18n({ useScope: 'global' });
   const { loading, hideoutLoading } = useTarkovData();
   const router = useRouter();
@@ -19,6 +27,7 @@
     }
   }, 10000);
   const refresh = () => {
+    if (props.disabled) return;
     router.go(0);
   };
 </script>

@@ -3,6 +3,8 @@ import { watch } from 'vue';
 import { doc, setDoc } from 'firebase/firestore';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
+import { notify } from '@/utils/notify';
+import { isDevAuthEnabled } from '@/utils/devAuth';
 import { wasDataMigrated } from '@/plugins/store-initializer';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 import {
@@ -23,9 +25,6 @@ import {
   scheduleLockRelease,
   saveToLocalStorage,
 } from '@/utils/fireswapHelpers';
-
-// Check if dev auth is enabled - if so, skip Firestore writes
-const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
 
 // Define the Fireswap configuration type
 interface FireswapConfig {
@@ -85,7 +84,10 @@ export const useTarkovStore = defineStore('swapTarkov', {
             await setDoc(userProgressRef, completeState, { merge: true });
           } catch (error) {
             logger.error('Error syncing gamemode to backend:', error);
-            // TODO: Show error notification to user
+            notify({
+              message: 'Failed to sync gamemode — please try again',
+              type: 'error',
+            });
           }
         }
       }
@@ -133,8 +135,18 @@ export const useTarkovStore = defineStore('swapTarkov', {
         const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
 
         // Get access to the Fireswap plugin's lock mechanism
-        const extendedStore = this as unknown as StoreWithFireswapExt<typeof this>;
+        const extendedStore = this as unknown as StoreWithFireswapExt<
+          ReturnType<typeof useTarkovStore>
+        >;
         const primarySetting = getPrimaryFireswapSetting(extendedStore);
+        if (!primarySetting) {
+          logger.error('Fireswap extension not available');
+          notify({
+            message: 'Fireswap extension unavailable — profile reset failed',
+            type: 'error',
+          });
+          return;
+        }
         setFireswapLock(primarySetting, true);
 
         // Clear ALL localStorage data for full account reset
@@ -153,8 +165,8 @@ export const useTarkovStore = defineStore('swapTarkov', {
         // Cancel any pending debounced saves before updating state
         cancelPendingUpload(primarySetting);
 
-        // Directly replace the entire state to ensure all reactive dependencies update
-        this.$state = freshDefaultState as UserState;
+        // Use $patch to update state while preserving reactivity
+        this.$patch(freshDefaultState as UserState);
 
         // Ensure Vue has processed the state change before releasing the lock
         scheduleLockRelease(primarySetting);
@@ -197,8 +209,18 @@ export const useTarkovStore = defineStore('swapTarkov', {
         const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
 
         // Get access to the Fireswap plugin's lock mechanism
-        const extendedStore = this as unknown as StoreWithFireswapExt<typeof this>;
+        const extendedStore = this as unknown as StoreWithFireswapExt<
+          ReturnType<typeof useTarkovStore>
+        >;
         const primarySetting = getPrimaryFireswapSetting(extendedStore);
+        if (!primarySetting) {
+          logger.error('Fireswap extension not available for game mode reset');
+          notify({
+            message: 'Fireswap extension unavailable — game mode reset failed',
+            type: 'error',
+          });
+          return;
+        }
         setFireswapLock(primarySetting, true);
 
         // Clear all localStorage to ensure no stale data remains
@@ -217,9 +239,8 @@ export const useTarkovStore = defineStore('swapTarkov', {
         // Cancel any pending debounced saves before updating state
         cancelPendingUpload(primarySetting);
 
-        // Directly replace the entire state to ensure all reactive dependencies update
-        // This is more reliable than $patch for deep nested object changes
-        this.$state = newCompleteState as UserState;
+        // Use $patch to update state while preserving reactivity
+        this.$patch(newCompleteState as UserState);
 
         // Ensure Vue has processed the state change before releasing the lock
         scheduleLockRelease(primarySetting);

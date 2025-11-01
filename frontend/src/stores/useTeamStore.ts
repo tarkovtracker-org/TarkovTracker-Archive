@@ -14,9 +14,7 @@ import type { TeamState, TeamGetters } from '@/types/tarkov';
 import type { Store } from 'pinia';
 import type { UserState } from '@/shared_state';
 import { logger } from '@/utils/logger';
-
-// Check if dev auth is enabled - if so, skip Firestore connections
-const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+import { isDevAuthEnabled } from '@/utils/devAuth';
 
 /**
  * Team store definition with getters for team info and members

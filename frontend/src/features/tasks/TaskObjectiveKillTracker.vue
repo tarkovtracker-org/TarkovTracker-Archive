@@ -93,11 +93,18 @@
       rgba(var(--v-theme-warning), 0.15)
     );
     color: rgb(var(--v-theme-on-surface));
-    will-change: background, color, transform;
     transition: all 0.15s ease;
     cursor: pointer;
     padding: 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+
+    &:hover:not(:disabled) {
+      will-change: background, color, transform;
+    }
+
+    &:focus-visible {
+      will-change: outline;
+    }
   }
 
   .kill-tracker__control--reset {
@@ -111,11 +118,13 @@
   }
 
   .kill-tracker__control:focus-visible {
+    will-change: outline;
     outline: 2px solid rgba(var(--v-theme-warning), 0.75);
     outline-offset: 2px;
   }
 
   .kill-tracker__control:hover:not(:disabled) {
+    will-change: background, color, transform;
     background: rgba(var(--v-theme-warning), 0.55);
     color: rgb(var(--v-theme-on-warning));
     transform: translateY(-1px);
@@ -150,7 +159,6 @@
     letter-spacing: 0.08em;
     background: rgba(var(--v-theme-warning), 0.35);
     color: rgb(var(--v-theme-on-warning));
-    will-change: background, color;
     transition:
       background 0.15s ease,
       color 0.15s ease;

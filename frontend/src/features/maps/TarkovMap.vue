@@ -47,6 +47,21 @@
           </v-alert>
         </div>
 
+        <!-- Map Loading Error Alert -->
+        <v-alert
+          v-if="mapLoadError"
+          type="error"
+          color="error"
+          variant="outlined"
+          density="comfortable"
+          icon="mdi-alert-circle"
+          class="map-error-alert"
+          closable
+          @click:close="mapLoadError = null"
+        >
+          {{ mapLoadError }}
+        </v-alert>
+
         <!-- Floor/Layer Controls -->
         <div v-if="mapHasSvg && svgFloors.length > 1" class="floor-controls">
           <v-btn-group direction="vertical" density="compact">
@@ -59,12 +74,7 @@
               class="floor-button"
               @click="setFloor(floor)"
             >
-              {{
-                floor
-                  .replace('_', ' ')
-                  .replace(/Floor|Level/g, '')
-                  .trim() || floor
-              }}
+              {{ formatFloorLabel(floor) }}
             </v-btn>
           </v-btn-group>
         </div>
@@ -115,8 +125,6 @@
   } from 'vue';
   import { v4 as uuidv4 } from 'uuid';
   import * as d3 from 'd3';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  type D3Selection = any;
   import type { TarkovMap } from '@/types/tarkov';
   import type {
     MapSvgDefinition,
@@ -124,6 +132,13 @@
     MapZone as MapZoneDefinition,
   } from '@/types/maps';
   import { logger } from '@/utils/logger';
+  import { useMapZoom } from '@/composables/maps/useMapZoom';
+  import { parseMapFileName, getMapSvgUrl, formatFloorLabel } from '@/utils/mapUtils';
+
+  // Opacity constants for multi-floor map rendering
+  const FLOOR_OPACITY_BELOW = 0.4;
+  const FLOOR_OPACITY_SELECTED = 1.0;
+  const FLOOR_OPACITY_ABOVE = 0.05;
 
   interface Props {
     map: TarkovMap;
@@ -137,22 +152,31 @@
   const MapMarker = defineAsyncComponent(() => import('@/features/maps/MapMarker.vue'));
   const MapZone = defineAsyncComponent(() => import('@/features/maps/MapZone.vue'));
 
-  // Zoom state
-  const currentZoom = ref(1);
-  const minZoom = 1; // 100% - no zoom out (prevent empty space around map)
-  const maxZoom = 5; // 500% - max zoom in
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let zoomBehavior: any = null;
-  let svgElement: SVGSVGElement | null = null;
+  // Map loading error state
+  const mapLoadError = ref<string | null>(null);
+
+
+
+  // Zoom composable
+  const {
+    currentZoom,
+    showScrollHint,
+    minZoom,
+    maxZoom,
+    initializeZoom,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    teardownZoom,
+  } = useMapZoom({
+    minZoom: 1,
+    maxZoom: 5,
+  });
+
+  const svgElement = ref<SVGSVGElement | null>(null);
 
   // Cache for loaded SVG elements (to avoid re-fetching)
-  const svgCache = new Map<string, SVGSVGElement>();
-
-  // Scroll hint state
-  const showScrollHint = ref(false);
-  let scrollHintTimeout: ReturnType<typeof setTimeout> | null = null;
-  let wheelEventHandler: ((event: WheelEvent) => void) | null = null;
-  let viewportElement: HTMLElement | null = null;
+  const svgCache = ref(new Map<string, SVGSVGElement>());
 
   const mapSvg = computed<MapSvgDefinition | undefined>(() => {
     const svg = props.map?.svg;
@@ -198,15 +222,7 @@
     // If there are multiple floors and a floor is selected, construct the filename
     const floors = svgFloors.value;
     if (floors.length > 1 && selectedFloor.value) {
-      // Get the base name without floor suffix
-      // e.g., "Factory-Ground_Floor.svg" -> "Factory"
-      const match = baseFile.match(/^(.+?)(-[\w_]+)?\.svg$/);
-      if (match) {
-        const baseName = match[1];
-        // Construct filename for selected floor
-        // e.g., "Factory" + "-" + "Second_Floor" + ".svg"
-        return `${baseName}-${selectedFloor.value}.svg`;
-      }
+      return parseMapFileName(baseFile, selectedFloor.value);
     }
 
     return baseFile;
@@ -243,6 +259,20 @@
   const setFloor = (floor: string) => {
     selectedFloor.value = floor;
     if (mapHasSvg.value) {
+      const floors = svgFloors.value;
+      // If multi-floor map and floors are already loaded, just update opacity
+      if (floors.length > 1) {
+        const mapContainer = document.getElementById(randomMapId.value);
+        const wrapper = mapContainer?.querySelector('.map-content-wrapper') as HTMLElement | null;
+        const existingSvgs = wrapper?.querySelectorAll('svg');
+        if (existingSvgs && existingSvgs.length === floors.length && wrapper) {
+          // All floors loaded, just update opacity
+          const selectedFloorIndex = floors.indexOf(floor);
+          updateFloorOpacity(wrapper, selectedFloorIndex);
+          return;
+        }
+      }
+      // Otherwise do a full draw
       draw();
     }
   };
@@ -251,40 +281,13 @@
   });
 
   // Track current map to detect map changes (vs floor changes)
-  let currentMapId: string | undefined = undefined;
-
-  const teardownZoom = () => {
-    const mapContainer = document.getElementById(randomMapId.value);
-    if (zoomBehavior && mapContainer?.parentElement) {
-      const viewport = d3.select(mapContainer.parentElement) as D3Selection;
-      viewport.on('.zoom', null);
-      viewport.on('mousedown.cursor', null);
-      viewport.on('mouseup.cursor', null);
-      viewport.on('dblclick', null);
-    }
-
-    if (viewportElement && wheelEventHandler) {
-      viewportElement.removeEventListener('wheel', wheelEventHandler);
-    }
-
-    if (scrollHintTimeout) {
-      clearTimeout(scrollHintTimeout);
-    }
-
-    showScrollHint.value = false;
-    zoomBehavior = null;
-    wheelEventHandler = null;
-    viewportElement = null;
-    scrollHintTimeout = null;
-    svgElement = null;
-    currentZoom.value = 1;
-  };
+  const currentMapId = ref<string | undefined>(undefined);
 
   watch(
     () => props.map,
     (newMap) => {
       // Clear wrapper when switching to a different map
-      if (newMap?.id !== currentMapId) {
+      if (newMap?.id !== currentMapId.value) {
         const mapContainer = document.getElementById(randomMapId.value);
         if (mapContainer) {
           const wrapper = mapContainer.querySelector('.map-content-wrapper') as HTMLElement;
@@ -293,7 +296,7 @@
           }
         }
         teardownZoom();
-        currentMapId = newMap?.id;
+        currentMapId.value = newMap?.id;
       }
       if (!mapHasSvg.value) {
         teardownZoom();
@@ -333,63 +336,7 @@
         return;
       }
 
-      const baseFile = svg.file;
-      const match = baseFile.match(/^(.+?)(-[\w_]+)?\.svg$/);
-      if (!match) {
-        logger.warn('Could not parse base file name:', baseFile);
-        return;
-      }
-
-      const baseName = match[1];
-      const selectedFloorIndex = selectedFloor.value
-        ? floors.indexOf(selectedFloor.value)
-        : floors.length - 1;
-
-      // Check if all floors are already loaded (in cache or DOM)
-      const existingSvgs = wrapper.querySelectorAll('svg');
-      const allFloorsLoaded = existingSvgs.length === floors.length;
-
-      if (allFloorsLoaded) {
-        // Just update opacity without re-fetching
-        updateFloorOpacity(wrapper, selectedFloorIndex);
-      } else {
-        // Initial load - fetch and add all floors
-        for (let i = 0; i < floors.length; i++) {
-          const floor = floors[i];
-          const floorFileName = `${baseName}-${floor}.svg`;
-
-          // Calculate opacity based on position relative to selected floor
-          let opacity = 1.0;
-          const isMainLayer = i === selectedFloorIndex;
-          const isFirstLayer = i === 0; // First layer defines wrapper height
-
-          if (i < selectedFloorIndex) {
-            opacity = 0.4;
-          } else if (isMainLayer) {
-            opacity = 1.0;
-          } else {
-            opacity = 0.05;
-          }
-
-          const loadedSvg = await drawFloorLayer(
-            wrapper,
-            floorFileName,
-            opacity,
-            isMainLayer,
-            isFirstLayer
-          );
-
-          // Store the main layer as svgElement for zoom reference
-          if (isMainLayer && loadedSvg) {
-            svgElement = loadedSvg;
-          }
-        }
-
-        // Initialize zoom after all floors are loaded
-        if (svgElement) {
-          initializeZoom();
-        }
-      }
+      await drawMultiFloorMap(wrapper, floors, svg.file);
     } else {
       // Single floor or no floor info - load the single file
       const fileName = svgFileName.value;
@@ -402,21 +349,106 @@
   };
 
   /**
+   * Handle multi-floor map rendering
+   */
+  const drawMultiFloorMap = async (
+    wrapper: HTMLElement,
+    floors: string[],
+    baseFile: string
+  ): Promise<void> => {
+    const match = baseFile.match(/^(.+?)(-[\w_]+)?\.svg$/);
+    if (!match) {
+      logger.warn('Could not parse base file name:', baseFile);
+      return;
+    }
+
+    const baseName = match[1];
+    const selectedFloorIndex = selectedFloor.value
+      ? floors.indexOf(selectedFloor.value)
+      : floors.length - 1;
+
+    // Check if all floors are already loaded (in cache or DOM)
+    const existingSvgs = wrapper.querySelectorAll('svg[data-floor-layer]');
+    const allFloorsLoaded = existingSvgs.length === floors.length;
+
+    if (allFloorsLoaded) {
+      // Just update opacity without re-fetching
+      updateFloorOpacity(wrapper, selectedFloorIndex);
+    } else {
+      // Initial load - fetch and add all floors
+      await loadAllFloors(wrapper, floors, baseName, selectedFloorIndex);
+    }
+  };
+
+  /**
+   * Load all floor layers for a multi-floor map
+   */
+  const loadAllFloors = async (
+    wrapper: HTMLElement,
+    floors: string[],
+    baseName: string,
+    selectedFloorIndex: number
+  ): Promise<void> => {
+    for (let i = 0; i < floors.length; i++) {
+      const floor = floors[i];
+      const floorFileName = `${baseName}-${floor}.svg`;
+
+      // Calculate opacity based on position relative to selected floor
+      let opacity = FLOOR_OPACITY_SELECTED;
+      const isMainLayer = i === selectedFloorIndex;
+      const isFirstLayer = i === 0; // First layer defines wrapper height
+
+      if (i < selectedFloorIndex) {
+        opacity = FLOOR_OPACITY_BELOW;
+      } else if (isMainLayer) {
+        opacity = FLOOR_OPACITY_SELECTED;
+      } else {
+        opacity = FLOOR_OPACITY_ABOVE;
+      }
+
+      const loadedSvg = await drawFloorLayer(
+        wrapper,
+        floorFileName,
+        opacity,
+        isMainLayer,
+        isFirstLayer
+      );
+
+      // Store the main layer as svgElement for zoom reference
+      if (isMainLayer && loadedSvg) {
+        svgElement.value = loadedSvg;
+      }
+    }
+
+    // Initialize zoom after all floors are loaded
+    if (svgElement.value) {
+      const mapContainer = document.getElementById(randomMapId.value);
+      if (mapContainer?.parentElement) {
+        initializeZoom({
+          wrapper,
+          viewport: mapContainer.parentElement,
+          mapContainerId: randomMapId.value,
+        });
+      }
+    }
+  };
+
+  /**
    * Update opacity of existing floor SVGs without re-fetching
    */
   const updateFloorOpacity = (wrapper: HTMLElement, selectedFloorIndex: number) => {
     const svgs = wrapper.querySelectorAll('svg');
 
     svgs.forEach((svg, index) => {
-      let opacity = 1.0;
+      let opacity = FLOOR_OPACITY_SELECTED;
       const isMainLayer = index === selectedFloorIndex;
 
       if (index < selectedFloorIndex) {
-        opacity = 0.4; // Floors below
+        opacity = FLOOR_OPACITY_BELOW; // Floors below
       } else if (isMainLayer) {
-        opacity = 1.0; // Selected floor
+        opacity = FLOOR_OPACITY_SELECTED; // Selected floor
       } else {
-        opacity = 0.05; // Floors above
+        opacity = FLOOR_OPACITY_ABOVE; // Floors above
       }
 
       const currentSvg = svg as SVGSVGElement;
@@ -425,7 +457,7 @@
 
       // Update svgElement reference for main layer
       if (isMainLayer) {
-        svgElement = currentSvg;
+        svgElement.value = currentSvg;
       }
     });
   };
@@ -441,8 +473,8 @@
     isFirstLayer: boolean = false
   ): Promise<SVGSVGElement | null> => {
     // Check cache first
-    if (svgCache.has(fileName)) {
-      const cachedSvg = svgCache.get(fileName)!;
+    if (svgCache.value.has(fileName)) {
+      const cachedSvg = svgCache.value.get(fileName)!;
 
       // Update opacity and pointer events
       cachedSvg.style.opacity = opacity.toString();
@@ -457,11 +489,7 @@
     }
 
     // Not in cache - fetch it
-    const isLab = props.map.name?.toLowerCase() === 'the lab';
-
-    const svgUrl = isLab
-      ? `https://raw.githubusercontent.com/TarkovTracker/tarkovdata/master/maps/${fileName}`
-      : `https://assets.tarkov.dev/maps/svg/${fileName}`;
+    const svgUrl = getMapSvgUrl(fileName, props.map.name);
 
     try {
       const svg = await d3.svg(svgUrl);
@@ -474,6 +502,7 @@
       // Set proper scaling attributes
       rootElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
       rootElement.setAttribute('data-floor-file', fileName); // Add identifier
+      rootElement.setAttribute('data-floor-layer', 'true'); // Mark as floor layer for detection
       rootElement.style.width = '100%';
       rootElement.style.height = 'auto';
       rootElement.style.display = 'block';
@@ -493,13 +522,14 @@
       rootElement.style.zIndex = '0'; // Keep SVGs below markers
 
       // Cache the SVG element
-      svgCache.set(fileName, rootElement);
+      svgCache.value.set(fileName, rootElement);
 
       wrapper.appendChild(rootElement);
 
       return rootElement;
     } catch (err) {
       logger.error(`Failed to load floor: ${fileName}`, err);
+      mapLoadError.value = `Failed to load map floor: ${fileName}. Please try refreshing the page.`;
       return null;
     }
   };
@@ -507,11 +537,7 @@
   const drawStandardMap = async (mapContainer: HTMLElement, fileName: string) => {
     // Lab uses old tarkovdata CDN (uses PNG tiles on tarkov.dev)
     // All others use tarkov.dev CDN
-    const isLab = props.map.name?.toLowerCase() === 'the lab';
-
-    const svgUrl = isLab
-      ? `https://raw.githubusercontent.com/TarkovTracker/tarkovdata/master/maps/${fileName}`
-      : `https://assets.tarkov.dev/maps/svg/${fileName}`;
+    const svgUrl = getMapSvgUrl(fileName, props.map.name);
 
     try {
       const svg = await d3.svg(svgUrl);
@@ -520,36 +546,42 @@
         logger.warn('Unexpected SVG root element', rootElement);
         return;
       }
-      svgElement = rootElement;
+      svgElement.value = rootElement;
 
       // Set proper scaling attributes
-      svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-      svgElement.style.width = '100%';
-      svgElement.style.height = 'auto';
-      svgElement.style.display = 'block';
+      svgElement.value.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      svgElement.value.style.width = '100%';
+      svgElement.value.style.height = 'auto';
+      svgElement.value.style.display = 'block';
 
       // Find the wrapper that contains both markers and SVG
       const wrapper = mapContainer.querySelector('.map-content-wrapper') as HTMLElement;
       if (wrapper) {
-        wrapper.appendChild(svgElement);
+        wrapper.appendChild(svgElement.value);
       } else {
-        mapContainer.appendChild(svgElement);
+        mapContainer.appendChild(svgElement.value);
       }
 
       // Initialize zoom behavior
-      initializeZoom();
+      if (mapContainer.parentElement) {
+        initializeZoom({
+          wrapper: wrapper || mapContainer,
+          viewport: mapContainer.parentElement,
+          mapContainerId: randomMapId.value,
+        });
+      }
 
       // Apply floor visibility logic for standard maps
       const floors = svgFloors.value;
-      if (selectedFloor.value && floors && floors.length > 0 && svgElement) {
+      if (selectedFloor.value && floors && floors.length > 0 && svgElement.value) {
         const selectedFloorIndex = floors.indexOf(selectedFloor.value);
         if (selectedFloorIndex !== -1) {
-          const svg = svgElement; // Capture for closure
+          const svg = svgElement.value; // Capture for closure
           floors.forEach((floor: string, index: number) => {
             if (index > selectedFloorIndex) {
               const floorElement = svg.querySelector<SVGGraphicsElement>(`#${floor}`);
               if (floorElement) {
-                floorElement.style.opacity = '0.02';
+                floorElement.style.opacity = FLOOR_OPACITY_ABOVE.toString();
               }
             }
           });
@@ -557,140 +589,12 @@
       }
     } catch (err) {
       logger.error(`Failed to load map: ${fileName}`, err);
+      mapLoadError.value = `Failed to load map: ${fileName}. Please try refreshing the page.`;
     }
   };
 
-  /**
-   * Initialize D3 zoom behavior
-   */
-  function initializeZoom() {
-    if (!svgElement) return;
-
-    // Get the wrapper that contains both SVG and markers
-    const mapContainer = document.getElementById(randomMapId.value);
-    if (!mapContainer) return;
-
-    const wrapper = mapContainer.querySelector('.map-content-wrapper') as HTMLElement;
-    if (!wrapper) return;
-
-    const wrapperSelection = d3.select(wrapper) as D3Selection;
-    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
-
-    // Get viewport and content dimensions for pan constraints
-    const viewportWidth = mapContainer.parentElement?.clientWidth || 800;
-    const viewportHeight = mapContainer.parentElement?.clientHeight || 600;
-    const contentWidth = wrapper.clientWidth || viewportWidth;
-    const contentHeight = wrapper.clientHeight || viewportHeight;
-
-    // Create zoom behavior
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    zoomBehavior = (d3 as any)
-      .zoom()
-      .scaleExtent([minZoom, maxZoom])
-      // Set extent to viewport size (what user can see)
-      .extent([
-        [0, 0],
-        [viewportWidth, viewportHeight],
-      ])
-      // Constrain panning - tight bounds to keep map always visible
-      // Allow minimal overflow (10%) to reach edges comfortably
-      .translateExtent([
-        [-contentWidth * 0.1, -contentHeight * 0.1], // Allow 10% overflow on top-left
-        [contentWidth * 1.1, contentHeight * 1.1], // Allow 10% overflow on bottom-right
-      ])
-      // Filter wheel events - only zoom with Alt key (prevent accidental zoom while scrolling page)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .filter((event: any) => {
-        // Allow all non-wheel events (drag pan, programmatic zoom, etc.)
-        if (event.type !== 'wheel') return true;
-
-        // For wheel events, require Alt key (doesn't conflict with browser zoom)
-        return event.altKey;
-      })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .on('zoom', (event: any) => {
-        // Apply transform to the wrapper (which contains both SVG and markers)
-        wrapperSelection.style(
-          'transform',
-          `translate(${event.transform.x}px, ${event.transform.y}px) scale(${event.transform.k})`
-        );
-        wrapperSelection.style('transform-origin', '0 0');
-        currentZoom.value = event.transform.k;
-      });
-
-    // Apply zoom behavior to the viewport
-    viewport.call(zoomBehavior);
-
-    // Show hint when user tries to scroll without Alt
-    // Use native addEventListener with passive option to avoid blocking scroll
-    viewportElement = mapContainer.parentElement;
-    if (viewportElement) {
-      wheelEventHandler = (event: WheelEvent) => {
-        if (!event.altKey) {
-          // User scrolled without Alt key - show hint
-          showScrollHint.value = true;
-
-          // Clear existing timeout
-          if (scrollHintTimeout) {
-            clearTimeout(scrollHintTimeout);
-          }
-
-          // Hide hint after 2 seconds
-          scrollHintTimeout = setTimeout(() => {
-            showScrollHint.value = false;
-          }, 2000);
-        }
-      };
-
-      viewportElement.addEventListener('wheel', wheelEventHandler, { passive: true });
-    }
-
-    // Change cursor on drag
-    viewport.style('cursor', 'grab');
-    viewport.on('mousedown.cursor', () => {
-      viewport.style('cursor', 'grabbing');
-    });
-    viewport.on('mouseup.cursor', () => {
-      viewport.style('cursor', 'grab');
-    });
-
-    // Double-click to zoom in
-    viewport.on('dblclick.zoom', null);
-    viewport.on('dblclick', () => {
-      if (!zoomBehavior) return;
-      viewport.transition().duration(300).call(zoomBehavior.scaleBy, 1.5);
-    });
-  }
-
-  /**
-   * Zoom controls
-   */
-  function zoomIn() {
-    if (!zoomBehavior) return;
-    const mapContainer = document.getElementById(randomMapId.value);
-    if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
-    viewport.transition().duration(300).call(zoomBehavior.scaleBy, 1.3);
-  }
-
-  function zoomOut() {
-    if (!zoomBehavior) return;
-    const mapContainer = document.getElementById(randomMapId.value);
-    if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
-    viewport.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
-  }
-
-  function resetZoom() {
-    if (!zoomBehavior) return;
-    const mapContainer = document.getElementById(randomMapId.value);
-    if (!mapContainer) return;
-    const viewport = d3.select(mapContainer.parentElement) as D3Selection;
-    viewport.transition().duration(500).call(zoomBehavior.transform, d3.zoomIdentity);
-  }
-
   onMounted(() => {
-    currentMapId = props.map?.id;
+    currentMapId.value = props.map?.id;
     if (mapHasSvg.value) {
       draw();
     }
@@ -699,7 +603,7 @@
   onBeforeUnmount(() => {
     teardownZoom();
     // Clear SVG cache when component unmounts
-    svgCache.clear();
+    svgCache.value.clear();
   });
 </script>
 

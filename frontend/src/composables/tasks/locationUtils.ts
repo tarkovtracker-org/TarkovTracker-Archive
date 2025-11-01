@@ -30,7 +30,7 @@ export const resolveObjectiveMapIds = (objective: TaskObjective): string[] => {
   return [...ids];
 };
 
-export const collectTaskLocationIds = (task: Task) => {
+export const collectTaskLocationIds = (task: Task): string[] => {
   const locationIds = new Set<string>();
 
   // Collect locations from task objectives
@@ -40,5 +40,5 @@ export const collectTaskLocationIds = (task: Task) => {
     });
   }
 
-  return locationIds;
+  return Array.from(locationIds);
 };

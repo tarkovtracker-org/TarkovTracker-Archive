@@ -36,7 +36,7 @@
           {{ error }}
         </v-alert>
 
-        <div v-if="!loading && !error" ref="scalarContainer">
+        <div v-if="!loading && !error">
           <ApiReference :configuration="scalarConfig" />
         </div>
       </v-card-text>
@@ -46,21 +46,38 @@
 
 <script setup lang="ts">
   import { onBeforeUnmount, onMounted, ref, computed, defineAsyncComponent } from 'vue';
+  import '@scalar/api-reference/style.css';
   import { LoadingComponent, ErrorComponent } from '@/pages/apiReferenceFallbackComponents';
   import { logger } from '@/utils/logger';
-  import '@scalar/api-reference/style.css';
 
-  const ApiReference = defineAsyncComponent({
-    loader: () => import('@scalar/api-reference').then((module) => module.ApiReference),
-    loadingComponent: LoadingComponent,
-    errorComponent: ErrorComponent,
-    delay: 200,
-    timeout: 10000,
-    onError(error, retry, _fail) {
-      logger.error('Failed to load ApiReference component:', error);
-      retry(); // Retry once
-    },
-  });
+  const MAX_RETRIES = 2;
+
+  const createApiReference = () => {
+    let retryAttempts = 0;
+
+    return defineAsyncComponent({
+      loader: () => import('@scalar/api-reference').then((module) => module.ApiReference),
+      loadingComponent: LoadingComponent,
+      errorComponent: ErrorComponent,
+      delay: 200,
+      timeout: 10000,
+      onError(error, retry, fail) {
+        logger.error('Failed to load ApiReference component:', error);
+        retryAttempts++;
+        if (retryAttempts < MAX_RETRIES) {
+          logger.info(
+            `Retrying ApiReference load (attempt ${retryAttempts + 1}/${MAX_RETRIES})...`
+          );
+          retry();
+        } else {
+          logger.error('Max retries reached for ApiReference component');
+          fail();
+        }
+      },
+    });
+  };
+
+  const ApiReference = createApiReference();
 
   const loading = ref(true);
   const error = ref<string | null>(null);
@@ -73,6 +90,9 @@
     error.value = null;
   };
 
+  // TarkovTracker custom CSS theme (empty for now)
+  const TARKOV_TRACKER_THEME_CSS = '';
+
   // Scalar configuration with TarkovTracker theme
   const scalarConfig = computed(() => ({
     // Updated to latest Scalar API - remove spec wrapper
@@ -83,87 +103,7 @@
     defaultOpenAllTags: false,
     hideModels: false,
     showSidebar: true,
-    customCss: `
-      /* TarkovTracker Dark Theme */
-      .scalar-api-reference {
-        --scalar-font: 'Share Tech Mono', monospace;
-        --scalar-font-code: 'Share Tech Mono', monospace;
-
-        /* Primary colors */
-        --scalar-color-1: #2ba86a;
-        --scalar-color-2: #9a8866;
-        --scalar-color-3: #2c261c;
-
-        /* Background colors */
-        --scalar-background-1: #121212;
-        --scalar-background-2: #1e1e1e;
-        --scalar-background-3: #2c261c;
-        --scalar-background-4: #424242;
-
-        /* Text colors */
-        --scalar-color-accent: #2ba86a;
-        --scalar-color-green: #2ba86a;
-        --scalar-color-red: #cf6679;
-        --scalar-color-yellow: #9a8866;
-        --scalar-color-blue: #82aaff;
-        --scalar-color-orange: #f78c6c;
-        --scalar-color-purple: #c792ea;
-
-        /* Border colors */
-        --scalar-border-color: rgba(154, 136, 102, 0.3);
-      }
-
-      /* Ensure proper contrast for text */
-      .scalar-api-reference * {
-        font-family: 'Share Tech Mono', monospace;
-      }
-
-      /* Custom header styles to match TarkovTracker */
-      .scalar-api-reference .scalar-card {
-        background-color: #1e1e1e;
-        border: 1px solid rgba(154, 136, 102, 0.3);
-      }
-
-      /* Method badges */
-      .scalar-api-reference .scalar-method-get {
-        background-color: #2ba86a;
-        color: white;
-      }
-
-      .scalar-api-reference .scalar-method-post {
-        background-color: #82aaff;
-        color: white;
-      }
-
-      .scalar-api-reference .scalar-method-put {
-        background-color: #f78c6c;
-        color: white;
-      }
-
-      .scalar-api-reference .scalar-method-delete {
-        background-color: #cf6679;
-        color: white;
-      }
-
-      /* Scrollbar styling */
-      .scalar-api-reference ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-
-      .scalar-api-reference ::-webkit-scrollbar-track {
-        background: #1e1e1e;
-      }
-
-      .scalar-api-reference ::-webkit-scrollbar-thumb {
-        background: #9a8866;
-        border-radius: 4px;
-      }
-
-      .scalar-api-reference ::-webkit-scrollbar-thumb:hover {
-        background: #b89f7a;
-      }
-    `,
+    customCss: TARKOV_TRACKER_THEME_CSS,
   }));
 
   onMounted(async () => {

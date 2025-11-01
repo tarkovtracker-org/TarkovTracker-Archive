@@ -1,13 +1,14 @@
 import type { Task } from '@/types/tarkov';
 
-export const summarizeSecondaryTaskCounts = (entries: Record<string, Task[]>) => ({
+export const summarizeSecondaryTaskCounts = (
+  entries: Record<string, Task[]>
+): { available: number; locked: number; completed: number } => ({
   available: entries.available?.length || 0,
   locked: entries.locked?.length || 0,
   completed: entries.completed?.length || 0,
 });
 
 export const successorDepth = (task: Task, tasks: Task[]) => {
-  const visited = new Set<string>();
   const tasksMap = tasks.reduce(
     (acc, t) => {
       acc[t.id] = t;
@@ -15,21 +16,37 @@ export const successorDepth = (task: Task, tasks: Task[]) => {
     },
     {} as Record<string, Task>
   );
+  const depthMemo = new Map<string, number>();
 
-  const calculateDepth = (taskId: string): number => {
-    if (visited.has(taskId) || !tasksMap[taskId]) {
+  const calculateDepth = (taskId: string, recursionStack = new Set<string>()): number => {
+    if (!tasksMap[taskId]) {
       return 0;
     }
 
-    visited.add(taskId);
-    const successors = tasksMap[taskId].successors || [];
-
-    if (successors.length === 0) {
-      return 1;
+    if (depthMemo.has(taskId)) {
+      return depthMemo.get(taskId)!;
     }
 
-    const successorDepths = successors.map(calculateDepth);
-    return 1 + Math.max(...successorDepths);
+    if (recursionStack.has(taskId)) {
+      return 0;
+    }
+
+    recursionStack.add(taskId);
+    try {
+      const successors = tasksMap[taskId].successors || [];
+
+      if (successors.length === 0) {
+        depthMemo.set(taskId, 1);
+        return 1;
+      }
+
+      const successorDepths = successors.map((sid) => calculateDepth(sid, recursionStack));
+      const depth = 1 + Math.max(...successorDepths);
+      depthMemo.set(taskId, depth);
+      return depth;
+    } finally {
+      recursionStack.delete(taskId);
+    }
   };
 
   return calculateDepth(task.id);
@@ -42,18 +59,22 @@ const checkParentChildRelation = (a: Task, b: Task) => {
 };
 
 const compareBySuccessorDepth = (a: Task, b: Task, tasks: Task[]) => {
-  const aSuccessors = b.successors?.length || 0;
-  const bSuccessors = a.successors?.length || 0;
+  const aSuccessors = a.successors?.length || 0;
+  const bSuccessors = b.successors?.length || 0;
 
-  if (aSuccessors > 0 && bSuccessors > 0) {
-    const aDepth = successorDepth(a, tasks);
-    const bDepth = successorDepth(b, tasks);
-    if (aDepth !== bDepth) {
-      return aDepth - bDepth;
-    }
+  // Task without successors comes before task with successors
+  if (aSuccessors === 0 && bSuccessors > 0) {
+    return -1;
+  }
+  // Task with successors comes after task without successors
+  if (aSuccessors > 0 && bSuccessors === 0) {
+    return 1;
   }
 
-  return 0;
+  // Both tasks have successors: compare by their successor depth values
+  const aDepth = successorDepth(a, tasks);
+  const bDepth = successorDepth(b, tasks);
+  return aDepth - bDepth;
 };
 
 const compareBySuccessorCount = (a: Task, b: Task) => {
@@ -78,13 +99,12 @@ const compareForGroupedView = (a: Task, b: Task, tasks: Task[]) => {
 
 export const sortVisibleTasks = (tasksToSort: Task[], activeUserView: string, tasks: Task[]) => {
   const shouldGroupTasks = activeUserView === 'all';
-  const tasksArray = [...tasksToSort];
 
   if (shouldGroupTasks) {
+    const tasksArray = [...tasksToSort];
     tasksArray.sort((a, b) => compareForGroupedView(a, b, tasks));
-  } else {
-    tasksArray.sort((_a, _b) => 0); // No sorting for non-grouped view
+    return tasksArray;
   }
 
-  return tasksArray;
+  return tasksToSort;
 };

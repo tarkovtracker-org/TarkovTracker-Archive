@@ -26,10 +26,10 @@
         - Skeleton loaders in TaskCardList provide better visual feedback without layout shifts
         - Reserved min-height prevents content jump when loading completes
       -->
-      <v-row v-if="loadingTasks || reloadingTasks" justify="center" style="min-height: 60px">
+      <v-row v-if="loadingTasks || reloadingTasks" justify="center" class="loading-row">
         <v-col cols="12" align="center">
           <div class="text-body-1 text-secondary">{{ $t('page.tasks.loading') }}</div>
-          <RefreshButton />
+          <RefreshButton :disabled="loadingTasks || reloadingTasks" />
         </v-col>
       </v-row>
 
@@ -134,5 +134,9 @@
   .compact-row {
     --v-layout-column-gap: 12px;
     --v-layout-row-gap: 12px;
+  }
+
+  .loading-row {
+    min-height: 60px;
   }
 </style>

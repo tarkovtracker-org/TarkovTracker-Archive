@@ -13,18 +13,13 @@ import { debounce } from '@/utils/debounce';
 import { useVirtualTaskList } from './useVirtualTaskList';
 import { EOD_EDITIONS, TRADER_ORDER } from '@/config/gameConstants';
 import { collectTaskLocationIds, resolveObjectiveMapIds } from './locationUtils';
-import { summarizeSecondaryTaskCounts, sortVisibleTasks } from './taskFilterUtils';
+import { summarizeSecondaryTaskCounts, sortVisibleTasks, taskUnlockedForCurrentView, taskHasIncompleteObjectiveOnMap, filterTasksByPrimaryView } from './taskUtils';
 import {
   collectObjectiveMarkers,
   getUnlockedUsersForTask,
   usersWithIncompleteObjective,
   objectiveIncompleteForUser,
 } from './taskMarkersUtils';
-import {
-  taskUnlockedForCurrentView,
-  taskHasIncompleteObjectiveOnMap,
-  filterTasksByPrimaryView,
-} from './taskFilteringUtils';
 import type { Task, TaskObjective } from '@/types/tarkov';
 
 interface ObjectiveWithUsers extends TaskObjective {
@@ -444,20 +439,21 @@ export function useTaskList() {
   } | null = null;
 
   const getFilterCacheKey = () => {
-    // Create cache key from all filter dependencies
-    return JSON.stringify({
-      primary: activePrimaryView.value,
-      map: activeMapView.value,
-      trader: activeTraderView.value,
-      user: activeUserView.value,
-      hideGlobal: hideGlobalTasks.value,
-      hideNonKappa: hideNonKappaTasks.value,
-      hideKappaReq: hideKappaRequiredTasks.value,
-      hideLKReq: hideLightkeeperRequiredTasks.value,
-      showEod: showEodOnlyTasks.value,
-      level: currentPlayerLevel.value,
-      tasksLength: tasks.value.length,
-    });
+    // Create deterministic cache key from primitive filter values
+    // Note: level is only included if it actually affects filtering
+    const parts = [
+      activePrimaryView.value,
+      activeMapView.value,
+      activeTraderView.value,
+      activeUserView.value,
+      hideGlobalTasks.value ? '1' : '0',
+      hideNonKappaTasks.value ? '1' : '0',
+      hideKappaRequiredTasks.value ? '1' : '0',
+      hideLightkeeperRequiredTasks.value ? '1' : '0',
+      showEodOnlyTasks.value ? '1' : '0',
+      tasks.value.length.toString(),
+    ];
+    return parts.join('|');
   };
 
   const updateVisibleTasks = async () => {

@@ -57,7 +57,7 @@ const bootstrapClarity = () => {
   } else {
     document.head.appendChild(script);
   }
-  logger.info('Microsoft Clarity initialized');
+  logger.debug('Microsoft Clarity initialized');
 };
 
 const enableClarity = () => {
@@ -70,7 +70,7 @@ const enableClarity = () => {
   bootstrapClarity();
   if (typeof window.clarity === 'function') {
     window.clarity('consent', true);
-    logger.info('Microsoft Clarity consent enabled');
+    logger.debug('Microsoft Clarity consent enabled');
   }
 };
 
@@ -83,7 +83,7 @@ const disableClarity = () => {
   }
   if (typeof window.clarity === 'function') {
     window.clarity('consent', false);
-    logger.info('Microsoft Clarity consent disabled');
+    logger.debug('Microsoft Clarity consent disabled');
   }
 };
 

@@ -281,7 +281,8 @@
 <style lang="scss">
   .task-settings-slide-enter-active,
   .task-settings-slide-leave-active {
-    /* GPU acceleration to prevent non-composited animations causing layout shifts */
+    /* Compositing hint: will-change tells browser to optimize these properties for animation.
+       For CLS prevention, consider using contain, min-height/min-width, or content-visibility instead. */
     will-change: opacity, transform;
     transition:
       opacity 160ms ease,

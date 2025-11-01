@@ -20,7 +20,14 @@ export const taskHasIncompleteObjectiveOnMap = (
   resolveObjectiveMapIds: (objective: TaskObjective) => string[],
   getObjectiveCompletionMap: (objectiveId: string) => Record<string, boolean> | undefined
 ) => {
-  for (const objective of task.objectives || []) {
+  const objectives = task.objectives;
+  
+  // Explicit guard for null/undefined objectives
+  if (!objectives || objectives.length === 0) {
+    return false;
+  }
+  
+  for (const objective of objectives) {
     const objectiveMapIds = resolveObjectiveMapIds(objective);
     if (!objectiveMapIds.some((id: string) => mapIdGroup.includes(id))) continue;
     const completions = getObjectiveCompletionMap(objective.id) || {};
@@ -52,7 +59,9 @@ export const filterTasksByPrimaryView = (
     });
   }
   if (activeTraderView && activeTraderView !== 'all') {
-    filteredTasks = filteredTasks.filter((task) => task.trader?.id === activeTraderView);
+    filteredTasks = filteredTasks.filter(
+      (task) => task.trader && task.trader.id === activeTraderView
+    );
   }
   return filteredTasks;
 };

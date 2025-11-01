@@ -35,7 +35,11 @@
         {{ $t('page.settings.card.apitokens.streamer_mode_qr') }}
       </template>
       <template v-else>
-        <img v-if="qrDataUrl" :src="qrDataUrl" alt="Authenticator setup QR code" />
+        <v-progress-circular v-if="loading" indeterminate color="primary" size="64" />
+        <img v-else-if="qrDataUrl" :src="qrDataUrl" :alt="$t('settings.authenticatorSetupQrAlt')" />
+        <div v-else-if="qrError" class="text-error text-caption mt-1">
+          {{ $t('settings.authenticatorSetupQrError') }}
+        </div>
       </template>
     </div>
     <div class="mt-1">
@@ -222,17 +226,26 @@
   };
   const showQR = ref(false);
   const qrDataUrl = ref('');
+  const qrError = ref(false);
+  const loading = ref(false);
   const tokenVisible = ref(false);
   const generateQR = async () => {
+    if (loading.value) return;
+    
     if (!qrDataUrl.value) {
+      loading.value = true;
       try {
+        qrError.value = false;
         qrDataUrl.value = await QRCode.toDataURL(props.token, {
           errorCorrectionLevel: 'M',
           type: 'image/png',
           width: 256,
         });
       } catch (error) {
+        qrError.value = true;
         logger.error('QR code generation failed', error);
+      } finally {
+        loading.value = false;
       }
     }
   };

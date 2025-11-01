@@ -113,35 +113,34 @@ const fireuser = reactive<FireUser>({
 const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
 
 // Handle auth state changes with comprehensive user data
-// Skip onAuthStateChanged when dev auth is enabled to prevent overwriting mock user
-if (!isDevAuthEnabled) {
-  onAuthStateChanged(auth, (user: User | null) => {
-    if (user) {
-      fireuser.uid = user.uid;
-      fireuser.loggedIn = true;
-      fireuser.displayName = user.displayName;
-      fireuser.email = user.email;
-      fireuser.photoURL = user.photoURL;
-      fireuser.emailVerified = user.emailVerified;
-      fireuser.phoneNumber = user.phoneNumber;
-      fireuser.lastLoginAt = user.metadata.lastSignInTime ?? null;
-      fireuser.createdAt = user.metadata.creationTime ?? null;
-    } else {
-      // Reset all properties on logout
-      Object.assign(fireuser, {
-        uid: null,
-        loggedIn: false,
-        displayName: null,
-        email: null,
-        photoURL: null,
-        emailVerified: false,
-        phoneNumber: null,
-        lastLoginAt: null,
-        createdAt: null,
-      });
-    }
-  });
-}
+// Always register listener to handle logout, but skip login property updates when dev auth is enabled
+onAuthStateChanged(auth, (user: User | null) => {
+  if (user && !isDevAuthEnabled) {
+    // Only update login properties if dev auth is disabled
+    fireuser.uid = user.uid;
+    fireuser.loggedIn = true;
+    fireuser.displayName = user.displayName;
+    fireuser.email = user.email;
+    fireuser.photoURL = user.photoURL;
+    fireuser.emailVerified = user.emailVerified;
+    fireuser.phoneNumber = user.phoneNumber;
+    fireuser.lastLoginAt = user.metadata.lastSignInTime ?? null;
+    fireuser.createdAt = user.metadata.creationTime ?? null;
+  } else if (!user) {
+    // Always reset all properties on logout
+    Object.assign(fireuser, {
+      uid: null,
+      loggedIn: false,
+      displayName: null,
+      email: null,
+      photoURL: null,
+      emailVerified: false,
+      phoneNumber: null,
+      lastLoginAt: null,
+      createdAt: null,
+    });
+  }
+});
 // Connect to emulators when running on localhost (but not when using dev auth)
 if (['localhost', '127.0.0.1'].includes(window.location.hostname) && !isDevAuthEnabled) {
   try {
