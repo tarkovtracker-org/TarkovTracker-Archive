@@ -10,7 +10,7 @@ export const PASSWORD_UID_GEN = new UIDGenerator(48, UIDGenerator.BASE62);
 export const TEAM_UID_GEN = new UIDGenerator(32);
 
 // Hoist regex to avoid per-call compilation
-export const ITEM_ID_SANITIZER_REGEX = /[/\\*?[\]]/g;
+export const ITEM_ID_SANITIZER_REGEX = /[*?[\\/]/g;
 
 export interface SystemDocData {
   team?: string | null;
@@ -71,14 +71,15 @@ export async function waitForAll<T>(
   const results: T[] = [];
   const errors: Error[] = [];
 
-  await Promise.allSettled(promises).then((settledResults) => {
-    settledResults.forEach((result) => {
-      if (result.status === 'fulfilled') {
-        results.push(result.value);
-      } else {
-        errors.push(result.reason);
-      }
-    });
+  const settledResults = await Promise.allSettled(promises);
+  settledResults.forEach((result) => {
+    if (result.status === 'fulfilled') {
+      results.push(result.value);
+    } else {
+      const reason = result.reason;
+      const error = reason instanceof Error ? reason : new Error(String(reason));
+      errors.push(error);
+    }
   });
 
   return { results, errors };

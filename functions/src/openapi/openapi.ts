@@ -72,17 +72,25 @@ const swaggerOptions: swaggerJsdoc.Options = {
   apis: ['lib/**/*.js'],
 };
 // Find the project root
-const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
+const projectRoot = findProjectRoot(__dirname, 'package.json');
 if (!projectRoot) {
   console.error(
-    "Failed to find project root. Make sure 'LICENSE.md' exists at the root of your project."
+    `Failed to find project root while searching for 'package.json'.\n` +
+    `Current working directory: ${process.cwd()}\n` +
+    `Script directory (__dirname): ${__dirname}\n` +
+    `\n` +
+    `This script must be run from the project root (or package.json must exist in a parent directory).\n` +
+    `Next steps:\n` +
+    `  1. Verify that package.json exists at the project root\n` +
+    `  2. Run this script from the project root directory\n` +
+    `  3. If needed, update the marker file name or provide an alternate root path`
   );
   process.exit(1);
 }
 const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
-const outputPath = path.join(projectRoot, 'functions/openapi/openapi.json');
-const outputDir = path.dirname(outputPath); // This will be projectRoot/functions/openapi
+const outputPath = path.join(projectRoot, 'openapi/openapi.json');
+const outputDir = path.dirname(outputPath); // This will be projectRoot/openapi
 // Ensure the output directory exists
 try {
   if (!fs.existsSync(outputDir)) {

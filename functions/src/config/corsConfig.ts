@@ -9,13 +9,13 @@
 import { logger } from 'firebase-functions';
 import type { Request as FunctionsRequest } from 'firebase-functions/v2/https';
 
-type CorsRequest = {
+interface CorsRequest {
   headers: FunctionsRequest['headers'];
-};
+}
 
-type CorsResponse = {
+interface CorsResponse {
   set(field: string, value: string | readonly string[]): unknown;
-};
+}
 
 interface CorsOptions {
   trustNoOrigin?: boolean;
@@ -42,11 +42,11 @@ export function validateOrigin(
     const dangerousPatterns = [
       /^null$/i,
       /^file:/i,
-      /localhost/i,
-      /127\.0\.0\.1/i,
-      /192\.168\./i,
-      /10\./i,
-      /172\.(1[6-9]|2[0-9]|3[0-1])\./i,
+      /^localhost$/i,
+      /^127\.0\.0\.1(?:$|:)/i,
+      /^192\.168\./i,
+      /^10\./i,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./i,
     ];
 
     const originString = origin.toLowerCase();
@@ -62,12 +62,13 @@ export function validateOrigin(
     }
 
     if (
-      !originUrl.protocol.startsWith('http') ||
+      (originUrl.protocol !== 'http:' && originUrl.protocol !== 'https:') ||
       originUrl.hostname.includes('..') ||
       originUrl.username ||
       originUrl.password
     ) {
-      logger.warn(`CORS: Unusual origin format: ${origin}`);
+      logger.warn(`CORS: Blocked suspicious origin format: ${origin}`);
+      return false;
     }
 
     return origin;
@@ -77,7 +78,13 @@ export function validateOrigin(
   }
 }
 
-/** Returns whitelist array. Empty array = allow all origins (public API mode) */
+/**
+ * Returns whitelist array.
+ * An empty array means no explicit whitelist is provided — requests will be validated
+ * by downstream pattern checks; this does NOT grant unrestricted access.
+ * If you intend to allow all origins use an explicit wildcard '*' or adjust the CORS
+ * handler accordingly.
+ */
 export function getAllowedOrigins(): string[] {
   if (process.env.NODE_ENV !== 'production') {
     return [

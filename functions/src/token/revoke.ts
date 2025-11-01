@@ -8,7 +8,7 @@ import {
   Transaction,
 } from 'firebase-admin/firestore';
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
-import { setCorsHeaders } from '../config/corsConfig.js';
+import { withCorsAndAuth } from '../middleware/onRequestAuth.js';
 // Define interfaces for data structures
 interface RevokeTokenData {
   token: string;
@@ -158,87 +158,66 @@ export const revokeToken = onRequest(
     timeoutSeconds: 20,
   },
   async (req: FirebaseRequest, res) => {
-    if (!setCorsHeaders(req, res)) {
-      res.status(403).send('Origin not allowed');
-      return;
-    }
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method Not Allowed' });
-      return;
-    }
-    try {
-      const authHeader = req.headers.authorization || '';
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
+    withCorsAndAuth(req, res, async (req, res, uid: string) => {
+      if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method Not Allowed' });
         return;
       }
-      const idToken = match[1];
-      let decodedToken;
-      try {
-        decodedToken = await admin.auth().verifyIdToken(idToken);
-      } catch (err: unknown) {
-        logger.warn('Token verification failed for revokeToken', {
-          error: err instanceof Error ? err.message : err,
-          tokenLength: idToken ? idToken.length : 0,
-        });
-        res
-          .status(401)
-          .json({ error: err instanceof Error ? err.message : 'Invalid or expired token' });
+
+      if (!req.body || typeof req.body !== 'object' || !('data' in req.body)) {
+        res.status(400).json({ error: 'Invalid request body: "data" field is required.' });
         return;
       }
-      const userUid = decodedToken.uid;
       const data = req.body.data as RevokeTokenData;
       try {
-        const result = await _revokeTokenLogic(userUid, data);
+        const result = await _revokeTokenLogic(uid, data);
         res.status(200).json({ data: result });
       } catch (e: unknown) {
-        let messageToSend = 'Error processing token revocation.';
+        let messageToSend = 'An error occurred while processing your request.';
         let httpStatus = 500;
         let errorCode: FunctionsErrorCode | string | undefined = 'internal';
         let errorDetails: unknown | undefined = undefined;
+        let fullErrorMessage = 'Unknown error';
+        
         if (e instanceof HttpsError) {
           httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          messageToSend = e.message || messageToSend;
           errorCode = e.code;
           errorDetails = e.details;
+          fullErrorMessage = e.message;
+          
+          // Map HttpsError codes to safe client messages
+          switch (e.code) {
+            case 'not-found':
+              messageToSend = 'Token not found.';
+              break;
+            case 'permission-denied':
+              messageToSend = 'You do not have permission to revoke this token.';
+              break;
+            case 'invalid-argument':
+              messageToSend = 'Invalid request parameters.';
+              break;
+            default:
+              messageToSend = 'An error occurred while processing your request.';
+          }
         } else if (e instanceof Error) {
-          messageToSend = String(e.message).substring(0, 500);
+          fullErrorMessage = e.message;
         } else if (typeof e === 'string') {
-          messageToSend = e.substring(0, 500);
+          fullErrorMessage = e;
         }
+        
+        // Log full error details server-side for debugging
         logger.error('Error from _revokeTokenLogic in revokeToken handler', {
-          uid: userUid,
+          uid: uid,
           originalError: e,
           errorCode: errorCode,
-          errorMessage: e instanceof Error || e instanceof HttpsError ? e.message : String(e),
+          errorMessage: fullErrorMessage,
           errorDetails: errorDetails,
-          messageSent: messageToSend,
+          clientMessageSent: messageToSend,
           httpStatusSet: httpStatus,
         });
+        
         res.status(httpStatus).json({ error: messageToSend });
       }
-    } catch (e: unknown) {
-      // Outer catch for auth errors or other setup issues
-      let messageToSend = 'Server error during token revocation request.';
-      if (e instanceof Error) {
-        if (res.headersSent) return;
-        messageToSend = String(e.message).substring(0, 500);
-      } else if (typeof e === 'string') {
-        messageToSend = e.substring(0, 500);
-      } else if (e && typeof (e as { message?: string }).message === 'string') {
-        // Basic check for a message property if it's an object but not an Error instance
-        if (res.headersSent) return;
-        messageToSend = String((e as { message: string }).message).substring(0, 500);
-      }
-      logger.error('Outer error in revokeToken request handler', {
-        originalError: e,
-        errorMessage: e instanceof Error ? e.message : String(e),
-        messageSent: messageToSend,
-      });
-      if (!res.headersSent) {
-        res.status(500).json({ error: messageToSend });
-      }
-    }
+    });
   }
 );

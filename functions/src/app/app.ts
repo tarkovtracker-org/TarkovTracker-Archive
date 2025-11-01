@@ -5,6 +5,9 @@ import type {
   Response as ExpressResponse,
   NextFunction,
 } from 'express';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { logger } from 'firebase-functions/v2';
 import { verifyBearer } from '../middleware/auth.js';
 import { abuseGuard } from '../middleware/abuseGuard.js';
@@ -16,6 +19,21 @@ import progressHandler from '../handlers/progressHandler.js';
 import teamHandler from '../handlers/teamHandler.js';
 import tokenHandler from '../handlers/tokenHandler.js';
 import { deleteUserAccountHandler } from '../handlers/userDeletionHandler.js';
+import { API_FEATURES } from '../config/features.js';
+
+// Read package version at module load
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJsonPath = join(__dirname, '../../package.json');
+
+let APP_VERSION = '0.0.0';
+try {
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
+  APP_VERSION = packageJson.version;
+} catch (error) {
+  logger.error('Failed to read package.json version:', error);
+  APP_VERSION = 'unknown';
+}
 
 export async function createApp(): Promise<Express> {
   const expressModule = await import('express');
@@ -55,11 +73,15 @@ function setupRoutes(app: Express) {
       res.status(200).json({ success: true, message: 'User deletion API is working' });
     })
   );
-  app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
-
   // Auth middleware for all /api routes
   app.use('/api', verifyBearer);
   app.use('/api', abuseGuard);
+
+  app.delete(
+    '/api/user/account',
+    requireRecentAuth,
+    asyncHandler(deleteUserAccountHandler)
+  );
 
   // Token endpoints
   app.get('/api/token', tokenHandler.getTokenInfo);
@@ -105,20 +127,9 @@ function setupRoutes(app: Express) {
   app.get('/api/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
   app.get('/api/v2/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
 
-  // Team management with CORS preflight
-  app.options('/api/team/create', (_req: ExpressRequest, res: ExpressResponse) => {
-    res.status(200).send();
-  });
+  // Team management
   app.post('/api/team/create', teamHandler.createTeam);
-
-  app.options('/api/team/join', (_req: ExpressRequest, res: ExpressResponse) => {
-    res.status(200).send();
-  });
   app.post('/api/team/join', teamHandler.joinTeam);
-
-  app.options('/api/team/leave', (_req: ExpressRequest, res: ExpressResponse) => {
-    res.status(200).send();
-  });
   app.post('/api/team/leave', teamHandler.leaveTeam);
 
   // Health check endpoint
@@ -130,14 +141,9 @@ function setupRoutes(app: Express) {
         data: {
           status: 'healthy',
           timestamp: new Date().toISOString(),
-          version: '2.0.0',
+          version: APP_VERSION,
           service: 'tarkovtracker-api',
-          features: {
-            newErrorHandling: true,
-            newProgressService: true,
-            newTeamService: true,
-            newTokenService: true,
-          },
+          features: API_FEATURES,
         },
       });
     })
