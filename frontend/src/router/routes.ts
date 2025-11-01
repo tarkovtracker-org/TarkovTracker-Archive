@@ -15,6 +15,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/TrackerDashboard.vue'),
       },
       {
+        name: 'traders',
+        path: '/traders',
+        meta: {},
+        component: () => import('@/pages/TradersPage.vue'),
+      },
+      {
         name: 'neededitems',
         path: '/items',
         meta: {},
