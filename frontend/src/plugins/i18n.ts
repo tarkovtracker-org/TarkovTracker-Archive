@@ -1,7 +1,7 @@
 // i18n translations
 import { createI18n, type I18n, type LocaleMessages } from 'vue-i18n';
 import {
-  cz as vuetifyCz,
+  cs as vuetifyCs,
   en as vuetifyEn,
   de as vuetifyDe,
   fr as vuetifyFr,
