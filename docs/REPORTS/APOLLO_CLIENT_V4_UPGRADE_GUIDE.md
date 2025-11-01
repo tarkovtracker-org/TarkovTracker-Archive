@@ -591,6 +591,7 @@ export default apolloClient;
 ```typescript
 // Example test for Apollo v4 compatibility
 import { describe, it, expect, vi } from 'vitest';
+import { gql } from '@apollo/client';
 import apolloClient from '@/plugins/apollo';
 
 describe('Apollo Client v4', () => {
@@ -1099,7 +1100,7 @@ useQuery(query, variables, {
 
 - [REPORTS/ACTION_ITEMS.md](./ACTION_ITEMS.md) - Project priorities
 - [REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRATEGY.md) - General upgrade patterns
-- [CLAUDE.md](../CLAUDE.md) - Development guidelines
+- [CLAUDE.md](/CLAUDE.md) & [AGENTS.md](/AGENTS.md) - Identical development guidelines
 
 ---
 

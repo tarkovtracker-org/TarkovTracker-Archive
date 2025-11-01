@@ -25,7 +25,7 @@ main (production)
 
 ### The Solution: Staging as Integration Branch
 
-```lua
+```text
 main (production - stable, deployed)
   ↑
   └── merge weekly (after testing)
@@ -222,7 +222,11 @@ git push origin staging
 ```bash
 # Production values (from GitHub Secrets)
 VITE_FIREBASE_PROJECT_ID=tarkovtracker-org
-VITE_FEATURE_FLAGS=false  # All flags OFF in production initially
+
+# Individual feature flags (default: false/off in production)
+VITE_FEATURE_NEW_API_DOCS=false
+VITE_FEATURE_WEBGL_MAPS=false
+VITE_FEATURE_TEAM_ANALYTICS=false
 ```
 
 ### Staging (staging branch)
@@ -238,7 +242,11 @@ VITE_FEATURE_FLAGS=false  # All flags OFF in production initially
 ```bash
 # Staging values (same project, different channel)
 VITE_FIREBASE_PROJECT_ID=tarkovtracker-org
-VITE_FEATURE_FLAGS=true  # Test flags ON in staging
+
+# Individual feature flags (test new features in staging)
+VITE_FEATURE_NEW_API_DOCS=true
+VITE_FEATURE_WEBGL_MAPS=true
+VITE_FEATURE_TEAM_ANALYTICS=false  # Not implemented yet
 ```
 
 ### Pull Request Previews (feature branches)
@@ -281,7 +289,23 @@ VITE_FEATURE_TEAM_ANALYTICS=false  # Not implemented yet
 
 ### Rollback Staging
 
+**⚠️ WARNING: Force-pushing is destructive and affects all developers working with staging.**
+
+When using `git push --force`, be aware that:
+
+- Any developer with local checkouts of staging will need to synchronize their branch
+- They must either force-pull (`git fetch origin && git reset --hard origin/staging`) or rebase to avoid conflicts
+- Uncommitted local changes may be lost if not handled carefully
+
+**Safer Alternative: Use `git revert` instead of force-pushing when possible**, as it creates a new commit rather than rewriting history.
+
 ```bash
+# Option 1: Revert specific commit (preferred - non-destructive)
+git checkout staging
+git revert <bad-commit-hash>
+git push origin staging
+
+# Option 2: Force reset (destructive - use with caution)
 # Find last good commit
 git log staging --oneline -10
 
@@ -290,10 +314,9 @@ git checkout staging
 git reset --hard <good-commit-hash>
 git push --force origin staging
 
-# Or revert specific commit
-git checkout staging
-git revert <bad-commit-hash>
-git push origin staging
+# Team members must sync with:
+git fetch origin
+git reset --hard origin/staging
 ```
 
 ### Rollback Production

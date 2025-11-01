@@ -5,7 +5,7 @@ This guide explains how we manage branches in the TarkovTracker repository to av
 ## Table of Contents
 
 - [Branch Structure](#branch-structure)
-- [The Problem We're Solving](#the-problem-were-solving)
+- [The Problem We're Solving](#the-problem-we're-solving)
 - [Recommended Workflows](#recommended-workflows)
 - [Common Scenarios](#common-scenarios)
 - [Best Practices](#best-practices)
@@ -52,7 +52,7 @@ Result: When merging, you get conflicts like:
 
 ### Solution: Short-Lived Branches + Feature Flags
 
-```lua
+```mermaid
 staging ─o─o─o─o─o─o─o─o
           └┬─┘ └┬─┘ └┬─┘
          feat1 feat2 feat3
@@ -335,7 +335,7 @@ test: add tests for team management
 
 ### 5. Release Strategy
 
-```lua
+```mermaid
 staging → (weekly) → main → production
 ```
 
@@ -478,7 +478,7 @@ jobs:
 
 **The Golden Rules:**
 
-1. 🚀 **Merge early, merge often** - Don't let branches live > 1 week
+1. 🚀 **Merge early and often** - Don't let branches live > 1 week
 2. 🎌 **Use feature flags** - Ship incomplete code safely
 3. 🔄 **Sync daily** - Update your branch from staging every day
 4. ✂️ **Keep PRs small** - Smaller = faster review = faster merge

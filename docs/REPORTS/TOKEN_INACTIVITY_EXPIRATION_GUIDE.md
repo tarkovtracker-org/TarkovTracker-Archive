@@ -28,9 +28,9 @@
 **Solution:** Inactivity-based expiration is perfect for "set and forget" tokens because:
 
 1. Active scripts/integrations keep working forever
-2. Forgotten tokens don't accumulate security risk
-3. Simple mental model: "use it or lose it"
-4. Industry standard (GitHub, AWS, Google Cloud all use this)
+1. Forgotten tokens don't accumulate security risk
+1. Simple mental model: "use it or lose it"
+1. Industry standard (GitHub, AWS, Google Cloud all use this)
 
 ---
 
@@ -166,8 +166,10 @@ export const verifyBearer = asyncHandler(
           (Date.now() - tokenData.lastUsed.toMillis()) / (1000 * 60 * 60 * 24);
 
         if (daysSinceLastUse > INACTIVITY_LIMIT_DAYS) {
-          // Auto-revoke expired token
-          await tokenDoc.ref.update({ revoked: true });
+          // Auto-revoke expired token (non-blocking fire-and-forget)
+          tokenDoc.ref.update({ revoked: true }).catch(err => {
+            logger.error('Failed to revoke inactive token', { error: err });
+          });
 
           logger.warn('Token expired due to inactivity', {
             owner: tokenData.owner,
@@ -513,6 +515,8 @@ const regenerateToken = async (token: ApiToken) => {
 **File:** `functions/src/handlers/tokenHandler.ts`
 
 ```typescript
+import { rateLimiter } from '../middleware/rateLimiter.js';
+
 export const regenerateTokenHandler = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.user?.uid;
@@ -522,11 +526,50 @@ export const regenerateTokenHandler = asyncHandler(
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    // Early validation: tokenId required
     if (!tokenId) {
       return res.status(400).json({ error: 'Token ID required' });
     }
 
+    // Early validation: tokenId format check (alphanumeric, 20-40 chars)
+    if (!/^[a-zA-Z0-9]{20,40}$/.test(tokenId)) {
+      logger.warn('Invalid token ID format in regenerate request', {
+        userId,
+        tokenId: tokenId.substring(0, 10) + '...',
+      });
+      return res.status(400).json({ 
+        error: 'Invalid token ID format',
+        code: 'INVALID_TOKEN_FORMAT' 
+      });
+    }
+
     try {
+      // Pre-check: Verify token exists and belongs to user
+      const tokenDoc = await db.collection('token').doc(tokenId).get();
+
+      if (!tokenDoc.exists()) {
+        logger.warn('Token not found in regenerate request', { userId, tokenId });
+        return res.status(404).json({
+          error: 'Token not found',
+          code: 'TOKEN_NOT_FOUND'
+        });
+      }
+
+      const tokenData = tokenDoc.data() as ApiToken;
+
+      if (tokenData.owner !== userId) {
+        logger.warn('Unauthorized token regeneration attempt', {
+          userId,
+          tokenId,
+          tokenOwner: tokenData.owner,
+        });
+        return res.status(403).json({
+          error: 'You do not own this token',
+          code: 'TOKEN_NOT_OWNED'
+        });
+      }
+
+      // Now call the service to regenerate
       const tokenService = new TokenService();
       const result = await tokenService.regenerateToken(userId, tokenId);
 
@@ -537,24 +580,126 @@ export const regenerateTokenHandler = asyncHandler(
       });
     } catch (error) {
       logger.error('Token regeneration failed', { error, userId, tokenId });
-      res.status(500).json({ error: 'Failed to regenerate token' });
+      
+      // Don't leak internal errors to client
+      res.status(500).json({ 
+        error: 'Failed to regenerate token',
+        code: 'REGENERATION_FAILED'
+      });
     }
   }
 );
 ```
 
-**Add route in `functions/src/index.ts`:**
+**Add rate-limited route in `functions/src/index.ts`:**
 
 ```typescript
+import { createRateLimiter } from './middleware/rateLimiter.js';
+
+// Rate limiter: 5 regeneration requests per user per hour
+const regenerateRateLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 5,
+  keyGenerator: (req) => req.user?.uid || req.ip,
+  message: 'Too many token regeneration requests. Please try again later.',
+});
+
 app.post('/api/tokens/regenerate',
   requireAuth,
+  regenerateRateLimiter,
   tokenHandler.regenerateTokenHandler
 );
 ```
 
+**Create rate limiter middleware** (`functions/src/middleware/rateLimiter.ts`):
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import { logger } from '../utils/logger.js';
+
+// Firestore-backed rate limiter for distributed deployments
+// In-memory maps are not suitable for distributed environments where multiple instances
+// need to share the same rate limit state. We use Firestore transactions to ensure consistency.
+import { firestore as db, Timestamp } from './plugins/firebase'; // adjust relative path for your functions workspace
+import type { Request, Response, NextFunction } from 'express';
+
+interface RateLimitConfig {
+  windowMs: number;
+  maxRequests: number;
+  keyGenerator: (req: Request) => string;
+  message?: string;
+}
+
+export function firebaseRateLimiter(config: RateLimitConfig): express.RequestHandler {
+  const { windowMs, maxRequests, keyGenerator, message } = config;
+  
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const key = keyGenerator(req);
+    const now = Timestamp.now();
+
+    try {
+      await db.runTransaction(async (tx) => {
+        const ref = db.collection('rateLimits').doc(key);
+        const snap = await tx.get(ref);
+
+        const resetTime = Timestamp.fromMillis(now.toMillis() + windowMs);
+
+        if (!snap.exists) {
+          tx.set(ref, { count: 1, resetTime });
+          return;
+        }
+
+        const data = snap.data() as { count: number; resetTime: Timestamp };
+        const windowExpired = data.resetTime.toMillis() <= now.toMillis();
+
+        if (windowExpired) {
+          tx.set(ref, { count: 1, resetTime });
+          return;
+        }
+
+        if (data.count >= maxRequests) {
+          // Signal to the outer catch for consistent response handling
+          throw Object.assign(new Error('RATE_LIMIT_EXCEEDED'), { retryAfterMs: data.resetTime.toMillis() - now.toMillis() });
+        }
+
+        tx.update(ref, { count: data.count + 1 });
+      });
+
+      next();
+    } catch (err: any) {
+      if (err?.message === 'RATE_LIMIT_EXCEEDED') {
+        const retryAfterSec = Math.ceil((err.retryAfterMs ?? windowMs) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSec));
+        return res.status(429).json({
+          error: message ?? 'Too Many Requests',
+          retryAfterSeconds: retryAfterSec
+        });
+      }
+      // Unexpected error
+      return res.status(500).json({ error: 'Rate limiter failed' });
+    }
+  };
+}
+```
+
 ---
 
-## Step 7: Migration for Existing Tokens (Optional, 30 min)
+### Redis Alternative
+
+For high-throughput scenarios, Redis provides a low-latency alternative with single source of truth across instances:
+
+- Use `INCR` with `EXPIRE` for fixed-window, or `ZADD`/`ZREMRANGEBYSCORE` for sliding window
+- Store keys by the same scheme (ip/uid + route)
+- Keep TTL aligned with `windowMs`
+- Ensure retry headers mirror Firestore approach
+
+---
+
+## Step 7: Migration for Existing Tokens (**REQUIRED**, 30 min)
+
+**⚠️ CRITICAL: This migration is REQUIRED for any project with pre-existing tokens.**
+
+Run this migration **BEFORE** deploying the new middleware code to eliminate any window where tokens lack `lastUsed`/`revoked` fields and could cause runtime failures.
 
 **File:** `functions/src/migrations/addTokenInactivityTracking.ts`
 
@@ -629,6 +774,40 @@ export const migrateTokens = onRequest({ memory: '512MiB' }, async (req, res) =>
 });
 ```
 
+**Migration Deployment Steps:**
+
+1. **Deploy migration function first:**
+
+   ```bash
+   npm run deploy:functions
+   ```
+
+2. **Run migration:**
+
+   ```bash
+   curl -X POST https://your-project.cloudfunctions.net/migrateTokens
+   ```
+
+3. **Verify completion** in logs/response
+
+4. **Then deploy the new middleware code** that requires `lastUsed`/`revoked` fields
+
+**Idempotency:** This migration is safe to re-run multiple times. It only updates tokens that lack the required fields.
+
+**Firestore Index Requirements:**
+
+Before deploying, ensure these indexes exist:
+
+1. **Single-field index on `lastUsed`** (for range queries like `where('lastUsed', '<', ...)`)
+   - Usually auto-created by Firestore
+   - Verify in Firebase Console → Firestore → Indexes → Single field
+
+2. **Composite indexes** (if using queries that combine fields):
+   - `revoked` + `lastUsed` - Required for email notification queries
+   - Add to `firestore.indexes.json` and deploy with `firebase deploy --only firestore:indexes`
+
+**Note:** The migration sets `lastUsed` to `createdAt` (or current time) for existing tokens, giving them a full 180-day grace period from the migration date.
+
 ---
 
 ## Testing Checklist
@@ -649,6 +828,33 @@ export const migrateTokens = onRequest({ memory: '512MiB' }, async (req, res) =>
 - [ ] Verify expired token returns correct error code
 - [ ] Regenerate expired token and verify new token works
 - [ ] Revoke token and verify it stops working
+
+### Performance Tests
+
+- [ ] **Measure lastUsed update latency impact:**
+  - Baseline: Average API request time without lastUsed updates
+  - With feature: Average API request time with fire-and-forget lastUsed updates
+  - Pass criteria: < 5ms latency increase, no blocking on update failures
+  
+- [ ] **Validate migration throughput on large datasets:**
+  - Test with simulated 100K+ token dataset
+  - Measure total migration time (should complete in < 30 minutes)
+  - Verify batching works correctly (500 tokens per batch)
+  - Confirm no memory issues or timeouts
+
+### Rollback Tests
+
+- [ ] **Previous middleware handles new fields:**
+  - Deploy tokens with `lastUsed` and `revoked` fields
+  - Roll back to previous middleware version (without inactivity checks)
+  - Verify tokens with new fields still work correctly
+  - Confirm rollback doesn't reject or corrupt existing tokens
+  
+- [ ] **Rollback procedure validation:**
+  - Document exact rollback steps (git checkout, redeploy)
+  - Test rollback in staging environment
+  - Verify data integrity after rollback (no token corruption)
+  - Confirm users can still authenticate with existing tokens
 
 ### Manual Testing
 
@@ -732,6 +938,36 @@ export const notifyExpiringTokens = onSchedule({
   }
 });
 ```
+
+**⚠️ Important: Composite Index Required**
+
+This query combines `where('revoked', '==', false)` and `where('lastUsed', '<', ...)` which requires a composite index in Firestore. Before deploying this function:
+
+1. **Create the index via Firebase Console:**
+   - Navigate to Firestore → Indexes → Composite
+   - Add index for collection `token`:
+     - Field: `revoked` (Ascending)
+     - Field: `lastUsed` (Ascending)
+     - Query scope: Collection
+
+2. **Or use Firebase CLI:** Add to `firestore.indexes.json`:
+
+   ```json
+   {
+     "collectionGroup": "token",
+     "queryScope": "COLLECTION",
+     "fields": [
+       { "fieldPath": "revoked", "order": "ASCENDING" },
+       { "fieldPath": "lastUsed", "order": "ASCENDING" }
+     ]
+   }
+   ```
+
+   Then deploy: `firebase deploy --only firestore:indexes`
+
+3. **Or wait for auto-creation:** Run the function once and it will provide a link to auto-create the index (takes 5-15 minutes).
+
+Without this index, the query will fail at runtime with an error like "The query requires an index."
 
 ### Analytics Dashboard
 

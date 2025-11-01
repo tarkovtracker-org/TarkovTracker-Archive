@@ -1,6 +1,6 @@
 # Dependency Upgrade Quick Start Guide
 
-Quick reference for upgrading TarkovTracker dependencies**
+Quick reference for upgrading TarkovTracker dependencies
 
 For full details, see [DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRATEGY.md)
 
@@ -44,6 +44,7 @@ git commit -m "chore: update patch/minor dependencies"
 ```
 
 Tips:
+
 - Prefer selecting patch/minor upgrades only on the first pass.
 - Keep a short list of accepted upgrades in the commit body for future reference.
 
@@ -73,7 +74,8 @@ git add .
 git commit -m "feat: upgrade Firebase to v12"
 ```
 
-Document breaking changes in the commit body and refer to `REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md` for the checklist.
+Document breaking changes in the commit body and refer to `REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md`
+for the checklist.
 
 #### Week 5-6 – Apollo Client 4 (BREAKING)
 
@@ -286,7 +288,7 @@ After each upgrade, verify:
 
 - **Strategy Document:** [DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRATEGY.md)
 - **Migration Guides:** See strategy doc sections on Firebase, Apollo, UUID
-- **Scripts Documentation:** [SCRIPTS.md](./SCRIPTS.md)
+- **Scripts Documentation:** [SCRIPTS.md](/SCRIPTS.md)
 - **Firebase Support:** <https://firebase.google.com/support>
 - **Apollo Support:** <https://community.apollographql.com/>
 

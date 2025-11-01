@@ -1,6 +1,6 @@
 # TarkovTracker - Current Action Items
 
-**Last Updated:** 2025-10-15
+**Last Updated:** 2025-10-29
 **Status:** Active Development
 **Next Review:** After completing P0 items
 
@@ -165,9 +165,15 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests without an Origin header (same-origin, server-to-server, tooling)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
     if (isDevelopment) {
       callback(null, true);  // Allow all in dev
-    } else if (!origin || allowedOrigins.includes(origin)) {
+    } else if (origin && allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

@@ -284,10 +284,10 @@ Main Container (#tracker-page-background-blur)
 ## Files to Modify
 
 1. **`frontend/index.html`** - Add font preloads
-2. **`frontend/src/components/TaskCard.vue`** - Add explicit dimensions
-3. **`frontend/src/pages/Tasks.vue`** - Implement virtual scrolling
-4. **`frontend/src/styles/fonts.css`** - Add font-display strategy
-5. **`frontend/package.json`** - Add virtual scroller dependency
+1. **`frontend/src/components/TaskCard.vue`** - Add explicit dimensions
+1. **`frontend/src/pages/Tasks.vue`** - Implement virtual scrolling
+1. **`frontend/src/styles/fonts.css`** - Add font-display strategy
+1. **`frontend/package.json`** - Add virtual scroller dependency
 
 ---
 

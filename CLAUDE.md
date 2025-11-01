@@ -1,268 +1,124 @@
-# CLAUDE.md
+# AI Agent Guide
+
+Shared playbook for any AI coding assistant collaborating on TarkovTracker.
+
+> Keep this file current: whenever scripts, paths, tooling, or workflows change in the repo, reflect those
+> updates here (and in `AGENTS.md`).
+
+## Environment
+
+- **Node.js Runtime**
+  - Minimum supported (frontend workspace): Node 20.19+
+  - Recommended (functions + frontend consistency): Node 22.x
+  - Target: Align local dev and CI on Node 22 to avoid subtle API/version drift while permitting 20.19+ for frontend-only work.
+- **Java 11+ Runtime** – Required for Firebase emulators.
+- **Firebase CLI** – Available as the local dev dependency `firebase-tools`; invoke through the
+  provided npm/yarn scripts.
+- Install dependencies once from the repository root via `npm install`.
+
+## Repository Layout
+
+- `frontend/` – Vue 3 + Vite SPA using Pinia, Vuetify, Vue Router, Vue I18n, and Firebase/VueFire integrations.
+- `functions/` – Firebase Cloud Functions written in TypeScript (Express, Firestore, scheduled jobs, Tarkov.dev integrations).
+- `frontend/dist/`, `functions/lib/`, `firebase-export-*` – Generated output; do not commit.
+- `functions/openapi/` – Generated OpenAPI spec consumed by the Scalar UI page.
+- `functions/src/openapi/` – TypeScript source for generating the OpenAPI schema.
+- `docs/REPORTS/` – Operational runbooks and postmortems (published material lives inside `docs/`).
+- `docs/architecture/` – System architecture documentation and technical design documents.
+- `docs/user-guides/` – End-user documentation and guides.
+- `docs/development/` – Development workflows and setup instructions.
+- `scripts/` – Tooling (e.g., map sync automation).
+- Firebase configuration (`firebase.json`, `firestore.rules`, `firestore.indexes.json`,
+  `database.rules.json`) resides at the repo root.
+
+Ensure new data files or fixtures live inside the appropriate workspace so workspace-specific tooling picks them up.
+
+## Development Workflows
+
+| Script | What it runs | Typical use |
+| --- | --- | --- |
+| `npm run dev` | Frontend Vite dev server (port 3000) | UI work without emulators; mock auth |
+| `npm run dev:full` | Vite dev server + Auth/Firestore/Functions | End-to-end feature flows |
+| `npm run dev:firebase` | Builds functions then launches all emulators (incl. hosting on 5000) via `scripts/emulator-wrapper.js` | Pre-deploy checks |
+
+Additional helpers:
+
+- `npm run emulators` – Builds functions and launches the full Firebase emulator suite.
+- `npm run emulators:backend` – Functions/Firebase backends only (no hosting).
+- `npm run emulators:local` – Replays emulator state from `./local_data` and exports on exit
+  for deterministic tests.
+- `npm run build` – Functions build ➜ OpenAPI generation ➜ frontend production build.
+- `npm run build:functions` / `npm run build:frontend` – Workspace-specific builds.
+- `npm run maps:sync` – Refresh Tarkov map metadata from Tarkov.dev.
+
+### Mock Authentication
+
+For frontend-only work, enable mock auth:
+
+```bash
+cp frontend/.env.example frontend/.env.local
+# edit .env.local
+VITE_DEV_AUTH=true
+npm run dev
+```
+
+Mock auth persists a generated dev user ID in localStorage; disable (`false` or remove) before testing real auth flows.
+
+## Testing & Quality Gates
+
+- `npm run test` – Executes `functions` then `frontend` test suites.
+- `npm run test:frontend` / `npm run test:functions` – Targeted runs from the root.
+- Frontend workspace:
+  - `npm run test:run` – Vitest unit tests (CI mode).
+  - `npm run test:e2e` / `npm run test:e2e:ui` – Playwright suites (headless/UI).
+  - `npm run test:coverage` – Coverage report (store artifacts for security-related work).
+- Functions workspace:
+  - `npm test` – Vitest unit/integration tests.
+  - `npm run type-check` – TSC with `--noEmit`.
+- Linting/formatting:
+  - `npm run lint` – ESLint, type-check, and markdown linting for
+  all files.
+  - `npm run lint:md` – Run only markdown linting for documentation files (human-readable output).
+  - `npm run lint:md:json` – Run markdown linting with condensed JSON output (80% reduction in verbosity).
+  - `npm run format` / `npm run format:check` – Prettier across
+  `.vue`/`.ts` sources.
+
+CI expects zero lint errors and passing tests. When adding features, include a Vitest or Playwright regression guard.
+
+## Documentation & Deploy
+
+- `npm run docs` – Builds functions and regenerates `functions/openapi/openapi.json`.
+- `npm run docs:generate` – Runs `npm run openapi --workspace=functions` and copies the spec into
+  `frontend/public/api/openapi.json` for Scalar UI.
+- `npm run deploy:staging` – Build functions, regenerate docs, build frontend, then deploy hosting
+  to a 7-day preview channel.
+- `npm run deploy:prod` – Build functions, regenerate docs, build frontend, then deploy hosting +
+  functions.
+
+If you alter API endpoints or request/response shapes, rerun `npm run docs` and include the
+resulting diff under `functions/openapi/`.
+
+## Coding Standards
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+- 2-space indentation, Prettier formatting, shared flat ESLint config.
+- Max line length: 100 in `frontend/`, 120 in `functions/`; split literals instead of disabling lint rules.
+- Vue components follow Composition API, typed Pinia stores, and live in `kebab-case.vue` files under feature folders.
+- Functions export named handlers from `functions/src/**` that mirror their trigger purpose; prefer pure services under `src/services/` with thin handler wrappers.
+- Avoid `any`; justify unavoidable cases with targeted ESLint suppressions.
+- Organise imports using the `@/` alias for local modules; remove unused imports promptly.
+- Keep Vue components <300 lines and Firebase handlers focused (<200 lines); refactor shared logic into composables/services.
+- Vitest setup helpers live under `frontend/src/test/`; create fixtures/mocks alongside features when needed.
 
-## Prerequisites
+## Git & PR Expectations
 
-- **Node.js 18+** - Required for all development
-- **Java 11+ Runtime Environment** - Required for Firebase emulators
-- **Firebase CLI** - Installed as dev dependency (`firebase-tools`)
+- Conventional Commit prefixes (`feat`, `fix`, `chore`, `docs`, etc.). Reference tickets (`TT-123`) or issues (`Fixes #123`) when relevant.
+- PRs explain scope, surface screenshots or terminal output for UI/CLI changes, and call out Firebase config updates.
+- Never commit generated assets from `frontend/dist/`, `functions/lib/`, or emulator exports.
 
-## Development Commands
+## Agent Workflow Tips
 
-### Three Development Modes
+- Prefer `apply_patch` for surgical edits; avoid rewriting large files unless necessary.
+- Default to workspace-level scripts (`npm run … --workspace=frontend`) instead of manually invoking binaries.
+- When uncertain about project behaviour, search the repo (`rg`) before guessing. Ask the maintainer only if facts remain unclear.
 
-This project supports three distinct development modes optimized for different workflows:
-
-#### 1. `npm run dev` - Pure Frontend Development (Recommended for UI work)
-
-- **What runs:** Vite dev server only (port 3000)
-- **What doesn't run:** No Firebase emulators
-- **Use for:** UI development, component work, styling, routing
-- **Auth support:** Enable mock auth with `VITE_DEV_AUTH=true` in `frontend/.env.local`
-- **Fastest startup** - No backend services needed
-
-#### 2. `npm run dev:full` - Full Stack Development
-
-- **What runs:** Vite dev server (3000) + Firebase emulators (auth, firestore, functions)
-- **What doesn't run:** Hosting emulator (port 5000) - not needed during dev
-- **Use for:** Team features, auth flows, API tokens, real-time sync, functions testing
-- **Complete backend integration** - Tests all Firebase features
-
-#### 3. `npm run dev:firebase` - Production Build Testing
-
-- **What runs:** ALL Firebase emulators including hosting (port 5000)
-- **What doesn't run:** Vite dev server
-- **Use for:** Pre-deployment testing, build verification, production bug testing
-- **Builds first:** Runs full production build before starting emulators
-- **Serves:** Production-optimized code from `frontend/dist`
-
-### Quick Reference Table
-
-| Command | Frontend | Backend | Hosting | Use Case |
-|---------|----------|---------|---------|----------|
-| `npm run dev` | Vite (3000) | ❌ None | ❌ No | UI/component work |
-| `npm run dev:full` | Vite (3000) | ✅ Emulators | ❌ No | Full-stack features |
-| `npm run dev:firebase` | ❌ None | ✅ Emulators | ✅ Yes (5000) | Pre-deploy testing |
-
-### Other Essential Commands
-
-- `npm run build` - Build entire project (frontend + functions)
-- `npm run lint` - Lint entire codebase
-- `npm run format` - Format code with Prettier
-
-### Frontend Development
-
-- `npm run build:frontend` - Build frontend only
-- `cd frontend && npm run type-check` - Type check frontend code
-
-### Backend/Functions Development
-
-- `npm run build:functions` - Build Firebase Cloud Functions
-- `npm run emulators` - Start all Firebase emulators (includes hosting)
-- `npm run emulators:backend` - Start backend emulators only (auth, firestore, functions)
-- `npm run emulators:local` - Start emulators with local data import
-- `npm run export:data` - Export emulator data to local_data directory
-
-### Testing
-
-- `cd frontend && npm test` - Run frontend unit tests with Vitest (watch mode)
-- `cd frontend && npm run test:run` - Run frontend unit tests once
-- `cd frontend && npm run test:coverage` - Run tests with coverage report
-- `cd frontend && npm run test:e2e` - Run Playwright end-to-end tests
-- `cd frontend && npm run test:e2e:ui` - Run E2E tests in interactive UI mode
-- `cd functions && npm test` - Run backend/functions tests with Vitest
-
-### API Documentation
-
-- `npm run docs` - Generate OpenAPI specification at `functions/openapi/openapi.json` for consumption by Scalar UI in the app
-
-### Deployment
-
-- `npm run deploy:staging` - Deploy to staging preview channel
-- `npm run deploy:prod` - Deploy to production environment
-
-## Local Development Setup
-
-### Mock Authentication for Pure Frontend Development
-
-When using `npm run dev` (frontend only, no emulators), you can enable mock authentication to test auth-gated features without Firebase:
-
-1. **Create/copy the environment file:**
-
-   ```bash
-   cp frontend/.env.example frontend/.env.local
-   ```
-
-2. **Enable dev auth:**
-
-   ```bash
-   # Edit frontend/.env.local
-   VITE_DEV_AUTH=true
-   ```
-
-3. **Start development:**
-
-   ```bash
-   npm run dev
-   ```
-
-You'll be automatically "logged in" as a dev user with:
-
-- **UID:** Randomly generated, persists across reloads
-- **Email:** `dev@localhost.local`
-- **Display Name:** `Dev User`
-- **Auth Status:** `loggedIn: true`
-
-**Note:** This bypasses real Firebase authentication and only works in development mode. For testing real auth flows, use `npm run dev:full` with Firebase emulators.
-
-### Port Reference
-
-| Port | Service | When Active |
-|------|---------|-------------|
-| 3000 | Vite Dev Server | `npm run dev`, `npm run dev:full` |
-| 4999 | Firebase Emulator UI | All emulator modes |
-| 5000 | Firebase Hosting Emulator | `npm run dev:firebase`, `npm run emulators` |
-| 5001 | Cloud Functions Emulator | All emulator modes |
-| 5002 | Firestore Emulator | All emulator modes |
-| 5003 | Realtime Database Emulator | All emulator modes |
-| 8085 | Pub/Sub Emulator | All emulator modes |
-| 9099 | Auth Emulator | All emulator modes |
-
-**Access Firebase Emulator UI:** <http://localhost:4999> when any emulator mode is running
-
-## Project Architecture
-
-### Monorepo Structure
-
-This is a **monorepo** with two main workspaces:
-
-- **`/frontend`** - Vue 3 Single Page Application
-- **`/functions`** - Firebase Cloud Functions (Node.js/TypeScript backend)
-
-### Frontend Architecture (Vue 3 + Composition API)
-
-- **Framework**: Vue 3 with Composition API and TypeScript
-- **UI Framework**: Vuetify 3 (Material Design components)
-- **State Management**: Pinia stores
-- **Routing**: Vue Router 4
-- **Build Tool**: Vite
-- **GraphQL**: Apollo Client for external APIs
-- **Firebase Integration**: VueFire for Firebase features
-- **i18n**: Vue I18n for internationalization
-
-### Key Frontend Patterns
-
-- **Feature-based organization**: Components organized in `/src/features/` by domain
-- **Composables pattern**: Reusable logic in `/src/composables/`
-- **Store pattern**: Pinia stores for state management in `/src/stores/`
-- **Page-based routing**: Main pages in `/src/pages/`
-
-### Backend Architecture (Firebase Cloud Functions)
-
-- **Runtime**: Node.js with TypeScript
-- **API Framework**: Express.js with CORS and body parsing
-- **Authentication**: Firebase Auth with custom bearer token verification
-- **Database**: Firestore with transaction-based operations
-- **External APIs**: GraphQL queries to Tarkov.dev API
-- **Scheduled Tasks**: Firebase scheduled functions for data fetching
-
-### Key Backend Patterns
-
-- **Express middleware pattern**: Authentication and error handling
-- **Transaction-based operations**: All team operations use Firestore transactions
-- **Callable + HTTP endpoints**: Dual API approach for flexibility
-- **API versioning**: `/api/` and `/api/v2/` routes for backward compatibility
-
-### Data Flow Architecture
-
-1. **Frontend** → Firebase Auth → **Backend API**
-2. **Backend** → Firestore transactions → **Database**
-3. **Scheduled Functions** → External APIs → **Firestore**
-4. **Frontend** → VueFire → **Real-time Firestore updates**
-
-### State Management Pattern
-
-- **User State**: Individual user progress and settings
-- **Team State**: Team member progress aggregation
-- **Tarkov Data**: Game data from external APIs
-- **Progress Tracking**: Reactive state updates across team members
-
-### Authentication Flow
-
-1. Firebase Auth (Google/Email providers)
-2. API token generation for third-party access
-3. Bearer token verification middleware
-4. User context injection into requests
-
-### Team System Architecture
-
-- **Team Creation**: Transaction-based with unique ID generation
-- **Member Management**: Array-based membership with transaction safety
-- **Progress Sharing**: Real-time sync via Firestore listeners
-- **Data Isolation**: Per-user collections with team aggregation
-
-### API Integration Points
-
-- **Tarkov.dev GraphQL API**: Game data synchronization
-- **Tarkov.dev Maps Data**: Map metadata fetched at runtime from GitHub
-  - Primary: Runtime fetch from `https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json`
-  - Fallback: Bundled `maps.json` used if fetch fails
-  - Transformation: `mapTransformUtils.ts` converts to TarkovTracker format
-  - Benefits: Always fresh data, ~3.6KB bundle reduction, lazy loading
-- **Firebase APIs**: Auth, Firestore, Cloud Functions
-- **Third-party API tokens**: User-generated tokens for external access
-
-## Development Patterns
-
-### Component Development
-
-- Use Vue 3 Composition API syntax
-- Components in `/frontend/src/features/` organized by domain
-- Shared UI components in `/frontend/src/features/ui/`
-- Follow Vuetify component patterns and theming
-- **Keep components under 300 lines** - decompose large files into smaller, focused components
-
-### State Management
-
-- Use Pinia stores for all state management
-- Store files in `/frontend/src/stores/` (consolidated from previous `/composables/stores/`)
-- Composables for reusable reactive logic in `/frontend/src/composables/`
-- Use proper TypeScript casting for Firestore plugin extensions
-
-### API Development
-
-- **Handlers**: Organized in `/functions/src/handlers/` by domain (progress, team, token)  
-- **Services**: Business logic extracted to `/functions/src/services/`
-- **Middleware**: Authentication and error handling in `/functions/src/middleware/`
-- **Types**: Shared interfaces in `/functions/src/types/`
-- Use TypeScript interfaces for all data structures
-- Implement both callable and HTTP endpoints for flexibility
-
-### Database Operations
-
-- Always use Firestore transactions for multi-document operations
-- Implement proper error handling and logging
-- Use typed document references and snapshots
-
-## Code Quality Standards
-
-### Complexity Management
-
-- **Functions**: Keep Firebase Cloud Functions handlers focused and under 200 lines each
-- **Components**: Vue components over 400 lines should be decomposed into smaller, focused components  
-- **Stores**: Extract reusable state logic into shared_state.ts patterns
-- **Templates**: Avoid deeply nested template structures - use composition
-- **Clean Code**: Remove commented imports, unused files, and redundant abstractions
-
-### Import Organization
-
-- Use absolute imports with `@/` prefix
-- Group imports: Vue/framework first, then local imports
-- Remove unused imports regularly
-
-### TypeScript Usage
-
-- Cast Pinia stores properly when using plugins: `as StoreWithFireswapExt<ReturnType<typeof useStore>>`
-- Avoid `any` types - use proper interfaces
-- Use proper null checking for optional values
+Keep this guidance in sync across `CLAUDE.md` and `AGENTS.md`.

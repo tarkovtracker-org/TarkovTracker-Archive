@@ -2,7 +2,8 @@
 
 ## TarkovTracker Monorepo
 
-**Generated:** 2025-10-14
+**Generated:** 2025-10-31
+**Note:** Dependency analysis performed on 2025-10-31; library versions may have changed since generation.
 **Current Node.js:** v22.16.0
 **Security Status:** ✅ No vulnerabilities found
 
@@ -96,8 +97,8 @@ npm update eslint-plugin-vue firebase-tools
 **Breaking Changes:**
 
 1. **Node.js requirement:** Minimum v20 (✅ Current: v22.16.0)
-2. **Firestore API change:** `DocumentSnapshot.exists` property → `exists()` method
-3. **ES2020 target:** May require build configuration updates
+1. **Firestore API change:** `DocumentSnapshot.exists` property → `exists()` method
+1. **ES2020 target:** May require build configuration updates
 
 **Impact Assessment:**
 
@@ -128,10 +129,10 @@ See **Migration Guide #1** below for detailed steps.
 **Breaking Changes:**
 
 1. **RxJS dependency:** New peer dependency `rxjs@^7.3.0` required
-2. **Observable implementation:** Migrated from `zen-observable` to RxJS
-3. **Core/React split:** Framework-specific exports separated (Vue apps use `/core`)
-4. **Error handling:** Unified error properties, deprecated `ApolloError`
-5. **TypeScript:** Stricter type requirements
+1. **Observable implementation:** Migrated from `zen-observable` to RxJS
+1. **Core/React split:** Framework-specific exports separated (Vue apps use `/core`)
+1. **Error handling:** Unified error properties, deprecated `ApolloError`
+1. **TypeScript:** Stricter type requirements
 
 **Current Usage:**
 
@@ -207,30 +208,53 @@ npm list firebase
 
 #### Step 2: Automated Migration - Fix `.exists` Property
 
-Create a migration script to automate the `.exists` → `.exists()` conversion:
+**Recommended approach:** Use the provided migration script:
 
 ```bash
-# Create migration script
-cat > scripts/migrate-firebase-exists.sh << 'EOF'
-#!/bin/bash
-# Firebase 12 Migration: Convert .exists property to .exists() method
-
-echo "🔍 Scanning for .exists usage..."
-
-# Find and replace in functions directory
-find functions/src -type f \( -name "*.ts" -o -name "*.js" \) -exec sed -i.bak 's/\(Doc\|Snap\|snapshot\|doc\)\.exists\([^(]\)/\1.exists()\2/g' {} \;
-
-echo "✅ Migration complete!"
-echo "📝 Backup files created with .bak extension"
-echo ""
-echo "🔍 Please review changes with: git diff"
-EOF
-
-chmod +x scripts/migrate-firebase-exists.sh
-
-# Run migration
-./scripts/migrate-firebase-exists.sh
+# Run the migration script with target directories or files
+./scripts/migrate-firebase-exists.sh frontend functions
 ```
+
+**Prerequisites:**
+
+- **Perl 5.x+** must be installed and available on PATH
+- **Bash** or POSIX-compatible shell (Unix-like systems)
+- **Windows users:** Use WSL or Git Bash
+
+**Advanced usage:**
+
+```bash
+# Process specific files
+./scripts/migrate-firebase-exists.sh frontend/src/store/user.ts functions/src/auth/*.ts
+
+# Use find with file type filtering
+./scripts/migrate-firebase-exists.sh $(find frontend functions -type f \( -name '*.ts' -o -name '*.vue' \))
+```
+
+**Notes:**
+
+- The script uses a Perl regex with lookaround patterns to safely replace `.exists` with `.exists()`
+  while preserving optional chaining (`?.exists`) and already-called methods (`exists()`).
+- The pattern `(?<!\?)\\.exists(?!\s*\(|\s*\?)` uses negative lookbehind to avoid optional chaining, and
+  negative lookahead to skip already-called `exists(` or ternary `exists ?`.
+- Perl is chosen for consistent `-i` behavior and full PCRE-style lookaround support across macOS (BSD) and Linux (GNU).
+
+**Alternative for sed users:**
+
+If you must use sed for other transformations, ensure portable `-i` flags:
+
+```bash
+# If you must use sed for other transformations, ensure portable -i flags:
+case "$(uname)" in
+  Darwin) SED_I=(-i '') ;;
+  *)      SED_I=(-i) ;;
+esac
+# Note: sed does not support lookbehind; use the provided script for the .exists ➜ .exists() transformation.
+```
+
+**AST-based codemod recommendation:**
+
+For full reliability, use a TypeScript-aware codemod (e.g., ts-morph) to find PropertyAccessExpressions named 'exists' and replace with a CallExpression 'exists()'. This avoids regex edge cases and preserves formatting. An AST-based approach handles all contexts correctly, including ternaries, negations, and chained expressions.
 
 **Manual verification required for:**
 
@@ -435,7 +459,7 @@ const apolloClient = new ApolloClient({
 **Key changes:**
 
 1. `createHttpLink()` → `new HttpLink()` (function to class)  
-2. Added optional `name` and `version` for client identification
+1. Added optional `name` and `version` for client identification
 
 #### Step 4: Update Error Handling
 
@@ -1056,10 +1080,10 @@ npm run deps:audit  # Custom script
 This upgrade strategy prioritizes safety and stability while modernizing the TarkovTracker codebase. By following the incremental batch approach, you can:
 
 1. ✅ **Minimize risk** with small, testable updates  
-2. ✅ **Maintain stability** through comprehensive testing  
-3. ✅ **Learn iteratively** from each upgrade  
-4. ✅ **Rollback easily** if issues arise  
-5. ✅ **Stay current** with security patches
+1. ✅ **Maintain stability** through comprehensive testing  
+1. ✅ **Learn iteratively** from each upgrade  
+1. ✅ **Rollback easily** if issues arise  
+1. ✅ **Stay current** with security patches
 
 ### Next Steps
 

@@ -31,7 +31,7 @@ The Tarkov Tracker codebase has **38 distinct technical debt items** across fron
 
 **Issue:**
 
-```text
+```typescript
 frontend/vite.config.ts(235,3): error TS2769: No overload matches this call.
 Type 'string' is not assignable to type '"pre" | "post" | undefined'
 ```

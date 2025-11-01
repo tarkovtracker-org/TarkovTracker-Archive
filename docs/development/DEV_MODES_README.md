@@ -125,7 +125,7 @@ If you need to test auth-gated features without running emulators:
 1. **Create environment file:**
 
    ```bash
-   cp frontend/.env.local.example frontend/.env.local
+   cp frontend/.env.example frontend/.env.local
    ```
 
 2. **Enable mock auth:**

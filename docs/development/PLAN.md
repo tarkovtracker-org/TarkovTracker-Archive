@@ -69,7 +69,7 @@
    - Audit heavy synchronous work in primary layout components, map rendering, Pinia store initialization.
    - Inspect `frontend/src/features` for components loaded at route root; flag expensive watchers/effects.
 2. **Routing & Data Fetching**
-   - Trace route guards, `onBeforeRouteEnter`, and Apollo queries triggered prior to first paint.
+   - Trace route guards, `onBeforeRouteEnter`, and Apollo queries triggered before first paint.
    - Evaluate Firebase auth initialization for delays; consider lazy loading non-critical services.
    - Capture performance profile around initial GraphQL queries to measure main-thread stall duration and identify heavy resolvers/cache hydration.
 3. **Asset Delivery**
