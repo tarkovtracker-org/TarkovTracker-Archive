@@ -13,8 +13,6 @@
     <v-divider class="mx-3 my-1" />
     <drawer-level :is-collapsed="isRailActive" />
     <v-divider class="mx-3 my-1" />
-    <drawer-trader-standings :is-collapsed="isRailActive" />
-    <v-divider class="mx-3 my-1" />
     <drawer-links :is-collapsed="isRailActive" />
     <v-divider class="mx-3 my-1" />
     <drawer-external-links :is-collapsed="isRailActive" />
