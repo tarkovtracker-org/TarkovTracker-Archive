@@ -24,7 +24,7 @@ Every user on every page load waits for Tarkov.dev API to respond, causing major
 - **Location:** `frontend/src/plugins/apollo.ts:6`
 - **Configuration:** Points directly at `https://api.tarkov.dev/graphql`
 - **Problem:** Every user hits Tarkov.dev API directly on every load
-- **Impact:** **Completely ignores the Firebase cache!**
+- **Impact:** **Entirely bypasses the Firebase cache**
 
 ## Solution: Replace Apollo with Firestore Reads
 
@@ -120,7 +120,7 @@ Currently these still use GraphQL:
 
 ### Risk 1: Data staleness
 
-- **Issue:** Firestore cache updated daily, could be up to 24hrs old
+- **Issue:** Firestore cache updated daily, could be up to 24 hours old
 - **Mitigation:** Acceptable for game data that changes infrequently
 - **Fallback:** Add manual refresh button if needed
 

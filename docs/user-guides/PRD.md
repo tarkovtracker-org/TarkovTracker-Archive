@@ -27,40 +27,40 @@ This project addresses the core problem of manual tracking by integrating with T
 
 ### Functional Requirements
 
-**User & Profile Management**
+#### User & Profile Management
 
 - FR001: Users must be able to create and manage a user profile.
 - FR002: Users must be able to view their detailed player statistics and progress, including progression rate over time (e.g., task completion frequency and duration), timelines of major achievements (e.g., reaching max traders, Kappa, Lightkeeper), and potentially other metadata from TarkovMonitor logs (e.g., raid times).
 - FR003: Users must be able to form teams with other users to view their progress.
 - FR013: Users must be able to "Prestige" their profile, which resets some but not all of their progress, mirroring the in-game functionality. (Note: The specific data to be reset requires further investigation as the in-game implementation is subject to change).
 
-**Automated Tracking**
+#### Automated Tracking
 
 - FR004: The system must ensure API compatibility with TarkovMonitor to facilitate automated user progress updates from game logs.
 - FR005: The system must provide a mechanism for users to manually input and edit their progress as a fallback.
 
-**Task & Quest Tracking**
+#### Task & Quest Tracking
 
 - FR006: The system must display all Escape From Tarkov quests and tasks.
 - FR007: The system must allow users to track their progress on each quest.
 - FR016: Users must be able to track their skill progression and levels, as some skills are prerequisites for task completion.
 
-**API**
+#### API
 
 - FR008: The system must expose a public API for accessing user progress and data, specifically including `playerLevel`, `gameEdition`, `taskProgress` (which includes `id` (UUID correlating to the task ID available via the tarkov.dev API), `complete` (boolean), `failed` (boolean), `invalid` (boolean)), `taskObjectivesProgress`, `hideoutModulesProgress`, `hideoutPartsProgress`, `userId`, `displayName`, and `pmcFaction` via the "Progress" endpoint.
 - FR009: The API must be documented to allow for third-party integrations.
 - FR014: The system must maintain an audit log of all actions performed by API services on a user's account, including task status updates and data reads, for auditing, security, transparency, and statistical purposes.
 
-**Monetization**
+#### Monetization
 
 - FR010: The system must support a mechanism for unique monetized features, such as donations (Ko-fi, Patreon, GitHub Sponsors), exclusive Discord roles, non-disruptive supporter recognition (e.g., profile badges), early-access to new features, cosmetic upgrades (e.g., themes, avatars), and sponsored content creator integrations.
 - FR011: Core tracking functionality must remain free and ad-free.
 
-**Community & Open Source**
+#### Community & Open Source
 
 - FR012: The project will be open source, allowing for community contributions.
 
-**Data Integration**
+#### Data Integration
 
 - FR015: The system must integrate with the Tarkov.dev API to retrieve community-sourced game data not readily available from official game sources.
 
@@ -151,7 +151,7 @@ This project addresses the core problem of manual tracking by integrating with T
     - Open-sourcing the project.
     - Monetization hooks (donations, etc.).
 
-> **Note:** Detailed epic breakdown with full story specifications is available in [epics.md](./epics.md)
+> **Note:** Detailed epic breakdown with full story specifications is available in [epics.md](../development/epics.md)
 
 ---
 

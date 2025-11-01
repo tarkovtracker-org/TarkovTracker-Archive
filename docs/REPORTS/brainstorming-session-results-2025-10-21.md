@@ -1,8 +1,8 @@
 # Brainstorming Session Results
 
 **Session Date:** 2025-10-21
-**Facilitator:** Business Analyst Mary
-**Participant:** Dys
+**Facilitator:** Business Analyst
+**Participant:** Team Member
 
 ## Executive Summary
 
@@ -44,7 +44,7 @@
 **Why #2: Why did the project lack clear style guides and architecture guidelines?**
 
 - **Inherited brownfield project** - forked from original maintainer after 1 year of inactivity
-- Solo maintenance mode - fixing critical issues and outdated dependencies took priority
+- Solo maintenance mode - addressing critical issues and outdated dependencies took priority
 - **Triage mentality** - outdated/broken features were more urgent than organizational work
 - Time investment prioritized **tangible user-facing results** over invisible structural improvements
 
@@ -135,7 +135,7 @@ Key Insight: **"You're maintaining a Vue app while dreaming of React patterns an
 Codebase Organization Philosophy:
 
 - **"Goldilocks folder structure"** - Prefer flat, but not TOO flat
-  - Problem: Too many files in one directory = hard to navigate
+  - Problem: Too many files in one directory = difficult to navigate
   - Problem: Folders with only 1-3 files = unnecessary nesting overhead
   - Ideal: Balanced - group related files, but avoid over-nesting
 
@@ -160,9 +160,11 @@ Naming Convention Preferences:
 - Good: Clear, specific names that reveal purpose at a glance
 - Balance: Not too verbose, but specific enough to understand without opening file
 
-**BREAKTHROUGH INSIGHT: "The performance problem isn't the code - it's the missing backend cache layer. Every user hits Tarkov.dev directly on load."**
+## BREAKTHROUGH INSIGHT
 
-**Q4: The First Principles "Aha" - What's the simplest caching solution?**
+"The performance problem isn't the code - it's the missing backend cache layer. Every user hits Tarkov.dev directly on load."
+
+## Q4: The First Principles "Aha" - What's the simplest caching solution?
 
 💡 **SMOKING GUN DISCOVERED:**
 
@@ -220,9 +222,11 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Priority: Implement testing infrastructure first
    - Can optimize/consolidate testing approaches later
 
-**Key insight: "Combination opportunities are limited - more about ELIMINATION of duplicates than merging."**
+## Key insight
 
-#### **A - ADAPT: What patterns from other projects to borrow?**
+"Combination opportunities are limited - more about ELIMINATION of duplicates than merging."
+
+### **A - ADAPT: What patterns from other projects to borrow?**
 
 1. **ADAPT CI/CD PATTERNS** ⭐ - Main adaptation desire
    - Most modern projects have extensive CI/CD setup
@@ -390,7 +394,7 @@ This reframes everything:
 
 **HARDEST: React/Next.js migration**
 
-- Would take way too long
+- Would take excessively long
 - Likely introduces MORE issues than it solves
 - Not worth the cost (effort vs benefit)
 - **Verdict: Keep Vue - stop dreaming of React**
@@ -433,8 +437,6 @@ Combining all constraint questions:
 - ❌ React/Next.js migration (too costly, wrong battle)
 - ⏸️ Complete refactoring (do incrementally, not big bang)
 - ⏸️ Perfect organization (good enough > perfect)
-
-{{technique_sessions}}
 
 ## Idea Categorization
 

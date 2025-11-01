@@ -1,18 +1,26 @@
 # TarkovTracker Scripts Guide
 
-This is a monorepo with two main workspaces: `frontend` and `functions`. Scripts are organized to avoid confusion and provide clear entry points from the root.
+> **Location**: This documentation belongs in the `/scripts/` directory
+> **Purpose**: Documents all npm scripts and development workflows for the
+> TarkovTracker monorepo
+
+This is a monorepo with two main workspaces: `frontend` and `functions`.
+Scripts are
+organized to avoid confusion and provide clear entry points from the root.
 
 ## Dependency Management Scripts
 
 ### Upgrade Automation
 
-- **`npm run deps`** - Interactive dependency upgrade tool powered by taze (works across platforms)
+- **`npm run deps`** - Interactive dependency upgrade tool powered by taze
+  (works across platforms)
 
-**Note:** Legacy upgrade scripts (`snapshot.sh`, `health-check.sh`, `batch-update.sh`) have been archived after completing the Firebase 12 and dependency upgrade cycle.
+**Note:** Legacy upgrade scripts (`snapshot.sh`, `health-check.sh`, `batch-update.sh`)
+have been archived after completing the Firebase 12 and dependency upgrade cycle.
 
-**Quick Start:** See [docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](./docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)
+**Quick Start:** See [docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](../docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)
 
-**Full Strategy:** See [docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](./docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)
+**Full Strategy:** See [docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](../docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)
 
 ### Manual Dependency Checks
 
@@ -33,11 +41,17 @@ This is a monorepo with two main workspaces: `frontend` and `functions`. Scripts
 ```bash
 npm run dev         # Start frontend only (Vite dev server)
 npm run dev:full    # Start frontend + Firebase emulators (auth, firestore, functions)
-npm run dev:firebase # Build everything + start all Firebase emulators including hosting
+npm run dev:firebase # Build everything + start all Firebase emulators
+                  # including hosting
 npm run emulators   # Build functions + start all Firebase emulators
-npm run emulators:backend # Build functions + start backend emulators only (auth, firestore, functions)
+npm run emulators:backend # Build functions + start backend emulators only
+                  # (auth, firestore, functions)
 npm run emulators:local # Start emulators with imported local data
 ```
+
+**Automatic Cleanup:** All emulator scripts now use an intelligent wrapper that
+automatically cleans up Firebase debug logs when emulators shut down
+(including SIGINT/SIGTERM signals).
 
 ### Building
 
@@ -50,8 +64,7 @@ npm run build:frontend   # Build frontend only
 ### API Documentation
 
 ```bash
-npm run docs             # Build functions + generate docs + show viewing instructions
-npm run docs:generate    # Generate docs and copy to frontend/public/api/
+npm run docs:generate    # Generate OpenAPI docs and copy to frontend/public/api/
 ```
 
 ### Testing
@@ -83,13 +96,15 @@ npm run deploy:prod      # Deploy to production environment
 #### `npm run dev:full`
 
 - **Purpose**: Full development setup with backend
-- **Process**: Starts frontend dev server + Firebase emulators (auth, firestore, functions) concurrently
+- **Process**: Starts frontend dev server + Firebase emulators (auth, firestore,
+  functions) concurrently
 - **Best for**: Team features, auth flows, real-time sync
 
 #### `npm run dev:firebase`
 
 - **Purpose**: Production build testing
-- **Process**: Builds everything + starts all Firebase emulators including hosting (port 5000)
+- **Process**: Builds everything + starts all Firebase emulators including hosting
+  (port 5000)
 - **Best for**: Pre-deployment testing, build verification
 
 #### `npm run emulators`
@@ -136,7 +151,7 @@ npm run deploy:prod      # Deploy to production environment
 
 - **Purpose**: Build functions + generate docs + show viewing instructions
 - **Process**: Builds functions, generates Swagger docs, and shows how to view them
-- **Output**: `functions/swaggerui/openapi.json`
+- **Output**: `functions/openapi/openapi.json`
 - **Best for**: Complete documentation workflow
 
 #### `npm run docs:generate`
@@ -151,13 +166,15 @@ npm run deploy:prod      # Deploy to production environment
 #### `npm run deploy:staging`
 
 - **Purpose**: Deploy to the shared Firebase preview/staging channel
-- **Process**: Build functions → Generate docs → Build frontend → Deploy to `staging` hosting channel (7-day expiry)
+- **Process**: Build functions → Generate docs → Build frontend → Deploy to
+  `staging` hosting channel (7-day expiry)
 - **Best for**: QA/preview releases before production
 
 #### `npm run deploy:prod`
 
 - **Purpose**: Deploy to production environment
-- **Process**: Build functions → Generate docs → Build frontend → Deploy to the active default project
+- **Process**: Build functions → Generate docs → Build frontend → Deploy to the
+  active default project
 - **Best for**: Production releases
 
 ### Quality & Maintenance Scripts
@@ -219,18 +236,20 @@ TarkovTracker/
 │   └── package.json      # Frontend-specific scripts
 ├── functions/
 │   └── package.json      # Functions-specific scripts
-└── functions/swaggerui/  # Swagger UI (published by GitHub Pages)
-    ├── index.html        # Swagger UI
+└── functions/openapi/    # OpenAPI specification output
     └── openapi.json      # OpenAPI specification (generated)
 ```
 
 ## Best Practices
 
-1. **Use root scripts** - Run scripts from the root directory using the scripts in the root `package.json`
-2. **Don't run workspace scripts directly** - Unless you're doing workspace-specific development
-3. **Build before docs** - Always build functions before generating documentation
-4. **Test locally first** - Use `npm run dev` or `npm run emulators:local` before deploying
-5. **Check formatting** - Run `npm run format:check` before commits
+1. **Use root scripts** - Run scripts from the root directory using the scripts in
+   the root `package.json`
+1. **Don't run workspace scripts directly** - Unless you're doing workspace-specific
+   development
+1. **Build before docs** - Always build functions before generating documentation
+1. **Test locally first** - Use `npm run dev` or `npm run emulators:local` before
+   deploying
+1. **Check formatting** - Run `npm run format:check` before commits
 
 ## Common Workflows
 
