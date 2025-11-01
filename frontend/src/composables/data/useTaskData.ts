@@ -1,11 +1,4 @@
-import {
-  ref,
-  computed,
-  watch,
-  onBeforeUnmount,
-  getCurrentInstance,
-  type ComponentInternalInstance,
-} from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
@@ -36,13 +29,17 @@ type IdleCallbackWindow = Window & {
   requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
   cancelIdleCallback?: (handle: number) => void;
 };
+
+// Timeout for idle callback processing
+const IDLE_CALLBACK_TIMEOUT_MS = 2000;
+
 /**
  * Composable for managing task data, relationships, and derived information
  */
 export function useTaskData() {
   const store = useTarkovStore();
-  const instance = getCurrentInstance() as ComponentInternalInstance | null;
   let cancelDeferredProcessing: (() => void) | null = null;
+  let isMounted = true;
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
@@ -310,9 +307,15 @@ export function useTaskData() {
     }
     const runProcessing = () => {
       try {
+        if (!isMounted) {
+          return;
+        }
         const newGraph = buildTaskGraph(taskList);
         const processedData = processTaskData(taskList);
         const enhancedTasks = enhanceTasksWithRelationships(taskList, newGraph);
+        if (!isMounted) {
+          return;
+        }
         tasks.value = enhancedTasks;
         taskGraph.value = newGraph;
         mapTasks.value = processedData.tempMapTasks;
@@ -328,7 +331,7 @@ export function useTaskData() {
         cancelDeferredProcessing = null;
       }
     };
-    if (instance?.isUnmounted) {
+    if (!isMounted) {
       return;
     }
     isDerivingTaskData.value = true;
@@ -345,7 +348,7 @@ export function useTaskData() {
         () => {
           runProcessing();
         },
-        { timeout: 200 }
+        { timeout: IDLE_CALLBACK_TIMEOUT_MS }
       );
       cancelDeferredProcessing = () => {
         idleWindow.cancelIdleCallback?.(handle);
@@ -367,6 +370,7 @@ export function useTaskData() {
     { immediate: true, flush: 'post' }
   );
   onBeforeUnmount(() => {
+    isMounted = false;
     if (cancelDeferredProcessing) {
       cancelDeferredProcessing();
       cancelDeferredProcessing = null;

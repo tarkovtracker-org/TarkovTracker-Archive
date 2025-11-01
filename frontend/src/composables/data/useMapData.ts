@@ -74,20 +74,16 @@ export function useMapData() {
         return map;
       }
 
-      const mergedMap = { ...map };
-
-      if (staticData.svg) {
-        mergedMap.svg = staticData.svg;
-      } else if (!missingSvgWarnings.has(mapKey)) {
+      if (!staticData.svg && !missingSvgWarnings.has(mapKey)) {
         missingSvgWarnings.add(mapKey);
         logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
       }
 
-      if (staticData.unavailableMessage) {
-        mergedMap.unavailableMessage = staticData.unavailableMessage;
-      }
-
-      return mergedMap;
+      return {
+        ...map,
+        ...(staticData.svg && { svg: staticData.svg }),
+        ...(staticData.unavailableMessage && { unavailableMessage: staticData.unavailableMessage }),
+      };
     });
     // Sort by game display order instead of alphabetically
     return [...mergedMaps].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));

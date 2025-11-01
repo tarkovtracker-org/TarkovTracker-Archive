@@ -1,3 +1,5 @@
+import type { DocumentNode } from 'graphql';
+
 const DEFAULT_ENDPOINT = 'https://api.tarkov.dev/graphql';
 
 interface GraphQLRequestBody<V> {
@@ -10,8 +12,14 @@ interface GraphQLResponse<T> {
   errors?: Array<{ message?: string }>;
 }
 
+/**
+ * Options for GraphQL requests
+ * @property signal - Optional AbortSignal for request cancellation
+ * @property timeout - Request timeout in milliseconds (default: 10000ms / 10 seconds)
+ */
 interface GraphQLRequestOptions {
   signal?: AbortSignal;
+  timeout?: number;
 }
 
 const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT ?? DEFAULT_ENDPOINT;
@@ -34,7 +42,7 @@ function setupAbortSignal(
 }
 
 // Helper to convert query to string
-function queryToString(query: string | import('graphql').DocumentNode): string {
+function queryToString(query: string | DocumentNode): string {
   if (typeof query === 'string') {
     return query;
   }
@@ -46,13 +54,48 @@ function queryToString(query: string | import('graphql').DocumentNode): string {
   return body;
 }
 
+function validateResponse(response: Response): void {
+  if (!response.ok) {
+    throw new Error(`GraphQL request failed with status ${response.status}`);
+  }
+}
+
+function validateContentType(response: Response): void {
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    throw new Error(
+      `Expected JSON response but received ${contentType || 'unknown content type'} (status ${response.status})`
+    );
+  }
+}
+
+function validatePayload<T>(payload: GraphQLResponse<T>): T {
+  if (payload.errors?.length) {
+    const aggregated = payload.errors
+      .map((error) => error.message)
+      .filter((message): message is string => Boolean(message))
+      .join('; ');
+    throw new Error(aggregated || 'GraphQL request returned errors');
+  }
+  if (!payload.data) {
+    throw new Error('GraphQL request returned no data');
+  }
+  return payload.data;
+}
+
 export async function executeGraphQL<T, V = Record<string, unknown>>(
-  query: string | import('graphql').DocumentNode,
+  query: string | DocumentNode,
   variables?: V,
   options: GraphQLRequestOptions = {}
 ): Promise<T> {
   const controller = new AbortController();
   const detachAbortListener = setupAbortSignal(controller, options);
+
+  // Setup timeout handler
+  const timeout = options.timeout ?? 10000; // Default 10 seconds
+  const timeoutId = setTimeout(() => {
+    controller.abort(new Error(`GraphQL request timed out after ${timeout}ms`));
+  }, timeout);
 
   try {
     // Convert query to string
@@ -67,23 +110,13 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
       mode: 'cors',
     });
 
-    if (!response.ok) {
-      throw new Error(`GraphQL request failed with status ${response.status}`);
-    }
+    validateResponse(response);
+    validateContentType(response);
 
     const payload = (await response.json()) as GraphQLResponse<T>;
-    if (payload.errors?.length) {
-      const aggregated = payload.errors
-        .map((error) => error.message)
-        .filter((message): message is string => Boolean(message))
-        .join('; ');
-      throw new Error(aggregated || 'GraphQL request returned errors');
-    }
-    if (!payload.data) {
-      throw new Error('GraphQL request returned no data');
-    }
-    return payload.data;
+    return validatePayload(payload);
   } finally {
+    clearTimeout(timeoutId);
     detachAbortListener?.();
   }
 }

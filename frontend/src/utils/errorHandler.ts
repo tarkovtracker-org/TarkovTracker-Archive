@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { logger } from './logger';
+import { logger } from '@/utils/logger';
 
 export interface ErrorInfo {
   id: string;
@@ -13,6 +13,15 @@ export interface ErrorInfo {
 class ErrorHandler {
   private errors = ref<ErrorInfo[]>([]);
   private maxErrors = 50; // Keep only last 50 errors in memory
+  private userIdProvider?: () => string | undefined;
+
+  /**
+   * Set user ID provider function
+   * @param provider - Function that returns current user ID
+   */
+  setUserIdProvider(provider: () => string | undefined): void {
+    this.userIdProvider = provider;
+  }
 
   /**
    * Handle and log an error
@@ -61,7 +70,7 @@ class ErrorHandler {
    * Get all logged errors
    */
   getErrors(): ErrorInfo[] {
-    return this.errors.value;
+    return [...this.errors.value];
   }
 
   /**
@@ -98,26 +107,94 @@ class ErrorHandler {
   }
 
   private generateErrorId(): string {
-    return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return `err_${crypto.randomUUID()}`;
+      }
+    } catch {
+      // Fallback if randomUUID fails
+    }
+
+    // Fallback using crypto.getRandomValues
+    try {
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint32Array(4);
+        crypto.getRandomValues(array);
+        const randomHex = Array.from(array, (dec) => dec.toString(16)).join('');
+        return `err_${randomHex}`;
+      }
+    } catch {
+      // Fallback if getRandomValues fails
+    }
+
+    // Ultimate fallback
+    return `err_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   private extractErrorMessage(error: unknown): string {
+    return this.safeStringifyError(error);
+  }
+
+  /**
+   * Safely converts any error value to a string without throwing.
+   * This avoids JSON.stringify which can throw on circular references.
+   */
+  private safeStringifyError(error: unknown): string {
+    // Handle Error instances with their well-known properties
     if (error instanceof Error) {
-      return error.message;
+      let result = `${error.name}: ${error.message}`;
+      if (error.stack) {
+        result += `\n${error.stack}`;
+      }
+      return result;
     }
+
+    // Handle primitive string values directly
     if (typeof error === 'string') {
       return error;
     }
-    if (typeof error === 'object' && error !== null) {
-      return JSON.stringify(error);
+
+    // Handle null and undefined explicitly
+    if (error === null) {
+      return 'null';
     }
-    return 'Unknown error occurred';
+    if (error === undefined) {
+      return 'undefined';
+    }
+
+    // For objects, create a safe representation without risking circular references
+    if (typeof error === 'object') {
+      try {
+        // Get the object's type for context
+        const typeInfo = Object.prototype.toString.call(error);
+        
+        // Get up to 10 enumerable properties to avoid verbosity
+        // and prevent deep structure traversal
+        const properties = Object.keys(error).slice(0, 10);
+        const propsString = properties
+          .map(key => {
+            try {
+              return `${key}=${String((error as Record<string, unknown>)[key])}`;
+            } catch {
+              // If property conversion fails, just note the key exists
+              return `${key}=<unable to convert>`;
+            }
+          })
+          .join(', ');
+        
+        return `${typeInfo}${propsString ? ` {${propsString}}` : ''}`;
+      } catch {
+        // Ultimate fallback if anything above fails
+        return `${Object.prototype.toString.call(error)}: ${String(error)}`;
+      }
+    }
+
+    // Handle all other primitive types
+    return String(error);
   }
 
   private getCurrentUserId(): string | undefined {
-    // This would depend on your auth system
-    // For now, return undefined since we don't want to couple this to specific auth
-    return undefined;
+    return this.userIdProvider ? this.userIdProvider() : undefined;
   }
 
   private logError(errorInfo: ErrorInfo): void {
@@ -139,9 +216,9 @@ export function useErrorHandler() {
   return {
     handleError: errorHandler.handleError.bind(errorHandler),
     handleAsyncError: errorHandler.handleAsyncError.bind(errorHandler),
-    getErrors: () => errorHandler.getErrors(),
+    getErrors: errorHandler.getErrors.bind(errorHandler),
     getErrorsByContext: errorHandler.getErrorsByContext.bind(errorHandler),
-    clearErrors: () => errorHandler.clearErrors(),
+    clearErrors: errorHandler.clearErrors.bind(errorHandler),
     clearErrorsByContext: errorHandler.clearErrorsByContext.bind(errorHandler),
     createErrorBoundary: errorHandler.createErrorBoundary.bind(errorHandler),
   };

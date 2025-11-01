@@ -73,6 +73,13 @@ const PRESERVED_BOUNDS: Record<string, number[][]> = {
 };
 
 /**
+ * Special floor orders for specific maps that don't follow standard naming conventions
+ */
+const SPECIAL_FLOOR_ORDERS: Record<string, string[]> = {
+  factory: ['Basement', 'Ground_Floor', 'Second_Floor', 'Third_Floor'],
+};
+
+/**
  * Extract SVG filename from interactive map data
  */
 function extractSvgFileName(ourKey: string, interactive: TarkovDevInteractiveMap): string {
@@ -80,12 +87,9 @@ function extractSvgFileName(ourKey: string, interactive: TarkovDevInteractiveMap
     return 'Labs.svg';
   }
   if (interactive.svgPath) {
-    const segments = interactive.svgPath
-      .split('/')
-      .map((segment) => segment.trim())
-      .filter((segment) => segment.length > 0);
-    if (segments.length > 0) {
-      return segments[segments.length - 1];
+    const lastSegment = interactive.svgPath.split('/').pop()?.trim();
+    if (lastSegment) {
+      return lastSegment;
     }
   }
   return `${ourKey}.svg`;
@@ -102,9 +106,9 @@ function extractFloorFromSvgPath(svgPath: string): string {
 function buildFloorArray(ourKey: string, interactive: TarkovDevInteractiveMap): string[] {
   const floors: string[] = [];
 
-  if (ourKey === 'factory') {
-    // Special case: Factory has custom floor order (Basement first, not last)
-    floors.push('Basement', 'Ground_Floor', 'Second_Floor', 'Third_Floor');
+  // Check if there's a special floor order for this map
+  if (SPECIAL_FLOOR_ORDERS[ourKey]) {
+    floors.push(...SPECIAL_FLOOR_ORDERS[ourKey]);
   } else {
     // Determine main floor name from SVG filename
     if (interactive.svgPath) {
@@ -134,30 +138,56 @@ function buildFloorArray(ourKey: string, interactive: TarkovDevInteractiveMap): 
 }
 
 /**
+ * Extract floor name from SVG path if it matches a valid floor
+ */
+function extractFloorFromPath(svgPath: string, floors: string[]): string | undefined {
+  const match = svgPath.match(/-([\w_]+)\.svg$/);
+  return match && floors.includes(match[1]) ? match[1] : undefined;
+}
+
+/**
  * Determine default floor from interactive map data
  */
 function determineDefaultFloor(floors: string[], interactive: TarkovDevInteractiveMap): string {
-  let defaultFloor = floors[0];
-
+  // First, try to derive from interactive.svgPath
   if (interactive.svgPath) {
-    const mainFloorMatch = interactive.svgPath.match(/-([\w_]+)\.svg$/);
-    if (mainFloorMatch && floors.includes(mainFloorMatch[1])) {
-      defaultFloor = mainFloorMatch[1];
-    }
+    const mainFloor = extractFloorFromPath(interactive.svgPath, floors);
+    if (mainFloor) return mainFloor;
   }
 
   // If not found in main path, check for layers with show=true
-  if (!defaultFloor && interactive.layers) {
+  if (interactive.layers) {
     const defaultLayer = interactive.layers.find((l) => l.show === true);
-    if (defaultLayer && defaultLayer.svgPath) {
-      const layerMatch = defaultLayer.svgPath.match(/-([\w_]+)\.svg$/);
-      if (layerMatch && floors.includes(layerMatch[1])) {
-        defaultFloor = layerMatch[1];
-      }
+    if (defaultLayer?.svgPath) {
+      const layerFloor = extractFloorFromPath(defaultLayer.svgPath, floors);
+      if (layerFloor) return layerFloor;
     }
   }
 
-  return defaultFloor;
+  // Final fallback to first floor if no match was found
+  return floors[0];
+}
+
+/**
+ * Apply optional transform and heightRange to map definition
+ */
+function applyOptionalFields(
+  mapDefinition: StaticMapDefinition,
+  interactive: TarkovDevInteractiveMap
+): void {
+  if (!mapDefinition.svg) {
+    logger.warn('mapDefinition.svg is undefined, skipping optional fields assignment');
+    return;
+  }
+  
+  const svg = mapDefinition.svg;
+  
+  if (interactive.transform) {
+    svg.transform = interactive.transform;
+  }
+  if (interactive.heightRange) {
+    svg.heightRange = interactive.heightRange;
+  }
 }
 
 /**
@@ -196,13 +226,7 @@ function convertMapGroup(
     },
   };
 
-  if (interactive.transform) {
-    mapDefinition.svg!.transform = interactive.transform;
-  }
-
-  if (interactive.heightRange) {
-    mapDefinition.svg!.heightRange = interactive.heightRange;
-  }
+  applyOptionalFields(mapDefinition, interactive);
 
   logger.debug(`Converted ${mapGroup.normalizedName} -> ${ourKey}`);
   return { key: ourKey, definition: mapDefinition };
@@ -235,11 +259,12 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
   const TARKOV_DEV_MAPS_URL =
     'https://raw.githubusercontent.com/the-hideout/tarkov-dev/main/src/data/maps.json';
 
-  // Set up timeout controller
+  // Single source of truth for timeout to align timer and logging
+  const TIMEOUT_MS = 8000;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
-  }, 8000); // 8 second timeout
+  }, TIMEOUT_MS); // 8 second timeout
 
   logger.info('Fetching maps from tarkov.dev...');
 
@@ -249,7 +274,9 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
     response = await fetch(TARKOV_DEV_MAPS_URL, { signal: controller.signal });
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      logger.error('Failed to fetch maps from tarkov.dev: Request timed out after 8 seconds');
+      logger.error(
+        `Failed to fetch maps from tarkov.dev: Request timed out after ${TIMEOUT_MS}ms`
+      );
       throw new Error('Request timed out while fetching maps from tarkov.dev');
     } else {
       logger.error('Failed to fetch maps from tarkov.dev:', error);

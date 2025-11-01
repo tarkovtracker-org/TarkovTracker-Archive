@@ -32,7 +32,8 @@ export default class DataMigrationService {
     if (!localData) {
       return false;
     }
-    return migrateLocalDataToUser(uid, localData);
+    const result = await migrateLocalDataToUser(uid, localData);
+    return result !== 'skipped';
   }
 
   static exportDataForMigration(): ExportObject | null {
@@ -54,15 +55,15 @@ export default class DataMigrationService {
     uid: string,
     importedData: ProgressData,
     targetGameMode?: GameMode
-  ): Promise<boolean> {
+  ): Promise<boolean | 'skipped'> {
     return importDataToFirestore(uid, importedData, targetGameMode);
   }
 
   static async fetchDataWithApiToken(
     apiToken: string,
-    oldDomain: string = import.meta.env.VITE_PROGRESS_ENDPOINT ||
+    endpointUrl: string = import.meta.env.VITE_PROGRESS_ENDPOINT ||
       'https://tarkovtracker.io/api/v2/progress'
   ): Promise<ProgressData | null> {
-    return fetchDataWithApiToken(apiToken, oldDomain);
+    return fetchDataWithApiToken(apiToken, endpointUrl);
   }
 }

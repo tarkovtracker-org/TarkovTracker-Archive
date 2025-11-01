@@ -1,7 +1,15 @@
 import { logger } from '@/utils/logger';
 import type { ProgressData } from './DataMigrationTypes';
 
-const DEFAULT_PROGRESS_ENDPOINT = 'https://tarkovtracker.io/api/v2/progress';
+const DEFAULT_PROGRESS_ENDPOINT =
+  import.meta.env.VITE_PROGRESS_ENDPOINT || 'https://tarkovtracker.io/api/v2/progress';
+
+/**
+ * Helper function to get timestamp with fallback to current time
+ */
+export const getTimestamp = (timestamp?: number): number => {
+  return timestamp ?? Date.now();
+};
 
 interface OldTaskProgress {
   id: string;
@@ -77,7 +85,7 @@ const buildTaskCompletions = (
 
     acc[task.id] = {
       complete: Boolean(task.complete),
-      timestamp: timestamp ?? Date.now(),
+      timestamp: getTimestamp(timestamp),
       failed: Boolean(task.failed),
     };
 
@@ -93,20 +101,20 @@ const buildHideoutModules = (
     return {};
   }
 
-  const result: ProgressData['hideoutModules'] = {};
+  const initialAcc: NonNullable<ProgressData['hideoutModules']> = {};
 
-  modules.forEach((module) => {
+  return modules.reduce<NonNullable<ProgressData['hideoutModules']>>((acc, module) => {
     if (!module?.id || module.complete !== true) {
-      return;
+      return acc;
     }
 
-    result[module.id] = {
+    acc[module.id] = {
       complete: true,
-      timestamp: timestamp ?? Date.now(),
+      timestamp: getTimestamp(timestamp),
     };
-  });
 
-  return result;
+    return acc;
+  }, initialAcc);
 };
 
 const buildHideoutParts = (
@@ -117,21 +125,21 @@ const buildHideoutParts = (
     return {};
   }
 
-  const result: ProgressData['hideoutParts'] = {};
+  const initialAcc: NonNullable<ProgressData['hideoutParts']> = {};
 
-  parts.forEach((part) => {
+  return parts.reduce<NonNullable<ProgressData['hideoutParts']>>((acc, part) => {
     if (!part?.id) {
-      return;
+      return acc;
     }
 
-    result[part.id] = {
+    acc[part.id] = {
       complete: Boolean(part.complete),
       count: part.count ?? 0,
       ...(part.complete ? { timestamp: timestamp ?? Date.now() } : {}),
     };
-  });
 
-  return result;
+    return acc;
+  }, initialAcc);
 };
 
 const buildTaskObjectives = (
@@ -142,24 +150,24 @@ const buildTaskObjectives = (
     return {};
   }
 
-  const result: ProgressData['taskObjectives'] = {};
+  const initialAcc: NonNullable<ProgressData['taskObjectives']> = {};
 
-  objectives.forEach((objective) => {
+  return objectives.reduce<NonNullable<ProgressData['taskObjectives']>>((acc, objective) => {
     if (!objective?.id) {
-      return;
+      return acc;
     }
 
-    result[objective.id] = {
+    acc[objective.id] = {
       complete: Boolean(objective.complete),
       count: objective.count ?? 0,
       ...(objective.complete ? { timestamp: timestamp ?? Date.now() } : {}),
     };
-  });
 
-  return result;
+    return acc;
+  }, initialAcc);
 };
 
-const createMigrationData = (dataFromApi: OldApiRawData, oldDomain: string): ProgressData => {
+const createMigrationData = (dataFromApi: OldApiRawData, endpointUrl: string): ProgressData => {
   const importTimestamp = Date.now();
 
   return {
@@ -174,14 +182,14 @@ const createMigrationData = (dataFromApi: OldApiRawData, oldDomain: string): Pro
     importedFromApi: true,
     importDate: new Date(importTimestamp).toISOString(),
     sourceUserId: dataFromApi.userId,
-    sourceDomain: oldDomain,
+    sourceDomain: endpointUrl,
   };
 };
 
 // Fetches and transforms legacy API data format
 export const fetchDataWithApiToken = async (
   apiToken: string,
-  oldDomain: string = DEFAULT_PROGRESS_ENDPOINT
+  endpointUrl: string = DEFAULT_PROGRESS_ENDPOINT
 ): Promise<ProgressData | null> => {
   if (!apiToken) {
     return null;
@@ -193,7 +201,7 @@ export const fetchDataWithApiToken = async (
       Accept: 'application/json',
     };
 
-    const response = await fetch(oldDomain, {
+    const response = await fetch(endpointUrl, {
       method: 'GET',
       headers,
     });
@@ -214,7 +222,7 @@ export const fetchDataWithApiToken = async (
       return null;
     }
 
-    return createMigrationData(dataFromApi, oldDomain);
+    return createMigrationData(dataFromApi, endpointUrl);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error(`[ExternalApiService] Error fetching data with API token: ${errorMessage}`, error);

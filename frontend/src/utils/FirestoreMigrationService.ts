@@ -61,7 +61,7 @@ const enrichLocalDataForMigration = (localData: ProgressData): ProgressData => (
 export const migrateLocalDataToUser = async (
   uid: string,
   localData: ProgressData
-): Promise<boolean> => {
+): Promise<boolean | 'skipped'> => {
   try {
     const progressRef = getProgressRef(uid);
     let existingData: ProgressData | null = null;
@@ -79,7 +79,7 @@ export const migrateLocalDataToUser = async (
       logger.warn(
         '[FirestoreMigrationService] User already has data, aborting automatic migration.'
       );
-      return false;
+      return 'skipped';
     }
 
     const enrichedData = enrichLocalDataForMigration({ ...localData });
@@ -87,14 +87,15 @@ export const migrateLocalDataToUser = async (
     // Skip Firestore write when dev auth is enabled
     if (!isDevAuthEnabled) {
       await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
+      backupLocalProgress(enrichedData);
+      return true;
     } else {
       logger.debug(
         `[FirestoreMigrationService] Skipped Firestore write to ${progressRef.path} due to dev auth`
       );
+      backupLocalProgress(enrichedData);
+      return 'skipped';
     }
-
-    backupLocalProgress(enrichedData);
-    return true;
   } catch (error) {
     logger.error('[FirestoreMigrationService] Error migrating local data to Firestore:', error);
     return false;
@@ -160,7 +161,7 @@ export const importDataToUser = async (
   uid: string,
   importedData: ProgressData,
   _targetGameMode?: GameMode
-): Promise<boolean> => {
+): Promise<boolean | 'skipped'> => {
   if (!uid) {
     logger.error('[FirestoreMigrationService] No UID provided for importDataToUser.');
     return false;
@@ -191,14 +192,14 @@ export const importDataToUser = async (
     // Skip Firestore write when dev auth is enabled
     if (!isDevAuthEnabled) {
       await setDoc(progressRef, newUserState as DocumentData, { merge: true });
+      saveLocalUserState(newUserState);
+      return true;
     } else {
       logger.debug(
         `[FirestoreMigrationService] Skipped Firestore write for user ${uid} due to dev auth`
       );
+      return 'skipped';
     }
-
-    saveLocalUserState(newUserState);
-    return true;
   } catch (error) {
     logger.error(
       `[FirestoreMigrationService] General error in importDataToUser for user ${uid}:`,
