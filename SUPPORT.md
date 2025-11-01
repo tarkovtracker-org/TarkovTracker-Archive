@@ -6,18 +6,16 @@ Thanks for your interest in TarkovTracker! We want to make it easy to find answe
 
 - **Documentation** – Start with the [README](README.md) for an overview and check the [`docs/`](docs/) directory for API references.
 - **Changelog** – Review [CHANGELOG.md](CHANGELOG.md) to see what has changed between releases.
-- **Discussions** – Browse [GitHub Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) for community Q&A, feature ideas, and announcements.
+- **Discussions** – Browse [GitHub Discussions](https://github.com/TarkovTracker-org/tarkovtracker/discussions) for community Q&A, feature ideas, and announcements.
 
 ## Ask the community
-
-- Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) for live chat, play sessions, and quick feedback loops.
+- Join the [TarkovTracker.org Discord](https://discord.gg/M8nBgA2sT6) for live chat, play sessions, and quick feedback loops.
 - Create a new discussion under the `Q&A` or `Ideas` categories.
 - Join informal playtests or co-working sessions announced in the `Events` category.
 - Share tips, builds, or third-party integrations that other players might find helpful.
 
 ## Report a bug
-
-- Search [existing issues](https://github.com/TarkovTracker/tarkovtracker/issues) to avoid duplicates.
+- Search [existing issues](https://github.com/TarkovTracker-org/tarkovtracker/issues) to avoid duplicates.
 - If no issue exists, open a new one and include reproduction steps, screenshots, browser/OS versions, and any relevant logs.
 - Clearly label the issue (e.g., `bug`, `enhancement`, `documentation`) to help maintainers triage quickly.
 

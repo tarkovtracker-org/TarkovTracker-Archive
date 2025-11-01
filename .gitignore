@@ -15,7 +15,7 @@ logs/
 # AI Assistant files
 .gemini/
 .factory/
-# .claude/ (Intentionally tracked so Claude prompt history can be shared for onboarding)
+.claude/
 
 # Log files
 npm-debug.log*

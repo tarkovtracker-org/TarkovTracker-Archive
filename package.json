@@ -22,7 +22,7 @@
     "emulators:backend": "npm run build:functions && firebase emulators:start --only auth,firestore,functions",
     "emulators:local": "firebase emulators:start --import=./local_data --export-on-exit=./local_data",
     "docs": "npm run build:functions && npm run swagger --workspace=functions && echo 'API docs generated! Open docs/index.html in your browser to view the Swagger UI.'",
-    "docs:generate": "npm run swagger --workspace=functions && mkdir -p frontend/public/api && cp docs/openapi.json frontend/public/api/openapi.json",
+    "docs:generate": "npm run swagger --workspace=functions && shx mkdir -p frontend/public/api && shx cp docs/openapi.json frontend/public/api/openapi.json",
     "deploy:staging": "npm run build:functions && npm run docs && npm run build:frontend && firebase hosting:channel:deploy staging --expires 7d",
     "deploy:prod": "npm run build:functions && npm run docs && npm run build:frontend && firebase deploy",
     "lint": "eslint . && npm run type-check --workspace=frontend && npm run type-check --workspace=functions",
@@ -31,7 +31,7 @@
     "test": "npm run test:functions && npm run test:frontend",
     "test:frontend": "npm run test --workspace=frontend",
     "test:functions": "npm run test --workspace=functions",
-    "clean": "rm -rf firebase-export-* *-debug.log firebase-debug*.log",
+    "clean": "shx rm -rf firebase-export-* *-debug.log firebase-debug*.log",
     "deps": "npx taze --r --I"
   },
   "devDependencies": {
@@ -43,9 +43,13 @@
     "firebase": "^12.4.0",
     "firebase-tools": "^14.22.0",
     "globals": "^16.4.0",
+    "shx": "^0.4.0",
     "taze": "^19.8.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
     "vue-eslint-parser": "^10.2.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.52.5"
   }
 }
