@@ -31,7 +31,7 @@ const languageCode = navigator.language.split(/[-_]/)[0];
 // Define type for the map of Vuetify locales
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const vuetifyLocales: Record<string, any> = {
-  cz: vuetifyCz,
+  cs: vuetifyCs,
   en: vuetifyEn,
   de: vuetifyDe,
   fr: vuetifyFr,
