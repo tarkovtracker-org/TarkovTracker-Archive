@@ -1,6 +1,7 @@
 // i18n translations
 import { createI18n, type I18n, type LocaleMessages } from 'vue-i18n';
 import {
+  cz as vuetifyCz,
   en as vuetifyEn,
   de as vuetifyDe,
   fr as vuetifyFr,
@@ -30,6 +31,7 @@ const languageCode = navigator.language.split(/[-_]/)[0];
 // Define type for the map of Vuetify locales
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const vuetifyLocales: Record<string, any> = {
+  cz: vuetifyCz,
   en: vuetifyEn,
   de: vuetifyDe,
   fr: vuetifyFr,
