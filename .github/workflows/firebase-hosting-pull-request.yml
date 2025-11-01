@@ -13,7 +13,10 @@ jobs:
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Setup Node.js and install dependencies
+        uses: ./.github/actions/setup-node-and-install
+        with:
+          node-version: '22'
       
       - name: Validate Firebase service account
         env:
@@ -29,9 +32,6 @@ jobs:
             exit 1
           }
           echo "✓ Firebase service account is valid JSON"
-      
-      - name: Install dependencies
-        run: npm ci
       
       - name: Type-check Firebase functions
         run: npm run type-check --workspace=functions

@@ -1,4 +1,3 @@
-/* eslint-env node */
 import { fileURLToPath, URL } from 'node:url';
 import vueParser from 'vue-eslint-parser';
 import globals from 'globals';
@@ -23,6 +22,12 @@ export default [
       'functions/**/*.test.js',
       'functions/vitest.config.js',
       'eslint.progress-rules.cjs',
+      // Exclude these directories from ESLint processing
+      '.factory/**',
+      '.github/**',
+      '.vscode/**',
+      'scripts/**/*',
+      'bmad/**',
     ],
   },
   // Base configuration for all files
@@ -31,9 +36,31 @@ export default [
   ...tseslint.configs.recommended,
   // Vue configuration
   ...pluginVue.configs['flat/recommended'],
+  // Apollo config (CommonJS) - must come before frontend rules
+  {
+    files: ['frontend/apollo.config.cjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
   // Project-specific overrides
   {
-    files: ['frontend/**/*.{ts,js,vue}'],
+    files: [
+      'frontend/src/**/*.{ts,js,vue}',
+      'frontend/vite.config.ts',
+      'frontend/vitest.config.ts',
+      'frontend/playwright.config.ts',
+      'frontend/e2e/**/*.ts',
+      '!frontend/apollo.config.cjs'
+    ],
     languageOptions: {
       parser: vueParser,
       ecmaVersion: 'latest',
@@ -47,6 +74,7 @@ export default [
         project: ['./frontend/tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
         extraFileExtensions: ['.vue'],
+        allowImportExportEverywhere: false,
       },
     },
     rules: {
@@ -92,6 +120,26 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
+  // Root-level config files (JavaScript only, no TypeScript project linting)
+  {
+    files: ['eslint.config.js', 'bmad/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+      parserOptions: {
+        project: null, // Disable project-based linting for config files
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-console': 'off',
+      'max-len': ['warn', { code: 120 }],
+    },
+  },
   // Node.js scripts configuration (CommonJS)
   {
     files: ['scripts/**/*.js'],
@@ -106,21 +154,6 @@ export default [
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       'no-console': 'off',
-    },
-  },
-  // Apollo config (CommonJS)
-  {
-    files: ['apollo.config.js'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'commonjs',
-      globals: {
-        ...globals.node,
-        ...globals.es2022,
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   // Prettier must be last to override style rules

@@ -36,13 +36,13 @@ export default defineConfig({
   },
   define: {
     __VUE_OPTIONS_API__: 'true',
-    __VUE_PROD_DEVTOOLS__: process.env.NODE_ENV !== 'production',
+    __VUE_PROD_DEVTOOLS__: JSON.stringify(process.env.NODE_ENV !== 'production'),
     __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false',
     'import.meta.env.VITE_COMMIT_HASH': JSON.stringify(getCommitHash()),
     'import.meta.env.VITE_BUILD_TIME': JSON.stringify(getBuildTime()),
   },
   build: {
-    sourcemap: false, // Disabled for production to reduce bundle size by ~7MB
+    sourcemap: 'hidden', // Generate source maps without linking them in bundle
     chunkSizeWarningLimit: 1000,
     modulePreload: {
       // Prevent heavy chunks from being preloaded on every page
@@ -55,6 +55,14 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        assetFileNames: (assetInfo) => {
+          // Use predictable names for font files to enable HTML preload links
+          if (assetInfo.name?.endsWith('.woff2')) {
+            return 'assets/fonts/[name][extname]';
+          }
+          // Default behavior for other assets
+          return 'assets/[name]-[hash][extname]';
+        },
         manualChunks(id) {
           // Only split the heaviest vendors to improve performance
           // Everything else uses Vite's automatic chunking

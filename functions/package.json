@@ -35,9 +35,9 @@
     "@types/node": "^22.18.13",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/uid-generator": "^2.0.6",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.0",
     "swagger-jsdoc": "^6.2.8",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.4"
+    "vitest": "^4.0.6"
   }
 }

@@ -41,7 +41,7 @@ firebase-export-*
 .firebaserc
 
 # Firebase function artifacts
-functions/swaggerui/openapi.json
+functions/openapi/openapi.json
 
 # AI assistant artifacts
 .gemini/
