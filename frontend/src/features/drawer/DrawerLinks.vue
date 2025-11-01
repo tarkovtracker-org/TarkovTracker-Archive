@@ -20,6 +20,12 @@
       to="/items"
       :is-collapsed="props.isCollapsed"
     >
+    <drawer-item
+      icon="mdi-handshake"
+      locale-key="traders"
+      to="/traders"
+      :is-collapsed="props.isCollapsed"
+    />
     </drawer-item>
     <drawer-item
       icon="mdi-home"
