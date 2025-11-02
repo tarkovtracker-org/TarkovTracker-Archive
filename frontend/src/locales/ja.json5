@@ -288,7 +288,7 @@
       title: 'ログイン',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'RESTful APIでプログラム的に進行データにアクセス',
         create_token: 'トークンを作成',

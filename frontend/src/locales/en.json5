@@ -296,7 +296,7 @@
       title: 'Privacy Policy',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'Access your progress data programmatically with our RESTful API',
         create_token: 'Create Token',

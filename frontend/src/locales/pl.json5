@@ -280,7 +280,7 @@
       title: 'Logowanie',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'Uzyskaj dostęp do swoich danych postępu poprzez nasze RESTful API',
         create_token: 'Utwórz token',
