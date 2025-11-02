@@ -10,7 +10,7 @@ import {
   safeAddNode,
   safeAddEdge,
 } from '@/composables/utils/graphHelpers';
-import type { HideoutStation, HideoutModule, NeededItemHideoutModule } from '@/types/tarkov';
+import type { HideoutStation, HideoutModule, NeededItemHideoutModule, TarkovHideoutQueryResult } from '@/types/tarkov';
 import type { AbstractGraph } from 'graphology-types';
 import { logger } from '@/utils/logger';
 /**

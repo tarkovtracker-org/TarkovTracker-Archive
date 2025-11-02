@@ -141,6 +141,7 @@ type GraphQLResource<T, V extends Record<string, unknown>> = ReturnType<
   typeof useGraphQLResource<T, V>
 >;
 type SharedTarkovDataResource = GraphQLResource<TarkovDataQueryResult, TarkovDataVariables>;
+type HideoutQueryResource = GraphQLResource<TarkovHideoutQueryResult, { gameMode: string; languageCode: string }>;
 
 const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
@@ -325,7 +326,7 @@ let sharedTarkovDataQueryResource: SharedTarkovDataResource | null = null;
 
 // Map to store hideout query resources keyed by variables (gameMode + languageCode)
 // This ensures each unique combination has its own shared resource instance
-const hideoutQueryResources = new Map<string, ReturnType<typeof useGraphQLResource>>();
+const hideoutQueryResources = new Map<string, HideoutQueryResource>();
 
 export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   const { languageCode } = useTarkovApi();
