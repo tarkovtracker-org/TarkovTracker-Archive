@@ -76,7 +76,9 @@ describe('useFirestoreTarkovItems', () => {
     expect(items.value).toEqual(mockItems);
     expect(loading.value).toBe(false);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith('Loaded 2 Tarkov items from Firestore subcollection cache');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Loaded 2 Tarkov items from Firestore subcollection cache'
+    );
   });
 
   it('should utilize VueFire for reactive data binding (AC: 4)', async () => {
@@ -180,7 +182,9 @@ describe('useFirestoreTarkovItems', () => {
     expect(items.value).toEqual([]);
     expect(loading.value).toBe(false);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith('Loaded 0 Tarkov items from Firestore subcollection cache');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Loaded 0 Tarkov items from Firestore subcollection cache'
+    );
   });
 
   it('should initialize with loading state (AC: 2)', async () => {
@@ -221,7 +225,9 @@ describe('useFirestoreTarkovItems', () => {
     // Assert
     expect(items.value).toEqual([]);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith('Loaded 0 Tarkov items from Firestore subcollection cache');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Loaded 0 Tarkov items from Firestore subcollection cache'
+    );
   });
 
   it('should handle initialization errors (AC: 2)', async () => {

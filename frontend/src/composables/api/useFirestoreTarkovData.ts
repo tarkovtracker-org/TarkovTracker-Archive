@@ -57,7 +57,9 @@ export function useFirestoreTarkovItems() {
               error.value = colError as Error;
             } else if (colData) {
               tarkovItemsCache.value = colData;
-              logger.info(`Loaded ${colData.length} Tarkov items from Firestore subcollection cache`);
+              logger.info(
+                `Loaded ${colData.length} Tarkov items from Firestore subcollection cache`
+              );
             } else {
               logger.warn('Tarkov items subcollection exists but is empty');
               tarkovItemsCache.value = [];

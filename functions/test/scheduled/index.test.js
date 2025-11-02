@@ -33,7 +33,9 @@ function setupGraphQLMocks(overrides = {}) {
       return Promise.resolve(overrides.tasks ?? { tasks: [{ id: 't1', name: 'Test Task' }] });
     }
     if (queryStr.includes('GetHideoutModules')) {
-      return Promise.resolve(overrides.hideout ?? { hideoutStations: [{ id: 'h1', name: 'Test Hideout' }] });
+      return Promise.resolve(
+        overrides.hideout ?? { hideoutStations: [{ id: 'h1', name: 'Test Hideout' }] }
+      );
     }
     if (queryStr.includes('GetItems')) {
       const items = Array.from({ length: 1200 }, (_, i) => ({
@@ -76,10 +78,10 @@ describe('Scheduled Functions', () => {
         commit: batchCommitSpy,
       };
     });
-    
+
     // Default successful responses - setup mock to handle all query types
     setupGraphQLMocks();
-    
+
     mockGql.mockImplementation((query) => query);
 
     // Dynamic import to get to scheduled functions after mocks are set up
@@ -115,8 +117,12 @@ describe('Scheduled Functions', () => {
       await scheduledFunctions.updateTarkovData();
 
       // Verify the function completed
-      expect(functionsMock.logger.info).toHaveBeenCalledWith('Starting scheduled Tarkov data update');
-      expect(functionsMock.logger.info).toHaveBeenCalledWith('Completed scheduled Tarkov data update');
+      expect(functionsMock.logger.info).toHaveBeenCalledWith(
+        'Starting scheduled Tarkov data update'
+      );
+      expect(functionsMock.logger.info).toHaveBeenCalledWith(
+        'Completed scheduled Tarkov data update'
+      );
 
       // Verify that batches were committed
       expect(batchCommitSpy).toHaveBeenCalled();
@@ -141,7 +147,10 @@ describe('Scheduled Functions', () => {
       await scheduledFunctions.updateTarkovData();
 
       // Should log the error
-      expect(functionsMock.logger.error).toHaveBeenCalledWith('Failed to update items:', expect.any(Error));
+      expect(functionsMock.logger.error).toHaveBeenCalledWith(
+        'Failed to update items:',
+        expect.any(Error)
+      );
 
       // Should still commit the tasks/hideout batch (1 batch only)
       expect(batchInstanceCount).toBe(1);

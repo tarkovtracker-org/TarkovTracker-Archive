@@ -367,11 +367,15 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
         try {
           await itemBatch.commit();
           totalItemsWritten += itemChunk.length;
-          logger.info(`Committed item chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${itemChunk.length} items.`);
+          logger.info(
+            `Committed item chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${itemChunk.length} items.`
+          );
         } catch (chunkError) {
           logger.error(`Failed to commit item chunk starting at index ${i}:`, chunkError);
           // Re-throw to stop the process and be caught by the outer catch block
-          throw new Error(`Item batch write failed at index ${i}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'}`);
+          throw new Error(
+            `Item batch write failed at index ${i}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'}`
+          );
         }
       }
 
@@ -387,15 +391,16 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
 
       // Also include the tasks and hideout updates in this final batch
       metadataBatch.commit();
-      
+
       itemsUpdateSuccessful = true;
-      logger.info(`Successfully updated ${totalItemsWritten} items in subcollection and metadata document.`);
-      
+      logger.info(
+        `Successfully updated ${totalItemsWritten} items in subcollection and metadata document.`
+      );
     } catch (error) {
       logger.error('Failed to update items:', error);
       // Continue processing other resources (tasks, hideout) if possible
     }
-    
+
     // Commit the non-items batch (tasks, hideout) separately if items update failed
     if (!itemsUpdateSuccessful) {
       try {
