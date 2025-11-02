@@ -183,7 +183,7 @@
         gameeditiondescription: 'Le niveau de planque est calculé en fonction de votre édition de jeu. Vous pouvez changer votre édition de jeu dans les paramètres.',
         settingsbutton: 'Voir les paramètres',
         upgradebutton: 'Construire | Construire vers {level} | Améliorer vers {level}',
-        downgradebutton: 'Supprimer module | Rétrograder au niveau {level} | Rétrograder au niveau {level}',
+        downgradebutton: 'Supprimer le module | Rétrograder au niveau {level} | Rétrograder au niveau {level}',
         statusupgraded: 'Améliorer {name} au niveau {level}',
         statusdowngraded: 'Rétrograder {name} au niveau {level}',
       },
