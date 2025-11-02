@@ -53,12 +53,29 @@ Result: When merging, you get conflicts like:
 ### Solution: Short-Lived Branches + Feature Flags
 
 ```mermaid
-staging ─o─o─o─o─o─o─o─o
-          └┬─┘ └┬─┘ └┬─┘
-         feat1 feat2 feat3
-         (2 days each)
+%% Staging → feat1 → merge → feat2 → merge
+gitGraph LR:
+  %% Initialize base (implicit main), then branch staging
+  commit id: "init"
+  branch staging
+  checkout staging
 
-Result: Small, manageable merges 🎉
+  %% Work on staging (with time marker)
+  commit id: "staging prep" tag: "2 days"
+
+  %% Feature 1 branch and merge back to staging
+  branch feat1
+  checkout feat1
+  commit id: "feat1 work"
+  checkout staging
+  merge feat1 tag: "merge feat1"
+
+  %% Feature 2 branch and merge back to staging
+  branch feat2
+  checkout feat2
+  commit id: "feat2 work"
+  checkout staging
+  merge feat2 tag: "merge feat2"
 ```
 
 ## Recommended Workflows
