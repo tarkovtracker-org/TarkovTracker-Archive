@@ -156,6 +156,11 @@
           </v-col>
         </v-row>
       </v-dialog>
+      <div v-else class="mt-4">
+        <v-alert type="warning" variant="tonal" density="comfortable" class="text-body-2">
+          <span class="font-weight-medium">Sign in to manage game mode resets.</span>
+        </v-alert>
+      </div>
       <v-dialog v-if="fireuser.loggedIn" v-model="fullResetDialog">
         <template #activator="{ props }">
           <v-btn

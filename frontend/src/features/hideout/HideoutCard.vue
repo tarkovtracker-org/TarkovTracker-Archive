@@ -157,7 +157,7 @@
           cols="auto"
           class="mx-1 my-1"
         >
-          <span class="mx-3">
+          <span class="mx-3 text-warning font-weight-medium">
             {{ t('page.hideout.stationcard.upgradeunavailable') }}
           </span>
         </v-col>
