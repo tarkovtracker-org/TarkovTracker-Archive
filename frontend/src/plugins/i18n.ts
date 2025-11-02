@@ -11,6 +11,7 @@ import {
   tr as vuetifyTr,
   uk as vuetifyUk,
   ja as vuetifyJa,
+  ko as vuetifyKo,
   zhHans as vuetifyZh,
 } from 'vuetify/locale';
 // Assume messages are structured appropriately,
@@ -41,6 +42,7 @@ const vuetifyLocales: Record<string, any> = {
   tr: vuetifyTr,
   uk: vuetifyUk,
   ja: vuetifyJa,
+  ko: vuetifyKo,
   zh: vuetifyZh,
 };
 const typedMessages = messages as AppMessages;
