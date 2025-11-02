@@ -34,7 +34,7 @@
     "test:functions": "npm run test --workspace=functions",
     "clean": "rm -rf firebase-export-* *-debug.log firebase-debug*.log",
     "deps": "npx taze --r --I",
-    "lint:md": "markdownlint \"**/*.md\" --ignore \"**/node_modules/**\" --ignore \"**/.*/node_modules/**\" --ignore \"LICENSE.md\" --ignore \"CLAUDE.md\" --ignore \"AGENTS.md\"",
+    "lint:md": "markdownlint \"**/*.md\"",
     "lint:scripts": "bash -n scripts/migrate-firebase-exists.sh"
   },
   "overrides": {

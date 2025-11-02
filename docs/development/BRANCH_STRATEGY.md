@@ -5,7 +5,7 @@ This guide explains how we manage branches in the TarkovTracker repository to av
 ## Table of Contents
 
 - [Branch Structure](#branch-structure)
-- [The Problem We're Solving](#the-problem-we're-solving)
+- [The Problem We're Solving](#the-problem-were-solving)
 - [Recommended Workflows](#recommended-workflows)
 - [Common Scenarios](#common-scenarios)
 - [Best Practices](#best-practices)
