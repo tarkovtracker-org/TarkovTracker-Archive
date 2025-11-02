@@ -351,6 +351,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'APIドキュメント',
+    },
     not_found: {
       title: 'ページが見つかりません',
       not_found_description: '申し訳ありません。そのページは見つかりませんでした！',

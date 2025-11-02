@@ -357,6 +357,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'API 文档',
+    },
     settings: {
       title: '设置',
       card: {
