@@ -32,6 +32,7 @@ export function useTaskList() {
     getDisplayName,
     unlockedTasks,
     tasksCompletions,
+    objectiveCompletions,
     playerFaction,
     isTaskUnlockedFor,
     isTaskUnlockedByAny,
@@ -453,11 +454,15 @@ export function useTaskList() {
     if (secondaryView === 'available') {
       filtered = filtered.filter((task) => {
         const unlockedMap = getUnlockedMap(task.id);
+        const completionMap = getTaskCompletionMap(task.id);
         if (
           Object.keys(unlockedTasks.value || {}).length === 0 ||
           Object.keys(unlockedMap).length === 0
         ) {
           return true;
+        }
+        if (completionMap?.[activeUserView.value] === true) {
+          return false;
         }
         return unlockedMap?.[activeUserView.value] === true;
       });
@@ -574,6 +579,9 @@ export function useTaskList() {
       hideLightkeeperRequiredTasks,
       showEodOnlyTasks,
       currentPlayerLevel,
+      unlockedTasks,
+      tasksCompletions,
+      objectiveCompletions,
     ],
     async () => {
       if (!loadingTasks.value) {
