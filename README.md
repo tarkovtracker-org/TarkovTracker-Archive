@@ -110,12 +110,11 @@ TarkovTracker/
 ├── functions/          # Firebase Cloud Functions (TypeScript)
 │   └── openapi/        # OpenAPI specification (output: openapi.json)
 ├── docs/               # Project docs (guides, ops, CI notes)
-├── scripts/            # Utility scripts (maps sync, etc.)
+├── scripts/            # Utility scripts and documentation
+│   └── SCRIPTS.md      # Reference for automation and maintenance scripts
 ├── firestore.rules     # Firestore security rules
 ├── firestore.indexes.json
 ├── database.rules.json # Realtime Database rules (if needed for features)
-├── scripts/            # Utility scripts and documentation
-│   └── SCRIPTS.md      # Reference for automation and maintenance scripts
 ├── CHANGELOG.md        # Release highlights and version notes
 └── CONTRIBUTING.md     # Contribution guidelines
 ```
