@@ -34,7 +34,7 @@ All configuration values are clamped to sensible bounds to avoid accidental disa
 - **Short-Term Overrides** – Raise `ABUSE_GUARD_THRESHOLD` (or shrink `PATH_PREFIXES`) for high-traffic events; revert after collecting baseline data.
 - **Investigations** – Filter `rateLimitEvents` by `tokenOwner` or `cacheKey` to spot abusive patterns. The `tokenOwner` field represents a user ID, team ID, or bearer token ID associated with the event (not the raw token), while `cacheKey` uses a SHA-256 hash of the bearer token, so the raw value is never persisted.
 
-#### Event Schema
+### Event Schema
 
 The rateLimitEvents document stores the following fields:
 - tokenOwner (string): User ID, team ID, or bearer token ID associated with the event.
