@@ -179,9 +179,9 @@ function applyOptionalFields(
     logger.warn('mapDefinition.svg is undefined, skipping optional fields assignment');
     return;
   }
-  
+
   const svg = mapDefinition.svg;
-  
+
   if (interactive.transform) {
     svg.transform = interactive.transform;
   }
@@ -274,9 +274,7 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
     response = await fetch(TARKOV_DEV_MAPS_URL, { signal: controller.signal });
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
-      logger.error(
-        `Failed to fetch maps from tarkov.dev: Request timed out after ${TIMEOUT_MS}ms`
-      );
+      logger.error(`Failed to fetch maps from tarkov.dev: Request timed out after ${TIMEOUT_MS}ms`);
       throw new Error('Request timed out while fetching maps from tarkov.dev');
     } else {
       logger.error('Failed to fetch maps from tarkov.dev:', error);

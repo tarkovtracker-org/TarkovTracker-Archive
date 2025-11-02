@@ -90,7 +90,7 @@ export const saveToLocalStorage = (key: string, value: unknown, errorMessage: st
         error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
     ) {
       logger.error(`localStorage quota exceeded for key '${key}'`, error);
-      
+
       // Attempt fallback to sessionStorage
       try {
         sessionStorage.setItem(key, serialized);

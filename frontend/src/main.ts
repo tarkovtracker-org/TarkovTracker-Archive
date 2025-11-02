@@ -49,14 +49,10 @@ app.use(i18n);
 markI18nReady();
 
 // Initialize Pinia and other plugins
-app
-  .use(pinia)
-  .use(router)
-  .use(vuetify)
-  .use(VueFire, {
-    firebaseApp: fireapp,
-    modules: [],
-  });
+app.use(pinia).use(router).use(vuetify).use(VueFire, {
+  firebaseApp: fireapp,
+  modules: [],
+});
 
 // Initialize dev auth after Pinia and Firebase are registered with the app to ensure stores and services are available
 initDevAuth();

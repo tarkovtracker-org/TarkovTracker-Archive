@@ -10,7 +10,8 @@ export const PASSWORD_UID_GEN = new UIDGenerator(48, UIDGenerator.BASE62);
 export const TEAM_UID_GEN = new UIDGenerator(32);
 
 // Hoist regex to avoid per-call compilation
-export const ITEM_ID_SANITIZER_REGEX = /[*?[\\/]/g;
+// eslint-disable-next-line no-useless-escape
+export const ITEM_ID_SANITIZER_REGEX = /[*?\[\\/]/g;
 
 export interface SystemDocData {
   team?: string | null;

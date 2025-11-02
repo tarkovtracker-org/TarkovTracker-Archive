@@ -14,9 +14,17 @@ interface ExpressResponse {
 }
 
 // Define the handler type that accepts the authenticated user ID
-type AuthenticatedHandler = (req: FirebaseRequest, res: ExpressResponse, uid: string) => Promise<void> | void;
+type AuthenticatedHandler = (
+  req: FirebaseRequest,
+  res: ExpressResponse,
+  uid: string
+) => Promise<void> | void;
 
-export async function withCorsAndAuth(req: FirebaseRequest, res: ExpressResponse, handler: AuthenticatedHandler): Promise<void> {
+export async function withCorsAndAuth(
+  req: FirebaseRequest,
+  res: ExpressResponse,
+  handler: AuthenticatedHandler
+): Promise<void> {
   // Step 1: Set CORS headers
   if (!setCorsHeaders(req, res)) {
     res.status(403).send('Origin not allowed');
@@ -33,24 +41,24 @@ export async function withCorsAndAuth(req: FirebaseRequest, res: ExpressResponse
   try {
     const authHeader = req.headers.authorization || '';
     const match = authHeader.match(/^Bearer (.+)$/);
-    
+
     if (!match) {
       res.status(401).json({ error: 'Missing or invalid Authorization header' });
       return;
     }
-    
+
     const idToken = match[1];
-    
+
     // Step 4: Verify token with Firebase Admin
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    
+
     // Step 5: Log successful verification
     logger.log('Token verified successfully', {
       uid: decodedToken.uid,
       method: req.method,
       path: req.path,
     });
-    
+
     // Step 6: Call the handler with authenticated UID
     await handler(req, res, decodedToken.uid);
   } catch (err: unknown) {
@@ -61,10 +69,10 @@ export async function withCorsAndAuth(req: FirebaseRequest, res: ExpressResponse
         method: req.method,
         path: req.path,
       });
-      
+
       if (!res.headersSent) {
         res.status(401).json({
-          error: err.message
+          error: err.message,
         });
       }
     } else {
@@ -73,7 +81,7 @@ export async function withCorsAndAuth(req: FirebaseRequest, res: ExpressResponse
         method: req.method,
         path: req.path,
       });
-      
+
       if (!res.headersSent) {
         res.status(500).json({ error: 'An error occurred while processing your request.' });
       }

@@ -30,15 +30,12 @@ export const resolveObjectiveMapIds = (objective: TaskObjective): string[] => {
   return [...ids];
 };
 
-export const collectTaskLocationIds = (task: Task): string[] => {
+export const collectTaskLocationIds = (task: Task): Set<string> => {
   const locationIds = new Set<string>();
-
-  // Collect locations from task objectives
   if (task.objectives) {
     task.objectives.forEach((objective) => {
       collectObjectiveLocationIds(objective, locationIds);
     });
   }
-
-  return Array.from(locationIds);
+  return locationIds;
 };

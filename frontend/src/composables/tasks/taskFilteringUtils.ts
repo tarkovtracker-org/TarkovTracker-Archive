@@ -21,12 +21,12 @@ export const taskHasIncompleteObjectiveOnMap = (
   getObjectiveCompletionMap: (objectiveId: string) => Record<string, boolean> | undefined
 ) => {
   const objectives = task.objectives;
-  
+
   // Explicit guard for null/undefined objectives
   if (!objectives || objectives.length === 0) {
     return false;
   }
-  
+
   for (const objective of objectives) {
     const objectiveMapIds = resolveObjectiveMapIds(objective);
     if (!objectiveMapIds.some((id: string) => mapIdGroup.includes(id))) continue;

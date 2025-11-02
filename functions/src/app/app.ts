@@ -77,11 +77,7 @@ function setupRoutes(app: Express) {
   app.use('/api', verifyBearer);
   app.use('/api', abuseGuard);
 
-  app.delete(
-    '/api/user/account',
-    requireRecentAuth,
-    asyncHandler(deleteUserAccountHandler)
-  );
+  app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
 
   // Token endpoints
   app.get('/api/token', tokenHandler.getTokenInfo);

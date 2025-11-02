@@ -178,13 +178,13 @@ export const revokeToken = onRequest(
         let errorCode: FunctionsErrorCode | string | undefined = 'internal';
         let errorDetails: unknown | undefined = undefined;
         let fullErrorMessage = 'Unknown error';
-        
+
         if (e instanceof HttpsError) {
           httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
           errorCode = e.code;
           errorDetails = e.details;
           fullErrorMessage = e.message;
-          
+
           // Map HttpsError codes to safe client messages
           switch (e.code) {
             case 'not-found':
@@ -204,7 +204,7 @@ export const revokeToken = onRequest(
         } else if (typeof e === 'string') {
           fullErrorMessage = e;
         }
-        
+
         // Log full error details server-side for debugging
         logger.error('Error from _revokeTokenLogic in revokeToken handler', {
           uid: uid,
@@ -215,7 +215,7 @@ export const revokeToken = onRequest(
           clientMessageSent: messageToSend,
           httpStatusSet: httpStatus,
         });
-        
+
         res.status(httpStatus).json({ error: messageToSend });
       }
     });

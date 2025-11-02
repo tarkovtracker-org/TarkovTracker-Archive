@@ -510,4 +510,32 @@ describe('useTaskFiltering', () => {
       expect(mapObjectiveTypes).toContain('shoot');
     });
   });
+
+  describe('task filtering with Set-based locations', () => {
+    it('does not throw when filtering by map and returns matching tasks', () => {
+      // Get the composable instance
+      const composable = useTaskFiltering();
+
+      // Create test tasks with map objectives
+      const tasks = [
+        {
+          id: 't1',
+          name: 'Task on Customs',
+          objectives: [{ id: 'o1', type: 'mark', maps: [{ id: 'customs', name: 'Customs' }] }],
+        },
+        {
+          id: 't2',
+          name: 'Task on Factory',
+          objectives: [{ id: 'o2', type: 'visit', maps: [{ id: 'factory', name: 'Factory' }] }],
+        },
+      ] as Task[];
+
+      // Execute filtering with map
+      const result = composable.filterTasksByMap(tasks, 'customs');
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.find((t) => t.id === 't1')).toBeTruthy();
+      expect(result.find((t) => t.id === 't2')).toBeFalsy();
+    });
+  });
 });

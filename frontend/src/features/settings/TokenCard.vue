@@ -231,7 +231,7 @@
   const tokenVisible = ref(false);
   const generateQR = async () => {
     if (loading.value) return;
-    
+
     if (!qrDataUrl.value) {
       loading.value = true;
       try {

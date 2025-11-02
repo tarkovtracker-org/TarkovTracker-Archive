@@ -13,7 +13,13 @@ import { debounce } from '@/utils/debounce';
 import { useVirtualTaskList } from './useVirtualTaskList';
 import { EOD_EDITIONS, TRADER_ORDER } from '@/config/gameConstants';
 import { collectTaskLocationIds, resolveObjectiveMapIds } from './locationUtils';
-import { summarizeSecondaryTaskCounts, sortVisibleTasks, taskUnlockedForCurrentView, taskHasIncompleteObjectiveOnMap, filterTasksByPrimaryView } from './taskUtils';
+import {
+  summarizeSecondaryTaskCounts,
+  sortVisibleTasks,
+  taskUnlockedForCurrentView,
+  taskHasIncompleteObjectiveOnMap,
+  filterTasksByPrimaryView,
+} from './taskUtils';
 import {
   collectObjectiveMarkers,
   getUnlockedUsersForTask,

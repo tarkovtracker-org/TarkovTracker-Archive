@@ -167,12 +167,12 @@ class ErrorHandler {
       try {
         // Get the object's type for context
         const typeInfo = Object.prototype.toString.call(error);
-        
+
         // Get up to 10 enumerable properties to avoid verbosity
         // and prevent deep structure traversal
         const properties = Object.keys(error).slice(0, 10);
         const propsString = properties
-          .map(key => {
+          .map((key) => {
             try {
               return `${key}=${String((error as Record<string, unknown>)[key])}`;
             } catch {
@@ -181,7 +181,7 @@ class ErrorHandler {
             }
           })
           .join(', ');
-        
+
         return `${typeInfo}${propsString ? ` {${propsString}}` : ''}`;
       } catch {
         // Ultimate fallback if anything above fails

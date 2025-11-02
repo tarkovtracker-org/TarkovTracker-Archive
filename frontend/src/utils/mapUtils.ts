@@ -19,6 +19,9 @@ export const getMapSvgUrl = (fileName: string, mapName?: string): string => {
 };
 
 export const formatFloorLabel = (floor: string): string => {
-  const formatted = floor.replace(/_/g, ' ').replace(/Floor|Level/g, '').trim();
+  const formatted = floor
+    .replace(/_/g, ' ')
+    .replace(/Floor|Level/g, '')
+    .trim();
   return formatted || floor;
 };

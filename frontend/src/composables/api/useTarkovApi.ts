@@ -55,10 +55,7 @@ async function getTarkovDataDb(): Promise<IDBDatabase | null> {
           });
         } catch (error) {
           if (attempt === MAX_DB_RETRIES) {
-            logger.warn(
-              `Failed to open IndexedDB after ${MAX_DB_RETRIES} attempts:`,
-              error
-            );
+            logger.warn(`Failed to open IndexedDB after ${MAX_DB_RETRIES} attempts:`, error);
             tarkovDataDbPromise = Promise.resolve(null);
             return null;
           }
@@ -389,18 +386,18 @@ export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed((
   // Get or create the appropriate resource for the current variables
   const currentResource = computed(() => {
     const key = resourceKey.value;
-    
+
     // Return existing resource if available
     if (hideoutQueryResources.has(key)) {
       return hideoutQueryResources.get(key)!;
     }
-    
+
     // Create new resource for this unique combination and store it
     const newResource = useGraphQLResource<
       TarkovHideoutQueryResult,
       { gameMode: string; languageCode: string }
     >(tarkovHideoutQuery, variables);
-    
+
     hideoutQueryResources.set(key, newResource);
     return newResource;
   });

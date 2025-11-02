@@ -388,7 +388,7 @@ const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
       .collection('apiTokens')
       .where('lastUsed', '<', admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
       .where('isActive', '==', true)
-      .select()  // Only get references, not data
+      .select() // Only get references, not data
       .get();
 
     if (candidateTokenRefs.empty) {
@@ -396,7 +396,7 @@ const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
       return;
     }
 
-    const tokenRefs = candidateTokenRefs.docs.map(doc => doc.ref);
+    const tokenRefs = candidateTokenRefs.docs.map((doc) => doc.ref);
     const chunkSize = 500;
     let expiredCount = 0;
 

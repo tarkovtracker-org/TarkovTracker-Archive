@@ -155,8 +155,6 @@
   // Map loading error state
   const mapLoadError = ref<string | null>(null);
 
-
-
   // Zoom composable
   const {
     currentZoom,
