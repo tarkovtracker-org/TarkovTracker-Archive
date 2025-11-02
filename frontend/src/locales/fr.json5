@@ -184,7 +184,7 @@
         settingsbutton: 'Voir les paramètres',
         upgradebutton: 'Construire | Construire vers {level} | Améliorer vers {level}',
         downgradebutton: 'Supprimer module | Rétrograder au niveau {level} | Rétrograder au niveau {level}',
-        statusupgraded: 'Améliorier {name} au niveau {level}',
+        statusupgraded: 'Améliorer {name} au niveau {level}',
         statusdowngraded: 'Rétrograder {name} au niveau {level}',
       },
     },
@@ -499,7 +499,7 @@
         },
         availability: {
           heading: '4. Disponibilité et modifications',
-          body1: 'Nous améliorons continuellement le Service et pouvons ajouter, modifier ou supprimer des fonctionnalités à tout moment. Nous pouvons suspendre ou arrêter le Service, en tout ou en partie, sans préavis pour des raisons de maintenance, de sécurité, légales ou commerciales.',
+          body1: 'Nous rons continuellement le Service et pouvons ajouter, modifier ou supprimer des fonctionnalités à tout moment. Nous pouvons suspendre ou arrêter le Service, en tout ou en partie, sans préavis pour des raisons de maintenance, de sécurité, légales ou commerciales.',
           body2: 'Nous ne sommes pas responsables des pertes ou dommages résultant d’une indisponibilité du Service. Il vous appartient de sauvegarder les informations que vous y stockez.',
         },
         user_content: {
@@ -581,8 +581,8 @@
             'vous authentifier et maintenir vos sessions ;',
             'synchroniser votre progression, vos préférences et vos données d’équipe sur vos appareils ;',
             'fournir du support, répondre aux demandes et résoudre les problèmes techniques ;',
-            'surveiller l’utilisation, prévenir les abus et améliorer la stabilité et la sécurité ;',
-            'analyser l’utilisation des fonctionnalités afin d’orienter les améliorations futures.',
+            'surveiller l’utilisation, prévenir les abus et rer la stabilité et la sécurité ;',
+            'analyser l’utilisation des fonctionnalités afin d’orienter les rations futures.',
           ],
         },
         legal_bases: {
