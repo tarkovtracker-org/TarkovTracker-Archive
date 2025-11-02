@@ -5,6 +5,7 @@ import {
   de as vuetifyDe,
   fr as vuetifyFr,
   es as vuetifyEs,
+  pt as vuetifyPt,
   pl as vuetifyPl,
   ru as vuetifyRu,
   tr as vuetifyTr,
@@ -34,6 +35,7 @@ const vuetifyLocales: Record<string, any> = {
   de: vuetifyDe,
   fr: vuetifyFr,
   es: vuetifyEs,
+  pt: vuetifyPt,
   pl: vuetifyPl,
   ru: vuetifyRu,
   tr: vuetifyTr,
@@ -42,6 +44,9 @@ const vuetifyLocales: Record<string, any> = {
   zh: vuetifyZh,
 };
 const typedMessages = messages as AppMessages;
+if (!typedMessages.pt && typedMessages['pt-BR']) {
+  typedMessages.pt = typedMessages['pt-BR'];
+}
 // Merge Vuetify's locale messages into all supported locales
 for (const [locale, vuetifyLocale] of Object.entries(vuetifyLocales)) {
   if (typedMessages[locale]) {
