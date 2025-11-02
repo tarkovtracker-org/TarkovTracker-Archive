@@ -125,13 +125,13 @@ describe('Cloud Functions: apiv2', () => {
     vi.clearAllMocks();
   });
   it('should be defined when imported', async () => {
-    // Use dynamic import for ESM module
+    // Use dynamic import for ESM module - api is exported as named export
     try {
       const module = await import('../lib/index.js');
-      apiv2 = module.default;
+      apiv2 = module.api;
       expect(apiv2).toBeDefined();
     } catch (err) {
-      console.error('Could not import apiv2 function:', err.message);
+      console.error('Could not import api function:', err.message);
       // Skip test if import fails - this is better than a failing test
       // that might be due to environment rather than actual code issues
       expect(true).toBe(true);

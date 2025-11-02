@@ -158,12 +158,13 @@ export const revokeToken = onRequest(
     timeoutSeconds: 20,
   },
   async (req: FirebaseRequest, res) => {
-    withCorsAndAuth(req, res, async (req, res, uid: string) => {
-      if (req.method !== 'POST') {
-        res.status(405).json({ error: 'Method Not Allowed' });
-        return;
-      }
+    // Check HTTP method first, before any authentication
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed' });
+      return;
+    }
 
+    withCorsAndAuth(req, res, async (req, res, uid: string) => {
       if (!req.body || typeof req.body !== 'object' || !('data' in req.body)) {
         res.status(400).json({ error: 'Invalid request body: "data" field is required.' });
         return;

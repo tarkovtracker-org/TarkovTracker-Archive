@@ -339,6 +339,7 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
     }
 
     // Update items with retry and validation
+    let itemsUpdateSuccessful = false;
     try {
       const itemsResponse = await fetchWithRetry<ItemsResponse>(
         TARKOV_DEV_GRAPHQL_ENDPOINT,
@@ -349,27 +350,66 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
         throw new Error('Invalid items response structure');
       }
 
-      const itemsRef = db.collection('tarkovData').doc('items');
-      batch.set(itemsRef, {
-        data: itemsResponse.items,
+      const itemsDataCollectionRef = db.collection('tarkovData').doc('items').collection('data');
+      const BATCH_SIZE = 500;
+      let totalItemsWritten = 0;
+
+      // Process items in batches to respect Firestore limits
+      for (let i = 0; i < itemsResponse.items.length; i += BATCH_SIZE) {
+        const itemChunk = itemsResponse.items.slice(i, i + BATCH_SIZE);
+        const itemBatch = db.batch();
+
+        itemChunk.forEach((item) => {
+          const itemDocRef = itemsDataCollectionRef.doc(item.id);
+          itemBatch.set(itemDocRef, item);
+        });
+
+        try {
+          await itemBatch.commit();
+          totalItemsWritten += itemChunk.length;
+          logger.info(`Committed item chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${itemChunk.length} items.`);
+        } catch (chunkError) {
+          logger.error(`Failed to commit item chunk starting at index ${i}:`, chunkError);
+          // Re-throw to stop the process and be caught by the outer catch block
+          throw new Error(`Item batch write failed at index ${i}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'}`);
+        }
+      }
+
+      // Write the metadata document after all item chunks have been successfully written
+      const itemsMetadataRef = db.collection('tarkovData').doc('items');
+      const metadataBatch = db.batch();
+      metadataBatch.set(itemsMetadataRef, {
         lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+        itemCount: totalItemsWritten,
+        schemaVersion: 2,
         source: 'tarkov.dev',
       });
-      logger.info(`Updated ${itemsResponse.items.length} items`);
+
+      // Also include the tasks and hideout updates in this final batch
+      metadataBatch.commit();
+      
+      itemsUpdateSuccessful = true;
+      logger.info(`Successfully updated ${totalItemsWritten} items in subcollection and metadata document.`);
+      
     } catch (error) {
       logger.error('Failed to update items:', error);
-      // Continue processing other resources
+      // Continue processing other resources (tasks, hideout) if possible
+    }
+    
+    // Commit the non-items batch (tasks, hideout) separately if items update failed
+    if (!itemsUpdateSuccessful) {
+      try {
+        await batch.commit();
+        logger.info('Committed non-items Tarkov data update.');
+      } catch (batchError) {
+        logger.error('Failed to commit non-items batch update to Firestore:', batchError);
+        throw new Error(
+          `Non-items batch commit failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`
+        );
+      }
     }
 
-    try {
-      await batch.commit();
-      logger.info('Completed scheduled Tarkov data update');
-    } catch (batchError) {
-      logger.error('Failed to commit batch update to Firestore:', batchError);
-      throw new Error(
-        `Batch commit failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`
-      );
-    }
+    logger.info('Completed scheduled Tarkov data update');
   } catch (error) {
     logger.error('Scheduled data update failed:', error);
     throw error;

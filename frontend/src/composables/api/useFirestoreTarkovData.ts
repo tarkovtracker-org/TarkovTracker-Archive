@@ -7,8 +7,8 @@
  */
 
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
-import { useDocument } from 'vuefire';
-import { doc } from 'firebase/firestore';
+import { useCollection } from 'vuefire';
+import { collection } from 'firebase/firestore';
 import { firestore } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
 import type { TarkovDataQueryResult, TarkovItem } from '@/types/tarkov';
@@ -23,7 +23,8 @@ const error: Ref<Error | null> = ref(null);
  * Composable for loading Tarkov items from Firestore cache
  * This replaces the direct Apollo GraphQL calls to tarkov.dev API
  *
- * Data structure: /tarkovData/items document contains an 'items' field with array of all items
+ * Data structure: /tarkovData/items/data subcollection, with one doc per item.
+ * A metadata doc at /tarkovData/items holds schemaVersion, itemCount, lastUpdated.
  * Cached by scheduledTarkovDataFetch Cloud Function (runs daily at midnight UTC)
  *
  * Implements singleton pattern to prevent duplicate Firestore listeners
@@ -35,30 +36,30 @@ export function useFirestoreTarkovItems() {
     loading.value = true;
 
     try {
-      // Create Firestore document reference for single-doc cache pattern
-      const itemsDocRef = doc(firestore, 'tarkovData', 'items');
+      // Create Firestore collection reference for the subcollection pattern
+      const itemsColRef = collection(firestore, 'tarkovData', 'items', 'data');
 
-      // Use VueFire's useDocument for reactive Firestore access
-      const firestoreDoc = useDocument<{ items: TarkovItem[] }>(itemsDocRef, {
-        ssrKey: 'tarkov-items',
+      // Use VueFire's useCollection for reactive Firestore access
+      const firestoreCollection = useCollection<TarkovItem>(itemsColRef, {
+        ssrKey: 'tarkov-items-collection',
       });
 
       // Watch for data load
       let stopWatch: (() => void) | null = null;
       stopWatch = watch(
-        [firestoreDoc.data, firestoreDoc.error],
-        ([docData, docError]) => {
-          if (docData !== undefined || docError) {
+        [firestoreCollection.data, firestoreCollection.error],
+        ([colData, colError]) => {
+          if (colData !== undefined || colError) {
             loading.value = false;
 
-            if (docError) {
-              logger.error('Failed to load Tarkov items from Firestore:', docError);
-              error.value = docError as Error;
-            } else if (docData && docData.items) {
-              tarkovItemsCache.value = docData.items;
-              logger.info(`Loaded ${docData.items.length} Tarkov items from Firestore cache`);
+            if (colError) {
+              logger.error('Failed to load Tarkov items from Firestore collection:', colError);
+              error.value = colError as Error;
+            } else if (colData) {
+              tarkovItemsCache.value = colData;
+              logger.info(`Loaded ${colData.length} Tarkov items from Firestore subcollection cache`);
             } else {
-              logger.warn('Tarkov items document exists but has no items field');
+              logger.warn('Tarkov items subcollection exists but is empty');
               tarkovItemsCache.value = [];
             }
 
@@ -71,7 +72,7 @@ export function useFirestoreTarkovItems() {
         { immediate: true }
       );
     } catch (err) {
-      logger.error('Error initializing Firestore Tarkov items:', err);
+      logger.error('Error initializing Firestore Tarkov items collection:', err);
       error.value = err as Error;
       loading.value = false;
     }
