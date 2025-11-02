@@ -280,7 +280,7 @@
       title: 'Giriş',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'İlerleme verilerinize RESTful API ile programatik olarak erişin',
         create_token: 'Anahtar Oluştur',
