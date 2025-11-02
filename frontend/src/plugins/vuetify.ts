@@ -20,7 +20,11 @@ type ColorThemeKeys =
   | 'failed'
   | 'error'
   | 'failure'
-  | 'tasklink';
+  | 'tasklink'
+  | 'kappaRequired'
+  | 'kappaOptional'
+  | 'lightkeeperRequired'
+  | 'lightkeeperOptional';
 // Type the colorTheme object
 const colorTheme: Record<ColorThemeKeys, string> = {
   primary: '#0A0A09',
@@ -29,13 +33,17 @@ const colorTheme: Record<ColorThemeKeys, string> = {
   accent: '#242F35',
   tertiary: '#39230a',
   info: '#181817',
-  success: '#242F35', // Note: Same as accent
+  success: '#2BA86A',
   warning: '#391111',
   complete: '#114200',
   failed: '#ffcccc',
   error: '#FF0000',
   failure: '#391111', // Note: Same as warning
   tasklink: '#00acc1',
+  kappaRequired: '#248F52',
+  kappaOptional: '#FF8C5A',
+  lightkeeperRequired: '#5BA9FF',
+  lightkeeperOptional: '#C76A1F',
 };
 const trackerTheme: ThemeDefinition = {
   dark: true,

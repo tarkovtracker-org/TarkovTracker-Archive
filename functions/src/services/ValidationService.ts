@@ -1,9 +1,9 @@
-import { 
-  TaskStatus, 
-  TaskUpdateRequest, 
-  MultipleTaskUpdateRequest, 
+import {
+  TaskStatus,
+  TaskUpdateRequest,
+  MultipleTaskUpdateRequest,
   ObjectiveUpdateRequest,
-  ApiToken 
+  ApiToken,
 } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 
@@ -12,8 +12,7 @@ export class ValidationService {
    * Validates task status values
    */
   static validateTaskStatus(status: unknown): status is TaskStatus {
-    return typeof status === 'string' && 
-           ['completed', 'failed', 'uncompleted'].includes(status);
+    return typeof status === 'string' && ['completed', 'failed', 'uncompleted'].includes(status);
   }
 
   /**
@@ -25,7 +24,7 @@ export class ValidationService {
     }
 
     const { state } = body as { state?: unknown };
-    
+
     if (!state) {
       throw errors.badRequest('State is required');
     }

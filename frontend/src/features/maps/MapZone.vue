@@ -33,8 +33,7 @@
     },
     selectedFloor: {
       type: String,
-      required: false,
-      default: '',
+      default: undefined,
     },
     map: {
       type: Object,

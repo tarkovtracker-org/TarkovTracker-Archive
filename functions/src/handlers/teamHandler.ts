@@ -61,27 +61,27 @@ interface AuthenticatedRequest extends Request {
  *       500:
  *         description: "Internal server error."
  */
-export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'TP');
+export const getTeamProgress = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
 
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
+    let gameMode = req.apiToken?.gameMode || 'pvp';
+    if (gameMode === 'dual') {
+      gameMode = (req.query.gameMode as string) || 'pvp';
+    }
 
-  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
-  let gameMode = req.apiToken?.gameMode || 'pvp';
-  if (gameMode === 'dual') {
-    gameMode = req.query.gameMode as string || 'pvp';
+    const result = await teamService.getTeamProgress(userId, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: result.data,
+      meta: result.meta,
+    };
+
+    res.status(200).json(response);
   }
-
-  const result = await teamService.getTeamProgress(userId, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: result.data,
-    meta: result.meta,
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -133,35 +133,37 @@ export const getTeamProgress = asyncHandler(async (req: AuthenticatedRequest, re
  *       500:
  *         description: "Internal server error."
  */
-export const createTeam = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  // Validate request body if provided
-  const data: { password?: string; maximumMembers?: number } = {};
-  
-  if (req.body?.password) {
-    if (typeof req.body.password !== 'string' || req.body.password.trim().length < 4) {
-      throw new Error('Password must be at least 4 characters long');
+export const createTeam = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    // Validate request body if provided
+    const data: { password?: string; maximumMembers?: number } = {};
+
+    if (req.body?.password) {
+      if (typeof req.body.password !== 'string' || req.body.password.trim().length < 4) {
+        throw new Error('Password must be at least 4 characters long');
+      }
+      data.password = req.body.password.trim();
     }
-    data.password = req.body.password.trim();
-  }
-  
-  if (req.body?.maximumMembers) {
-    const maxMembers = parseInt(String(req.body.maximumMembers), 10);
-    if (isNaN(maxMembers) || maxMembers < 2 || maxMembers > 50) {
-      throw new Error('Maximum members must be between 2 and 50');
+
+    if (req.body?.maximumMembers) {
+      const maxMembers = parseInt(String(req.body.maximumMembers), 10);
+      if (isNaN(maxMembers) || maxMembers < 2 || maxMembers > 50) {
+        throw new Error('Maximum members must be between 2 and 50');
+      }
+      data.maximumMembers = maxMembers;
     }
-    data.maximumMembers = maxMembers;
+
+    const result = await teamService.createTeam(userId, data);
+
+    const response: ApiResponse = {
+      success: true,
+      data: result,
+    };
+
+    res.status(200).json(response);
   }
-  
-  const result = await teamService.createTeam(userId, data);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: result,
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -216,32 +218,33 @@ export const createTeam = asyncHandler(async (req: AuthenticatedRequest, res: Re
  *       500:
  *         description: "Internal server error."
  */
-export const joinTeam = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
-  if (!req.body?.id || !req.body?.password) {
-    throw new Error('Team ID and password are required');
+export const joinTeam = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+
+    if (!req.body?.id || !req.body?.password) {
+      throw new Error('Team ID and password are required');
+    }
+
+    const data = {
+      id: String(req.body.id).trim(),
+      password: String(req.body.password),
+    };
+
+    if (!data.id || !data.password) {
+      throw new Error('Team ID and password cannot be empty');
+    }
+
+    const result = await teamService.joinTeam(userId, data);
+
+    const response: ApiResponse = {
+      success: true,
+      data: result,
+    };
+
+    res.status(200).json(response);
   }
-  
-  const data = {
-    id: String(req.body.id).trim(),
-    password: String(req.body.password),
-  };
-  
-  if (!data.id || !data.password) {
-    throw new Error('Team ID and password cannot be empty');
-  }
-  
-  const result = await teamService.joinTeam(userId, data);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: result,
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -272,19 +275,20 @@ export const joinTeam = asyncHandler(async (req: AuthenticatedRequest, res: Resp
  *       500:
  *         description: "Internal server error."
  */
-export const leaveTeam = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const teamService = new TeamService();
-  
-  const result = await teamService.leaveTeam(userId);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: result,
-  };
-  
-  res.status(200).json(response);
-});
+export const leaveTeam = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+
+    const result = await teamService.leaveTeam(userId);
+
+    const response: ApiResponse = {
+      success: true,
+      data: result,
+    };
+
+    res.status(200).json(response);
+  }
+);
 
 export default {
   getTeamProgress,

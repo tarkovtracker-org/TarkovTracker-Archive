@@ -12,6 +12,11 @@ logs/
 .env.local
 .env.*.local
 
+# AI Assistant files
+.gemini/
+.factory/
+.claude/
+
 # Log files
 npm-debug.log*
 yarn-debug.log*
@@ -42,9 +47,9 @@ local_data/
 logs
 *.log
 dev-debug.log
+
 # Dependency directories
 # Environment variables
-.vscode
 *.suo
 *.ntvs*
 *.njsproj
@@ -60,6 +65,4 @@ firebase-debug.log
 firestore-debug.log
 pubsub-debug.log
 
-# Task files
-# tasks.json
-# tasks/ 
+/bmad

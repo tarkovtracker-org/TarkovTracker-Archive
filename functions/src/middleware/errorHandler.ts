@@ -45,7 +45,7 @@ export const errorHandler = (
     statusCode = error.statusCode;
     errorMessage = error.message;
     errorCode = (error as ApiError & { code?: string }).code || 'API_ERROR';
-    
+
     // Log API errors as warnings unless they're 5xx
     if (statusCode >= 500) {
       logger.error('API Error (5xx):', errorContext);
@@ -99,7 +99,7 @@ export const notFoundHandler = (req: Request, res: Response): void => {
       timestamp: new Date().toISOString(),
     },
   };
-  
+
   res.status(404).json(response);
 };
 
@@ -117,7 +117,10 @@ export const errors = {
   forbidden: (message: string = 'Forbidden') => createError(403, message, 'FORBIDDEN'),
   notFound: (message: string = 'Not found') => createError(404, message, 'NOT_FOUND'),
   conflict: (message: string = 'Conflict') => createError(409, message, 'CONFLICT'),
-  unprocessable: (message: string = 'Unprocessable entity') => createError(422, message, 'UNPROCESSABLE_ENTITY'),
-  internal: (message: string = 'Internal server error') => createError(500, message, 'INTERNAL_ERROR'),
-  serviceUnavailable: (message: string = 'Service unavailable') => createError(503, message, 'SERVICE_UNAVAILABLE'),
+  unprocessable: (message: string = 'Unprocessable entity') =>
+    createError(422, message, 'UNPROCESSABLE_ENTITY'),
+  internal: (message: string = 'Internal server error') =>
+    createError(500, message, 'INTERNAL_ERROR'),
+  serviceUnavailable: (message: string = 'Service unavailable') =>
+    createError(503, message, 'SERVICE_UNAVAILABLE'),
 };

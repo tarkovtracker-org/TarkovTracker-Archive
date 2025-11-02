@@ -2,19 +2,115 @@
 # https://github.com/firebase/firebase-tools
 
 name: Deploy to Firebase Hosting on PR
-on: pull_request
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+
 permissions:
+  checks: write
   contents: read
   pull-requests: write
+  actions: read
+
 jobs:
   build_and_preview:
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: npm ci && npm run build
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Guard - Verify PR is trusted
+        id: guard
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const repoFull = `${context.repo.owner}/${context.repo.repo}`;
+
+            // If PR head repo is same as base repo -> trusted
+            if (pr.head.repo.full_name === repoFull) {
+              core.info('✓ PR from same repository - trusted');
+              core.setOutput('trusted', 'true');
+              return;
+            }
+
+            // Check if PR has the approved-for-preview label
+            const hasApprovedLabel = pr.labels.some(label => label.name === 'approved-for-preview');
+            if (hasApprovedLabel) {
+              core.info('✓ PR has approved-for-preview label - trusted');
+              core.setOutput('trusted', 'true');
+              return;
+            }
+
+            // Otherwise, check if PR author is a collaborator
+            try {
+              await github.rest.repos.checkCollaborator({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: pr.user.login
+              });
+              core.info(`✓ PR author @${pr.user.login} is a collaborator - trusted`);
+              core.setOutput('trusted', 'true');
+            } catch (err) {
+              core.warning(`✗ PR author @${pr.user.login} is not a collaborator - untrusted`);
+              core.warning('Skipping preview deploy to protect secrets. Add approved-for-preview label or add user as collaborator to enable previews.');
+              core.setOutput('trusted', 'false');
+            }
+
+      - name: Abort if untrusted
+        if: steps.guard.outputs.trusted != 'true'
+        run: |
+          echo "::notice::Untrusted fork PR detected - preview deployment skipped for security"
+          echo "To enable preview: Add 'approved-for-preview' label or add author as a repository collaborator"
+          exit 0
+
+      - name: Checkout PR code
+        if: steps.guard.outputs.trusted == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+      
+      - name: Validate Firebase service account
+        if: steps.guard.outputs.trusted == 'true'
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG }}
+        run: |
+          if [ -z "$FIREBASE_SA" ]; then
+            echo "ERROR: FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG secret is not set"
+            exit 1
+          fi
+          # Validate JSON structure (redirect to /dev/null to avoid logging secrets)
+          echo "$FIREBASE_SA" | python3 -m json.tool > /dev/null 2>&1 || {
+            echo "ERROR: Firebase service account is not valid JSON"
+            exit 1
+          }
+          echo "✓ Firebase service account is valid JSON"
+
+      - name: Install dependencies
+        if: steps.guard.outputs.trusted == 'true'
+        run: npm ci
+
+      - name: Type-check Firebase functions
+        if: steps.guard.outputs.trusted == 'true'
+        run: npm run type-check --workspace=functions
+
+      - name: Build project
+        if: steps.guard.outputs.trusted == 'true'
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_DATABASE_URL: ${{ secrets.VITE_FIREBASE_DATABASE_URL }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+
+      - name: Deploy to Firebase Hosting preview channel
+        if: steps.guard.outputs.trusted == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_TARKOVTRACKER_ORG }}
           projectId: tarkovtracker-org
+          channelId: pr${{ github.event.pull_request.number }}
+          expires: 7d

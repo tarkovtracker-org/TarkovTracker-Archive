@@ -34,10 +34,26 @@
       </div>
     </div>
     <!-- </div> -->
+    <v-fab-transition>
+      <v-btn
+        v-if="showBackToTop"
+        class="standard-layout__back-to-top"
+        color="secondary"
+        variant="elevated"
+        size="large"
+        elevation="8"
+        icon
+        aria-label="Back to top"
+        @click="scrollToTop"
+      >
+        <v-icon>mdi-arrow-up</v-icon>
+      </v-btn>
+    </v-fab-transition>
+    <consent-banner />
   </v-main>
 </template>
 <script setup>
-  import { computed } from 'vue';
+  import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
   import { defineAsyncComponent } from 'vue';
   import { useRoute } from 'vue-router';
   const route = useRoute();
@@ -58,6 +74,34 @@
   const NavDrawer = defineAsyncComponent(() => import('@/features/layout/NavDrawer'));
   const AppFooter = defineAsyncComponent(() => import('@/features/layout/AppFooter'));
   const AppBar = defineAsyncComponent(() => import('@/features/layout/AppBar'));
+  const ConsentBanner = defineAsyncComponent(() => import('@/features/layout/ConsentBanner.vue'));
+  const showBackToTop = ref(false);
+  const backToTopThreshold = 400;
+  const handleScroll = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    showBackToTop.value = window.scrollY > backToTopThreshold;
+  };
+  const scrollToTop = () => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  onMounted(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+  });
+  onBeforeUnmount(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.removeEventListener('scroll', handleScroll);
+  });
 </script>
 <style lang="scss" scoped>
   #tracker-page-background {
@@ -90,5 +134,19 @@
   :deep(.v-main__wrap) {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+  }
+
+  .standard-layout__back-to-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    z-index: 300;
+  }
+
+  @media (max-width: 768px) {
+    .standard-layout__back-to-top {
+      bottom: 20px;
+      right: 20px;
+    }
   }
 </style>

@@ -13,6 +13,7 @@ import { useSystemStoreWithFirebase } from './useSystemStore';
 import type { TeamState, TeamGetters } from '@/types/tarkov';
 import type { Store } from 'pinia';
 import type { UserState } from '@/shared_state';
+import { logger } from '@/utils/logger';
 
 /**
  * Team store definition with getters for team info and members
@@ -122,7 +123,7 @@ export function useTeammateStores() {
           }
         }
       } catch (error) {
-        console.error('Error managing teammate stores:', error);
+        logger.error('Error managing teammate stores:', error);
       }
     },
     {
@@ -166,12 +167,12 @@ export function useTeammateStores() {
             teammateUnsubscribes.value[teammateId]();
             delete teammateUnsubscribes.value[teammateId];
           } else {
-            console.error(`Error in teammate ${teammateId} listener:`, error);
+            logger.error(`Error in teammate ${teammateId} listener:`, error);
           }
         }
       );
     } catch (error) {
-      console.error(`Error creating store for teammate ${teammateId}:`, error);
+      logger.error(`Error creating store for teammate ${teammateId}:`, error);
     }
   };
 

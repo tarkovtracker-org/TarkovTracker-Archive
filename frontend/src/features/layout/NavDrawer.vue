@@ -4,7 +4,7 @@
     theme="dark"
     image="/img/background/sidebar-background.webp"
     :rail="isRailActive"
-    :width="isRailActive ? 56 : 200"
+    :width="isRailActive ? 56 : 300"
     class="compact-nav-drawer"
   >
     <tracker-logo :is-collapsed="isRailActive" />
@@ -12,6 +12,8 @@
     <drawer-account :is-collapsed="isRailActive" />
     <v-divider class="mx-3 my-1" />
     <drawer-level :is-collapsed="isRailActive" />
+    <v-divider class="mx-3 my-1" />
+    <drawer-trader-standings :is-collapsed="isRailActive" />
     <v-divider class="mx-3 my-1" />
     <drawer-links :is-collapsed="isRailActive" />
     <v-divider class="mx-3 my-1" />
@@ -33,6 +35,9 @@
   const DrawerLinks = defineAsyncComponent(() => import('@/features/drawer/DrawerLinks'));
   const DrawerAccount = defineAsyncComponent(() => import('@/features/drawer/DrawerAccount'));
   const DrawerLevel = defineAsyncComponent(() => import('@/features/drawer/DrawerLevel'));
+  const DrawerTraderStandings = defineAsyncComponent(
+    () => import('@/features/drawer/DrawerTraderStandings')
+  );
   const DrawerExternalLinks = defineAsyncComponent(
     () => import('@/features/drawer/DrawerExternalLinks')
   );

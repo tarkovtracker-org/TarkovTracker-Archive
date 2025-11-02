@@ -71,8 +71,8 @@ src/
 ### Production Deployment
 
 ```bash
-npm run deploy:prod   # Deploy to production
-npm run deploy:dev    # Deploy to development
+npm run deploy:prod     # Deploy to production
+npm run deploy:staging  # Deploy to staging preview channel
 ```
 
 ## 📡 API Endpoints
@@ -185,7 +185,7 @@ const swaggerOptions = {
     },
     servers: [
       { url: 'https://tarkovtracker.org/api/v2', description: 'Production' },
-      { url: 'https://tarkov-tracker-dev.web.app/api/v2', description: 'Development' }
+      { url: 'https://staging--tarkovtracker-org.web.app/api/v2', description: 'Staging preview channel' }
     ]
   },
   apis: ['lib/**/*.js'] // Generated JS files with JSDoc comments
@@ -371,8 +371,8 @@ export const PRODUCTION_CONFIG: DeploymentConfig = {
 # Production deployment
 npm run deploy:prod
 
-# Development deployment  
-npm run deploy:dev
+# Staging preview deployment
+npm run deploy:staging
 
 # Functions only
 firebase deploy --only functions

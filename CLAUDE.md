@@ -2,43 +2,134 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Task Master AI Instructions
+## Prerequisites
 
-**Import Task Master's development workflow commands and guidelines, treat as if import is in the main CLAUDE.md file.**
-@./.taskmaster/CLAUDE.md
+- **Node.js 18+** - Required for all development
+- **Java 11+ Runtime Environment** - Required for Firebase emulators
+- **Firebase CLI** - Installed as dev dependency (`firebase-tools`)
 
 ## Development Commands
 
-### Essential Commands
+### Three Development Modes
 
-- `npm run dev` - Start complete development environment (frontend + Firebase emulators)
+This project supports three distinct development modes optimized for different workflows:
+
+#### 1. `npm run dev` - Pure Frontend Development (Recommended for UI work)
+
+- **What runs:** Vite dev server only (port 3000)
+- **What doesn't run:** No Firebase emulators
+- **Use for:** UI development, component work, styling, routing
+- **Auth support:** Enable mock auth with `VITE_DEV_AUTH=true` in `frontend/.env.local`
+- **Fastest startup** - No backend services needed
+
+#### 2. `npm run dev:full` - Full Stack Development
+
+- **What runs:** Vite dev server (3000) + Firebase emulators (auth, firestore, functions)
+- **What doesn't run:** Hosting emulator (port 5000) - not needed during dev
+- **Use for:** Team features, auth flows, API tokens, real-time sync, functions testing
+- **Complete backend integration** - Tests all Firebase features
+
+#### 3. `npm run dev:firebase` - Production Build Testing
+
+- **What runs:** ALL Firebase emulators including hosting (port 5000)
+- **What doesn't run:** Vite dev server
+- **Use for:** Pre-deployment testing, build verification, production bug testing
+- **Builds first:** Runs full production build before starting emulators
+- **Serves:** Production-optimized code from `frontend/dist`
+
+### Quick Reference Table
+
+| Command | Frontend | Backend | Hosting | Use Case |
+|---------|----------|---------|---------|----------|
+| `npm run dev` | Vite (3000) | ❌ None | ❌ No | UI/component work |
+| `npm run dev:full` | Vite (3000) | ✅ Emulators | ❌ No | Full-stack features |
+| `npm run dev:firebase` | ❌ None | ✅ Emulators | ✅ Yes (5000) | Pre-deploy testing |
+
+### Other Essential Commands
+
 - `npm run build` - Build entire project (frontend + functions)
 - `npm run lint` - Lint entire codebase
 - `npm run format` - Format code with Prettier
 
 ### Frontend Development
 
-- `cd frontend && npm run dev` - Start frontend development server only
 - `npm run build:frontend` - Build frontend only
 - `cd frontend && npm run type-check` - Type check frontend code
 
 ### Backend/Functions Development
 
 - `npm run build:functions` - Build Firebase Cloud Functions
-- `npm run emulators` - Start Firebase emulators
+- `npm run emulators` - Start all Firebase emulators (includes hosting)
+- `npm run emulators:backend` - Start backend emulators only (auth, firestore, functions)
 - `npm run emulators:local` - Start emulators with local data import
 - `npm run export:data` - Export emulator data to local_data directory
 
+### Testing
+
+- `cd frontend && npm test` - Run frontend unit tests with Vitest (watch mode)
+- `cd frontend && npm run test:run` - Run frontend unit tests once
+- `cd frontend && npm run test:coverage` - Run tests with coverage report
+- `cd frontend && npm run test:e2e` - Run Playwright end-to-end tests
+- `cd frontend && npm run test:e2e:ui` - Run E2E tests in interactive UI mode
+- `cd functions && npm test` - Run backend/functions tests with Vitest
+
 ### API Documentation
 
-- `npm run docs` - Generate API documentation
-- `npm run docs:generate` - Build functions and generate API docs
-- `npm run docs:serve` - Generate docs and show instructions to view
+- `npm run docs` - Generate API documentation (output: `docs/index.html` - open in browser to view Swagger UI)
 
 ### Deployment
 
-- `npm run deploy:dev` - Deploy to development environment
+- `npm run deploy:staging` - Deploy to staging preview channel
 - `npm run deploy:prod` - Deploy to production environment
+
+## Local Development Setup
+
+### Mock Authentication for Pure Frontend Development
+
+When using `npm run dev` (frontend only, no emulators), you can enable mock authentication to test auth-gated features without Firebase:
+
+1. **Create/copy the environment file:**
+
+   ```bash
+   cp frontend/.env.example frontend/.env.local
+   ```
+
+2. **Enable dev auth:**
+
+   ```bash
+   # Edit frontend/.env.local
+   VITE_DEV_AUTH=true
+   ```
+
+3. **Start development:**
+
+   ```bash
+   npm run dev
+   ```
+
+You'll be automatically "logged in" as a dev user with:
+
+- **UID:** Randomly generated, persists across reloads
+- **Email:** `dev@localhost.local`
+- **Display Name:** `Dev User`
+- **Auth Status:** `loggedIn: true`
+
+**Note:** This bypasses real Firebase authentication and only works in development mode. For testing real auth flows, use `npm run dev:full` with Firebase emulators.
+
+### Port Reference
+
+| Port | Service | When Active |
+|------|---------|-------------|
+| 3000 | Vite Dev Server | `npm run dev`, `npm run dev:full` |
+| 4999 | Firebase Emulator UI | All emulator modes |
+| 5000 | Firebase Hosting Emulator | `npm run dev:firebase`, `npm run emulators` |
+| 5001 | Cloud Functions Emulator | All emulator modes |
+| 5002 | Firestore Emulator | All emulator modes |
+| 5003 | Realtime Database Emulator | All emulator modes |
+| 8085 | Pub/Sub Emulator | All emulator modes |
+| 9099 | Auth Emulator | All emulator modes |
+
+**Access Firebase Emulator UI:** <http://localhost:4999> when any emulator mode is running
 
 ## Project Architecture
 

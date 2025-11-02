@@ -1,6 +1,28 @@
 <template>
   <div class="d-flex justify-space-between align-center">
-    <router-link to="#" @click.prevent="scrollToTask">
+    <v-tooltip v-if="hasWikiLink" location="top">
+      <template #activator="{ props: tooltipProps }">
+        <a
+          v-bind="tooltipProps"
+          :href="task.wikiLink"
+          target="_blank"
+          rel="noopener"
+          class="task-link__anchor"
+        >
+          <v-avatar size="1.5em" style="vertical-align: middle">
+            <v-img :src="traderAvatar" />
+          </v-avatar>
+          <template v-if="isFactionTask">
+            <v-avatar size="1.5em" rounded="0" style="vertical-align: middle" class="ml-2">
+              <v-img :src="factionImage" class="faction-icon" />
+            </v-avatar>
+          </template>
+          <span class="ml-2 font-weight-bold">{{ task?.name }}</span>
+        </a>
+      </template>
+      {{ t('page.tasks.questcard.wiki_tooltip') }}
+    </v-tooltip>
+    <span v-else class="task-link__anchor">
       <v-avatar size="1.5em" style="vertical-align: middle">
         <v-img :src="traderAvatar" />
       </v-avatar>
@@ -9,20 +31,8 @@
           <v-img :src="factionImage" class="faction-icon" />
         </v-avatar>
       </template>
-      <span class="ml-2 font-weight-bold">
-        {{ props.task?.name }}
-      </span>
-    </router-link>
-    <a v-if="props.showWikiLink" :href="props.task.wikiLink" target="_blank" class="wiki-link">
-      <v-row no-gutters>
-        <v-col cols="auto" class="mr-1">
-          <v-icon icon="mdi-information-outline" />
-        </v-col>
-        <v-col>
-          {{ t('page.tasks.questcard.wiki') }}
-        </v-col>
-      </v-row>
-    </a>
+      <span class="ml-2 font-weight-bold">{{ task?.name }}</span>
+    </span>
   </div>
 </template>
 <script setup>
@@ -45,24 +55,19 @@
   useTarkovData();
   const { t } = useI18n({ useScope: 'global' });
   // Check if there are two faction tasks for this task
-  const isFactionTask = computed(() => {
-    return props.task?.factionName != 'Any';
+  const task = computed(() => props.task);
+  const isFactionTask = computed(() => task.value?.factionName != 'Any');
+  const factionImage = computed(() => `/img/factions/${task.value?.factionName}.webp`);
+  const traderAvatar = computed(() => task.value?.trader?.imageLink);
+  const hasWikiLink = computed(() => {
+    return typeof task.value?.wikiLink === 'string' && task.value?.wikiLink;
   });
-  const factionImage = computed(() => {
-    return `/img/factions/${props.task.factionName}.webp`;
-  });
-  const traderAvatar = computed(() => {
-    return props.task?.trader?.imageLink;
-  });
-  const scrollToTask = () => {
-    const taskCard = document.getElementById(`task-${props.task.id}`);
-    taskCard?.scrollIntoView({
-      block: 'center',
-    });
-  };
 </script>
 <style lang="scss" scoped>
+  .task-link__anchor,
   a:any-link {
+    display: inline-flex;
+    align-items: center;
     color: rgba(var(--v-theme-tasklink), 1) !important;
     text-decoration: none;
   }
@@ -70,9 +75,5 @@
     filter: invert(1);
     max-width: 24px;
     max-height: 24px;
-  }
-  .wiki-link {
-    font-size: 12px;
-    white-space: nowrap;
   }
 </style>

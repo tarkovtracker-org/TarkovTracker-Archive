@@ -1,7 +1,10 @@
 import { computed } from 'vue';
 import { useTarkovDataQuery, useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
+import { isMapVariant } from '@/utils/mapNormalization';
 import type { TarkovMap, Trader, PlayerLevel } from '@/types/tarkov';
+import { logger } from '@/utils/logger';
+
 // Mapping from GraphQL map names to static data keys
 const MAP_NAME_MAPPING: { [key: string]: string } = {
   'night factory': 'factory',
@@ -9,6 +12,32 @@ const MAP_NAME_MAPPING: { [key: string]: string } = {
   'ground zero 21+': 'groundzero',
   'the labyrinth': 'labyrinth',
 };
+const missingStaticDataWarnings = new Set<string>();
+const missingSvgWarnings = new Set<string>();
+
+// Canonical map display order (as they appear in the game)
+const MAP_DISPLAY_ORDER = [
+  'Factory',
+  'Customs',
+  'Woods',
+  'Lighthouse',
+  'Shoreline',
+  'Reserve',
+  'Interchange',
+  'Streets of Tarkov',
+  'The Lab',
+  'Ground Zero',
+  'The Labyrinth',
+];
+
+/**
+ * Get the display order index for a map
+ */
+function getMapOrderIndex(mapName: string): number {
+  const index = MAP_DISPLAY_ORDER.findIndex((name) => name.toLowerCase() === mapName.toLowerCase());
+  // Return index if found, otherwise put at end (9999)
+  return index !== -1 ? index : 9999;
+}
 /**
  * Composable for managing map data with static SVG integration
  */
@@ -23,26 +52,47 @@ export function useMapData() {
 
   const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
   const { staticMapData } = useTarkovApi();
+
   // Computed property for maps with merged static data
+  // Filters out map variants (Night Factory, Ground Zero 21+) so they don't appear in UI
   const maps = computed<TarkovMap[]>(() => {
-    if (!queryResult.value?.maps || !staticMapData.value) {
-      return [];
+    if (!queryResult.value?.maps) return [];
+    const source = queryResult.value.maps.filter((map) => !isMapVariant(map.name));
+    if (!staticMapData.value) {
+      // Show maps without SVG while static data loads
+      return [...source].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));
     }
-    const mergedMaps = queryResult.value.maps.map((map) => {
-      const lowerCaseName = map.name.toLowerCase();
-      const mapKey = MAP_NAME_MAPPING[lowerCaseName] || lowerCaseName.replace(/\s+|\+/g, '');
+    const mergedMaps = source.map((map) => {
+      const mapKey = getStaticMapKey(map.name);
       const staticData = staticMapData.value?.[mapKey];
+
       if (staticData?.svg) {
         return {
           ...map,
           svg: staticData.svg,
         };
-      } else {
-        console.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
+      }
+
+      if (!staticData) {
+        if (!missingStaticDataWarnings.has(mapKey)) {
+          missingStaticDataWarnings.add(mapKey);
+          logger.warn(`Static map data not found for map: ${map.name} (lookup key: ${mapKey})`);
+        }
         return map;
       }
+
+      if (!staticData.svg) {
+        if (!missingSvgWarnings.has(mapKey)) {
+          missingSvgWarnings.add(mapKey);
+          logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
+        }
+        return map;
+      }
+
+      return map;
     });
-    return [...mergedMaps].sort((a, b) => a.name.localeCompare(b.name));
+    // Sort by game display order instead of alphabetically
+    return [...mergedMaps].sort((a, b) => getMapOrderIndex(a.name) - getMapOrderIndex(b.name));
   });
   // Raw maps without SVG data
   const rawMaps = computed<TarkovMap[]>(() => {

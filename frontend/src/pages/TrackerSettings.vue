@@ -179,7 +179,7 @@
             </div>
             <v-row justify="center">
               <v-col cols="12">
-                <v-alert dense outlined type="error" :value="true" class="ma-2">
+                <v-alert v-model="notLoggedInAlert" type="error" variant="tonal" class="ma-2">
                   {{ $t('page.settings.card.apitokens.not_logged_in') }}
                 </v-alert>
               </v-col>
@@ -197,9 +197,6 @@
       </v-col>
 
       <!-- Account Deletion -->
-      <v-col v-if="fireuser.loggedIn" cols="12" sm="12" md="4" lg="6" xl="6" class="d-flex">
-        <account-deletion-card class="flex-grow-1" />
-      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -209,13 +206,13 @@
   import { useLiveData } from '@/composables/livedata';
   import ApiTokens from '@/features/settings/ApiTokens';
   import DataMigrationCard from '@/features/settings/DataMigrationCard';
-  import AccountDeletionCard from '@/features/settings/AccountDeletionCard.vue';
   import FittedCard from '@/features/ui/FittedCard';
 
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
 
   const tokensSection = ref(null);
+  const notLoggedInAlert = ref(true);
 
   // Computed properties for token count
   const userTokenCount = computed(() => {

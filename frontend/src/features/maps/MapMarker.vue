@@ -21,6 +21,7 @@
 <script setup>
   import { computed, defineAsyncComponent, ref } from 'vue';
   import { useTarkovData } from '@/composables/tarkovdata';
+  import { logger } from '@/utils/logger';
   const TaskObjective = defineAsyncComponent(() => import('@/features/tasks/TaskObjective'));
   const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink'));
   const { objectives, tasks } = useTarkovData();
@@ -35,8 +36,7 @@
     },
     selectedFloor: {
       type: String,
-      required: false,
-      default: '',
+      default: undefined,
     },
     map: {
       type: Object,
@@ -77,7 +77,7 @@
       !Array.isArray(bounds[0]) ||
       !Array.isArray(bounds[1])
     ) {
-      console.warn('MapMarker: Invalid or missing map bounds for map:', props.map?.name);
+      logger.warn('MapMarker: Invalid or missing map bounds for map:', props.map?.name);
       return { leftPercent: 0, topPercent: 0 }; // Return default if bounds are invalid
     }
 
@@ -104,18 +104,19 @@
       z = -originalX;
     }
 
-    // Use original bounds (not rotated)
+    // Use original bounds (not rotated) - the bounds are in the original coordinate space
     let mapLeft = bounds[0][0];
     let mapTop = bounds[0][1];
-    let mapWidth = Math.max(bounds[0][0], bounds[1][0]) - Math.min(bounds[0][0], bounds[1][0]);
-    let mapHeight = Math.max(bounds[0][1], bounds[1][1]) - Math.min(bounds[0][1], bounds[1][1]);
+    let mapWidth = Math.abs(bounds[1][0] - bounds[0][0]);
+    let mapHeight = Math.abs(bounds[1][1] - bounds[0][1]);
 
     // Prevent division by zero if width or height is 0
     if (mapWidth === 0 || mapHeight === 0) {
-      console.warn('MapMarker: Map width or height is zero for map:', props.map?.name);
+      logger.warn('MapMarker: Map width or height is zero for map:', props.map?.name);
       return { leftPercent: 0, topPercent: 0 };
     }
 
+    // Calculate position relative to bounds with proper handling of coordinate direction
     let relativeLeft = Math.abs(x - mapLeft);
     let relativeTop = Math.abs(z - mapTop);
     let relativeLeftPercent = (relativeLeft / mapWidth) * 100;

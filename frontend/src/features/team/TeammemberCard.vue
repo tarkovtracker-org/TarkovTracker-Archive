@@ -1,10 +1,10 @@
 <template>
   <v-sheet class="pa-2" color="primary" :rounded="true">
     <v-container no-gutters>
-      <v-row dense align="center" justify="space-between">
+      <v-row class="compact-row" align="center" justify="space-between">
         <v-col cols="auto" class="text-left">
           <div class="text-h4">
-            {{ progressStore.getDisplayName(props.teammember) }}
+            {{ getDisplayName(props.teammember) }}
           </div>
           <div v-if="props.teammember == fireuser.uid" class="text-left">
             <b>
@@ -24,14 +24,14 @@
               </div>
               <div class="text-center">
                 <h1 style="font-size: 2.5em; line-height: 0.8em">
-                  {{ progressStore.getLevel(props.teammember) }}
+                  {{ getLevel(props.teammember) }}
                 </h1>
               </div>
             </span>
           </div>
         </v-col>
       </v-row>
-      <v-row dense justify="space-between">
+      <v-row class="compact-row" justify="space-between">
         <v-col cols="auto">
           <i18n-t
             v-if="!userStore.teamIsHidden(props.teammember)"
@@ -98,8 +98,9 @@
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
+  import { logger } from '@/utils/logger';
   // Define the props for the component
   const props = defineProps({
     teammember: {
@@ -118,17 +119,17 @@
       return props.teammember;
     }
   });
-  const progressStore = useProgressStore();
+  const { getDisplayName, getLevel, tasksCompletions } = useProgressQueries();
   const userStore = useUserStore();
   const { tasks, playerLevels } = useTarkovData();
   const { t } = useI18n({ useScope: 'global' });
   const completedTaskCount = computed(() => {
-    return tasks.value.filter(
-      (task) => progressStore.tasksCompletions?.[task.id]?.[teamStoreId.value] == true
-    ).length;
+    const completions = tasksCompletions.value || {};
+    return tasks.value.filter((task) => completions?.[task.id]?.[teamStoreId.value] === true)
+      .length;
   });
   const groupIcon = computed(() => {
-    const level = progressStore.getLevel(props.teammember);
+    const level = getLevel(props.teammember);
     const entry = playerLevels.value.find((pl) => pl.level === level);
     return entry?.levelBadgeImageLink ?? '';
   });
@@ -169,10 +170,15 @@
     } catch (error) {
       let backendMsg = error?.message || error?.data?.message || error?.toString();
       kickTeammateResult.value = backendMsg || t('page.team.card.manageteam.membercard.kick_error');
-      console.error('[TeammemberCard.vue] Error kicking teammate:', error);
+      logger.error('[TeammemberCard.vue] Error kicking teammate:', error);
       kickTeammateSnackbar.value = true;
     }
     kickingTeammate.value = false;
   };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>

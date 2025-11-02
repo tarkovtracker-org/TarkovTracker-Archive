@@ -11,10 +11,10 @@
             <i18n-t
               keypath="page.hideout.stationcard.level"
               scope="global"
-              :plural="progressStore.hideoutLevels?.[props.station.id]?.self || 0"
+              :plural="currentStationLevel || 0"
             >
               <template #level>
-                {{ progressStore.hideoutLevels?.[props.station.id]?.self || 0 }}
+                {{ currentStationLevel || 0 }}
               </template>
             </i18n-t>
           </span>
@@ -73,7 +73,11 @@
             </template>
           </i18n-t>
         </div>
-        <div v-for="(requirement, rIndex) in nextLevel.traderRequirements" :key="rIndex">
+        <div
+          v-for="(requirement, rIndex) in nextLevel.traderRequirements"
+          :key="rIndex"
+          :class="{ 'text-error': !isTraderRequirementMet(requirement) }"
+        >
           <i18n-t keypath="page.hideout.stationcard.requirements.trader" scope="global">
             <template #loyaltylevel>
               {{ requirement.value }}
@@ -83,6 +87,15 @@
             </template>
           </i18n-t>
         </div>
+        <v-alert
+          v-if="hasUnmetTraderRequirement"
+          type="warning"
+          variant="tonal"
+          density="compact"
+          class="mt-2"
+        >
+          {{ t('page.hideout.stationcard.trader_requirement_blocked') }}
+        </v-alert>
       </div>
     </v-sheet>
     <v-sheet v-if="!nextLevel" rounded color="accent" class="pa-2">
@@ -123,10 +136,10 @@
             <i18n-t
               keypath="page.hideout.stationcard.downgradebutton"
               scope="global"
-              :plural="(progressStore.hideoutLevels?.[props.station.id]?.self || 0) - 1"
+              :plural="(currentStationLevel || 0) - 1"
             >
               <template #level>
-                {{ (progressStore.hideoutLevels?.[props.station.id]?.self || 0) - 1 }}
+                {{ (currentStationLevel || 0) - 1 }}
               </template>
             </i18n-t>
           </v-btn>
@@ -144,10 +157,10 @@
             <i18n-t
               keypath="page.hideout.stationcard.downgradebutton"
               scope="global"
-              :plural="(progressStore.hideoutLevels?.[props.station.id]?.self || 0) - 1"
+              :plural="(currentStationLevel || 0) - 1"
             >
               <template #level>
-                {{ (progressStore.hideoutLevels?.[props.station.id]?.self || 0) - 1 }}
+                {{ (currentStationLevel || 0) - 1 }}
               </template>
             </i18n-t>
           </v-btn>
@@ -173,7 +186,9 @@
 </template>
 <script setup>
   import { computed, defineAsyncComponent, ref } from 'vue';
-  import { useProgressStore, STASH_STATION_ID, CULTIST_CIRCLE_STATION_ID } from '@/stores/progress';
+  import { STASH_STATION_ID, CULTIST_CIRCLE_STATION_ID } from '@/stores/progress';
+  import { UNHEARD_EDITIONS } from '@/config/gameConstants';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useI18n } from 'vue-i18n';
   const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
@@ -183,33 +198,56 @@
       required: true,
     },
   });
-  const progressStore = useProgressStore();
+  const { getHideoutLevelFor, gameEditionData } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const { t } = useI18n({ useScope: 'global' });
+  const currentStationLevel = computed(() => getHideoutLevelFor(props.station.id, 'self') || 0);
   const highlightClasses = computed(() => {
     let classes = {};
-    if (progressStore.hideoutLevels?.[props.station.id]?.self > 0) {
+    if (currentStationLevel.value > 0) {
       classes['highlight-secondary'] = true;
     } else {
       classes['highlight-green'] = true;
     }
     return classes;
   });
+  const isTraderRequirementMet = (requirement) => {
+    const traderId = requirement?.trader?.id;
+    if (!traderId) return true;
+    const rawReq = Number(requirement?.value);
+    const requiredLevel = Number.isFinite(rawReq)
+      ? Math.max(0, Math.min(10, Math.floor(rawReq)))
+      : 0;
+    const rawCur = Number(tarkovStore.getTraderLoyaltyLevel(traderId));
+    const currentLevel = Number.isFinite(rawCur)
+      ? Math.max(0, Math.min(10, Math.floor(rawCur)))
+      : 0;
+    return currentLevel >= requiredLevel;
+  };
+  const hasUnmetTraderRequirement = computed(() => {
+    if (!nextLevel.value?.traderRequirements?.length) return false;
+    return nextLevel.value.traderRequirements.some((req) => !isTraderRequirementMet(req));
+  });
   const upgradeDisabled = computed(() => {
-    return nextLevel.value === null;
+    return nextLevel.value === null || hasUnmetTraderRequirement.value;
   });
   const downgradeDisabled = computed(() => {
     if (props.station.id === STASH_STATION_ID) {
-      const currentStash = progressStore.hideoutLevels?.[props.station.id]?.self ?? 0;
-      const editionId = tarkovStore.getGameEdition();
-      const editionData = progressStore.gameEditionData.find((e) => e.version === editionId);
+      const currentStash = currentStationLevel.value ?? 0;
+      const rawEdition = tarkovStore.getGameEdition();
+      const editionId = Number(rawEdition);
+      const editionData = gameEditionData.value?.find((e) => {
+        const version = Number(e.version);
+        return Number.isFinite(version) && Number.isFinite(editionId) && version === editionId;
+      });
       const defaultStash = editionData?.defaultStashLevel ?? 0;
       return currentStash <= defaultStash;
     }
     if (props.station.id === CULTIST_CIRCLE_STATION_ID) {
-      const editionId = tarkovStore.getGameEdition();
-      // If Unheard Edition (5) or Unheard+EOD Edition (6), disable downgrade
-      return editionId === 5 || editionId === 6;
+      const rawEdition = tarkovStore.getGameEdition();
+      const editionId = Number(rawEdition);
+      // If Unheard Edition or Unheard+EOD Edition, disable downgrade
+      return UNHEARD_EDITIONS.has(editionId);
     }
     return false;
   });
@@ -245,17 +283,11 @@
   };
   const nextLevel = computed(() => {
     return (
-      props.station.levels.find(
-        (level) => level.level === (progressStore.hideoutLevels?.[props.station.id]?.self || 0) + 1
-      ) || null
+      props.station.levels.find((level) => level.level === currentStationLevel.value + 1) || null
     );
   });
   const currentLevel = computed(() => {
-    return (
-      props.station.levels.find(
-        (level) => level.level === progressStore.hideoutLevels?.[props.station.id]?.self
-      ) || null
-    );
+    return props.station.levels.find((level) => level.level === currentStationLevel.value) || null;
   });
   const stationAvatar = computed(() => {
     return `/img/hideout/${props.station.id}.avif`;
@@ -265,12 +297,13 @@
     if (props.station.id !== STASH_STATION_ID) {
       return description;
     }
-    // Check if user has Unheard Edition (5) or Unheard + EOD Edition (6)
-    const editionId = tarkovStore.getGameEdition();
-    const isUnheardEdition = editionId === 5 || editionId === 6;
+    // Check if user has Unheard Edition or Unheard + EOD Edition
+    const rawEdition = tarkovStore.getGameEdition();
+    const editionId = Number(rawEdition);
+    const isUnheardEdition = UNHEARD_EDITIONS.has(editionId);
     // For Unheard editions, show static description with 10x72
     if (isUnheardEdition) {
-      return 'Maximum size stash (10x72)';
+      return t('page.hideout.stationcard.unheard_max_stash');
     }
     return description;
   };

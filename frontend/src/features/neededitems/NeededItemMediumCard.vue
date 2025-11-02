@@ -67,7 +67,7 @@
             </v-row>
           </template>
           <template v-else-if="props.need.needType == 'hideoutModule'">
-            <v-row dense no-gutters class="mb-1 mt-1 d-flex justify-center">
+            <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
               <v-col cols="auto" align="center">
                 <station-link :station="relatedStation" class="justify-center" />
               </v-col>
@@ -130,8 +130,9 @@
                   style="white-space: pre-line"
                 >
                   <v-icon size="x-small" class="mr-1">mdi-account-child-circle</v-icon
-                  >{{ progressStore.getDisplayName(userNeed.user) }}
-                  {{ userNeed.count.toLocaleString() }}/{{ neededCount.toLocaleString() }}
+                  >{{ getDisplayName(userNeed.user) }} {{ userNeed.count.toLocaleString() }}/{{
+                    neededCount.toLocaleString()
+                  }}
                 </div>
               </template>
             </i18n-t>
@@ -143,7 +144,7 @@
 </template>
 <script setup>
   import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink'));
   const StationLink = defineAsyncComponent(() => import('@/features/hideout/StationLink'));
@@ -154,7 +155,7 @@
     },
   });
   defineEmits(['increaseCount', 'decreaseCount', 'toggleCount']);
-  const progressStore = useProgressStore();
+  const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const {
     selfCompletedNeed,

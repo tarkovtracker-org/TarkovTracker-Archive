@@ -1,10 +1,9 @@
 <template>
-  <v-row v-if="show" dense>
+  <v-row v-if="show" class="compact-row">
     <v-col cols="12">
       <v-card>
         <v-tabs
-          :model-value="activeMapView"
-          @update:model-value="(value: unknown) => $emit('update:activeMapView', value as string)"
+          v-model="activeMapViewModel"
           bg-color="accent"
           slider-color="secondary"
           align-tabs="center"
@@ -13,7 +12,7 @@
           <v-tab
             v-for="(map, index) in maps"
             :key="index"
-            :value="map.mergedIds ? map.mergedIds[0] : map.id"
+            :value="map.id"
             prepend-icon="mdi-compass"
           >
             <v-badge
@@ -38,7 +37,6 @@
   interface MapData {
     id: string;
     name: string;
-    mergedIds?: string[];
   }
 
   interface Props {
@@ -53,10 +51,21 @@
   }
 
   const props = defineProps<Props>();
-  defineEmits<Emits>();
+  const emit = defineEmits<Emits>();
 
   const getTaskTotal = (map: MapData): number => {
-    const mapId = map.mergedIds ? map.mergedIds[0] : map.id;
-    return props.taskTotals[mapId] || 0;
+    return props.taskTotals[map.id] || 0;
   };
+
+  const activeMapViewModel = computed({
+    get: () => props.activeMapView,
+    set: (value: string) => emit('update:activeMapView', value),
+  });
 </script>
+
+<style scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>

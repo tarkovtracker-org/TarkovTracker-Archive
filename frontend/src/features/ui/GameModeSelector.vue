@@ -29,16 +29,8 @@
   import { useTarkovStore } from '@/stores/tarkov';
   import type { GameMode } from '@/shared_state';
 
-  interface GameModeOption {
-    label: string;
-    value: GameMode;
-    icon: string;
-    description: string;
-  }
-
   const store = useTarkovStore();
-
-  const gameModeOptions: GameModeOption[] = [
+  const gameModeOptions = [
     {
       label: 'PvP',
       value: 'pvp',

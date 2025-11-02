@@ -5,8 +5,12 @@ import {
   de as vuetifyDe,
   fr as vuetifyFr,
   es as vuetifyEs,
+  pl as vuetifyPl,
   ru as vuetifyRu,
+  tr as vuetifyTr,
   uk as vuetifyUk,
+  ja as vuetifyJa,
+  zhHans as vuetifyZh,
 } from 'vuetify/locale';
 // Assume messages are structured appropriately,
 // potentially needing manual type def if library doesn't provide
@@ -30,8 +34,12 @@ const vuetifyLocales: Record<string, any> = {
   de: vuetifyDe,
   fr: vuetifyFr,
   es: vuetifyEs,
+  pl: vuetifyPl,
   ru: vuetifyRu,
+  tr: vuetifyTr,
   uk: vuetifyUk,
+  ja: vuetifyJa,
+  zh: vuetifyZh,
 };
 const typedMessages = messages as AppMessages;
 // Merge Vuetify's locale messages into all supported locales
@@ -55,6 +63,8 @@ const i18n: I18n<
   globalInjection: true, // Enable global injection for $t
   locale: languageCode, // Use detected language code
   fallbackLocale: 'en', // Fallback locale
+  warnHtmlInMessage: 'error', // Block locale strings that contain HTML
+  escapeParameterHtml: true, // Ensure interpolated params are HTML-escaped
   messages: typedMessages, // Use the typed and merged messages
   silentTranslationWarn: true, // Suppress translation warnings
   silentFallbackWarn: true, // Suppress fallback warnings

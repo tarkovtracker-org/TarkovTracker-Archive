@@ -4,6 +4,13 @@ import { createFirebaseAdminMock, createFirebaseFunctionsMock } from './mocks';
 // Set up mocks before imports
 const { adminMock, firestoreMock } = createFirebaseAdminMock();
 const functionsMock = createFirebaseFunctionsMock();
+const mockGraphqlRequest = vi.fn();
+const mockGql = vi.fn((query) => query);
+const mockFetch = vi.fn();
+const mockFetchResponse = {
+  json: vi.fn().mockResolvedValue({ alternatives: [] }),
+  ok: true,
+};
 // Mock Firebase modules
 vi.mock('firebase-admin', () => ({
   default: adminMock,
@@ -11,36 +18,36 @@ vi.mock('firebase-admin', () => ({
 vi.mock('firebase-functions', () => ({
   default: functionsMock,
 }));
+vi.mock('firebase-functions/v2', () => ({
+  logger: functionsMock.logger,
+}));
+vi.mock('firebase-functions/v2/https', () => ({
+  HttpsError: functionsMock.https.HttpsError,
+  onCall: functionsMock.https.onCall,
+  onRequest: functionsMock.https.onRequest,
+}));
+vi.mock('firebase-functions/v2/scheduler', () => ({
+  onSchedule: functionsMock.schedule,
+}));
 // Mock GraphQL request and fetch
 vi.mock('graphql-request', () => ({
-  default: {
-    gql: vi.fn((query) => query),
-    GraphQLClient: vi.fn().mockImplementation(() => ({
-      request: vi.fn().mockResolvedValue({ tasks: [] }),
-    })),
-  },
+  request: mockGraphqlRequest,
+  gql: mockGql,
 }));
 vi.mock('node-fetch', () => ({
-  default: vi.fn().mockResolvedValue({
-    json: vi.fn().mockResolvedValue({ alternatives: [] }),
-    ok: true,
-  }),
+  default: mockFetch,
 }));
 // Import the Tarkovdata function with dynamic import
 let updateTarkovdataHTTPS;
-let retrieveTarkovdata;
 describe('Tarkov Data Updates', () => {
-  // Create mock objects for testing
-  const mockFetch = vi.fn().mockResolvedValue({
-    json: vi.fn().mockResolvedValue({ alternatives: [] }),
-    ok: true,
-  });
-  const mockGraphqlRequest = vi.fn().mockResolvedValue({
-    tasks: [],
-    hideoutStations: [],
-  });
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockResolvedValue(mockFetchResponse);
+    mockGraphqlRequest.mockResolvedValue({
+      tasks: [],
+      hideoutStations: [],
+    });
+    mockGql.mockImplementation((query) => query);
     // Reset global fetch and GraphQL mocks
     global.fetch = mockFetch;
     // Reset Firestore mock behavior
@@ -53,9 +60,8 @@ describe('Tarkov Data Updates', () => {
   // Import the modules
   it('should import tarkovdata functions', async () => {
     try {
-      const module = await import('../index');
+      const module = await import('../lib/index.js');
       updateTarkovdataHTTPS = module.updateTarkovdataHTTPS;
-      retrieveTarkovdata = module.retrieveTarkovdata; // This might be internal
       expect(updateTarkovdataHTTPS).toBeDefined();
     } catch (err) {
       console.error('Error importing tarkovdata modules:', err.message);
@@ -77,18 +83,13 @@ describe('Tarkov Data Updates', () => {
         send: vi.fn(),
       };
       // If retrieveTarkovdata is exposed, mock it
-      if (retrieveTarkovdata) {
-        retrieveTarkovdata = vi.fn().mockResolvedValue({ success: true });
-      }
       // Call the function
       await updateTarkovdataHTTPS(req, res);
       // Verify response
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.send).toHaveBeenCalledWith('OK');
       // If retrieveTarkovdata is exposed, check it was called
-      if (retrieveTarkovdata && typeof retrieveTarkovdata === 'function') {
-        expect(retrieveTarkovdata).toHaveBeenCalled();
-      }
+      expect(mockGraphqlRequest).toHaveBeenCalled();
     });
     it('should handle errors and still return 200 OK', async () => {
       // Skip test if import failed
@@ -102,13 +103,8 @@ describe('Tarkov Data Updates', () => {
         send: vi.fn(),
       };
       // If retrieveTarkovdata is exposed, mock it to throw
-      if (retrieveTarkovdata) {
-        retrieveTarkovdata = vi.fn().mockRejectedValue(new Error('Test error'));
-      } else {
-        // Otherwise make sure fetch or GraphQL will throw
-        mockFetch.mockRejectedValueOnce(new Error('Fetch error'));
-        mockGraphqlRequest.mockRejectedValueOnce(new Error('GraphQL error'));
-      }
+      mockFetch.mockRejectedValueOnce(new Error('Fetch error'));
+      mockGraphqlRequest.mockRejectedValueOnce(new Error('GraphQL error'));
       // Call the function
       await updateTarkovdataHTTPS(req, res);
       // Verify response - should still be 200 OK

@@ -150,8 +150,11 @@ export async function _createTokenLogic(
     }
   }
 }
-export const createToken = onCall({
-  cors: true, // allow all origins; callable will handle credentials appropriately
-  memory: '256MiB',
-  timeoutSeconds: 20,
-}, _createTokenLogic);
+export const createToken = onCall(
+  {
+    cors: true, // allow all origins; callable will handle credentials appropriately
+    memory: '256MiB',
+    timeoutSeconds: 20,
+  },
+  _createTokenLogic
+);

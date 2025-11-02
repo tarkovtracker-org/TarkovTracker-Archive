@@ -2,6 +2,25 @@
 
 This is a monorepo with two main workspaces: `frontend` and `functions`. Scripts are organized to avoid confusion and provide clear entry points from the root.
 
+## Dependency Management Scripts
+
+### Upgrade Automation
+
+- **`./scripts/snapshot.sh`** - Create pre-upgrade snapshot with git tags and baselines
+- **`./scripts/batch-update.sh <batch-number>`** - Execute batch dependency updates (1-5)
+- **`./scripts/health-check.sh`** - Post-upgrade health verification
+- **`./scripts/migrate-firebase-exists.sh`** - Migrate Firestore `.exists` property to method
+
+**Quick Start:** See [DEPENDENCY_UPGRADE_QUICK_START.md](./DEPENDENCY_UPGRADE_QUICK_START.md)
+
+**Full Strategy:** See [DEPENDENCY_UPGRADE_STRATEGY.md](./DEPENDENCY_UPGRADE_STRATEGY.md)
+
+### Manual Dependency Checks
+
+- **`npm outdated`** - Check for outdated packages
+- **`npm audit`** - Check for security vulnerabilities
+- **`npm run deps`** - Interactive dependency upgrade tool (uses taze)
+
 ## Quick Reference
 
 ### Development
@@ -28,7 +47,7 @@ npm run docs             # Build functions + generate docs + show viewing instru
 ### Deployment
 
 ```bash
-npm run deploy:dev       # Deploy to development environment
+npm run deploy:staging   # Deploy to staging preview channel
 npm run deploy:prod      # Deploy to production environment
 ```
 
@@ -68,7 +87,6 @@ npm run deploy:prod      # Deploy to production environment
 - **Process**: Builds Vue.js frontend
 - **Best for**: Frontend-only deployments
 
-
 ### API Documentation Scripts
 
 #### `npm run docs`
@@ -80,16 +98,16 @@ npm run deploy:prod      # Deploy to production environment
 
 ### Deployment Scripts
 
-#### `npm run deploy:dev`
+#### `npm run deploy:staging`
 
-- **Purpose**: Deploy to development environment
-- **Process**: Switch to dev Firebase project → Build functions → Generate docs → Build frontend for dev → Deploy
-- **Best for**: Development releases
+- **Purpose**: Deploy to the shared Firebase preview/staging channel
+- **Process**: Build functions → Generate docs → Build frontend → Deploy to `staging` hosting channel (7-day expiry)
+- **Best for**: QA/preview releases before production
 
 #### `npm run deploy:prod`
 
 - **Purpose**: Deploy to production environment
-- **Process**: Switch to prod Firebase project → Build functions → Generate docs → Build frontend for prod → Deploy
+- **Process**: Build functions → Generate docs → Build frontend → Deploy to the active default project
 - **Best for**: Production releases
 
 ### Quality & Maintenance Scripts
@@ -99,7 +117,6 @@ npm run deploy:prod      # Deploy to production environment
 - **Purpose**: Lint all code
 - **Process**: Runs ESLint on entire monorepo
 - **Best for**: Code quality checks
-
 
 #### `npm run format`
 
@@ -116,7 +133,6 @@ npm run deploy:prod      # Deploy to production environment
 
 - **Purpose**: Clean up Firebase debug files
 - **Best for**: Cleanup after development
-
 
 #### `npm run deps`
 
@@ -170,10 +186,10 @@ npm run format:check    # Check formatting
 npm run build           # Build everything
 ```
 
-### 4. Deploy to Development
+### 4. Deploy to Staging Preview
 
 ```bash
-npm run deploy:dev      # One command deployment
+npm run deploy:staging  # One command deployment to staging channel
 ```
 
 ### 5. Deploy to Production

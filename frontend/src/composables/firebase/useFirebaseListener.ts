@@ -14,6 +14,7 @@ import {
   devLog,
   devWarn,
 } from '@/composables/utils/storeHelpers';
+import { logger } from '@/utils/logger';
 export interface FirebaseListenerConfig {
   store: Store;
   docRef: ComputedRef<DocumentReference<DocumentData> | null>;
@@ -67,7 +68,7 @@ export function useFirebaseListener({
       unsubscribe.value = null;
       resetStore(store);
     } else {
-      console.error(`[${storeIdForLogging}] Firebase error:`, error);
+      logger.error(`[${storeIdForLogging}] Firebase error:`, error);
     }
     if (onError) {
       onError(error);

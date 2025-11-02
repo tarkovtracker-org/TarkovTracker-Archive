@@ -4,32 +4,16 @@ import { fireuser } from '@/plugins/firebase';
 import { useTarkovStore } from '@/stores/tarkov';
 import { useUserStore } from '@/stores/user';
 import { useTeammateStores } from './useTeamStore';
-import type { Task } from '@/composables/tarkovdata';
-import { tasks, traders, objectives, hideoutStations } from '@/composables/tarkovdata';
+import { getCurrentGameModeData } from './utils/gameModeHelpers';
+import { GAME_EDITIONS, HIDEOUT_STATION_IDS } from '@/config/gameConstants';
+import { createTaskProgressGetters } from './progress/taskProgress';
+import { createHideoutProgressGetters } from './progress/hideoutProgress';
+import { createTraderProgressGetters } from './progress/traderProgress';
+import type { TeamStoresMap } from './progress/types';
 import type { Store } from 'pinia';
 import type { UserState, UserProgressData } from '@/shared_state';
-export const STASH_STATION_ID = '5d484fc0654e76006657e0ab';
-export const CULTIST_CIRCLE_STATION_ID = '667298e75ea6b4493c08f266';
-interface GameEdition {
-  version: number;
-  value: number;
-  defaultStashLevel: number;
-}
-const gameEditions: GameEdition[] = [
-  { version: 1, value: 0.0, defaultStashLevel: 1 },
-  { version: 2, value: 0.0, defaultStashLevel: 2 },
-  { version: 3, value: 0.2, defaultStashLevel: 3 },
-  { version: 4, value: 0.2, defaultStashLevel: 4 },
-  { version: 5, value: 0.2, defaultStashLevel: 5 },
-  { version: 6, value: 0.2, defaultStashLevel: 5 },
-];
-type TeamStoresMap = Record<string, Store<string, UserState>>;
-type CompletionsMap = Record<string, Record<string, boolean>>;
-type TraderLevelsMap = Record<string, Record<string, number>>;
-type FactionMap = Record<string, string>;
-type TaskAvailabilityMap = Record<string, Record<string, boolean>>;
-type ObjectiveCompletionsMap = Record<string, Record<string, boolean>>;
-type HideoutLevelMap = Record<string, Record<string, number>>;
+export const STASH_STATION_ID = HIDEOUT_STATION_IDS.STASH;
+export const CULTIST_CIRCLE_STATION_ID = HIDEOUT_STATION_IDS.CULTIST_CIRCLE;
 /*
 type ProgressGetters = {
   teamStores: TeamStoresMap;
@@ -54,6 +38,13 @@ interface FireswapConfig {
   debouncems: number;
   localKey: string;
 }
+
+const getProgressDataFromStore = (
+  store: Store<string, UserState> | null | undefined
+): UserProgressData | null => {
+  const { currentData } = getCurrentGameModeData<UserProgressData | undefined>(store);
+  return currentData ?? null;
+};
 export const useProgressStore = defineStore(
   'progress',
   () => {
@@ -81,244 +72,14 @@ export const useProgressStore = defineStore(
       });
       return visibleStores;
     });
-    const tasksCompletions = computed(() => {
-      const completions: CompletionsMap = {};
-      if (!tasks.value || !visibleTeamStores.value) return {};
-      for (const task of tasks.value as Task[]) {
-        completions[task.id] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          completions[task.id][teamId] = currentData?.taskCompletions?.[task.id]?.complete ?? false;
-        }
-      }
-      return completions;
-    });
-    const gameEditionData = computed(() => gameEditions);
-    const traderLevelsAchieved = computed(() => {
-      const levels: TraderLevelsMap = {};
-      if (!traders.value || !visibleTeamStores.value) return {};
-      for (const teamId of Object.keys(visibleTeamStores.value)) {
-        levels[teamId] = {};
-        const store = visibleTeamStores.value[teamId];
-        for (const trader of traders.value) {
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          levels[teamId][trader.id] = (currentData as UserProgressData)?.level ?? 0;
-        }
-      }
-      return levels;
-    });
-    const playerFaction = computed(() => {
-      const faction: FactionMap = {};
-      if (!visibleTeamStores.value) return {};
-      for (const teamId of Object.keys(visibleTeamStores.value)) {
-        const store = visibleTeamStores.value[teamId];
-        // Get current gamemode data, with fallback to legacy structure
-        const currentGameMode = store?.$state.currentGameMode || 'pvp';
-        const currentData = store?.$state[currentGameMode] || store?.$state;
-        faction[teamId] = currentData?.pmcFaction ?? 'Unknown';
-      }
-      return faction;
-    });
-    const unlockedTasks = computed(() => {
-      const available: TaskAvailabilityMap = {};
-      if (!tasks.value || !visibleTeamStores.value) return {};
-      for (const task of tasks.value as Task[]) {
-        available[task.id] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          const playerLevel = currentData?.level ?? 0;
-          const currentPlayerFaction = playerFaction.value[teamId];
-          const isTaskComplete = tasksCompletions.value[task.id]?.[teamId] ?? false;
-          if (isTaskComplete) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let failedReqsMet = true;
-          if (task.failedRequirements) {
-            for (const req of task.failedRequirements) {
-              const failed = currentData?.taskCompletions?.[req.task.id]?.failed ?? false;
-              if (failed) {
-                failedReqsMet = false;
-                break;
-              }
-            }
-          }
-          if (!failedReqsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          if (task.minPlayerLevel && playerLevel < task.minPlayerLevel) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let traderLevelsMet = true;
-          if (task.traderLevelRequirements) {
-            for (const req of task.traderLevelRequirements) {
-              const currentTraderLevel = traderLevelsAchieved.value[teamId]?.[req.trader.id] ?? 0;
-              if (currentTraderLevel < req.level) {
-                traderLevelsMet = false;
-                break;
-              }
-            }
-          }
-          if (!traderLevelsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          let prereqsMet = true;
-          if (task.taskRequirements) {
-            for (const req of task.taskRequirements) {
-              const isPrereqComplete = tasksCompletions.value[req.task.id]?.[teamId] ?? false;
-              if (!isPrereqComplete) {
-                prereqsMet = false;
-                break;
-              }
-            }
-          }
-          if (!prereqsMet) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          if (
-            task.factionName &&
-            task.factionName !== 'Any' &&
-            task.factionName !== currentPlayerFaction
-          ) {
-            available[task.id][teamId] = false;
-            continue;
-          }
-          available[task.id][teamId] = true;
-        }
-      }
-      return available;
-    });
-    const objectiveCompletions = computed(() => {
-      const completions: ObjectiveCompletionsMap = {};
-      if (!objectives.value || !visibleTeamStores.value) return {};
-      for (const objective of objectives.value) {
-        completions[objective.id] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          completions[objective.id][teamId] =
-            currentData?.taskObjectives?.[objective.id]?.complete ?? false;
-        }
-      }
-      return completions;
-    });
-    const hideoutLevels = computed(() => {
-      const levels: HideoutLevelMap = {};
-      if (!hideoutStations.value || !visibleTeamStores.value) return {};
-      for (const station of hideoutStations.value) {
-        if (!station || !station.id) continue;
-        levels[station.id] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          const modulesState = currentData?.hideoutModules ?? {};
-          let maxManuallyCompletedLevel = 0;
-          if (station.levels && Array.isArray(station.levels)) {
-            for (const lvl of station.levels) {
-              if (
-                lvl &&
-                lvl.id &&
-                modulesState[lvl.id]?.complete &&
-                typeof lvl.level === 'number'
-              ) {
-                maxManuallyCompletedLevel = Math.max(maxManuallyCompletedLevel, lvl.level);
-              }
-            }
-          }
-          let currentStationDisplayLevel;
-          if (station.id === STASH_STATION_ID) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
-            const edition = gameEditionData.value.find(
-              (e: GameEdition) => e.version === gameEditionVersion
-            );
-            const defaultStashFromEdition = edition?.defaultStashLevel ?? 0;
-            const maxLevel = station.levels?.length || 0;
-            const effectiveStashLevel = Math.min(defaultStashFromEdition, maxLevel);
-            if (effectiveStashLevel === maxLevel) {
-              currentStationDisplayLevel = maxLevel;
-            } else {
-              currentStationDisplayLevel = Math.max(effectiveStashLevel, maxManuallyCompletedLevel);
-            }
-          } else if (station.id === CULTIST_CIRCLE_STATION_ID) {
-            const gameEditionVersion = store?.$state.gameEdition ?? 0;
-            if (
-              (gameEditionVersion === 5 || gameEditionVersion === 6) &&
-              station.levels &&
-              station.levels.length > 0
-            ) {
-              currentStationDisplayLevel = station.levels.length;
-            } else {
-              currentStationDisplayLevel = maxManuallyCompletedLevel;
-            }
-          } else {
-            currentStationDisplayLevel = maxManuallyCompletedLevel;
-          }
-          levels[station.id][teamId] = currentStationDisplayLevel;
-        }
-      }
-      return levels;
-    });
+    const gameEditionData = computed(() => Object.values(GAME_EDITIONS));
 
-    const moduleCompletions = computed(() => {
-      const completions: CompletionsMap = {};
-      if (!hideoutStations.value || !visibleTeamStores.value) return {};
-      
-      // Collect all module IDs from all stations
-      const allModuleIds = hideoutStations.value.flatMap(station => 
-        station.levels?.map(level => level.id) || []
-      );
-      
-      for (const moduleId of allModuleIds) {
-        completions[moduleId] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          completions[moduleId][teamId] = currentData?.hideoutModules?.[moduleId]?.complete ?? false;
-        }
-      }
-      return completions;
+    const traderProgress = createTraderProgressGetters(visibleTeamStores);
+    const taskProgress = createTaskProgressGetters(visibleTeamStores, {
+      traderLevels: traderProgress.traderLevelsAchieved,
+      traderStandings: traderProgress.traderStandings,
     });
-
-    const modulePartCompletions = computed(() => {
-      const completions: CompletionsMap = {};
-      if (!hideoutStations.value || !visibleTeamStores.value) return {};
-      
-      // Collect all part/requirement IDs from all station levels
-      const allPartIds = hideoutStations.value.flatMap(station => 
-        station.levels?.flatMap(level => 
-          level.itemRequirements?.map(req => req.id) || []
-        ) || []
-      );
-      
-      for (const partId of allPartIds) {
-        completions[partId] = {};
-        for (const teamId of Object.keys(visibleTeamStores.value)) {
-          const store = visibleTeamStores.value[teamId];
-          // Get current gamemode data, with fallback to legacy structure
-          const currentGameMode = store?.$state.currentGameMode || 'pvp';
-          const currentData = store?.$state[currentGameMode] || store?.$state;
-          completions[partId][teamId] = currentData?.hideoutParts?.[partId]?.complete ?? false;
-        }
-      }
-      return completions;
-    });
+    const hideoutProgress = createHideoutProgressGetters(visibleTeamStores);
 
     const getTeamIndex = (teamId: string): string => {
       return teamId === fireuser?.uid ? 'self' : teamId;
@@ -326,9 +87,8 @@ export const useProgressStore = defineStore(
     const getDisplayName = (teamId: string): string => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      const currentGameMode = store?.$state.currentGameMode || 'pvp';
-      const currentData = store?.$state[currentGameMode] || store?.$state;
-      const displayNameFromStore = (currentData as UserProgressData)?.displayName;
+      const progressData = getProgressDataFromStore(store);
+      const displayNameFromStore = progressData?.displayName;
 
       if (!displayNameFromStore) {
         return teamId.substring(0, 6);
@@ -338,17 +98,13 @@ export const useProgressStore = defineStore(
     const getLevel = (teamId: string): number => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      // Get current gamemode data, with fallback to legacy structure
-      const currentGameMode = store?.$state.currentGameMode || 'pvp';
-      const currentData = store?.$state[currentGameMode] || store?.$state;
-      return currentData?.level ?? 1;
+      const progressData = getProgressDataFromStore(store);
+      return progressData?.level ?? 1;
     };
     const getFaction = (teamId: string): string => {
       const store = visibleTeamStores.value[teamId];
-      // Get current gamemode data, with fallback to legacy structure
-      const currentGameMode = store?.$state.currentGameMode || 'pvp';
-      const currentData = store?.$state[currentGameMode] || store?.$state;
-      return currentData?.pmcFaction ?? 'Unknown';
+      const progressData = getProgressDataFromStore(store);
+      return progressData?.pmcFaction ?? 'Unknown';
     };
     const getTeammateStore = (teamId: string): Store<string, UserState> | null => {
       return teammateStores.value[teamId] || null;
@@ -357,10 +113,8 @@ export const useProgressStore = defineStore(
     const hasCompletedTask = (teamId: string, taskId: string): boolean => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      // Get current gamemode data, with fallback to legacy structure
-      const currentGameMode = store?.$state.currentGameMode || 'pvp';
-      const currentData = store?.$state[currentGameMode] || store?.$state;
-      const taskCompletion = currentData?.taskCompletions?.[taskId];
+      const progressData = getProgressDataFromStore(store);
+      const taskCompletion = progressData?.taskCompletions?.[taskId];
       return taskCompletion?.complete === true;
     };
 
@@ -370,10 +124,8 @@ export const useProgressStore = defineStore(
     ): 'completed' | 'failed' | 'incomplete' => {
       const storeKey = getTeamIndex(teamId);
       const store = teamStores.value[storeKey];
-      // Get current gamemode data, with fallback to legacy structure
-      const currentGameMode = store?.$state.currentGameMode || 'pvp';
-      const currentData = store?.$state[currentGameMode] || store?.$state;
-      const taskCompletion = currentData?.taskCompletions?.[taskId];
+      const progressData = getProgressDataFromStore(store);
+      const taskCompletion = progressData?.taskCompletions?.[taskId];
 
       if (taskCompletion?.complete) return 'completed';
       if (taskCompletion?.failed) return 'failed';
@@ -386,22 +138,22 @@ export const useProgressStore = defineStore(
 
       if (!store?.$state) return 0;
 
-      // Get current gamemode data, with fallback to legacy structure
-      const currentGameMode = store.$state.currentGameMode || 'pvp';
-      const currentData = store.$state[currentGameMode] || store.$state;
+      const progressData = getProgressDataFromStore(store);
 
       switch (category) {
         case 'tasks': {
-          const totalTasks = Object.keys(currentData.taskCompletions || {}).length;
-          const completedTasks = Object.values(currentData.taskCompletions || {}).filter(
+          const taskCompletions = progressData?.taskCompletions ?? {};
+          const totalTasks = Object.keys(taskCompletions).length;
+          const completedTasks = Object.values(taskCompletions).filter(
             (completion) => completion?.complete === true
           ).length;
           return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
         }
 
         case 'hideout': {
-          const totalModules = Object.keys(currentData.hideoutModules || {}).length;
-          const completedModules = Object.values(currentData.hideoutModules || {}).filter(
+          const hideoutModules = progressData?.hideoutModules ?? {};
+          const totalModules = Object.keys(hideoutModules).length;
+          const completedModules = Object.values(hideoutModules).filter(
             (module) => module?.complete === true
           ).length;
           return totalModules > 0 ? (completedModules / totalModules) * 100 : 0;
@@ -415,15 +167,16 @@ export const useProgressStore = defineStore(
     return {
       teamStores,
       visibleTeamStores,
-      tasksCompletions,
+      tasksCompletions: taskProgress.tasksCompletions,
       gameEditionData,
-      traderLevelsAchieved,
-      playerFaction,
-      unlockedTasks,
-      objectiveCompletions,
-      hideoutLevels,
-      moduleCompletions,
-      modulePartCompletions,
+      traderLevelsAchieved: traderProgress.traderLevelsAchieved,
+      traderStandings: traderProgress.traderStandings,
+      playerFaction: taskProgress.playerFaction,
+      unlockedTasks: taskProgress.unlockedTasks,
+      objectiveCompletions: taskProgress.objectiveCompletions,
+      hideoutLevels: hideoutProgress.hideoutLevels,
+      moduleCompletions: hideoutProgress.moduleCompletions,
+      modulePartCompletions: hideoutProgress.modulePartCompletions,
       getTeamIndex,
       getDisplayName,
       getLevel,

@@ -6,12 +6,7 @@
         {{ tokenDataRef?.note }}
       </div>
       <v-spacer></v-spacer>
-      <v-chip 
-        :color="gameModeChipColor" 
-        size="small" 
-        variant="tonal"
-        class="ml-2"
-      >
+      <v-chip :color="gameModeChipColor" size="small" variant="tonal" class="ml-2">
         <v-icon :icon="gameModeIcon" size="small" class="mr-1"></v-icon>
         {{ gameModeDisplay }}
       </v-chip>
@@ -93,6 +88,7 @@
   import QRCode from 'qrcode';
   import { useUserStore } from '@/stores/user';
   import { useI18n } from 'vue-i18n';
+  import { logger } from '@/utils/logger';
   // Get locale for use in calculating relative time
   const { locale } = useI18n({ useScope: 'global' });
   // Define the props for the component
@@ -142,28 +138,40 @@
   // Game mode display properties
   const gameModeDisplay = computed(() => {
     switch (tokenGameMode.value) {
-      case 'pvp': return 'PvP Only';
-      case 'pve': return 'PvE Only'; 
-      case 'dual': return 'Dual Mode';
-      default: return 'PvP Only';
+      case 'pvp':
+        return 'PvP Only';
+      case 'pve':
+        return 'PvE Only';
+      case 'dual':
+        return 'Dual Mode';
+      default:
+        return 'PvP Only';
     }
   });
 
   const gameModeChipColor = computed(() => {
     switch (tokenGameMode.value) {
-      case 'pvp': return 'blue';
-      case 'pve': return 'green';
-      case 'dual': return 'orange';
-      default: return 'blue';
+      case 'pvp':
+        return 'blue';
+      case 'pve':
+        return 'green';
+      case 'dual':
+        return 'orange';
+      default:
+        return 'blue';
     }
   });
 
   const gameModeIcon = computed(() => {
     switch (tokenGameMode.value) {
-      case 'pvp': return 'mdi-sword-cross';
-      case 'pve': return 'mdi-shield-account';
-      case 'dual': return 'mdi-swap-horizontal-variant';
-      default: return 'mdi-sword-cross';
+      case 'pvp':
+        return 'mdi-sword-cross';
+      case 'pve':
+        return 'mdi-shield-account';
+      case 'dual':
+        return 'mdi-swap-horizontal-variant';
+      default:
+        return 'mdi-sword-cross';
     }
   });
   // Calculate the relative days since the token was created using Intl.RelativeTimeFormat
@@ -204,10 +212,10 @@
     try {
       const result = await revokeTokenFn({ token: props.token });
       if (result.data.error) {
-        console.error('Token revocation failed:', result.data.error);
+        logger.error('Token revocation failed:', result.data.error);
       }
-    } catch {
-      console.error('Failed to revoke token');
+    } catch (error) {
+      logger.error('Failed to revoke token', error);
     } finally {
       deleting.value = false;
     }
@@ -219,9 +227,9 @@
     const canvasId = props.token + '-tc';
     const canvasElement = document.getElementById(canvasId);
     if (canvasElement && !qrGenerated.value) {
-      QRCode.toCanvas(canvasElement, props.token, {}, function (_error) {
-        if (_error) {
-          console.error('QR code generation failed');
+      QRCode.toCanvas(canvasElement, props.token, {}, function (error) {
+        if (error) {
+          logger.error('QR code generation failed', error);
         } else {
           qrGenerated.value = true;
         }

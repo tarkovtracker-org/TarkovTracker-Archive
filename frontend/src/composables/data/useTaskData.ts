@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
+import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
 import {
   createGraph,
   getPredecessors,
@@ -17,32 +18,23 @@ import type {
   NeededItemTaskObjective,
   ObjectiveMapInfo,
   ObjectiveGPSInfo,
+  TarkovItem,
+  RequiredKey,
+  Key,
 } from '@/types/tarkov';
 import type Graph from 'graphology';
-
-// Disabled tasks list
-const DISABLED_TASKS: string[] = [
-  '61e6e5e0f5b9633f6719ed95',
-  '61e6e60223374d168a4576a6',
-  '61e6e621bfeab00251576265',
-  '61e6e615eea2935bc018a2c5',
-  '61e6e60c5ca3b3783662be27',
-];
-
+import { logger } from '@/utils/logger';
 /**
  * Composable for managing task data, relationships, and derived information
  */
 export function useTaskData() {
   const store = useTarkovStore();
-
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
-
   const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
-
   // Reactive state
   const tasks = ref<Task[]>([]);
   const taskGraph = ref(createGraph());
@@ -51,7 +43,6 @@ export function useTaskData() {
   const objectiveGPS = ref<{ [taskId: string]: ObjectiveGPSInfo[] }>({});
   const mapTasks = ref<{ [mapId: string]: string[] }>({});
   const neededItemTaskObjectives = ref<NeededItemTaskObjective[]>([]);
-
   // Computed properties
   const objectives = computed<TaskObjective[]>(() => {
     if (!tasks.value.length) return [];
@@ -65,18 +56,13 @@ export function useTaskData() {
     });
     return allObjectives;
   });
-
   const enabledTasks = computed(() =>
-    tasks.value.filter((task) => !DISABLED_TASKS.includes(task.id))
+    tasks.value.filter((task) => !DISABLED_TASK_IDS.includes(task.id))
   );
-
-  /**
-   * Builds the task graph from task requirements
-   */
+  // Builds the task graph from task requirements
   const buildTaskGraph = (taskList: Task[]) => {
     const newGraph = createGraph();
     const activeRequirements: { task: Task; requirement: TaskRequirement }[] = [];
-
     // Add all tasks as nodes and process non-active requirements
     taskList.forEach((task) => {
       safeAddNode(newGraph, task.id);
@@ -94,7 +80,6 @@ export function useTaskData() {
         }
       });
     });
-
     // Handle active requirements by linking predecessors
     activeRequirements.forEach(({ task, requirement }) => {
       const requiredTaskNodeId = requirement.task.id;
@@ -105,10 +90,8 @@ export function useTaskData() {
         });
       }
     });
-
     return newGraph;
   };
-
   /**
    * Processes tasks to extract map, GPS, and item information
    */
@@ -118,7 +101,6 @@ export function useTaskData() {
     const tempObjectiveGPS: { [taskId: string]: ObjectiveGPSInfo[] } = {};
     const tempAlternativeTasks: { [taskId: string]: string[] } = {};
     const tempNeededObjectives: NeededItemTaskObjective[] = [];
-
     taskList.forEach((task) => {
       // Process finish rewards for alternative tasks
       if (Array.isArray(task.finishRewards)) {
@@ -135,7 +117,6 @@ export function useTaskData() {
           }
         });
       }
-
       // Process objectives
       task.objectives?.forEach((objective) => {
         // Map and location data
@@ -147,7 +128,6 @@ export function useTaskData() {
           if (!tempMapTasks[mapId].includes(task.id)) {
             tempMapTasks[mapId].push(task.id);
           }
-
           if (!tempObjectiveMaps[task.id]) {
             tempObjectiveMaps[task.id] = [];
           }
@@ -155,7 +135,6 @@ export function useTaskData() {
             objectiveID: String(objective.id),
             mapID: String(mapId),
           });
-
           // GPS coordinates
           if (objective.x !== undefined && objective.y !== undefined) {
             if (!tempObjectiveGPS[task.id]) {
@@ -168,15 +147,51 @@ export function useTaskData() {
             });
           }
         }
-
-        // Item requirements
-        if (objective?.item?.id || objective?.markerItem?.id) {
+        // Item requirements - handle both new 'items' array and legacy 'item'
+        const candidateItems: TarkovItem[] = [];
+        if (objective?.item) {
+          candidateItems.push(objective.item);
+        }
+        if (Array.isArray(objective?.items)) {
+          objective.items
+            .filter((candidate): candidate is TarkovItem => Boolean(candidate))
+            .forEach((candidate) => candidateItems.push(candidate));
+        }
+        const dedupedItems: TarkovItem[] = [];
+        const seenItemIds = new Set<string>();
+        candidateItems.forEach((candidate) => {
+          if (!candidate) {
+            return;
+          }
+          if (candidate.id) {
+            if (seenItemIds.has(candidate.id)) {
+              return;
+            }
+            seenItemIds.add(candidate.id);
+          }
+          dedupedItems.push(candidate);
+        });
+        if (dedupedItems.length > 0) {
+          // Use the first deduped item as representative because all entries share the same item id
+          const representativeItem = dedupedItems[0];
           tempNeededObjectives.push({
             id: objective.id,
             needType: 'taskObjective',
             taskId: task.id,
             type: objective.type,
-            item: objective.item!,
+            item: representativeItem,
+            alternativeItems: dedupedItems,
+            markerItem: objective.markerItem,
+            count: objective.count ?? 1,
+            foundInRaid: objective.foundInRaid ?? false,
+          });
+        } else if (objective?.markerItem?.id) {
+          tempNeededObjectives.push({
+            id: objective.id,
+            needType: 'taskObjective',
+            taskId: task.id,
+            type: objective.type,
+            item: undefined,
             markerItem: objective.markerItem,
             count: objective.count ?? 1,
             foundInRaid: objective.foundInRaid ?? false,
@@ -184,7 +199,6 @@ export function useTaskData() {
         }
       });
     });
-
     return {
       tempMapTasks,
       tempObjectiveMaps,
@@ -193,21 +207,72 @@ export function useTaskData() {
       tempNeededObjectives,
     };
   };
-
   /**
-   * Enhances tasks with graph relationship data
+   * Collects required keys from task objectives to replace deprecated neededKeys
+   * Falls back to legacy neededKeys if no requiredKeys found on objectives
+   */
+  const getRequiredKeysFromObjectives = (task: Task) => {
+    const requiredKeys: RequiredKey[] = [];
+    // First try to collect from objectives.requiredKeys
+    task.objectives?.forEach((objective) => {
+      if (objective?.requiredKeys) {
+        const keys = Array.isArray(objective.requiredKeys)
+          ? objective.requiredKeys
+          : [objective.requiredKeys];
+        const objectiveMaps =
+          Array.isArray(objective.maps) && objective.maps.length > 0 ? objective.maps : [null];
+        keys.forEach((key: Key) => {
+          if (!key) {
+            return;
+          }
+          objectiveMaps.forEach((map) => {
+            const mapId = map?.id ?? null;
+            const existingMapEntry = requiredKeys.find(
+              (entry) => (entry.map?.id ?? null) === mapId
+            );
+            if (existingMapEntry) {
+              if (key.id && !existingMapEntry.keys.some((k: Key) => k.id === key.id)) {
+                existingMapEntry.keys.push(key);
+              } else if (
+                !key.id &&
+                !existingMapEntry.keys.some(
+                  (k: Key) => k.id === key.id || JSON.stringify(k) === JSON.stringify(key)
+                )
+              ) {
+                existingMapEntry.keys.push(key);
+              }
+            } else {
+              requiredKeys.push({
+                keys: key.id ? [key] : [key],
+                map: map ?? null,
+              });
+            }
+          });
+        });
+      }
+    });
+    // If no keys found from objectives and legacy neededKeys exists, use that
+    if (requiredKeys.length === 0 && task.neededKeys && Array.isArray(task.neededKeys)) {
+      return task.neededKeys;
+    }
+    return requiredKeys;
+  };
+  /**
+   * Enhances tasks with graph relationship data and computed required keys
    */
   const enhanceTasksWithRelationships = (taskList: Task[], graph: Graph) => {
     return taskList.map((task) => ({
       ...task,
+      eodOnly: EOD_ONLY_TASK_IDS.has(task.id),
       traderIcon: task.trader?.imageLink,
       predecessors: getPredecessors(graph, task.id),
       successors: getSuccessors(graph, task.id),
       parents: getParents(graph, task.id),
       children: getChildren(graph, task.id),
+      // Compute neededKeys from objectives with fallback to legacy field
+      neededKeys: getRequiredKeysFromObjectives(task),
     }));
   };
-
   // Watch for query result changes
   watch(
     queryResult,
@@ -217,7 +282,6 @@ export function useTaskData() {
           const newGraph = buildTaskGraph(newResult.tasks);
           const processedData = processTaskData(newResult.tasks);
           const enhancedTasks = enhanceTasksWithRelationships(newResult.tasks, newGraph);
-
           // Update reactive state
           tasks.value = enhancedTasks;
           taskGraph.value = newGraph;
@@ -237,7 +301,7 @@ export function useTaskData() {
           neededItemTaskObjectives.value = [];
         }
       } catch (error) {
-        console.error('Error processing task data:', error);
+        logger.error('Error processing task data:', error);
         // Reset to safe state on error to prevent stuck loading
         tasks.value = [];
         taskGraph.value = createGraph();
@@ -296,6 +360,6 @@ export function useTaskData() {
     getTasksByMap,
     isPrerequisiteFor,
     // Constants
-    disabledTasks: DISABLED_TASKS,
+    disabledTasks: [...DISABLED_TASK_IDS],
   };
 }

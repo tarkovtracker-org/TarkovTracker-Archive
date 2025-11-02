@@ -12,7 +12,11 @@ export interface ApiResponse<T = unknown> {
 
 // Error class for consistent error handling
 export class ApiError extends Error {
-  constructor(public statusCode: number, message: string, public code?: string) {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public code?: string
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -137,7 +141,7 @@ export interface TaskUpdateRequest {
   state: TaskStatus;
 }
 
-export type MultipleTaskUpdateRequest = { id: string, state: TaskStatus }[]
+export type MultipleTaskUpdateRequest = { id: string; state: TaskStatus }[];
 
 export interface ObjectiveUpdateRequest {
   state?: 'completed' | 'uncompleted';

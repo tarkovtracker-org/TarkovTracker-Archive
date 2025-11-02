@@ -72,27 +72,21 @@
                 </div>
               </v-btn>
             </v-card-text>
-            <div class="auth-footer px-6 py-3">
-              <div class="d-flex justify-space-between">
-                <v-btn
-                  variant="text"
-                  color="grey-lighten-1"
-                  class="text-caption text-lowercase"
-                  href="/privacy"
-                  target="_blank"
-                >
-                  Privacy Policy
-                </v-btn>
-                <v-btn
-                  variant="text"
-                  color="grey-lighten-1"
-                  class="text-caption text-lowercase"
-                  href="/terms"
-                  target="_blank"
-                >
-                  Terms of Service
-                </v-btn>
-              </div>
+            <div class="auth-footer px-6 py-4">
+              <p class="auth-consent text-caption text-medium-emphasis mb-0">
+                <i18n-t keypath="auth.consent.full" scope="global">
+                  <template #terms>
+                    <router-link to="/terms" class="auth-consent__link">{{
+                      $t('auth.consent.terms')
+                    }}</router-link>
+                  </template>
+                  <template #privacy>
+                    <router-link to="/privacy" class="auth-consent__link">{{
+                      $t('auth.consent.privacy')
+                    }}</router-link>
+                  </template>
+                </i18n-t>
+              </p>
             </div>
           </v-card>
         </v-col>
@@ -111,6 +105,7 @@
   } from '@/plugins/firebase';
   import { fireuser } from '@/plugins/firebase.ts';
   import DataMigrationService from '@/utils/DataMigrationService';
+  import { logger } from '@/utils/logger';
 
   const hasLocalData = ref(false);
 
@@ -135,7 +130,7 @@
         // If there was a checkUserDataAndShowMigration, it would be removed or simplified
       }
     } catch (error) {
-      console.error('Error in onMounted:', error);
+      logger.error('Error in onMounted:', error);
     }
   });
   const handleAuthSuccess = async (user) => {
@@ -147,7 +142,7 @@
       // Navigate to dashboard after successful login
       router.push('/');
     } catch (error) {
-      console.error('Error in handleAuthSuccess:', error);
+      logger.error('Error in handleAuthSuccess:', error);
       // Handle error (e.g., show a notification to the user)
     }
   };
@@ -158,7 +153,7 @@
       const result = await signInWithPopup(auth, provider);
       await handleAuthSuccess(result.user);
     } catch (error) {
-      console.error('Google sign in error:', error);
+      logger.error('Google sign in error:', error);
       loading.value.google = false;
     }
   };
@@ -169,7 +164,7 @@
       const result = await signInWithPopup(auth, provider);
       await handleAuthSuccess(result.user);
     } catch (error) {
-      console.error('GitHub sign in error:', error);
+      logger.error('GitHub sign in error:', error);
       loading.value.github = false;
     }
   };
@@ -209,5 +204,14 @@
   .auth-footer {
     border-top: 1px solid rgba(255, 255, 255, 0.05);
     background-color: rgba(0, 0, 0, 0.2);
+  }
+  .auth-consent {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+  .auth-consent__link {
+    color: rgba(var(--v-theme-secondary), 1);
+    text-decoration: underline;
+    font-weight: 500;
   }
 </style>

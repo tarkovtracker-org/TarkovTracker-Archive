@@ -1,7 +1,7 @@
 <template>
   <tracker-tip :tip="{ id: 'neededitems' }"></tracker-tip>
   <v-container>
-    <v-row align="center" dense>
+    <v-row align="center" class="compact-row">
       <v-col cols="9" sm="8" md="9" lg="8">
         <!-- Primary views (all, maps, traders) -->
         <v-card>
@@ -46,7 +46,7 @@
               <v-card :title="$t('page.neededitems.options.title')" style="width: fit-content">
                 <v-card-text>
                   <v-container class="ma-0 pa-0">
-                    <v-row dense>
+                    <v-row class="compact-row">
                       <!-- Choose needed items layout style -->
                       <v-col cols="12">
                         <v-btn-toggle
@@ -124,7 +124,8 @@
     <v-row v-if="loading || hideoutLoading" justify="center">
       <v-col cols="12" align="center">
         <v-progress-circular indeterminate color="secondary" class="mx-2"></v-progress-circular>
-        {{ $t('page.neededitems.loading') }} <refresh-button />
+        <span>{{ $t('page.neededitems.loading') }}</span>
+        <refresh-button />
       </v-col>
     </v-row>
     <v-row
@@ -149,16 +150,35 @@
         :item-style="neededItemsStyle"
       />
     </v-row>
+
+    <!-- Load more indicator -->
+    <v-row v-if="hasMoreItems && !loading && !hideoutLoading" justify="center" class="mt-4">
+      <v-col cols="12" align="center">
+        <v-btn variant="outlined" color="secondary" :loading="false" @click="loadMoreItems">
+          {{ $t('page.neededitems.load_more') }}
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Bottom loading indicator for auto-scroll -->
+    <v-row v-if="hasMoreItems && (loading || hideoutLoading)" justify="center" class="mt-4">
+      <v-col cols="12" align="center">
+        <v-progress-circular indeterminate color="secondary" class="mx-2"></v-progress-circular>
+        {{ $t('page.neededitems.loading_more') }}
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 <script setup>
-  import { computed, provide, ref, watch } from 'vue';
+  import { computed, provide, ref, watch, onMounted, onUnmounted } from 'vue';
   import { useTarkovData } from '@/composables/tarkovdata';
-  import { useProgressStore, STASH_STATION_ID } from '@/stores/progress';
+  import { STASH_STATION_ID } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { defineAsyncComponent } from 'vue';
   import { debounce } from '@/utils/debounce';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
+  import { useNeedVisibility } from '@/features/neededitems/useNeedVisibility';
   const TrackerTip = defineAsyncComponent(() => import('@/features/ui/TrackerTip'));
   const RefreshButton = defineAsyncComponent(() => import('@/features/ui/RefreshButton'));
   const NeededItem = defineAsyncComponent(() => import('@/features/neededitems/NeededItem'));
@@ -171,8 +191,10 @@
     neededItemTaskObjectives,
     neededItemHideoutModules,
   } = useTarkovData();
-  const progressStore = useProgressStore();
+  const { tasksCompletions, moduleCompletions, getHideoutLevelFor, getModuleCompletionMap } =
+    useProgressQueries();
   const userStore = useUserStore();
+  const { isTaskNeedVisible, isHideoutNeedVisible } = useNeedVisibility();
   const itemFilterNameText = ref('');
   function clearItemFilterNameText() {
     if (itemFilterNameText.value) itemFilterNameText.value = '';
@@ -190,6 +212,9 @@
     set: (value) => userStore.setNeededItemsStyle(value),
   });
   const settingsDialog = ref(false);
+
+  const itemsPerPage = 50;
+  const currentPage = ref(0);
   const neededViews = [
     {
       title: t('page.neededitems.neededviews.all'),
@@ -211,112 +236,173 @@
     get: () => userStore.getNeededTypeView,
     set: (value) => userStore.setNeededTypeView(value),
   });
-  const neededTaskItems = computed(() => {
-    const objectives = neededItemTaskObjectives?.value;
+  const normalizedFilter = computed(() => itemFilterName.value.trim().toLowerCase());
+
+  const taskMap = computed(() => {
     const taskList = tasks?.value;
-    if (!Array.isArray(objectives) || !Array.isArray(taskList)) {
+    if (!Array.isArray(taskList) || taskList.length === 0) {
+      return new Map();
+    }
+    const map = new Map();
+    taskList.forEach((task) => {
+      if (task?.id) {
+        map.set(task.id, task);
+      }
+    });
+    return map;
+  });
+
+  const taskPrerequisiteCounts = computed(() => {
+    const counts = new Map();
+    const completions = tasksCompletions.value || {};
+    taskMap.value.forEach((task, taskId) => {
+      const predecessors = Array.isArray(task?.predecessors) ? task.predecessors : [];
+      let unfinished = 0;
+      predecessors.forEach((predecessorId) => {
+        if (completions?.[predecessorId]?.self === false) {
+          unfinished += 1;
+        }
+      });
+      counts.set(taskId, unfinished);
+    });
+    return counts;
+  });
+
+  const matchesItemFilter = (need) => {
+    if (!normalizedFilter.value) {
+      return true;
+    }
+    const query = normalizedFilter.value;
+    const candidates = [];
+    if (need?.item) {
+      if (need.item.shortName) candidates.push(String(need.item.shortName));
+      if (need.item.name) candidates.push(String(need.item.name));
+    }
+    if (need?.markerItem) {
+      if (need.markerItem.shortName) candidates.push(String(need.markerItem.shortName));
+      if (need.markerItem.name) candidates.push(String(need.markerItem.name));
+    }
+    return candidates.some((value) => value.toLowerCase().includes(query));
+  };
+
+  const allNeededTaskItems = computed(() => {
+    const objectives = neededItemTaskObjectives?.value;
+    if (!Array.isArray(objectives) || objectives.length === 0) {
       return [];
     }
-    try {
-      // Use the captured, validated arrays
-      return objectives.slice().sort(
-        // Use objectives
-        (a, b) => {
-          let aCount = 0;
-          // Use taskList, still needs optional chaining for find
-          const taskA = taskList?.find((task) => task.id == a.taskId);
-          taskA?.predecessors.forEach((predecessor) => {
-            if (progressStore.tasksCompletions?.[predecessor]?.['self'] === false) {
-              aCount++;
-            }
-          });
-          let bCount = 0;
-          // Use taskList, still needs optional chaining for find
-          const taskB = taskList?.find((task) => task.id == b.taskId);
-          taskB?.predecessors.forEach((predecessor) => {
-            if (progressStore.tasksCompletions?.[predecessor]?.['self'] === false) {
-              bCount++;
-            }
-          });
-          if (aCount > bCount) {
-            return 1;
-          } else if (aCount < bCount) {
-            return -1;
-          }
+    const sorted = objectives
+      .filter((objective) => objective && matchesItemFilter(objective))
+      .slice()
+      .sort((a, b) => {
+        const aScore = taskPrerequisiteCounts.value.get(a.taskId) || 0;
+        const bScore = taskPrerequisiteCounts.value.get(b.taskId) || 0;
+        if (aScore === bScore) {
           return 0;
         }
-      );
-    } catch (error) {
-      console.error('Error processing neededTaskItems:', error);
-      return [];
-    }
+        return aScore - bScore;
+      });
+    return sorted;
   });
-  const neededHideoutItems = computed(() => {
-    // Capture dependencies' values at the start using optional chaining on .value access
-    const modulesNeeded = neededItemHideoutModules?.value;
+
+  const visibleTaskItems = computed(() => {
+    return allNeededTaskItems.value.filter((need) => {
+      if (!need || need.needType !== 'taskObjective') {
+        return false;
+      }
+      const relatedTask = need?.taskId ? taskMap.value.get(need.taskId) : undefined;
+      return isTaskNeedVisible(need, relatedTask);
+    });
+  });
+
+  const neededTaskItems = computed(() => {
+    const endIndex = (currentPage.value + 1) * itemsPerPage;
+    return visibleTaskItems.value.slice(0, endIndex);
+  });
+
+  const hideoutModuleMap = computed(() => {
     const moduleList = hideoutModules?.value;
-    // Check if captured values are valid arrays
-    if (!Array.isArray(modulesNeeded) || !Array.isArray(moduleList)) {
+    if (!Array.isArray(moduleList) || moduleList.length === 0) {
+      return new Map();
+    }
+    const map = new Map();
+    moduleList.forEach((module) => {
+      if (module?.id) {
+        map.set(module.id, module);
+      }
+    });
+    return map;
+  });
+
+  const hideoutPrerequisiteCounts = computed(() => {
+    const counts = new Map();
+    const completions = moduleCompletions.value || {};
+    hideoutModuleMap.value.forEach((module, moduleId) => {
+      const predecessors = Array.isArray(module?.predecessors) ? module.predecessors : [];
+      let unfinished = 0;
+      predecessors.forEach((predecessorId) => {
+        if (completions?.[predecessorId]?.self === false) {
+          unfinished += 1;
+        }
+      });
+      counts.set(moduleId, unfinished);
+    });
+    return counts;
+  });
+
+  const shouldIncludeHideoutNeed = (need) => {
+    const moduleInstanceId = need?.hideoutModule?.id;
+    const moduleStationId = need?.hideoutModule?.stationId;
+    const moduleTargetLevel = need?.hideoutModule?.level;
+    if (!moduleInstanceId || !moduleStationId || typeof moduleTargetLevel !== 'number') {
+      return true;
+    }
+
+    if (moduleStationId === STASH_STATION_ID) {
+      const currentEffectiveStashLevel = getHideoutLevelFor(STASH_STATION_ID, 'self');
+      if (typeof currentEffectiveStashLevel === 'number') {
+        return currentEffectiveStashLevel < moduleTargetLevel;
+      }
+      const moduleCompletion = getModuleCompletionMap(moduleInstanceId);
+      return moduleCompletion?.self !== true;
+    }
+
+    const moduleCompletion = getModuleCompletionMap(moduleInstanceId);
+    return moduleCompletion?.self !== true;
+  };
+
+  const allNeededHideoutItems = computed(() => {
+    const modules = neededItemHideoutModules?.value;
+    if (!Array.isArray(modules) || modules.length === 0) {
       return [];
     }
-    try {
-      // Use the captured, validated arrays
-      let hideoutNeeds = modulesNeeded
-        .slice()
-        .filter((need) => {
-          const moduleInstanceId = need.hideoutModule?.id;
-          const moduleStationId = need.hideoutModule?.stationId;
-          const moduleTargetLevel = need.hideoutModule?.level;
-          if (!moduleInstanceId || !moduleStationId || typeof moduleTargetLevel !== 'number') {
-            // If essential data is missing, cautiously keep the item,
-            // though this state is unexpected.
-            // Consider logging this case if it occurs.
-            return true;
-          }
-          if (moduleStationId === STASH_STATION_ID) {
-            const currentEffectiveStashLevel =
-              progressStore.hideoutLevels?.[STASH_STATION_ID]?.['self'];
-            if (typeof currentEffectiveStashLevel === 'number') {
-              return currentEffectiveStashLevel < moduleTargetLevel;
-            }
-            return (
-              progressStore.teamStores?.['self']?.$state?.hideoutModules?.[moduleInstanceId]
-                ?.complete !== true
-            );
-          } else {
-            const selfTeamStore = progressStore.teamStores?.['self'];
-            const hideoutModules = selfTeamStore?.$state?.hideoutModules;
-            const module = hideoutModules?.[moduleInstanceId];
-            return module?.complete !== true;
-          }
-        })
-        .sort((a, b) => {
-          let aCount = 0;
-          const moduleA = moduleList?.find((hModule) => hModule.id == a.hideoutModule?.id);
-          moduleA?.predecessors.forEach((predecessor) => {
-            if (progressStore.moduleCompletions?.[predecessor]?.['self'] === false) {
-              aCount++;
-            }
-          });
-          let bCount = 0;
-          const moduleB = moduleList?.find((hModule) => hModule.id == b.hideoutModule?.id);
-          moduleB?.predecessors.forEach((predecessor) => {
-            if (progressStore.moduleCompletions?.[predecessor]?.['self'] === false) {
-              bCount++;
-            }
-          });
-          if (aCount > bCount) {
-            return 1;
-          } else if (aCount < bCount) {
-            return -1;
-          }
+    const filtered = modules
+      .filter((module) => module && shouldIncludeHideoutNeed(module) && matchesItemFilter(module))
+      .slice()
+      .sort((a, b) => {
+        const moduleAId = a?.hideoutModule?.id;
+        const moduleBId = b?.hideoutModule?.id;
+        const aScore = moduleAId ? hideoutPrerequisiteCounts.value.get(moduleAId) || 0 : 0;
+        const bScore = moduleBId ? hideoutPrerequisiteCounts.value.get(moduleBId) || 0 : 0;
+        if (aScore === bScore) {
           return 0;
-        });
-      return hideoutNeeds;
-    } catch (error) {
-      console.error('Error processing neededHideoutItems:', error);
-      return [];
-    }
+        }
+        return aScore - bScore;
+      });
+    return filtered;
+  });
+
+  const visibleHideoutItems = computed(() => {
+    return allNeededHideoutItems.value.filter((need) => {
+      if (!need || need.needType !== 'hideoutModule') {
+        return false;
+      }
+      return isHideoutNeedVisible(need);
+    });
+  });
+
+  const neededHideoutItems = computed(() => {
+    const endIndex = (currentPage.value + 1) * itemsPerPage;
+    return visibleHideoutItems.value.slice(0, endIndex);
   });
   const hideFIR = computed({
     get: () => userStore.itemsNeededHideNonFIR,
@@ -362,5 +448,65 @@
   const itemsHideHideoutColor = computed(() =>
     userStore.itemsTeamHideoutHidden ? 'error' : 'success'
   );
+
+  // Infinite scroll logic
+  const hasMoreItems = computed(() => {
+    if (activeNeededView.value === 'tasks') {
+      return neededTaskItems.value.length < visibleTaskItems.value.length;
+    }
+    if (activeNeededView.value === 'hideout') {
+      return neededHideoutItems.value.length < visibleHideoutItems.value.length;
+    }
+    return (
+      neededTaskItems.value.length < visibleTaskItems.value.length ||
+      neededHideoutItems.value.length < visibleHideoutItems.value.length
+    );
+  });
+
+  const loadMoreItems = () => {
+    if (hasMoreItems.value) {
+      currentPage.value++;
+    }
+  };
+
+  // Reset pagination on view change or filter update
+  watch([activeNeededView, itemFilterName], () => {
+    currentPage.value = 0;
+  });
+
+  // Reset pagination when source collections change substantially
+  watch([visibleTaskItems, visibleHideoutItems], () => {
+    currentPage.value = 0;
+  });
+
+  // Scroll handler for infinite scroll
+  const handleScroll = debounce(() => {
+    const { scrollY } = window;
+    const { scrollHeight, clientHeight } = document.documentElement;
+    if (scrollY + clientHeight >= scrollHeight - 100) {
+      // Load more when 100px from bottom
+      loadMoreItems();
+    }
+  }, 100);
+
+  // Add and remove scroll listener
+  onMounted(() => {
+    window.addEventListener('scroll', handleScroll);
+  });
+
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+  });
+
+  /*
+   * Legacy components rely on the provide/inject filter. Even though we now
+   * pre-filter for performance, continue providing the live value for
+   * downstream consumers that expect it.
+   */
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .compact-row {
+    --v-layout-column-gap: 12px;
+    --v-layout-row-gap: 12px;
+  }
+</style>

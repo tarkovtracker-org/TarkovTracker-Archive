@@ -40,7 +40,10 @@ export class UserDeletionService {
   /**
    * Completely delete a user account and all associated data
    */
-  async deleteUserAccount(userId: string, request: UserDeletionRequest): Promise<ApiResponse<{ message: string }>> {
+  async deleteUserAccount(
+    userId: string,
+    request: UserDeletionRequest
+  ): Promise<ApiResponse<{ message: string }>> {
     logger.info('Starting user deletion process', { userId });
 
     // Validate confirmation text
@@ -63,17 +66,16 @@ export class UserDeletionService {
       return {
         success: true,
         data: {
-          message: 'User account and all associated data have been permanently deleted'
-        }
+          message: 'User account and all associated data have been permanently deleted',
+        },
       };
-
     } catch (error) {
       logger.error('Error during user deletion', { userId, error });
-      
+
       if (error instanceof ApiError) {
         throw error;
       }
-      
+
       throw errors.internal('Failed to delete user account. Please try again later.');
     }
   }
@@ -83,10 +85,10 @@ export class UserDeletionService {
    */
   private async handleTeamCleanup(userId: string): Promise<void> {
     const systemRef = this.db.collection('system').doc(userId) as DocumentReference<SystemDocData>;
-    
+
     return this.db.runTransaction(async (transaction) => {
       const systemDoc = await transaction.get(systemRef);
-      
+
       if (!systemDoc.exists) {
         logger.info('No system document found for user', { userId });
         return;
@@ -98,7 +100,9 @@ export class UserDeletionService {
         return;
       }
 
-      const teamRef = this.db.collection('team').doc(systemData.team) as DocumentReference<TeamDocData>;
+      const teamRef = this.db
+        .collection('team')
+        .doc(systemData.team) as DocumentReference<TeamDocData>;
       const teamDoc = await transaction.get(teamRef);
 
       if (!teamDoc.exists) {
@@ -107,13 +111,13 @@ export class UserDeletionService {
       }
 
       const teamData = teamDoc.data()!;
-      
+
       // Check if user is the team owner
       if (teamData.owner === userId) {
         await this.transferTeamOwnership(transaction, teamRef, teamData, userId);
       } else {
         // Just remove user from team members
-        const updatedMembers = teamData.members.filter(memberId => memberId !== userId);
+        const updatedMembers = teamData.members.filter((memberId) => memberId !== userId);
         transaction.update(teamRef, { members: updatedMembers });
         logger.info('Removed user from team members', { userId, teamId: systemData.team });
       }
@@ -130,29 +134,32 @@ export class UserDeletionService {
     currentOwnerId: string
   ): Promise<void> {
     // Remove current owner from members list
-    const remainingMembers = teamData.members.filter(memberId => memberId !== currentOwnerId);
+    const remainingMembers = teamData.members.filter((memberId) => memberId !== currentOwnerId);
 
     if (remainingMembers.length === 0) {
       // No other members, delete the team
       transaction.delete(teamRef);
-      logger.info('Deleted team with no remaining members', { teamId: teamRef.id, ownerId: currentOwnerId });
+      logger.info('Deleted team with no remaining members', {
+        teamId: teamRef.id,
+        ownerId: currentOwnerId,
+      });
       return;
     }
 
     // Find the oldest member based on user creation time
     const newOwner = await this.findOldestMember(remainingMembers);
-    
+
     // Update team with new owner
     transaction.update(teamRef, {
       owner: newOwner,
-      members: remainingMembers
+      members: remainingMembers,
     });
 
-    logger.info('Transferred team ownership', { 
-      teamId: teamRef.id, 
-      oldOwner: currentOwnerId, 
+    logger.info('Transferred team ownership', {
+      teamId: teamRef.id,
+      oldOwner: currentOwnerId,
       newOwner,
-      remainingMembers: remainingMembers.length 
+      remainingMembers: remainingMembers.length,
     });
   }
 
@@ -162,23 +169,23 @@ export class UserDeletionService {
   private async findOldestMember(memberIds: string[]): Promise<string> {
     try {
       // Get user documents for all members to check creation times
-      const userPromises = memberIds.map(memberId => 
+      const userPromises = memberIds.map((memberId) =>
         this.db.collection('user').doc(memberId).get()
       );
-      
+
       const userDocs = await Promise.all(userPromises);
-      
+
       let oldestMember = memberIds[0];
       let oldestTime = new Date();
 
       for (let i = 0; i < userDocs.length; i++) {
         const userDoc = userDocs[i];
         const memberId = memberIds[i];
-        
+
         if (userDoc.exists) {
           const userData = userDoc.data() as UserDocData;
           const createdAt = userData.createdAt?.toDate() || new Date();
-          
+
           if (createdAt < oldestTime) {
             oldestTime = createdAt;
             oldestMember = memberId;
@@ -202,7 +209,7 @@ export class UserDeletionService {
 
     // Collections that contain user documents
     const collections = ['progress', 'system', 'user'];
-    
+
     for (const collectionName of collections) {
       const docRef = this.db.collection(collectionName).doc(userId);
       batch.delete(docRef);
@@ -212,8 +219,8 @@ export class UserDeletionService {
     // Delete all tokens owned by the user
     const tokensQuery = this.db.collection('token').where('owner', '==', userId);
     const tokenDocs = await tokensQuery.get();
-    
-    tokenDocs.forEach(doc => {
+
+    tokenDocs.forEach((doc) => {
       batch.delete(doc.ref);
       operationCount++;
     });
@@ -238,7 +245,7 @@ export class UserDeletionService {
         logger.info('Firebase Auth user already deleted or not found', { userId });
         return;
       }
-      
+
       logger.error('Failed to delete Firebase Auth user', { userId, error });
       throw errors.internal('Failed to delete authentication account');
     }
@@ -255,7 +262,7 @@ export async function deleteUserAccountHandler(
   try {
     // Extract user ID from authenticated request
     const userId = req.user?.id;
-    
+
     if (!userId) {
       throw errors.unauthorized('User not authenticated');
     }
@@ -266,17 +273,17 @@ export async function deleteUserAccountHandler(
     res.status(200).json(result);
   } catch (error) {
     logger.error('User deletion handler error', { error });
-    
+
     if (error instanceof ApiError) {
       res.status(error.statusCode).json({
         success: false,
         error: error.message,
-        code: error.code
+        code: error.code,
       });
     } else {
       res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: 'Internal server error',
       });
     }
   }

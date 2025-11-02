@@ -16,6 +16,26 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
+const resolveGameMode = (token: ApiToken | undefined, queryGameMode: unknown): 'pvp' | 'pve' => {
+  const tokenMode = token?.gameMode ?? 'pvp';
+  if (tokenMode !== 'dual') {
+    return tokenMode === 'pve' ? 'pve' : 'pvp';
+  }
+
+  const queryValue = Array.isArray(queryGameMode)
+    ? queryGameMode[0]
+    : typeof queryGameMode === 'string'
+      ? queryGameMode
+      : undefined;
+
+  if (typeof queryValue === 'string') {
+    const normalized = queryValue.toLowerCase();
+    return normalized === 'pve' ? 'pve' : 'pvp';
+  }
+
+  return 'pvp';
+};
+
 /**
  * @openapi
  * /progress:
@@ -57,21 +77,21 @@ interface AuthenticatedRequest extends Request {
  *       500:
  *         description: "Internal server error."
  */
-export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'GP');
-  
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const gameMode = req.apiToken?.gameMode || 'pvp'; // Use token's game mode
-  const progressData = await progressService.getUserProgress(userId, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: progressData,
-    meta: { self: userId, gameMode },
-  };
-  
-  res.status(200).json(response);
-});
+export const getPlayerProgress = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
+    const progressData = await progressService.getUserProgress(userId, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: progressData,
+      meta: { self: userId, gameMode },
+    };
+
+    res.status(200).json(response);
+  }
+);
 
 /**
  * @openapi
@@ -123,30 +143,26 @@ export const getPlayerProgress = asyncHandler(async (req: AuthenticatedRequest, 
  *       500:
  *         description: "Internal server error."
  */
-export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
+export const setPlayerLevel = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    const level = ValidationService.validateLevel(req.params.levelValue);
 
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const level = ValidationService.validateLevel(req.params.levelValue);
+    const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
-  let gameMode = req.apiToken?.gameMode || 'pvp';
-  if (gameMode === 'dual') {
-    gameMode = req.query.gameMode as string || 'pvp';
+    await progressService.setPlayerLevel(userId, level, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        level,
+        message: 'Level updated successfully',
+      },
+    };
+
+    res.status(200).json(response);
   }
-  
-  await progressService.setPlayerLevel(userId, level, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: {
-      level,
-      message: 'Level updated successfully',
-    },
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -213,32 +229,28 @@ export const setPlayerLevel = asyncHandler(async (req: AuthenticatedRequest, res
  *       500:
  *         description: "Internal server error."
  */
-export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
+export const updateSingleTask = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    const taskId = ValidationService.validateTaskId(req.params.taskId);
+    const { state } = ValidationService.validateTaskUpdate(req.body);
 
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const taskId = ValidationService.validateTaskId(req.params.taskId);
-  const { state } = ValidationService.validateTaskUpdate(req.body);
+    const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
-  let gameMode = req.apiToken?.gameMode || 'pvp';
-  if (gameMode === 'dual') {
-    gameMode = req.query.gameMode as string || 'pvp';
+    await progressService.updateSingleTask(userId, taskId, state, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        taskId,
+        state,
+        message: 'Task updated successfully',
+      },
+    };
+
+    res.status(200).json(response);
   }
-  
-  await progressService.updateSingleTask(userId, taskId, state, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: {
-      taskId,
-      state,
-      message: 'Task updated successfully',
-    },
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -296,30 +308,26 @@ export const updateSingleTask = asyncHandler(async (req: AuthenticatedRequest, r
  *       500:
  *         description: "Internal server error during batch update."
  */
-export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
+export const updateMultipleTasks = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
 
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
+    const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
-  let gameMode = req.apiToken?.gameMode || 'pvp';
-  if (gameMode === 'dual') {
-    gameMode = req.query.gameMode as string || 'pvp';
+    await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        updatedTasks: Object.keys(taskUpdates),
+        message: 'Tasks updated successfully',
+      },
+    };
+
+    res.status(200).json(response);
   }
-  
-  await progressService.updateMultipleTasks(userId, taskUpdates, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: {
-      updatedTasks: Object.keys(taskUpdates),
-      message: 'Tasks updated successfully',
-    },
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 /**
  * @openapi
@@ -394,32 +402,28 @@ export const updateMultipleTasks = asyncHandler(async (req: AuthenticatedRequest
  *       500:
  *         description: "Internal server error."
  */
-export const updateTaskObjective = asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  ValidationService.validatePermissions(req.apiToken, 'WP');
+export const updateTaskObjective = asyncHandler(
+  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const userId = ValidationService.validateUserId(req.apiToken?.owner);
+    const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
+    const updateData = ValidationService.validateObjectiveUpdate(req.body);
 
-  const userId = ValidationService.validateUserId(req.apiToken?.owner);
-  const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
-  const updateData = ValidationService.validateObjectiveUpdate(req.body);
+    const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
 
-  // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
-  let gameMode = req.apiToken?.gameMode || 'pvp';
-  if (gameMode === 'dual') {
-    gameMode = req.query.gameMode as string || 'pvp';
+    await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
+
+    const response: ApiResponse = {
+      success: true,
+      data: {
+        objectiveId,
+        ...updateData,
+        message: 'Task objective updated successfully',
+      },
+    };
+
+    res.status(200).json(response);
   }
-  
-  await progressService.updateTaskObjective(userId, objectiveId, updateData, gameMode);
-  
-  const response: ApiResponse = {
-    success: true,
-    data: {
-      objectiveId,
-      ...updateData,
-      message: 'Task objective updated successfully',
-    },
-  };
-  
-  res.status(200).json(response);
-});
+);
 
 export default {
   getPlayerProgress,
