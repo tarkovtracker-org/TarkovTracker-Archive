@@ -91,8 +91,8 @@ REPORTS/
 Quarterly (or after large refactors):
 
 1. Re-run dependency audit and update both upgrade docs.
-1. Verify each action item against the codebase (`wc -l`, `rg`, etc.).
-1. Regenerate architecture/dependency mapping reports if still needed; keep fresh copies in the root directory and move prior versions to `archive/`.
+2. Verify each action item against the codebase (`wc -l`, `rg`, etc.).
+3. Regenerate architecture/dependency mapping reports if still needed; keep fresh copies in the root directory and move prior versions to `archive/`.
 
 ---
 
