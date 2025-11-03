@@ -1,13 +1,13 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const LEVEL_WEIGHT: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40,
 };
 
-const fallbackLevel: LogLevel = import.meta.env.DEV ? 'debug' : 'warn';
+const fallbackLevel: LogLevel = import.meta.env.DEV === false ? 'warn' : 'debug';
 
 function isLogLevel(value: string): value is LogLevel {
   return value in LEVEL_WEIGHT;
@@ -19,12 +19,17 @@ function resolveLogLevel(): LogLevel {
   if (configuredLevel && isLogLevel(configuredLevel)) {
     return configuredLevel;
   }
+
+  // In test environments or when DEV is undefined, default to debug for testing
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') {
+    return 'debug';
+  }
+
   return fallbackLevel;
 }
 
-const activeLevel = resolveLogLevel();
-
 function shouldLog(level: LogLevel) {
+  const activeLevel = resolveLogLevel();
   return LEVEL_WEIGHT[level] >= LEVEL_WEIGHT[activeLevel];
 }
 
@@ -44,9 +49,9 @@ function createLogMethod(level: LogLevel, scope?: string): LogMethod {
       return;
     }
     const prefix = scope ? [`[${scope}]`] : [];
+    const consoleFn = console[consoleMethod] as (...args: unknown[]) => void;
     const method =
-      (console[consoleMethod] as ((...data: unknown[]) => void) | undefined) ??
-      console.log.bind(console);
+      typeof consoleFn === 'function' ? consoleFn.bind(console) : console.log.bind(console);
     method(...prefix, ...args);
   };
 }
