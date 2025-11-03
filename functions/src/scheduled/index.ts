@@ -377,51 +377,150 @@ async function updateTarkovDataImplInternal(
         throw new Error('Invalid items response structure');
       }
 
-      const itemsDataCollectionRef = db.collection('tarkovData').doc('items').collection('data');
+      // Sharding configuration
+      const SHARD_TARGET_MAX = 700_000; // Conservative target below 1MB limit
+      const itemsShardsCollectionRef = db.collection('tarkovData').doc('items').collection('shards');
+      
+      // Helper function to approximate JSON size in bytes
+      const approximateSize = (obj: unknown): number => {
+        try {
+          return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+        } catch {
+          // Fallback for environments without Buffer
+          return JSON.stringify(obj).length;
+        }
+      };
+
+      // Create shards from items data
+      interface Shard {
+        data: Item[];
+        index: string;
+        size: number;
+      }
+      const shards: Shard[] = [];
+      let currentShard: Item[] = [];
+      let currentShardSize = 0;
+      let shardIndex = 0;
+
+      for (const item of itemsResponse.items) {
+        const itemSize = approximateSize(item);
+        
+        // Check if adding this item would exceed target size
+        if (currentShardSize + itemSize > SHARD_TARGET_MAX && currentShard.length > 0) {
+          // Save current shard and start new one
+          shards.push({
+            data: [...currentShard],
+            index: shardIndex.toString().padStart(3, '0'),
+            size: currentShardSize
+          });
+          
+          currentShard = [];
+          currentShardSize = 0;
+          shardIndex++;
+        }
+        
+        currentShard.push(item);
+        currentShardSize += itemSize;
+      }
+
+      // Don't forget the last shard
+      if (currentShard.length > 0) {
+        shards.push({
+          data: currentShard,
+          index: shardIndex.toString().padStart(3, '0'),
+          size: currentShardSize
+        });
+      }
+
+      // Write shards in batches (respecting 500 operation limit)
       const BATCH_SIZE = 500;
-      let totalItemsWritten = 0;
+      // let totalShardsWritten = 0; // Not used in final logging
 
-      // Process items in batches to respect Firestore limits
-      for (let i = 0; i < itemsResponse.items.length; i += BATCH_SIZE) {
-        const itemChunk = itemsResponse.items.slice(i, i + BATCH_SIZE);
-        const itemBatch = db.batch();
+      for (let i = 0; i < shards.length; i += BATCH_SIZE) {
+        const shardChunk = shards.slice(i, i + BATCH_SIZE);
+        const shardBatch = db.batch();
 
-        itemChunk.forEach((item) => {
-          const itemDocRef = itemsDataCollectionRef.doc(item.id);
-          itemBatch.set(itemDocRef, item);
+        shardChunk.forEach((shard) => {
+          const shardRef = itemsShardsCollectionRef.doc(shard.index);
+          shardBatch.set(shardRef, {
+            data: shard.data,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          });
         });
 
         try {
-          await itemBatch.commit();
-          totalItemsWritten += itemChunk.length;
+          await shardBatch.commit();
           logger.info(
-            `Committed item chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${itemChunk.length} items.`
+            `Committed shard chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${shardChunk.length} shards.`
           );
+          
+          // Log individual shard details for debugging
+          shardChunk.forEach((shard) => {
+            logger.debug(
+              `Shard ${shard.index}: ${shard.data.length} items, ~${Math.round(shard.size / 1024)}KB`
+            );
+          });
         } catch (chunkError) {
-          logger.error(`Failed to commit item chunk starting at index ${i}:`, chunkError);
-          // Re-throw to stop the process and be caught by the outer catch block
+          logger.error(`Failed to commit shard chunk starting at index ${i}:`, chunkError);
           throw new Error(
-            `Item batch write failed at index ${i}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'}`
+            `Shard batch write failed at index ${i}: ${chunkError instanceof Error ? chunkError.message : 'Unknown error'}`
           );
         }
       }
 
-      // Write the metadata document after all item chunks have been successfully written
+      // Clean up stale shards - list existing shards and delete those not in current set
+      try {
+        const existingShardsSnapshot = await itemsShardsCollectionRef.get();
+        const currentShardIds = shards.map(shard => shard.index);
+        const staleShardRefs: admin.firestore.DocumentReference[] = [];
+
+        existingShardsSnapshot.forEach((doc) => {
+          if (!currentShardIds.includes(doc.id)) {
+            staleShardRefs.push(doc.ref);
+          }
+        });
+
+        if (staleShardRefs.length > 0) {
+          const deleteBatchSize = 500;
+          for (let i = 0; i < staleShardRefs.length; i += deleteBatchSize) {
+            const deleteChunk = staleShardRefs.slice(i, i + deleteBatchSize);
+            const deleteBatch = db.batch();
+            
+            deleteChunk.forEach(ref => deleteBatch.delete(ref));
+            
+            try {
+              await deleteBatch.commit();
+              logger.info(`Deleted ${deleteChunk.length} stale shards`);
+            } catch (deleteError) {
+              logger.warn(`Failed to delete stale shard chunk: ${deleteError}`);
+              // Continue with other chunks - best effort cleanup
+            }
+          }
+        }
+      } catch (cleanupError) {
+        logger.warn('Failed to cleanup stale shards:', cleanupError);
+        // Continue with metadata update - cleanup is best effort
+      }
+
+      // Write parent metadata document after shards are successfully written
       const itemsMetadataRef = db.collection('tarkovData').doc('items');
+      const shardIds = shards.map(shard => shard.index);
+      
       const metadataBatch = db.batch();
       metadataBatch.set(itemsMetadataRef, {
-        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-        itemCount: totalItemsWritten,
-        schemaVersion: 2,
-        source: 'tarkov.dev',
+        sharded: true,
+        shardCount: shards.length,
+        shardIds: shardIds,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        schemaVersion: 2
       });
 
-      // Also include the tasks and hideout updates in this final batch
-      metadataBatch.commit();
+      // Also include tasks and hideout updates in this final batch
+      await metadataBatch.commit();
 
       itemsUpdateSuccessful = true;
       logger.info(
-        `Successfully updated ${totalItemsWritten} items in subcollection and metadata document.`
+        `Successfully sharded ${itemsResponse.items.length} items into ${shards.length} shards and updated metadata.`
       );
     } catch (error) {
       logger.error('Failed to update items:', error);
