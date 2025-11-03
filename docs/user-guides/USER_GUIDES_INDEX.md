@@ -39,10 +39,10 @@ Welcome to the TarkovTracker user guides section. Here you'll find comprehensive
 
 ## 🔗 Quick Links
 
-- **Official Website:** [TarkovTracker.app](https://tarkovtracker.app)
-- **GitHub Repository:** [TarkovTracker/TarkovTracker](https://github.com/TarkovTracker/TarkovTracker)
-- **Discord Community:** [Join our Discord](https://discord.gg/tarkovtracker)
-- **Issues & Support:** [GitHub Issues](https://github.com/TarkovTracker/TarkovTracker/issues)
+- **Official Website:** [TarkovTracker.org](https://tarkovtracker.org)
+- **GitHub Repository:** [TarkovTracker-org/TarkovTracker](https://github.com/tarkovtracker-org/TarkovTracker)
+- **Discord Community:** [Join our Discord](https://discord.gg/M8nBgA2sT6)
+- **Issues & Support:** [GitHub Issues](https://github.com/tarkovtracker-org/TarkovTracker/issues)
 
 ---
 
