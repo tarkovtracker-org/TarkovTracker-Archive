@@ -615,6 +615,75 @@ The [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware handles
 - Blocking after consecutive breaches
 - Event logging to Firestore for monitoring
 
+
+No additional rate limiter implementation is needed for the regenerate token endpoint.
+
+---
+
+## Required Composite Indexes
+
+**⚠️ CRITICAL: Firestore composite indexes are required for efficient token and rate limiting queries.**
+
+The token inactivity expiration system requires the following composite indexes for optimal performance:
+
+### Current Status
+The current `firestore.indexes.json` file is empty, but the following indexes are recommended for production deployments:
+
+### Token Collection Indexes
+```json
+{
+  "collectionGroup": "token",
+  "queryScope": "COLLECTION",
+  "fields": [
+    { "fieldPath": "owner", "order": "ASCENDING" },
+    { "fieldPath": "revoked", "order": "ASCENDING" }
+  ]
+}
+```
+- **Purpose**: Efficiently query active tokens by owner for regeneration operations
+- **Usage**: `token.where('owner', '==', userId).where('revoked', '==', false)`
+
+```json
+{
+  "collectionGroup": "token", 
+  "queryScope": "COLLECTION",
+  "fields": [
+    { "fieldPath": "revoked", "order": "ASCENDING" },
+    { "fieldPath": "lastUsed", "order": "ASCENDING" }
+  ]
+}
+```
+- **Purpose**: Find tokens that need expiration processing
+- **Usage**: `token.where('revoked', '==', false).where('lastUsed', '<=', cutoffDate)`
+
+### Rate Limit Events Indexes  
+```json
+{
+  "collectionGroup": "rateLimitEvents",
+  "queryScope": "COLLECTION", 
+  "fields": [
+    { "fieldPath": "cacheKey", "order": "ASCENDING" },
+    { "fieldPath": "createdAt", "order": "DESCENDING" }
+  ]
+}
+```
+- **Purpose**: Monitor abuse guard events by cache key for security analysis
+- **Usage**: `rateLimitEvents.where('cacheKey', '==', tokenKey).orderBy('createdAt', 'desc')`
+
+### Deployment Commands
+Deploy indexes using Firebase CLI:
+```bash
+firebase deploy --only firestore:indexes
+```
+
+### Validation
+- **CI/CD**: Automated testing in emulator mode validates index usage
+- **Local Development**: Use `firebase emulators:start` to test index requirements  
+- **Production Monitoring**: Monitor Firestore query performance in Google Cloud Console
+
+For the complete index definitions, refer to [`firestore.indexes.json`](firestore.indexes.json) in the project root.
+
+---
 No additional rate limiter implementation is needed for the regenerate token endpoint.
 
 ---
