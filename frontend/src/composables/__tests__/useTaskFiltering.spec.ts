@@ -58,7 +58,6 @@ describe('useTaskFiltering', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).logger = console;
     composable = useTaskFiltering();
   });
