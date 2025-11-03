@@ -4,6 +4,25 @@ import type { ProgressData } from './DataMigrationTypes';
 export const LOCAL_PROGRESS_KEY = 'progress';
 export const LOCAL_USER_STATE_KEY = 'user_state';
 
+/**
+ * Sanitizes progress data before localStorage storage by removing
+ * potentially sensitive metadata fields that could identify users
+ * or expose API endpoints.
+ *
+ * Fields removed:
+ * - sourceUserId: External user identifier
+ * - sourceDomain: API endpoint URL
+ *
+ * @param data - The progress data to sanitize
+ * @returns Sanitized copy of the data safe for localStorage
+ */
+const sanitizeProgressData = <T extends Record<string, unknown>>(data: T): T => {
+  const sanitized = { ...data };
+  delete sanitized.sourceUserId;
+  delete sanitized.sourceDomain;
+  return sanitized;
+};
+
 // eslint-disable-next-line complexity
 export const hasLocalData = (): boolean => {
   try {
@@ -48,7 +67,8 @@ export const getLocalData = (): ProgressData | null => {
 export const backupLocalProgress = (data: ProgressData): void => {
   const backupKey = `progress_backup_${new Date().toISOString()}`;
   try {
-    localStorage.setItem(backupKey, JSON.stringify(data));
+    const sanitizedData = sanitizeProgressData(data);
+    localStorage.setItem(backupKey, JSON.stringify(sanitizedData));
   } catch (error) {
     logger.warn('[LocalDataService] Failed to create local backup copy:', error);
   }
@@ -56,7 +76,9 @@ export const backupLocalProgress = (data: ProgressData): void => {
 
 export const saveLocalProgress = (data: unknown): void => {
   try {
-    localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(data));
+    const sanitizedData =
+      data && typeof data === 'object' ? sanitizeProgressData(data as Record<string, unknown>) : data;
+    localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(sanitizedData));
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local progress:', error);
   }
@@ -64,7 +86,9 @@ export const saveLocalProgress = (data: unknown): void => {
 
 export const saveLocalUserState = (state: unknown): void => {
   try {
-    localStorage.setItem(LOCAL_USER_STATE_KEY, JSON.stringify(state));
+    const sanitizedState =
+      state && typeof state === 'object' ? sanitizeProgressData(state as Record<string, unknown>) : state;
+    localStorage.setItem(LOCAL_USER_STATE_KEY, JSON.stringify(sanitizedState));
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local user state:', error);
   }
