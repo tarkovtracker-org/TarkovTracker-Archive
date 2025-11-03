@@ -37,22 +37,7 @@ export default [
   ...tseslint.configs.recommended,
   // Vue configuration
   ...pluginVue.configs['flat/recommended'],
-  // Apollo config (CommonJS) - must come before frontend rules
-  {
-    files: ['frontend/apollo.config.cjs'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'commonjs',
-      globals: {
-        ...globals.node,
-        ...globals.es2022,
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-require-imports': 'off',
-    },
-  },
-  
+
   // TypeScript/Vue source files with typed linting
   {
     files: [
@@ -92,8 +77,7 @@ export default [
       'frontend/vite.config.ts',
       'frontend/vitest.config.ts',
       'frontend/playwright.config.ts',
-      'frontend/e2e/**/*.ts',
-      '!frontend/apollo.config.cjs'
+      'frontend/e2e/**/*.ts'
     ],
     languageOptions: {
       parser: vueParser,

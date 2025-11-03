@@ -7,8 +7,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "e2e/**/*.ts",
-    "apollo.config.cjs"
+    "e2e/**/*.ts"
   ],
   "exclude": ["../scripts/**/*"]
 }
