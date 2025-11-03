@@ -43,6 +43,7 @@ interface UserState {
     hideLightkeeperRequiredTasks: boolean;
     hideEodOnlyTasks: boolean;
     itemsNeededHideNonFIR: boolean;
+    itemsTeamHideNonFIR: boolean;
     showExperienceRewards: boolean;
     showNextTasks: boolean;
     showPreviousTasks: boolean;
@@ -88,6 +89,7 @@ export const defaultState: UserState = {
     hideLightkeeperRequiredTasks: false,
     hideEodOnlyTasks: false,
     itemsNeededHideNonFIR: false,
+    itemsTeamHideNonFIR: false,
     showExperienceRewards: false,
     showNextTasks: false,
     showTaskIds: false,
@@ -103,6 +105,7 @@ const initialSavingState = {
   hideLightkeeperRequiredTasks: false,
   hideEodOnlyTasks: false,
   itemsNeededHideNonFIR: false,
+  itemsTeamHideNonFIR: false,
   showExperienceRewards: false,
   showNextTasks: false,
   showTaskIds: false,
@@ -316,7 +319,7 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
       this.itemsTeamHideNonFIR = hide;
       persistUserState(this.$state);
       this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.itemsNeededHideNonFIR = true;
+      this.saving.itemsTeamHideNonFIR = true;
     },
     setItemsTeamHideHideout(hide: boolean) {
       this.itemsTeamHideHideout = hide;
