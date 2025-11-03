@@ -314,6 +314,9 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
     setItemsTeamHideNonFIR(hide: boolean) {
       this.itemsTeamHideNonFIR = hide;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.itemsNeededHideNonFIR = true;
     },
     setItemsTeamHideHideout(hide: boolean) {
       this.itemsTeamHideHideout = hide;
