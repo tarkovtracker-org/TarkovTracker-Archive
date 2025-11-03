@@ -280,7 +280,7 @@
       title: 'Giriş',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'İlerleme verilerinize RESTful API ile programatik olarak erişin',
         create_token: 'Anahtar Oluştur',
@@ -342,6 +342,9 @@
           message: 'Lütfen tekrar deneyin veya sorun devam ederse destekle iletişime geçin',
         },
       },
+    },
+    api_docs: {
+      title: 'API Belgeleri',
     },
     not_found: {
       title: 'Sayfa Bulunamadı',

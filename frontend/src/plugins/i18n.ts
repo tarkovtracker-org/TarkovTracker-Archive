@@ -8,11 +8,13 @@ import {
   es as vuetifyEs,
   hu as vuetifyHu,
   it as vuetifyIt,
+  pt as vuetifyPt,
   pl as vuetifyPl,
   ru as vuetifyRu,
   tr as vuetifyTr,
   uk as vuetifyUk,
   ja as vuetifyJa,
+  ko as vuetifyKo,
   zhHans as vuetifyZh,
 } from 'vuetify/locale';
 // Assume messages are structured appropriately,
@@ -40,14 +42,19 @@ const vuetifyLocales: Record<string, any> = {
   es: vuetifyEs,
   hu: vuetifyHu,
   it: vuetifyIt,
+  pt: vuetifyPt,
   pl: vuetifyPl,
   ru: vuetifyRu,
   tr: vuetifyTr,
   uk: vuetifyUk,
   ja: vuetifyJa,
+  ko: vuetifyKo,
   zh: vuetifyZh,
 };
 const typedMessages = messages as AppMessages;
+if (!typedMessages.pt && typedMessages['pt-BR']) {
+  typedMessages.pt = typedMessages['pt-BR'];
+}
 // Merge Vuetify's locale messages into all supported locales
 for (const [locale, vuetifyLocale] of Object.entries(vuetifyLocales)) {
   if (typedMessages[locale]) {

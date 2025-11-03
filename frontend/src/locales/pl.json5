@@ -280,7 +280,7 @@
       title: 'Logowanie',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'Uzyskaj dostęp do swoich danych postępu poprzez nasze RESTful API',
         create_token: 'Utwórz token',
@@ -342,6 +342,9 @@
           message: 'Spróbuj ponownie lub skontaktuj się z pomocą techniczną, jeśli problem się powtarza',
         },
       },
+    },
+    api_docs: {
+      title: 'Dokumentacja API',
     },
     not_found: {
       title: 'Strona nie znaleziona',

@@ -296,7 +296,7 @@
       title: 'Privacy Policy',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'Access your progress data programmatically with our RESTful API',
         create_token: 'Create Token',
@@ -358,6 +358,9 @@
           message: 'Please try again or contact support if the issue persists',
         },
       },
+    },
+    api_docs: {
+      title: 'API Documentation',
     },
     settings: {
       title: 'Settings',
