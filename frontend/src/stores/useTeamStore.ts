@@ -151,7 +151,7 @@ export function useTeammateStores() {
       teammateStores.value[teammateId] = storeInstance;
 
       // Skip Firebase listener setup when dev auth is enabled
-      if (isDevAuthEnabled) {
+      if (isDevAuthEnabled()) {
         logger.info(
           `[Team Store] Dev auth enabled - skipping Firebase listener for teammate ${teammateId}`
         );
