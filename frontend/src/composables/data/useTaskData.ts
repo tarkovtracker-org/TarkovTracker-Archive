@@ -300,7 +300,7 @@ export function useTaskData() {
       cancelDeferredProcessing();
       cancelDeferredProcessing = null;
     }
-    if (!taskList || taskList.length === 0) {
+    if (taskList.length === 0) {
       resetTaskState();
       isDerivingTaskData.value = false;
       return;
