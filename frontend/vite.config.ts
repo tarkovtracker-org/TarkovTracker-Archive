@@ -56,9 +56,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
-          // Use predictable names for font files to enable HTML preload links
+          // Use hashed names for font files to enable long-term immutable caching
           if (assetInfo.name?.endsWith('.woff2')) {
-            return 'assets/fonts/[name][extname]';
+            return 'assets/fonts/[name]-[hash][extname]';
           }
           // Default behavior for other assets
           return 'assets/[name]-[hash][extname]';

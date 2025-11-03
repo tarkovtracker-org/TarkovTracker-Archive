@@ -515,7 +515,7 @@ const regenerateToken = async (token: ApiToken) => {
 **File:** `functions/src/handlers/tokenHandler.ts`
 
 ```typescript
-import { rateLimiter } from '../middleware/rateLimiter.js';
+import { abuseGuard } from '../middleware/abuseGuard.js';
 
 export const regenerateTokenHandler = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
@@ -594,93 +594,28 @@ export const regenerateTokenHandler = asyncHandler(
 **Add rate-limited route in `functions/src/index.ts`:**
 
 ```typescript
-import { createRateLimiter } from './middleware/rateLimiter.js';
+import { abuseGuard } from '../middleware/abuseGuard.js';
 
-// Rate limiter: 5 regeneration requests per user per hour
-const regenerateRateLimiter = createRateLimiter({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 5,
-  keyGenerator: (req) => req.user?.uid || req.ip,
-  message: 'Too many token regeneration requests. Please try again later.',
-});
-
+// Apply the standard abuseGuard middleware to the route
+// abuseGuard handles rate limiting with configurable thresholds via environment variables
 app.post('/api/tokens/regenerate',
   requireAuth,
-  regenerateRateLimiter,
+  abuseGuard,
   tokenHandler.regenerateTokenHandler
 );
 ```
 
-**Create rate limiter middleware** (`functions/src/middleware/rateLimiter.ts`):
+**Note about rate limiting**:
 
-```typescript
-import { Request, Response, NextFunction } from 'express';
-import { logger } from '../utils/logger.js';
+TarkovTracker uses the standard [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware for rate limiting across all API endpoints. This middleware is already applied globally to all `/api/*` routes in [`app.use('/api', abuseGuard);`](functions/src/app/app.ts:78) and provides configurable rate limiting via environment variables.
 
-// Firestore-backed rate limiter for distributed deployments
-// In-memory maps are not suitable for distributed environments where multiple instances
-// need to share the same rate limit state. We use Firestore transactions to ensure consistency.
-import { firestore as db, Timestamp } from './plugins/firebase'; // adjust relative path for your functions workspace
-import type { Request, Response, NextFunction } from 'express';
+The [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware handles:
+- Rate limiting per token/IP with configurable thresholds
+- Warning at 80% of threshold
+- Blocking after consecutive breaches
+- Event logging to Firestore for monitoring
 
-interface RateLimitConfig {
-  windowMs: number;
-  maxRequests: number;
-  keyGenerator: (req: Request) => string;
-  message?: string;
-}
-
-export function firebaseRateLimiter(config: RateLimitConfig): express.RequestHandler {
-  const { windowMs, maxRequests, keyGenerator, message } = config;
-  
-  return async (req: Request, res: Response, next: NextFunction) => {
-    const key = keyGenerator(req);
-    const now = Timestamp.now();
-
-    try {
-      await db.runTransaction(async (tx) => {
-        const ref = db.collection('rateLimits').doc(key);
-        const snap = await tx.get(ref);
-
-        const resetTime = Timestamp.fromMillis(now.toMillis() + windowMs);
-
-        if (!snap.exists) {
-          tx.set(ref, { count: 1, resetTime });
-          return;
-        }
-
-        const data = snap.data() as { count: number; resetTime: Timestamp };
-        const windowExpired = data.resetTime.toMillis() <= now.toMillis();
-
-        if (windowExpired) {
-          tx.set(ref, { count: 1, resetTime });
-          return;
-        }
-
-        if (data.count >= maxRequests) {
-          // Signal to the outer catch for consistent response handling
-          throw Object.assign(new Error('RATE_LIMIT_EXCEEDED'), { retryAfterMs: data.resetTime.toMillis() - now.toMillis() });
-        }
-
-        tx.update(ref, { count: data.count + 1 });
-      });
-
-      next();
-    } catch (err: any) {
-      if (err?.message === 'RATE_LIMIT_EXCEEDED') {
-        const retryAfterSec = Math.ceil((err.retryAfterMs ?? windowMs) / 1000);
-        res.setHeader('Retry-After', String(retryAfterSec));
-        return res.status(429).json({
-          error: message ?? 'Too Many Requests',
-          retryAfterSeconds: retryAfterSec
-        });
-      }
-      // Unexpected error
-      return res.status(500).json({ error: 'Rate limiter failed' });
-    }
-  };
-}
-```
+No additional rate limiter implementation is needed for the regenerate token endpoint.
 
 ---
 
