@@ -58,3 +58,10 @@ functions/openapi/openapi.json
 
 # Misc
 /bmad
+# Test artifacts
+**/test-results/
+**/playwright-report/
+**/.playwright/
+**/coverage/
+# Temporary files
+*.patch

@@ -18,9 +18,16 @@ export default defineConfig({
     include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'], // Explicitly include test files
     exclude: ['**/node_modules/**', '**/dist/**'], // Explicitly exclude node_modules and dist
     coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'json', 'html'],
+      provider: 'v8',
+      reporters: ['text', 'lcov'],
+      include: ['src/**/*'],
       exclude: ['node_modules/**', 'test/**', 'coverage/**', '**/*.config'],
+      global: {
+        statements: 85,
+        branches: 80,
+        functions: 80,
+        lines: 85,
+      },
     },
     testTimeout: 15000, // Increase test timeout
     hookTimeout: 15000, // Increase hook timeout

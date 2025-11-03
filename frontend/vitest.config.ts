@@ -27,6 +27,18 @@ export default defineConfig({
         inline: ['vuetify'],
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporters: ['text', 'lcov'],
+      include: ['src/**/*'],
+      exclude: ['src/test/**', 'e2e/**', '**/*.config.*', '**/node_modules/**', '**/dist/**'],
+      global: {
+        statements: 90,
+        branches: 85,
+        functions: 85,
+        lines: 90,
+      },
+    },
   },
   resolve: {
     alias: {

@@ -8,28 +8,42 @@ const TARKOV_DEV_GRAPHQL_ENDPOINT = 'https://api.tarkov.dev/graphql';
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 
-// Helper function for exponential backoff retry
+// Types for dependency injection
+type BackoffStrategy = (attempt: number) => number;
+type DelayScheduler = (ms: number) => Promise<void>;
+
+// Default backoff strategy - exponential backoff: 1000 * 2^(attempt - 1)
+const defaultBackoff: BackoffStrategy = (attempt) => BASE_DELAY_MS * Math.pow(2, attempt - 1);
+
+// Default delay scheduler - uses real setTimeout
+const defaultDelay: DelayScheduler = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Helper function for exponential backoff retry with dependency injection
 async function fetchWithRetry<T>(
   endpoint: string,
   query: string,
-  retries: number = MAX_RETRIES,
-  baseDelay: number = BASE_DELAY_MS
+  options: {
+    maxAttempts?: number;
+    backoff?: BackoffStrategy;
+    delay?: DelayScheduler;
+  } = {}
 ): Promise<T> {
+  const { maxAttempts = MAX_RETRIES, backoff = defaultBackoff, delay = defaultDelay } = options;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
+  for (let attempt = 0; attempt <= maxAttempts; attempt++) {
     try {
       const result = await request<T>(endpoint, query);
       return result;
     } catch (error) {
       lastError = error as Error;
-      if (attempt < retries) {
-        const delay = baseDelay * Math.pow(2, attempt);
+      if (attempt < maxAttempts) {
+        const delayMs = backoff(attempt);
         logger.warn(
-          `Request failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${delay}ms:`,
+          `Request failed (attempt ${attempt + 1}/${maxAttempts + 1}), retrying in ${delayMs}ms:`,
           error
         );
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await delay(delayMs);
       }
     }
   }
@@ -286,6 +300,16 @@ const UPDATE_ITEMS_QUERY = gql`
 
 // Individual scheduled function implementations
 const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
+  await updateTarkovDataImplInternal({});
+});
+
+async function updateTarkovDataImplInternal(
+  options: {
+    backoff?: BackoffStrategy;
+    delay?: DelayScheduler;
+    maxAttempts?: number;
+  } = {}
+) {
   try {
     logger.info('Starting scheduled Tarkov data update');
 
@@ -296,7 +320,8 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
     try {
       const tasksResponse = await fetchWithRetry<TasksResponse>(
         TARKOV_DEV_GRAPHQL_ENDPOINT,
-        UPDATE_TASKS_QUERY
+        UPDATE_TASKS_QUERY,
+        options
       );
 
       if (!validateTasksResponse(tasksResponse)) {
@@ -319,7 +344,8 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
     try {
       const hideoutResponse = await fetchWithRetry<HideoutResponse>(
         TARKOV_DEV_GRAPHQL_ENDPOINT,
-        UPDATE_HIDEOUT_QUERY
+        UPDATE_HIDEOUT_QUERY,
+        options
       );
 
       if (!validateHideoutResponse(hideoutResponse)) {
@@ -343,7 +369,8 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
     try {
       const itemsResponse = await fetchWithRetry<ItemsResponse>(
         TARKOV_DEV_GRAPHQL_ENDPOINT,
-        UPDATE_ITEMS_QUERY
+        UPDATE_ITEMS_QUERY,
+        options
       );
 
       if (!validateItemsResponse(itemsResponse)) {
@@ -419,7 +446,7 @@ const updateTarkovDataImpl = onSchedule('every 6 hours', async () => {
     logger.error('Scheduled data update failed:', error);
     throw error;
   }
-});
+}
 
 const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
   try {
@@ -498,3 +525,6 @@ export const scheduledFunctions = {
 // Also export individual functions for direct import
 export const updateTarkovData = updateTarkovDataImpl;
 export const expireInactiveTokens = expireInactiveTokensImpl;
+
+// Export internal implementation for testing
+export { updateTarkovDataImplInternal };
