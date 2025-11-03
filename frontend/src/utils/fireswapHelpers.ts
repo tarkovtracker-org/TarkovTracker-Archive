@@ -1,6 +1,9 @@
 import type { Store } from 'pinia';
 import type { StoreWithFireswapExt, FireswapSettingInternal } from '@/plugins/pinia-firestore';
 import { logger } from '@/utils/logger';
+import { isDevAuthEnabled } from '@/utils/devAuth';
+
+const DEFAULT_ERROR_MESSAGE = 'Unable to complete the operation';
 
 /**
  * Helper to preserve specific localStorage keys when clearing
@@ -61,7 +64,32 @@ export const scheduleLockRelease = (
   }, delay);
 };
 
-export const saveToLocalStorage = (key: string, value: unknown, errorMessage: string): void => {
+const isQuotaExceededError = (error: unknown): boolean => {
+  return (
+    error instanceof DOMException &&
+    (error.code === 22 ||
+      error.name === 'QuotaExceededError' ||
+      error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
+  );
+};
+
+const trySessionStorageFallback = (key: string, serialized: string): void => {
+  try {
+    sessionStorage.setItem(key, serialized);
+    console.debug('[FireSwap] Using sessionStorage fallback (dev mode)');
+    logger.warn(`Fell back to sessionStorage for key '${key}'`);
+  } catch (sessionError) {
+    logger.error(`sessionStorage fallback also failed for key '${key}'`, sessionError);
+  }
+};
+
+export const saveToLocalStorage = (
+  key: string,
+  value: unknown,
+  errorMessage: string = DEFAULT_ERROR_MESSAGE
+): void => {
+  const finalErrorMessage = errorMessage || DEFAULT_ERROR_MESSAGE;
+
   // First, attempt JSON.stringify to detect circular references
   let serialized: string;
   try {
@@ -74,7 +102,7 @@ export const saveToLocalStorage = (key: string, value: unknown, errorMessage: st
       return;
     }
     // For other errors, continue with the original error handling
-    logger.error(errorMessage, error);
+    logger.error(finalErrorMessage, error);
     return;
   }
 
@@ -82,24 +110,15 @@ export const saveToLocalStorage = (key: string, value: unknown, errorMessage: st
   try {
     localStorage.setItem(key, serialized);
   } catch (error) {
-    // Check if this is a quota exceeded error
-    if (
-      error instanceof DOMException &&
-      (error.code === 22 ||
-        error.name === 'QuotaExceededError' ||
-        error.name === 'NS_ERROR_DOM_QUOTA_REACHED')
-    ) {
+    if (isQuotaExceededError(error)) {
       logger.error(`localStorage quota exceeded for key '${key}'`, error);
 
-      // Attempt fallback to sessionStorage
-      try {
-        sessionStorage.setItem(key, serialized);
-        logger.warn(`Fell back to sessionStorage for key '${key}'`);
-      } catch (sessionError) {
-        logger.error(`sessionStorage fallback also failed for key '${key}'`, sessionError);
+      // Attempt fallback to sessionStorage only in development contexts
+      if (import.meta.env.DEV || isDevAuthEnabled()) {
+        trySessionStorageFallback(key, serialized);
       }
     } else {
-      logger.error(errorMessage, error);
+      logger.error(finalErrorMessage, error);
     }
   }
 };
