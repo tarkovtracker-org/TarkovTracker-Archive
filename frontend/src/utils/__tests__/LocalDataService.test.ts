@@ -94,7 +94,9 @@ describe('LocalDataService', () => {
       backupLocalProgress(sensitiveData);
 
       // Find the backup key
-      const backupKeys = Object.keys(localStorageMock).filter((k) => k.startsWith('progress_backup_'));
+      const backupKeys = Object.keys(localStorageMock).filter((k) =>
+        k.startsWith('progress_backup_')
+      );
       expect(backupKeys.length).toBe(1);
 
       const storedData = JSON.parse(localStorageMock[backupKeys[0]]);

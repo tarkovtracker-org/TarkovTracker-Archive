@@ -489,18 +489,19 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Object where keys are task IDs and values are the new status",
+                "description": "Object where keys are task IDs and values are the new status (0-3)",
                 "additionalProperties": {
-                  "type": "string",
+                  "type": "integer",
                   "enum": [
-                    "uncompleted",
-                    "completed",
-                    "failed"
+                    0,
+                    1,
+                    2,
+                    3
                   ]
                 },
                 "example": {
-                  "task1": "completed",
-                  "task5": "uncompleted"
+                  "task1": 2,
+                  "task5": 1
                 }
               }
             }
@@ -664,7 +665,7 @@
       "get": {
         "summary": "Returns progress data of all members of the team",
         "tags": [
-          "Team"
+          "Progress"
         ],
         "security": [
           {
@@ -718,7 +719,8 @@
                         }
                       }
                     }
-                  }
+                  },
+                  "$ref": "#/components/schemas/TeamProgress"
                 }
               }
             }
