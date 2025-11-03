@@ -462,7 +462,7 @@ export function useTaskList() {
     return parts.join('|');
   };
 
-  const updateVisibleTasks = async () => {
+  const updateVisibleTasks = () => {
     if (shouldSkipVisibleTaskUpdate()) {
       return;
     }
@@ -517,11 +517,11 @@ export function useTaskList() {
   // 150ms delay allows rapid filter changes without blocking the main thread
   const debouncedUpdateVisibleTasks = debounce(updateVisibleTasks, 150);
 
-  watchEffect(async () => {
+  watchEffect(() => {
     if (loadingTasks.value) {
       return;
     }
-    await updateVisibleTasks();
+    updateVisibleTasks();
   });
 
   watch(
