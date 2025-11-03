@@ -343,6 +343,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'Dokumentacja API',
+    },
     not_found: {
       title: 'Strona nie znaleziona',
       not_found_description: 'Przepraszamy, nie można znaleźć tej strony!',
