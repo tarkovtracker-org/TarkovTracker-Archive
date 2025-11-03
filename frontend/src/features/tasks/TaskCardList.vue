@@ -12,20 +12,21 @@
     </template>
 
     <!-- Actual task cards -->
-    <div
-      v-for="(task, taskIndex) in tasks"
-      v-else
-      :key="task.id || taskIndex"
-      class="task-card-stack__item"
-    >
-      <task-card
-        :task="task"
-        :active-user-view="activeUserView"
-        :needed-by="task.neededBy || []"
-        :show-next-tasks="showNextTasks"
-        :show-previous-tasks="showPreviousTasks"
-      />
-    </div>
+    <template v-else>
+      <div
+        v-for="(task, taskIndex) in tasks"
+        :key="task.id || taskIndex"
+        class="task-card-stack__item"
+      >
+        <task-card
+          :task="task"
+          :active-user-view="activeUserView"
+          :needed-by="task.neededBy || []"
+          :show-next-tasks="showNextTasks"
+          :show-previous-tasks="showPreviousTasks"
+        />
+      </div>
+    </template>
 
     <!-- Load more trigger -->
     <div
