@@ -514,8 +514,9 @@ export function useTaskList() {
   };
 
   // Performance optimization: Debounce filter updates to reduce render blocking
-  // 150ms delay allows rapid filter changes without blocking the main thread
-  const debouncedUpdateVisibleTasks = debounce(updateVisibleTasks, 150);
+  // Debounce delay is configurable; 100ms is responsive for most user interactions
+  const FILTER_DEBOUNCE_DELAY = 100;
+  const debouncedUpdateVisibleTasks = debounce(updateVisibleTasks, FILTER_DEBOUNCE_DELAY);
 
   watchEffect(async () => {
     if (loadingTasks.value) {
