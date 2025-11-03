@@ -88,7 +88,7 @@
   import { firestore, functions } from '@/plugins/firebase';
   import { doc, getDoc } from '@/plugins/firebase';
   import { httpsCallable } from '@/plugins/firebase';
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import QRCode from 'qrcode';
   import { useUserStore } from '@/stores/user';
   import { useI18n } from 'vue-i18n';
@@ -258,6 +258,15 @@
   const toggleTokenVisibility = () => {
     tokenVisible.value = !tokenVisible.value;
   };
+
+  // Watch for token changes and reset cached QR data
+  watch(
+    () => props.token,
+    () => {
+      qrDataUrl.value = '';
+      qrError.value = false;
+    }
+  );
 </script>
 <style lang="scss" scoped>
   .token-display {
