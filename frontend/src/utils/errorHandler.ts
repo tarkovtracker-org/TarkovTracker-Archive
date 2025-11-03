@@ -57,10 +57,24 @@ class ErrorHandler {
   }
 
   /**
-   * Handle async errors from promises
+   * Handle async errors from promises with proper type preservation.
+   *
+   * @template R - The resolved type of the promise
+   * @param promise - The promise to wrap with error handling
+   * @param context - Optional context string for error tracking
+   * @returns A promise that resolves to the same type as the input promise
+   *
+   * @example
+   * ```ts
+   * const result = await errorHandler.handleAsyncError(
+   *   fetchUserData(userId),
+   *   'UserProfile'
+   * );
+   * // result is typed as the return type of fetchUserData
+   * ```
    */
-  handleAsyncError(promise: Promise<unknown>, context?: string): Promise<unknown> {
-    return promise.catch((error) => {
+  handleAsyncError<R>(promise: Promise<R>, context?: string): Promise<R> {
+    return promise.catch((error: unknown) => {
       this.handleError(error, context);
       throw error; // Re-throw to maintain error propagation
     });
