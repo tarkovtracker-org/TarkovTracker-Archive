@@ -81,7 +81,7 @@
         keysneeded: '{keys} requis sur {map} | Une des {keys} requis sur {map}',
         objectiveshidden: '{count} objectifs non présent sur la carte ({uncompleted} non terminés)',
         alternatives: 'Quêtes alternatives',
-        alternativefailed: 'Les quêtes alternatives seront également réniitialisées',
+        alternativefailed: 'Les quêtes alternatives seront également réinitialisées',
         differentfaction: "Cette quête n'est pas disponible pour votre faction",
       },
     },
