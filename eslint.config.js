@@ -16,12 +16,10 @@ export default [
       '**/dist/**',
       '**/lib/**',
       '**/node_modules/**',
+      'firebase-export-*/**',
       'frontend/public/**',
       'frontend/playwright-report/**',
       'docs/openapi.*',
-      'functions/test/**/*.js',
-      'functions/**/*.test.js',
-      'functions/vitest.config.js',
       'eslint.progress-rules.cjs',
       // Exclude these directories from ESLint processing
       '.factory/**',
@@ -38,12 +36,9 @@ export default [
   // Vue configuration
   ...pluginVue.configs['flat/recommended'],
 
-  // TypeScript/Vue source files with typed linting
+  // Frontend TypeScript/Vue source files with typed linting
   {
-    files: [
-      'frontend/src/**/*.{ts,tsx,vue}',
-      'functions/src/**/*.ts',
-    ],
+    files: ['frontend/**/*.ts', 'frontend/**/*.vue'],
     languageOptions: {
       parser: vueParser,
       ecmaVersion: 'latest',
@@ -70,17 +65,15 @@ export default [
       'max-len': ['warn', { code: 100 }],
     },
   },
-  // Other frontend files without typed linting
+  // Frontend config and test files (JavaScript/TypeScript without Vue parser)
   {
     files: [
-      'frontend/src/**/*.js',
       'frontend/vite.config.ts',
       'frontend/vitest.config.ts',
       'frontend/playwright.config.ts',
-      'frontend/e2e/**/*.ts'
+      'frontend/e2e/**/*.ts',
     ],
     languageOptions: {
-      parser: vueParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
@@ -103,8 +96,9 @@ export default [
       'max-len': ['warn', { code: 100 }],
     },
   },
+  // Functions source files
   {
-    files: ['functions/**/*.{ts,js}'],
+    files: ['functions/src/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 'latest',
@@ -124,8 +118,9 @@ export default [
       'max-len': ['warn', { code: 120 }],
     },
   },
+  // Functions test files - TypeScript
   {
-    files: ['functions/test/**/*.{ts,js}'],
+    files: ['functions/test/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -133,6 +128,27 @@ export default [
       },
     },
     rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+  // Functions test files - JavaScript
+  {
+    files: ['functions/test/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      'no-unused-vars': 'off',
+      'no-undef': 'off', // Allow console, global, etc. in test files
+      '@typescript-eslint/no-unused-vars': 'off', // Disable TypeScript rules for JS files
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },
@@ -172,7 +188,7 @@ export default [
       'no-console': 'off',
     },
   },
-  // Test files override (frontend only) - must be near the end to override general rules
+  // Frontend test files override - must be near the end to override general rules
   {
     files: [
       'frontend/src/**/*.spec.ts',
@@ -183,7 +199,7 @@ export default [
     ],
     rules: {
       // Disable complexity for test helpers and setups
-      'complexity': 'off',
+      complexity: 'off',
       // Allow 'any' in tests for mocking/flexibility
       '@typescript-eslint/no-explicit-any': 'off',
       // Permit inline multiple components inside test files
