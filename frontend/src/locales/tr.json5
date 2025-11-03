@@ -343,6 +343,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'API Belgeleri',
+    },
     not_found: {
       title: 'Sayfa Bulunamadı',
       not_found_description: 'Üzgünüz, bu sayfa bulunamadı!',

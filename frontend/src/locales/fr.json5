@@ -437,6 +437,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'Documentation API',
+    },
     not_found: {
       title: 'Page non trouvée',
       not_found_description: "La page que vous avez demandée n'a pas été trouvée.",
