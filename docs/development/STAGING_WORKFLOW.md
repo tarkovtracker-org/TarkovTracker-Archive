@@ -368,7 +368,7 @@ git push --force origin main  # ⚠️ Dangerous!
 
 **Testing Tools:**
 
-- **Swagger UI:** <https://staging--tarkovtracker-org.web.app/api-docs>
+- **Scalar UI:** <https://staging--tarkovtracker-org.web.app/api-docs>
 - **Emulator UI:** <http://localhost:4999> (local testing)
 
 ### Production Environment
