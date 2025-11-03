@@ -70,18 +70,20 @@
 
   // CLS optimization: Show skeleton loaders during initial load
   const isInitialLoading = ref(false);
-  const CARD_HEIGHT = 203; // Height of skeleton card in pixels
-  const CARD_VERTICAL_SPACING = 16; // Approximate vertical spacing between cards
-  const MIN_SKELETONS = 3;
-  const MAX_SKELETONS = 20;
-  const MIN_SKELETON_DURATION = 400; // Minimum time (ms) to show skeleton to avoid flicker
+  const SKELETON_CONFIG = {
+    CARD_HEIGHT: 203, // Height of skeleton card in pixels
+    CARD_VERTICAL_SPACING: 16, // Approximate vertical spacing between cards
+    MIN_SKELETONS: 3,
+    MAX_SKELETONS: 20,
+    MIN_SKELETON_DURATION: 400, // Minimum time (ms) to show skeleton to avoid flicker
+  };
 
   // Calculate dynamic skeleton count based on viewport height
   const calculateSkeletonCount = () => {
-    if (typeof window === 'undefined') return MIN_SKELETONS;
+    if (typeof window === 'undefined') return SKELETON_CONFIG.MIN_SKELETONS;
     const viewportHeight = window.innerHeight;
-    const count = Math.ceil(viewportHeight / (CARD_HEIGHT + CARD_VERTICAL_SPACING));
-    return Math.max(MIN_SKELETONS, Math.min(MAX_SKELETONS, count));
+    const count = Math.ceil(viewportHeight / (SKELETON_CONFIG.CARD_HEIGHT + SKELETON_CONFIG.CARD_VERTICAL_SPACING));
+    return Math.max(SKELETON_CONFIG.MIN_SKELETONS, Math.min(SKELETON_CONFIG.MAX_SKELETONS, count));
   };
 
   const skeletonCount = ref(calculateSkeletonCount());
