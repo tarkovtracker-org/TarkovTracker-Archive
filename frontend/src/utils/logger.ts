@@ -7,7 +7,7 @@ const LEVEL_WEIGHT: Record<LogLevel, number> = {
   error: 40,
 };
 
-const fallbackLevel: LogLevel = import.meta.env.DEV === false ? 'warn' : 'debug';
+const fallbackLevel: LogLevel = !import.meta.env.DEV ? 'warn' : 'debug';
 
 function isLogLevel(value: string): value is LogLevel {
   return value in LEVEL_WEIGHT;
