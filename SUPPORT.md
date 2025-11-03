@@ -15,7 +15,7 @@ answers and get help when you need it.
 
 ## Ask the community
 
-- Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) for live chat,
+- Join the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6) for live chat,
   play sessions, and quick feedback loops.
 - Create a new discussion under the `Q&A` or `Ideas` categories.
 - Join informal playtests or co-working sessions announced in the `Events`

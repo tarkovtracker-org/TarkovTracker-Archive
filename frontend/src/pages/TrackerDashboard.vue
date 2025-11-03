@@ -16,7 +16,7 @@
         </div>
         <div>
           Please report any issues in our
-          <a href="https://discord.gg/zeAP4Ng" target="_blank" class="text-green-lighten-2"
+          <a href="https://discord.gg/M8nBgA2sT6" target="_blank" class="text-green-lighten-2"
             >Discord</a
           >
           or on
