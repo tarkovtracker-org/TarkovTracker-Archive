@@ -1,4 +1,4 @@
-// Note: @mdi/font is now loaded via CDN in index.html
+// Note: @mdi/font CSS is imported in main.ts; fonts are bundled from local assets
 import 'vuetify/styles';
 import colors from 'vuetify/util/colors';
 import { useI18n } from 'vue-i18n';
