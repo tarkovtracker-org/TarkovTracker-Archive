@@ -610,7 +610,7 @@ app.post('/api/tokens/regenerate',
 TarkovTracker uses the standard [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware for rate limiting across all API endpoints. This middleware is already applied globally to all `/api/*` routes in [`app.use('/api', abuseGuard);`](functions/src/app/app.ts:78) and provides configurable rate limiting via environment variables.
 
 The [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware handles:
-- Rate limiting per token/IP with configurable thresholds
+- Rate-limiting per token/IP with configurable thresholds
 - Warning at 80% of threshold
 - Blocking after consecutive breaches
 - Event logging to Firestore for monitoring
@@ -627,9 +627,11 @@ No additional rate limiter implementation is needed for the regenerate token end
 The token inactivity expiration system requires the following composite indexes for optimal performance:
 
 ### Current Status
+
 The current `firestore.indexes.json` file is empty, but the following indexes are recommended for production deployments:
 
 ### Token Collection Indexes
+
 ```json
 {
   "collectionGroup": "token",
@@ -640,6 +642,8 @@ The current `firestore.indexes.json` file is empty, but the following indexes ar
   ]
 }
 ```
+
+
 - **Purpose**: Efficiently query active tokens by owner for regeneration operations
 - **Usage**: `token.where('owner', '==', userId).where('revoked', '==', false)`
 
@@ -653,10 +657,12 @@ The current `firestore.indexes.json` file is empty, but the following indexes ar
   ]
 }
 ```
+
 - **Purpose**: Find tokens that need expiration processing
 - **Usage**: `token.where('revoked', '==', false).where('lastUsed', '<=', cutoffDate)`
 
 ### Rate Limit Events Indexes  
+
 ```json
 {
   "collectionGroup": "rateLimitEvents",
@@ -667,16 +673,21 @@ The current `firestore.indexes.json` file is empty, but the following indexes ar
   ]
 }
 ```
+
+
 - **Purpose**: Monitor abuse guard events by cache key for security analysis
 - **Usage**: `rateLimitEvents.where('cacheKey', '==', tokenKey).orderBy('createdAt', 'desc')`
 
 ### Deployment Commands
+
 Deploy indexes using Firebase CLI:
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
 
 ### Validation
+
 - **CI/CD**: Automated testing in emulator mode validates index usage
 - **Local Development**: Use `firebase emulators:start` to test index requirements  
 - **Production Monitoring**: Monitor Firestore query performance in Google Cloud Console

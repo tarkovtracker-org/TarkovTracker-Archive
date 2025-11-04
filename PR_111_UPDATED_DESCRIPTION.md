@@ -11,6 +11,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ## Changes Breakdown
 
 ### 🏗️ **Infrastructure & Dependencies** (Medium Risk)
+
 - Firebase 12 upgrade with breaking changes migration
 - Dependency updates (ESLint, TypeScript, build tools)
 - Emulator wrapper with automatic cleanup
@@ -23,6 +24,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ---
 
 ### 📚 **Documentation** (Very Low Risk)
+
 - Reorganized docs into structured hierarchy
 - Added comprehensive guides (branch strategy, staging workflow)
 - Updated all development documentation
@@ -35,6 +37,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ---
 
 ### 🐛 **Bug Fixes** (Low Risk)
+
 - UI component fixes (TaskCardList, preload optimization)
 - Store state consistency fixes
 - Build & workflow fixes
@@ -47,6 +50,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ---
 
 ### 🔧 **Refactoring** (Medium Risk)
+
 - Lazy initialization factory pattern
 - CORS security hardening
 - Firebase cache optimizations
@@ -60,6 +64,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ---
 
 ### ⚡ **New Features** (High Risk - Feature Flagged)
+
 - Scheduled Tarkov data sync with sharding
 - Token inactivity expiration system
 - Rate limiting infrastructure
@@ -86,6 +91,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 ## Deployment Strategy
 
 ### Recommended Approach:
+
 1. Deploy to staging for 48-72 hours
 2. Monitor error rates and performance
 3. Enable feature flags one at a time:
@@ -95,7 +101,9 @@ This PR represents a **major integration branch** reconciling multiple feature s
 4. If stable, merge to production
 
 ### Firestore Changes (CRITICAL):
+
 ⚠️ **Deploy indexes BEFORE functions:**
+
 ```bash
 firebase deploy --only firestore:indexes
 # Wait 5-15 minutes for indexes to build
@@ -109,10 +117,12 @@ firebase deploy --only functions
 If reviewers prefer smaller PRs, I've created tooling to split this into 4 focused PRs:
 
 ### Option 1: Review as-is
+
 - Single PR, full context
 - Can merge all at once after staging verification
 
 ### Option 2: Create subset PRs
+
 I can immediately create:
 1. **docs/subset-from-pr111** - Documentation only (~30 files, zero risk)
 2. **fix/ui-fixes-from-pr111** - Bug fixes only (~15 files, low risk)
@@ -120,6 +130,7 @@ I can immediately create:
 4. Keep infrastructure & features in this PR
 
 ### Option 3: Full split
+
 Use the automated scripts in `scripts/split-pr-*.sh` to create 4 separate PRs.
 
 See `QUICK_START_PR_SPLIT.md` for details on any splitting approach.
@@ -140,6 +151,7 @@ If issues arise after deployment:
 ## Review Guidance
 
 ### For Quick Review:
+
 Focus on these high-risk areas first:
 - `functions/src/scheduled/` - New scheduled functions
 - `functions/src/middleware/` - Auth & rate limiting
@@ -147,6 +159,7 @@ Focus on these high-risk areas first:
 - `functions/src/services/` - Service layer changes
 
 ### For Thorough Review:
+
 1. Start with documentation to understand scope
 2. Review bug fixes (easy wins)
 3. Review refactoring (architecture changes)

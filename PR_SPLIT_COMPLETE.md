@@ -9,6 +9,7 @@ Successfully split PR #111 into manageable pieces!
 ## Created Pull Requests
 
 ### 🎯 **PR #132 - Documentation Updates**
+
 **Status**: ✅ Ready for review  
 **URL**: https://github.com/tarkovtracker-org/TarkovTracker/pull/132  
 **Branch**: `docs/documentation-updates-from-pr111`  
@@ -26,6 +27,7 @@ Successfully split PR #111 into manageable pieces!
 ---
 
 ### 📝 **PR #111 - Remaining Changes** (Updated)
+
 **Status**: ✅ Description updated  
 **URL**: https://github.com/tarkovtracker-org/TarkovTracker/pull/111  
 **Branch**: `integration/reconcile-all-features`
@@ -43,6 +45,7 @@ Successfully split PR #111 into manageable pieces!
 ## Current Status
 
 ### ✅ Completed:
+
 1. **Created subset tooling** - Scripts ready for more splits
 2. **Updated PR #111** - Now explains the splitting strategy
 3. **Created PR #132** - Documentation subset ready for review
@@ -50,6 +53,7 @@ Successfully split PR #111 into manageable pieces!
 5. **Immediate value** - Docs can merge right away
 
 ### 🔄 Optional Next Steps:
+
 You can create more subset PRs:
 - Bug fixes subset (~15 files)
 - Config/tooling subset (~15 files)
@@ -70,12 +74,14 @@ You can create more subset PRs:
 ## What Reviewers See Now
 
 ### PR #111:
+
 - Clear explanation it's being split
 - Link to documentation subset
 - Organized breakdown of what's left
 - Clear review strategy
 
 ### PR #132:
+
 - Simple, focused scope
 - Zero risk documentation
 - Quick review (5-30 minutes)
@@ -101,17 +107,21 @@ You can create more subset PRs:
 ## Recommended Actions
 
 ### Today:
+
 1. ✅ **Done!** - PRs created and updated
 2. 👀 **Watch** - See if #132 gets reviewed
 3. 🎉 **Celebrate** - You just made #111 manageable
 
 ### This Week:
+
 1. If #132 merges quickly → Create bug fixes subset
 2. If #132 takes time → Wait and let reviewers guide you
 3. If requested → Create more subsets using the scripts
 
 ### When Ready:
+
 Use the splitting scripts we created:
+
 ```bash
 ./scripts/create-subset-prs.sh
 ```
