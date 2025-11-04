@@ -1,21 +1,125 @@
-# Repository Guidelines
+# AI Agent Guide
 
-## Project Structure & Module Organization
+Shared playbook for any AI coding assistant collaborating on TarkovTracker.
 
-The root `package.json` orchestrates two workspaces: `frontend/` for the Vue 3 + Vite client and `functions/` for Firebase Cloud Functions written in TypeScript. Generated artifacts live in `frontend/dist/` and `functions/lib/`; keep these out of commits. API documentation is emitted into `docs/` via the functions swagger task, and operational playbooks are collected in `REPORTS/`. Shared tooling scripts are under `scripts/`, while Firebase configuration (`firebase.json`, `firestore.rules`, indexes) stays at the repo root.
+> Keep this file current: whenever scripts, paths, tooling, or workflows change in the repo, reflect those
+> updates here (and in `CLAUDE.md`).
 
-## Build, Test, and Development Commands
+## Environment
 
-From the root, `npm run dev` runs the web client alongside local Firebase emulators (after compiling functions). Use `npm run build`, `npm run build:frontend`, or `npm run build:functions` when you only need specific artifacts. Generate API docs with `npm run docs`. For a clean emulator snapshot, `npm run emulators:local` reuses `./local_data`. Inside `frontend/`, `npm run dev` starts Vite alone, and `npm run serve` previews the production build. Inside `functions/`, `npm run serve` compiles and serves only the function suite.
+- **Node.js 22.x** – Functions target Node 22; use the same version for frontend parity
+  (Vue workspace tolerates 20.19+, but standardise on 22).
+- **Java 11+ Runtime** – Required for Firebase emulators.
+- **Firebase CLI** – Available as the local dev dependency `firebase-tools`; invoke through the
+  provided npm/yarn scripts.
+- Install dependencies once from the repository root via `npm install`.
 
-## Coding Style & Naming Conventions
+## Repository Layout
 
-All TypeScript and Vue code uses 2-space indentation and must satisfy the shared flat ESLint config plus Prettier formatting. The linter enforces `max-len` 100 in `frontend/` and 120 in `functions/`; break long literals rather than suppress. Prefer typed `Pinia` stores and Composition API patterns in Vue components, naming files in `kebab-case.vue`. Functions modules export named handlers (e.g., `export const syncQuest`) and live under `src/` mirroring their Firestore or HTTP trigger purpose. Avoid `any`; if unavoidable, justify with a suppression comment.
+- `frontend/` – Vue 3 + Vite SPA using Pinia, Vuetify, Vue Router, Vue I18n, and Firebase/VueFire integrations.
+- `functions/` – Firebase Cloud Functions written in TypeScript (Express, Firestore, scheduled jobs, Tarkov.dev integrations).
+- `frontend/dist/`, `functions/lib/`, `firebase-export-*` – Generated output; do not commit.
+- `functions/openapi/` – Generated OpenAPI spec consumed by the Scalar UI page.
+- `functions/src/openapi/` – TypeScript source for generating the OpenAPI schema.
+- `docs/REPORTS/` – Operational runbooks and postmortems (published material lives inside `docs/`).
+- `docs/architecture/` – System architecture documentation and technical design documents.
+- `docs/user-guides/` – End-user documentation and guides.
+- `docs/development/` – Development workflows and setup instructions.
+- `scripts/` – Tooling (e.g., map sync automation).
+- Firebase configuration (`firebase.json`, `firestore.rules`, `firestore.indexes.json`,
+  `database.rules.json`) resides at the repo root.
 
-## Testing Guidelines
+Ensure new data files or fixtures live inside the appropriate workspace so workspace-specific tooling picks them up.
 
-UI logic relies on `vitest` with Vue Test Utils (`npm run test:run`), while e2e flows use Playwright (`npm run test:e2e`). Aim for deterministic component tests that stub Firebase/Apollo calls with fixtures in `frontend/test/`. Functions use `vitest` as well; run `npm test` from `functions/` before deploying. New features should include at least one automated check (unit or e2e) guarding the regression, and keep coverage reports when touching security-sensitive flows.
+## Development Workflows
 
-## Commit & Pull Request Guidelines
+| Script | What it runs | Typical use |
+| --- | --- | --- |
+| `npm run dev` | Frontend Vite dev server (port 3000) | UI work without emulators; mock auth |
+| `npm run dev:full` | Vite dev server + Auth/Firestore/Functions | End-to-end feature flows |
+| `npm run dev:firebase` | Builds functions then launches all emulators (incl. hosting on 5000) via `scripts/emulator-wrapper.js` | Pre-deploy checks |
 
-History mixes merge commits with Conventional Commit messages (`chore(deps-dev): …`), so follow conventional prefixes (`feat`, `fix`, `chore`, `docs`) for clarity. Reference GitHub issues as `TT-123` or `Fixes #123` when applicable. Pull requests must explain scope, include screenshots or terminal output for UI/CLI changes, and note any Firebase config updates. If API docs change, attach the generated diff from `docs/openapi.json`.
+Additional helpers:
+
+- `npm run emulators` – Builds functions and launches the full Firebase emulator suite.
+- `npm run emulators:backend` – Functions/Firebase backends only (no hosting).
+- `npm run emulators:local` – Replays emulator state from `./local_data` and exports on exit
+  for deterministic tests.
+- `npm run build` – Functions build ➜ OpenAPI generation ➜ frontend production build.
+- `npm run build:functions` / `npm run build:frontend` – Workspace-specific builds.
+- `npm run maps:sync` – Refresh Tarkov map metadata from Tarkov.dev.
+
+### Mock Authentication
+
+For frontend-only work, enable mock auth:
+
+```bash
+cp frontend/.env.example frontend/.env.local
+# edit .env.local
+VITE_DEV_AUTH=true
+npm run dev
+```
+
+Mock auth persists a generated dev user ID in localStorage; disable (`false` or remove) before testing real auth flows.
+
+## Testing & Quality Gates
+
+- `npm run test` – Executes `functions` then `frontend` test suites.
+- `npm run test:frontend` / `npm run test:functions` – Targeted runs from the root.
+- Frontend workspace:
+  - `npm run test:run` – Vitest unit tests (CI mode).
+  - `npm run test:e2e` / `npm run test:e2e:ui` – Playwright suites (headless/UI).
+  - `npm run test:coverage` – Coverage report (store artifacts for security-related work).
+- Functions workspace:
+  - `npm test` – Vitest unit/integration tests.
+  - `npm run type-check` – TSC with `--noEmit`.
+- Linting/formatting:
+  - `npm run lint` – ESLint, type-check, and markdown linting for
+  all files.
+  - `npm run lint:md` – Run only markdown linting for documentation files (human-readable output).
+  - `npm run lint:md:json` – Run markdown linting with condensed JSON output (80% reduction in verbosity).
+  - `npm run format` / `npm run format:check` – Prettier across
+  `.vue`/`.ts` sources.
+
+CI expects zero lint errors and passing tests. When adding features, include a Vitest or Playwright regression guard.
+
+## Documentation & Deploy
+
+- `npm run docs` – Builds functions and regenerates `functions/openapi/openapi.json`.
+- `npm run docs:generate` – Runs `npm run openapi --workspace=functions` and copies the spec into
+  `frontend/public/api/openapi.json` for Scalar UI.
+- `npm run deploy:staging` – Build functions, regenerate docs, build frontend, then deploy hosting
+  to a 7-day preview channel.
+- `npm run deploy:prod` – Build functions, regenerate docs, build frontend, then deploy hosting +
+  functions.
+
+If you alter API endpoints or request/response shapes, rerun `npm run docs` and include the
+resulting diff under `functions/openapi/`.
+
+## Coding Standards
+
+- 2-space indentation, Prettier formatting, shared flat ESLint config.
+- Max line length: 100 in `frontend/`, 120 in `functions/`; split literals instead of disabling lint rules.
+- Vue components follow Composition API, typed Pinia stores, and live in `kebab-case.vue` files under feature folders.
+- Functions export named handlers from `functions/src/**` that mirror their trigger purpose; prefer
+  pure services under `src/services/` with thin handler wrappers.
+- Avoid `any`; justify unavoidable cases with targeted ESLint suppressions.
+- Organise imports using the `@/` alias for local modules; remove unused imports promptly.
+- Keep Vue components <300 lines and Firebase handlers focused (<200 lines); refactor shared logic into composables/services.
+- Vitest setup helpers live under `frontend/src/test/`; create fixtures/mocks alongside features when needed.
+
+## Git & PR Expectations
+
+- Conventional Commit prefixes (`feat`, `fix`, `chore`, `docs`, etc.). Reference tickets (`TT-123`)
+  or issues (`Fixes #123`) when relevant.
+- PRs explain scope, surface screenshots or terminal output for UI/CLI changes, and call out Firebase config updates.
+- Never commit generated assets from `frontend/dist/`, `functions/lib/`, or emulator exports.
+
+## Agent Workflow Tips
+
+- Prefer `apply_patch` for surgical edits; avoid rewriting large files unless necessary.
+- Default to workspace-level scripts (`npm run … --workspace=frontend`) instead of manually invoking binaries.
+- When uncertain about project behaviour, search the repo (`rg`) before guessing. Ask the maintainer
+  only if facts remain unclear.
+
+Keep this guidance in sync across `CLAUDE.md` and `AGENTS.md`.

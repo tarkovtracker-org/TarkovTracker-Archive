@@ -43,6 +43,12 @@ frontend/.env.development
 frontend/.env.production
 local_data/
 
+# Test artifacts
+**/test-results/
+**/playwright-report/
+**/.playwright/
+**/coverage/
+
 # Logs
 logs
 *.log
