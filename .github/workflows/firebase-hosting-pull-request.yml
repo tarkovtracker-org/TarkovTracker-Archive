@@ -67,6 +67,13 @@ jobs:
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup Node.js and install dependencies
+        if: steps.guard.outputs.trusted == 'true'
+        uses: ./.github/actions/setup-node-and-install
+        with:
+          node-version: '22'
+          checkout: 'false'
       
       - name: Validate Firebase service account
         if: steps.guard.outputs.trusted == 'true'
@@ -83,10 +90,6 @@ jobs:
             exit 1
           }
           echo "✓ Firebase service account is valid JSON"
-
-      - name: Install dependencies
-        if: steps.guard.outputs.trusted == 'true'
-        run: npm ci
 
       - name: Type-check Firebase functions
         if: steps.guard.outputs.trusted == 'true'
