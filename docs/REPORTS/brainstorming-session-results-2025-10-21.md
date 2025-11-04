@@ -119,7 +119,7 @@ Current Stack Reality:
 - ✅ **Pinia + Firestore sync** - State management working
 - ⚠️ **Vitest** - Testing started but incomplete
 - ❌ **Vue/Vuetify** - Framework mismatch (you're a React developer)
-- ❌ **Firebase DX pain** - Java emulator is terrible, only using hosting/auth/cloud functions
+- ❌ **Firebase DX pain** - Java emulator is terrible, primarily relying on hosting, auth, cloud functions, and Firestore
 
 Stack Tension Points:
 
