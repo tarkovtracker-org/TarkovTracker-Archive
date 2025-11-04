@@ -61,19 +61,29 @@ jobs:
           echo "To enable preview: Add 'approved-for-preview' label or add author as a repository collaborator"
           exit 0
 
-      - name: Checkout PR code
-        if: steps.guard.outputs.trusted == 'true'
+      - name: Checkout base repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Fetch trusted PR head
+        if: steps.guard.outputs.trusted == 'true'
+        run: |
+          if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+            git fetch origin "${{ github.event.pull_request.head.ref }}:pr-${{ github.event.pull_request.number }}"
+          else
+            git remote add pr "${{ github.event.pull_request.head.repo.clone_url }}" 2>/dev/null || \
+              git remote set-url pr "${{ github.event.pull_request.head.repo.clone_url }}"
+            git fetch pr "${{ github.event.pull_request.head.ref }}:pr-${{ github.event.pull_request.number }}"
+          fi
+          git checkout pr-${{ github.event.pull_request.number }}
 
       - name: Setup Node.js and install dependencies
         if: steps.guard.outputs.trusted == 'true'
         uses: ./.github/actions/setup-node-and-install
         with:
           node-version: '22'
-      
+
       - name: Validate Firebase service account
         if: steps.guard.outputs.trusted == 'true'
         env:
