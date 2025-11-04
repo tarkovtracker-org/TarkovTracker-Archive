@@ -22,7 +22,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
 
 - **Node.js Crypto** (built-in)
   - Secure random token generation using `crypto.getRandomValues()` and `crypto.randomBytes()`
-  - SHA-256 hashing for rate limiting key generation
+  - SHA-256 hashing for rate-limiting key generation
 
 ### Frontend (Vue 3 SPA)
 
@@ -268,7 +268,7 @@ sanitized.replace(/[<>"'&]/g, '')
 
 **File**: `/functions/src/middleware/abuseGuard.ts`
 
-### Rate Limiting Strategy
+### Rate-Limiting Strategy
 
 #### Configuration (Environment Variables)
 
@@ -585,7 +585,7 @@ validateImportData(jsonString):
 - ✅ CORS origin validation
 - ✅ Error handling with redaction
 
-### 12.2 Defense Depth Notes
+### 12.2 Defense-in-Depth Notes
 
 1. **If Rate Limiting Fails**: API throttling may still protect via Firebase quota
 2. **If Token Leaked**: Revocation via Firestore delete, checked on each request

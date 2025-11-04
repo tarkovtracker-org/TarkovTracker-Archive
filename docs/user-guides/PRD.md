@@ -1,7 +1,7 @@
 # TarkovTracker Product Requirements Document (PRD)
 
 **Author:** Dys
-**Date:** 2025-10-22
+**Date:** 2025-11-04
 **Project Level:** 2
 **Target Scale:** 100s of concurrent users
 

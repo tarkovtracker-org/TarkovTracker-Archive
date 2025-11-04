@@ -2,7 +2,7 @@
 
 > **Location**: This documentation belongs in the `/scripts/` directory
 > **Purpose**: Documents all npm scripts and development workflows for the
-> TarkovTracker monorepo
+TarkovTracker monorepo
 
 This is a monorepo with two main workspaces: `frontend` and `functions`.
 Scripts are

@@ -29,6 +29,7 @@ This document tracks active technical debt items requiring architectural refacto
 
 **Target Structure:**
 
+
 ```text
 functions/src/progress/
 ├── interfaces/
@@ -62,6 +63,7 @@ functions/src/progress/
 
 ---
 
+
 ### 2. Refactor tarkovdataquery.ts
 
 **Priority:** 🟠 High
@@ -72,6 +74,7 @@ functions/src/progress/
 - One massive GraphQL query (600+ lines)
 - No reusability, difficult to modify
 - Fragments repeated across query
+
 
 **Target Structure:**
 
@@ -85,6 +88,7 @@ frontend/src/graphql/
 │   └── traderFragments.ts    # Trader data
 ├── queries/
 │   ├── tarkovDataQuery.ts    # Main query
+
 │   └── index.ts              # Re-export
 └── index.ts                  # Re-export all
 ```
@@ -140,6 +144,7 @@ frontend/src/stores/
 - No TypeScript errors
 - State persistence still works
 
+
 ---
 
 ### 4. Extract NeededItems.vue Components
@@ -156,6 +161,7 @@ frontend/src/features/neededitems/
 ├── components/
 │   ├── NeededItemsFilters.vue    # Filter controls (100 lines)
 │   ├── NeededItemsGrid.vue       # Grid display logic (100 lines)
+
 │   └── NeededItemsList.vue       # List display logic (100 lines)
 └── composables/
     ├── useNeededItemsFiltering.ts

@@ -193,7 +193,7 @@ app.use(cors({
 
 ## Priority 2: Medium (Backlog)
 
-### 5. Evaluate API Rate Limiting Strategy
+### 5. Evaluate API Rate-Limiting Strategy
 
 **Status:** ❌ Not Started
 **Priority:** P2

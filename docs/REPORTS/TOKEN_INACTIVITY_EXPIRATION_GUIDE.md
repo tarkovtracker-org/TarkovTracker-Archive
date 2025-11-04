@@ -607,7 +607,7 @@ app.post('/api/tokens/regenerate',
 
 **Note about rate limiting**:
 
-TarkovTracker uses the standard [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware for rate limiting across all API endpoints. This middleware is already applied globally to all `/api/*` routes in [`app.use('/api', abuseGuard);`](functions/src/app/app.ts:78) and provides configurable rate limiting via environment variables.
+TarkovTracker uses the standard [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware for rate-limiting across all API endpoints. This middleware is already applied globally to all `/api/*` routes in [`app.use('/api', abuseGuard);`](functions/src/app/app.ts:78) and provides configurable rate-limiting via environment variables.
 
 The [`abuseGuard`](functions/src/middleware/abuseGuard.ts:67) middleware handles:
 - Rate-limiting per token/IP with configurable thresholds

@@ -222,7 +222,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Priority: Implement testing infrastructure first
    - Can optimize/consolidate testing approaches later
 
-## Key insight
+#### Key Insight
 
 "Combination opportunities are limited - more about ELIMINATION of duplicates than merging."
 
@@ -234,7 +234,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Want: Automated testing, building, deployment, quality checks
    - Benefit: Confidence in changes, faster iteration, contributor safety net
 
-**Key insight: "CI/CD is the missing professional infrastructure - would provide automation and confidence currently lacking."**
+#### Key Insight: "CI/CD is the missing professional infrastructure - would provide automation and confidence currently lacking."
 
 #### **M - MODIFY: What to adjust/tweak in existing code?**
 
@@ -255,7 +255,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Better documentation for new contributors
    - Make it EASY for others to help
 
-**Key insight: "Modifications focus on REDUCTION (comments, complexity, barriers) and IMPROVEMENT (performance, organization, DX)."**
+#### Key Insight: "Modifications focus on REDUCTION (comments, complexity, barriers) and IMPROVEMENT (performance, organization, DX)."
 
 #### **P - PUT TO OTHER USE: Repurpose existing pieces?**
 
@@ -285,7 +285,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Keep only where needed for readability
    - Tighten up code density
 
-**Key insight: "ELIMINATION is where the biggest wins are - removing friction, bloat, and barriers."**
+#### Key Insight: "ELIMINATION is where the biggest wins are - removing friction, bloat, and barriers."
 
 #### **R - REVERSE/REARRANGE: Flip the approach or reorder?**
 
@@ -309,7 +309,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Depends on performance impact
    - "If it works, it works" - test and measure
 
-**Key insight: "REVERSALS focus on inverting friction points - generate instead of write, mock instead of require, cache instead of fetch."**
+#### Key Insight: "REVERSALS focus on inverting friction points - generate instead of write, mock instead of require, cache instead of fetch."
 
 ---
 
@@ -363,11 +363,11 @@ Every identified improvement is achievable with zero budget:
 - ✅ Documentation generation - TypeDoc or similar (free)
 - ✅ Dependency cleanup - Free
 
-**Key insight: "Budget is NOT the constraint - time and knowledge are the constraints."**
+#### Key Insight: "Budget is NOT the constraint - time and knowledge are the constraints."
 
 **Question 3: If you could only work solo (no contributors for 6 months), what focus?**
 
-**CONTEXT: Already spent a YEAR solo doing cleanup/refactoring/bug fixes**
+#### Context: Already spent a YEAR solo doing cleanup/refactoring/bug fixes
 
 Reality check:
 
@@ -376,7 +376,7 @@ Reality check:
 - Broke a lot of stuff along the way (no test safety net)
 - Solo maintenance fatigue is real
 
-**Key insight: "The solo grind is unsustainable - you've BEEN doing solo for a year. The real question is: how do you STOP being solo?"**
+#### Key Insight: "The solo grind is unsustainable - you've BEEN doing solo for a year. The real question is: how do you STOP being solo?"
 
 This reframes everything:
 
@@ -392,7 +392,7 @@ This reframes everything:
 
 **Question 4: Magic wand - ONE thing done perfectly by experts tomorrow?**
 
-**HARDEST: React/Next.js migration**
+#### HARDEST: React/Next.js migration
 
 - Would take excessively long
 - Likely introduces MORE issues than it solves
@@ -411,7 +411,7 @@ Both are:
 - Infrastructure work (unglamorous but essential)
 - Things that compound over time (investment pays back)
 
-**Key insight: "The framework doesn't matter - CI/CD and tests matter. Stop wishing for React; wish for infrastructure that makes Vue maintainable."**
+#### Key Insight: "The framework doesn't matter - CI/CD and tests matter. Stop wishing for React; wish for infrastructure that makes Vue maintainable."
 
 ---
 
@@ -419,13 +419,13 @@ Both are:
 
 Combining all constraint questions:
 
-**Top Priority (30 days): PERFORMANCE**
+#### Top Priority (30 days): PERFORMANCE
 
 - Connect Firebase cached data
 - Biggest user impact
 - Quick win with existing infrastructure
 
-**Second Priority (60 days): REDUCE SOLO BURDEN**
+#### Second Priority (60 days): REDUCE SOLO BURDEN
 
 - Eliminate Firebase emulator barrier
 - Implement CI/CD (GitHub Actions)
@@ -442,7 +442,7 @@ Combining all constraint questions:
 
 ### Immediate Opportunities
 
-_Quick wins ready to implement now (0-30 days)_
+#### Quick wins ready to implement now (0-30 days)
 
 1. **Connect Firebase cached Tarkov.dev data to frontend** ⭐⭐⭐
    - Infrastructure 90% built, just needs connection
@@ -471,7 +471,7 @@ _Quick wins ready to implement now (0-30 days)_
 
 ### Future Innovations
 
-_Bigger lifts requiring development (30-90 days)_
+#### Bigger lifts requiring development (30-90 days)
 
 1. **Eliminate Firebase Java emulator requirement** ⭐⭐⭐
    - Biggest contributor onboarding barrier (>50% friction)
@@ -506,7 +506,7 @@ _Bigger lifts requiring development (30-90 days)_
 
 ### Moonshots
 
-_Ambitious, transformative concepts (>90 days or wishlist)_
+#### Ambitious, transformative concepts (>90 days or wishlist)
 
 1. **Migrate to React/Next.js** (DEPRIORITIZED)
    - Verdict: Too costly, introduces more issues than it solves
@@ -528,7 +528,7 @@ _Ambitious, transformative concepts (>90 days or wishlist)_
 
 ### Insights and Learnings
 
-_Key realizations from the session_
+#### Key realizations from the session
 
 1. **The performance bottleneck is a disconnected feature, not missing architecture**
    - Firebase Cloud Function ALREADY fetches Tarkov.dev data daily

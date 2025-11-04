@@ -50,18 +50,18 @@ Token can have any combination: `['GP']`, `['GP', 'WP']`, `['TP']`, etc.
 
 ---
 
-## Rate Limiting Tiers
+## Rate-Limiting Tiers
 
 ```
-┌─ First Breach ──────┐
+┌─ First-Breach ──────┐
 │  (Count > Threshold)│  → Log event, continue
 └────────────────────┘
            ↓
-┌─ Second Breach ─────┐
+┌─ Second-Breach ─────┐
 │  (within history)   │  → Block for WINDOW_MS
 └────────────────────┘     Send 429 error
            ↓
-┌─ After Block ───────┐
+┌─ After-Block ───────┐
 │  (history resets)   │  → Clear count, start again
 └────────────────────┘
 ```
@@ -231,7 +231,7 @@ curl -X POST \
 
 **Response**: Firestore rules enforce
 - Token has correct permissions
-- But user tries accessing other user's data
+- But if a user tries to access another user's data
 - Firestore denies, returns 403
 
 ---

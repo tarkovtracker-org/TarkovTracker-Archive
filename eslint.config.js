@@ -17,6 +17,7 @@ export default [
       '**/dist/**',
       '**/lib/**',
       '**/node_modules/**',
+      // Build output directory for Firebase functions, should be ignored
       'bmad/**',
       'frontend/public/**',
       'docs/openapi.*',
