@@ -4,8 +4,7 @@
  */
 export function isDevAuthEnabled(): boolean {
   const raw = import.meta.env.VITE_DEV_AUTH as string | boolean | undefined;
-  const normalized =
-    typeof raw === 'string' ? raw.trim().toLowerCase() : raw ?? false;
+  const normalized = typeof raw === 'string' ? raw.trim().toLowerCase() : (raw ?? false);
   if (typeof normalized === 'boolean') return normalized;
   if (typeof normalized === 'string') {
     const v = normalized;

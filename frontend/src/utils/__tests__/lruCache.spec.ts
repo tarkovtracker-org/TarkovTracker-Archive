@@ -9,12 +9,8 @@ describe('LRUCache', () => {
     });
 
     it('throws an error if maxSize is less than 1', () => {
-      expect(() => new LRUCache<string, number>(0)).toThrow(
-        'LRUCache maxSize must be at least 1'
-      );
-      expect(() => new LRUCache<string, number>(-1)).toThrow(
-        'LRUCache maxSize must be at least 1'
-      );
+      expect(() => new LRUCache<string, number>(0)).toThrow('LRUCache maxSize must be at least 1');
+      expect(() => new LRUCache<string, number>(-1)).toThrow('LRUCache maxSize must be at least 1');
     });
 
     it('accepts an optional onEvict callback', () => {
@@ -45,7 +41,7 @@ describe('LRUCache', () => {
       cache.set('c', 3);
       cache.set('a', 10); // Update 'a'
       cache.set('d', 4); // This should evict 'b', not 'a'
-      
+
       expect(cache.get('a')).toBe(10);
       expect(cache.get('b')).toBeUndefined();
       expect(cache.get('c')).toBe(3);
@@ -157,10 +153,10 @@ describe('LRUCache', () => {
       cache.set('a', 1);
       cache.set('b', 2);
       cache.set('c', 3);
-      
+
       // Access 'a' to make it most recent
       cache.get('a');
-      
+
       // Adding 'd' should evict 'b', not 'a'
       cache.set('d', 4);
 
@@ -176,12 +172,12 @@ describe('LRUCache', () => {
       cache.set('a', 1);
       cache.set('b', 2);
       cache.set('c', 3);
-      
+
       // Access order: c, b, a (a is now most recent)
       cache.get('c');
       cache.get('b');
       cache.get('a');
-      
+
       // Adding 'd' should evict 'c' (least recently used)
       cache.set('d', 4);
 
@@ -199,9 +195,9 @@ describe('LRUCache', () => {
       cache.set('a', 1);
       cache.set('b', 2);
       cache.set('c', 3);
-      
+
       cache.clear();
-      
+
       expect(cache.size).toBe(0);
       expect(cache.has('a')).toBe(false);
       expect(cache.has('b')).toBe(false);
@@ -214,9 +210,9 @@ describe('LRUCache', () => {
       cache.set('a', 1);
       cache.set('b', 2);
       cache.set('c', 3);
-      
+
       cache.clear();
-      
+
       expect(onEvict).toHaveBeenCalledTimes(3);
       expect(onEvict).toHaveBeenCalledWith('a', 1);
       expect(onEvict).toHaveBeenCalledWith('b', 2);
@@ -226,9 +222,9 @@ describe('LRUCache', () => {
     it('works correctly when cache is already empty', () => {
       const onEvict = vi.fn();
       const cache = new LRUCache<string, number>(5, onEvict);
-      
+
       cache.clear();
-      
+
       expect(cache.size).toBe(0);
       expect(onEvict).not.toHaveBeenCalled();
     });

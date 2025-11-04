@@ -87,9 +87,7 @@ export const migrateLocalDataToUser = async (
 
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
-      logger.debug(
-        '[Migration] Dev auth enabled: skipping Firestore writes; local state updated'
-      );
+      logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
       return true;
     }
 
@@ -193,9 +191,7 @@ export const importDataToUser = async (
 
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
-      logger.debug(
-        '[Migration] Dev auth enabled: skipping Firestore writes; local state updated'
-      );
+      logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
       return true;
     }
 

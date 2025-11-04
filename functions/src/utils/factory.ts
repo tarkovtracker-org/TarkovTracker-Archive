@@ -1,10 +1,10 @@
 /**
  * Returns a memoized initializer for synchronous singletons.
- * 
+ *
  * @template T - The type of the singleton instance
  * @param init - Initialization function that creates the singleton
  * @returns A function that returns the singleton instance, creating it on first call
- * 
+ *
  * @example
  * ```ts
  * const getService = createLazy(() => new MyService());
@@ -26,11 +26,11 @@ export function createLazy<T>(init: () => T): () => T {
  * Returns a memoized initializer for async singletons with single-flight semantics.
  * Ensures that concurrent calls wait for the same initialization promise rather than
  * creating multiple instances.
- * 
+ *
  * @template T - The type of the singleton instance
  * @param init - Async initialization function that creates the singleton
  * @returns An async function that returns the singleton instance, creating it on first call
- * 
+ *
  * @example
  * ```ts
  * const getService = createLazyAsync(async () => {
