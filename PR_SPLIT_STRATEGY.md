@@ -10,12 +10,14 @@ This plan cherry-picks safe, independent commits into smaller PRs that can be re
 ---
 
 ## 🟢 **PR Split 1: Documentation & Chore Updates** (SAFEST - Merge First)
+
 **Branch**: `chore/docs-and-tooling-updates`  
 **Risk Level**: ✅ **Very Low** - No functional changes  
 **Files Affected**: Documentation, configs, workflows  
 **Estimated Review Time**: 30 minutes
 
 ### Commits to Cherry-Pick (in order):
+
 ```bash
 # Documentation updates (no code changes)
 2059b70  # docs: streamline technical debt documentation
@@ -58,12 +60,14 @@ efab263  # chore: apply code formatting to remaining files
 ---
 
 ## 🟡 **PR Split 2: Bug Fixes & UI Polish** (Low Risk - Merge Second)
+
 **Branch**: `fix/ui-and-bug-fixes`  
 **Risk Level**: ⚠️ **Low** - Isolated bug fixes  
 **Dependencies**: None  
 **Estimated Review Time**: 45 minutes
 
 ### Commits to Cherry-Pick:
+
 ```bash
 # UI/Component fixes
 dc8a2b3  # fix: move v-else directive in TaskCardList (#127)
@@ -95,12 +99,14 @@ d630264  # fix(user-store): correct default state and itemsTeamHideNonFIR
 ---
 
 ## 🟠 **PR Split 3: Infrastructure Refactoring** (Medium Risk - Merge Third)
+
 **Branch**: `refactor/infrastructure-improvements`  
 **Risk Level**: ⚠️⚠️ **Medium** - Structural changes but no new features  
 **Dependencies**: PR Split 1 & 2 should be merged first  
 **Estimated Review Time**: 90 minutes
 
 ### Commits to Cherry-Pick:
+
 ```bash
 # Shared utilities and lazy loading
 76c81a8  # refactor(functions): extract lazy init factory
@@ -131,12 +137,14 @@ ebb2b74  # fix(settings): reset cached QR on token change
 ---
 
 ## 🔴 **PR Split 4: Scheduled Functions & Data Management** (High Risk - Merge Fourth)
+
 **Branch**: `feat/scheduled-functions-and-data`  
 **Risk Level**: ⚠️⚠️⚠️ **High** - New backend features  
 **Dependencies**: PR Split 3 must be merged (needs lazy init, utilities)  
 **Estimated Review Time**: 2 hours
 
 ### Commits to Cherry-Pick:
+
 ```bash
 # Scheduled functions infrastructure
 56f29ae  # fix(functions): shard Firestore items under tarkovData/items
@@ -164,12 +172,14 @@ cad0c1f  # chore(features): document flags and default off
 ---
 
 ## 🔴 **PR Split 5: Remaining Features** (Highest Risk - Merge Last)
+
 **Branch**: `feat/remaining-features`  
 **Risk Level**: ⚠️⚠️⚠️⚠️ **Very High** - New features and integrations  
 **Dependencies**: All previous PRs merged  
 **Estimated Review Time**: 3+ hours
 
 ### What Stays in Original PR #111:
+
 - Token inactivity expiration system
 - Rate limiting infrastructure
 - Team management refactoring
@@ -187,6 +197,7 @@ cad0c1f  # chore(features): document flags and default off
 ## 📋 Execution Plan
 
 ### Step 1: Create PR Split 1 (NOW - Safest)
+
 ```bash
 # Create new branch from main
 git checkout main
@@ -205,6 +216,7 @@ git push origin chore/docs-and-tooling-updates
 ```
 
 ### Step 2: Create PR Split 2 (After PR1 is approved)
+
 ```bash
 git checkout main
 git pull origin main  # Will include merged PR1
@@ -217,6 +229,7 @@ git checkout -b fix/ui-and-bug-fixes
 ### Step 3-5: Repeat for remaining splits
 
 ### Step 6: Rebase and Simplify Original PR
+
 ```bash
 # After PRs 1-4 are merged to main
 git checkout integration/reconcile-all-features

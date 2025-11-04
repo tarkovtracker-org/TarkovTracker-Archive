@@ -25,7 +25,7 @@
 
 1. Bearer token validation (primary security)
 1. Origin pattern validation (defense-in-depth)
-1. Rate limiting (abuseGuard)
+1. Rate-limiting (abuseGuard)
 1. Permission system (GP, WP, TP)
 1. Token expiration and revocation
 

@@ -15,7 +15,7 @@
 | File | Purpose |
 |------|---------|
 | `/functions/src/middleware/auth.ts` | Bearer token validation |
-| `/functions/src/middleware/abuseGuard.ts` | Rate limiting |
+| `/functions/src/middleware/abuseGuard.ts` | Rate-limiting |
 | `/functions/src/services/ValidationService.ts` | Input validation |
 | `/firestore.rules` | Database access control |
 | `/functions/src/config/corsConfig.ts` | CORS origin validation |
@@ -89,17 +89,20 @@ Token can have any combination: `['GP']`, `['GP', 'WP']`, `['TP']`, etc.
 ## Firestore Rules by Collection
 
 ### progress/{userId}
+
 - **Create/Update**: `request.auth.uid == userId` + valid structure
 - **Read**: User OR same team member
 - **Delete**: User only
 - **Validates**: gameMode, gameEdition, faction structure
 
 ### token/{tokenId}
+
 - **Create**: Owner match + required fields
 - **Read/Update/Delete**: Owner only
 - **Protected**: owner, permissions, createdAt (immutable)
 
 ### team/{teamId}
+
 - **Create**: Owner match + max 50 members
 - **Read**: Team members only
 - **Update**: Owner (members) OR member (self-remove)
@@ -163,11 +166,13 @@ Token can have any combination: `['GP']`, `['GP', 'WP']`, `['TP']`, etc.
 ## Testing Auth/Validation
 
 ### Test Bearer Token
+
 ```bash
 curl -H "Authorization: Bearer <token>" https://api.example.com/api/progress
 ```
 
 ### Test Missing Permission
+
 ```bash
 # Token with only 'GP' permission trying 'WP' endpoint
 curl -X POST \
@@ -178,6 +183,7 @@ curl -X POST \
 ```
 
 ### Test Rate Limiting
+
 ```bash
 # Rapid requests to same endpoint
 for i in {1..200}; do
@@ -187,6 +193,7 @@ done
 ```
 
 ### Test Input Validation
+
 ```bash
 curl -X POST \
   -H "Authorization: Bearer <token>" \
@@ -200,24 +207,28 @@ curl -X POST \
 ## Common Security Scenarios
 
 ### Scenario: Token Leaked
+
 **Response**: Revoke immediately
 - Delete from `token` collection
 - Checked on next API request
 - Attacker gets 401 Unauthorized
 
 ### Scenario: Brute Force Attack
+
 **Response**: Rate limiter activates
 - First breach: Warning logged
 - Second breach: 429 response + 10s block
 - Tracks per token hash OR per IP
 
 ### Scenario: Invalid Input
+
 **Response**: Rejected at API layer
 - ValidationService checks type/range
 - Returns 400 Bad Request
 - Firestore rules provide second layer
 
 ### Scenario: Unauthorized Data Access
+
 **Response**: Firestore rules enforce
 - Token has correct permissions
 - But user tries accessing other user's data

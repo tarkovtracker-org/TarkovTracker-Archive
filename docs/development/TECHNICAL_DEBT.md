@@ -180,16 +180,19 @@ frontend/src/features/neededitems/
 ## Code Quality Guidelines
 
 ### File Size Targets
+
 - Vue components: < 300 lines
 - TypeScript modules: < 250 lines
 - GraphQL queries: Use fragments, no monolithic queries
 
 ### Single Responsibility Principle
+
 - Each file should have one clear purpose
 - Extract shared logic to composables/utilities
 - Use feature-based directory organization
 
 ### Testing Requirements
+
 - Unit tests for extracted modules
 - Integration tests for refactored workflows
 - Regression tests to ensure no breaking changes
@@ -276,6 +279,7 @@ npm run test:functions
 ## Success Metrics
 
 ### Quantitative
+
 - Build Success Rate: 100% ✅
 - TypeScript Strict Mode: Passes ✅
 - Lint Errors: < 10 warnings ✅
@@ -283,6 +287,7 @@ npm run test:functions
 - Console Statements in functions/src: 0 ✅
 
 ### Qualitative
+
 - Files follow single responsibility principle
 - No file > 400 lines (Vue) or > 300 lines (TS)
 - Clear separation of concerns
@@ -308,6 +313,7 @@ See [TECHNICAL_DEBT_COMPLETED.md](./TECHNICAL_DEBT_COMPLETED.md) for historical 
 ## Resource Estimates
 
 ### By Active Item
+
 1. progressUtils.ts decomposition: 16-20 hours
 2. tarkovdataquery.ts refactoring: 8-10 hours
 3. User store splitting: 12-16 hours
@@ -316,6 +322,7 @@ See [TECHNICAL_DEBT_COMPLETED.md](./TECHNICAL_DEBT_COMPLETED.md) for historical 
 **Total Active Debt:** 46-58 hours
 
 ### Additional Considerations
+
 - Code review/approval: 8-12 hours (4 PRs × 2-3 hours)
 - Documentation updates: 4-6 hours
 - Integration testing: 2-3 hours per item

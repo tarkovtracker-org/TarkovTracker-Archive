@@ -3,11 +3,13 @@
 ## TL;DR
 
 Run this to get started interactively:
+
 ```bash
 ./scripts/split-pr-master.sh
 ```
 
 Or create splits manually (in order):
+
 ```bash
 ./scripts/split-pr-1-docs-chore.sh          # Safest, do first
 ./scripts/split-pr-2-bugfixes.sh            # After Split 1 merged
@@ -52,6 +54,7 @@ Your PR #111 has **187 commits** - too large to review safely. These scripts spl
 ## Step-by-Step Workflow
 
 ### Option A: Guided (Recommended)
+
 ```bash
 # Interactive guide walks you through each split
 ./scripts/split-pr-master.sh
@@ -60,6 +63,7 @@ Your PR #111 has **187 commits** - too large to review safely. These scripts spl
 ### Option B: Manual (Advanced)
 
 #### 1. Create Split 1 (Docs/Chore) - SAFEST
+
 ```bash
 ./scripts/split-pr-1-docs-chore.sh
 # ✅ Tests pass? Push and create PR
@@ -69,6 +73,7 @@ git push origin chore/docs-and-tooling-updates
 #### 2. Wait for Split 1 to be merged to staging
 
 #### 3. Create Split 2 (Bug Fixes)
+
 ```bash
 git checkout staging && git pull origin staging
 ./scripts/split-pr-2-bugfixes.sh
@@ -78,6 +83,7 @@ git push origin fix/ui-and-bug-fixes
 #### 4. Wait for Split 2 to be merged
 
 #### 5. Create Split 3 (Refactoring)
+
 ```bash
 git checkout staging && git pull origin staging
 ./scripts/split-pr-3-refactoring.sh
@@ -87,6 +93,7 @@ git push origin refactor/infrastructure-improvements
 #### 6. Wait for Split 3 to be merged
 
 #### 7. Create Split 4 (New Features)
+
 ```bash
 git checkout staging && git pull origin staging
 ./scripts/split-pr-4-scheduled-functions.sh
@@ -94,6 +101,7 @@ git push origin feat/scheduled-functions-and-data
 ```
 
 #### 8. After all 4 are merged, clean up original PR
+
 ```bash
 git checkout integration/reconcile-all-features
 git rebase staging
@@ -107,6 +115,7 @@ Now PR #111 will only contain the remaining features (rate limiting, team refact
 ## What if Something Goes Wrong?
 
 ### Cherry-pick conflicts
+
 ```bash
 # Script will stop on conflict
 # Fix conflicts manually:
@@ -125,6 +134,7 @@ git branch -D <branch-name>
 ```
 
 ### Tests fail after cherry-picking
+
 ```bash
 # Review what broke:
 npm run build  # Check build errors
@@ -138,6 +148,7 @@ git commit -m "fix: resolve conflicts from cherry-pick"
 ```
 
 ### Want to start over?
+
 ```bash
 # Delete the branch and try again
 git checkout staging
