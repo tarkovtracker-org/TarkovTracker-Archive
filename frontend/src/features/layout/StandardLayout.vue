@@ -65,8 +65,8 @@
       return;
     }
     // Remove previous preload link if it exists
-    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
-      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+    if (currentPreloadLink.value) {
+      currentPreloadLink.value.remove();
       currentPreloadLink.value = null;
     }
     const href = `/img/background/${backgroundKey}.webp`;
@@ -130,8 +130,8 @@
     }
     window.removeEventListener('scroll', handleScroll);
     // Cleanup preload link on component unmount
-    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
-      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+    if (currentPreloadLink.value) {
+      currentPreloadLink.value.remove();
       currentPreloadLink.value = null;
     }
   });
