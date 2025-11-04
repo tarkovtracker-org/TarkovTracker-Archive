@@ -25,6 +25,7 @@ export default [
       '.factory/**',
       '.github/**',
       '.vscode/**',
+      'bmad/**',
     ],
   },
   // Base configuration for all files
@@ -80,7 +81,6 @@ export default [
       },
       parserOptions: {
         parser: tseslint.parser,
-        extraFileExtensions: ['.vue'],
         allowImportExportEverywhere: false,
       },
     },
@@ -88,8 +88,6 @@ export default [
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn', // TODO: Fix and change to 'error'
       'no-unused-vars': 'off',
-      'vue/no-unused-vars': 'off',
-      'vue/no-v-html': 'error',
       'no-debugger': 'off',
       'max-len': ['warn', { code: 100 }],
     },

@@ -78,12 +78,14 @@
     document.head.appendChild(link);
     currentPreloadLink.value = link;
   };
+  const routeBackgroundKey = computed(() =>
+    typeof route.meta?.background === 'string' ? route.meta.background : undefined
+  );
   const backgroundImage = computed(() => {
-    if (route?.meta?.background) {
-      return `url(/img/background/${route.meta.background}.webp)`;
-    } else {
-      return '';
+    if (routeBackgroundKey.value) {
+      return `url(/img/background/${routeBackgroundKey.value}.webp)`;
     }
+    return '';
   });
   // const backgroundImage = computed(() => {
   //   if (route.meta.background) {
@@ -99,7 +101,7 @@
   const showBackToTop = ref(false);
   const backToTopThreshold = 400;
   watch(
-    () => route.meta?.background,
+    () => routeBackgroundKey.value,
     (newBackground) => {
       preloadBackgroundImage(newBackground);
     },
