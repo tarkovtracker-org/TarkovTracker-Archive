@@ -34,7 +34,7 @@ All configuration values are clamped to sensible bounds to avoid accidental disa
 - **Short-Term Overrides** – Raise `ABUSE_GUARD_THRESHOLD` (or shrink `PATH_PREFIXES`) for high-traffic events; revert after collecting baseline data.
 - **Investigations** – Filter `rateLimitEvents` by `tokenOwner` or `cacheKey` to spot abusive patterns. The `tokenOwner` value mirrors the authenticated credential: individual tokens log the user UID, team API keys log the team document ID, and service/token-only credentials log the token document ID. Raw bearer strings are never stored, and the middleware prefers the most specific identifier (token ID > user UID > team ID). `cacheKey` uses a SHA-256 hash of the bearer token, so the raw value is never persisted.
 
-### Event Schema
+## Event Schema
 
 The rateLimitEvents document stores the following fields:
 - tokenOwner (string): Mirrors the credential owner—user UID for individual tokens, team document ID for team-scoped keys, token document ID for service/token-only credentials (raw tokens are never stored).
