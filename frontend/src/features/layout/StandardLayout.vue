@@ -57,11 +57,11 @@
   import { useRoute } from 'vue-router';
   const route = useRoute();
   const currentPreloadLink = ref<HTMLLinkElement | null>(null);
-  const preloadBackgroundImage = (backgroundKey: unknown) => {
+  const preloadBackgroundImage = (backgroundKey: string | undefined) => {
     if (typeof document === 'undefined') {
       return;
     }
-    if (typeof backgroundKey !== 'string' || backgroundKey.length === 0) {
+    if (!backgroundKey?.length) {
       return;
     }
     // Remove previous preload link if it exists
