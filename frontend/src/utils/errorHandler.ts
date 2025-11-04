@@ -18,8 +18,12 @@ class ErrorHandler {
   /**
    * Set user ID provider function
    * @param provider - Function that returns current user ID
+   * @throws Error if provider is not a function
    */
   setUserIdProvider(provider: () => string | undefined): void {
+    if (typeof provider !== 'function') {
+      throw new Error('User ID provider must be a function');
+    }
     this.userIdProvider = provider;
   }
 
