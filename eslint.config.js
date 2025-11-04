@@ -17,6 +17,7 @@ export default [
       '**/dist/**',
       '**/lib/**',
       '**/node_modules/**',
+      'bmad/**',
       'frontend/public/**',
       'docs/openapi.*',
       'functions/test/**/*.js',
