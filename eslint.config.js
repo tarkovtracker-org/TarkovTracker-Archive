@@ -25,8 +25,6 @@ export default [
       '.factory/**',
       '.github/**',
       '.vscode/**',
-      'scripts/**/*',
-      'bmad/**',
     ],
   },
   // Base configuration for all files
