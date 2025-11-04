@@ -489,19 +489,18 @@ window.openapi = {
             "application/json": {
               "schema": {
                 "type": "object",
-                "description": "Object where keys are task IDs and values are the new status (0-3)",
+                "description": "Object where keys are task IDs and values are the new status",
                 "additionalProperties": {
-                  "type": "integer",
+                  "type": "string",
                   "enum": [
-                    0,
-                    1,
-                    2,
-                    3
+                    "uncompleted",
+                    "completed",
+                    "failed"
                   ]
                 },
                 "example": {
-                  "task1": 2,
-                  "task5": 1
+                  "task1": "completed",
+                  "task5": "uncompleted"
                 }
               }
             }
@@ -665,7 +664,7 @@ window.openapi = {
       "get": {
         "summary": "Returns progress data of all members of the team",
         "tags": [
-          "Progress"
+          "Team"
         ],
         "security": [
           {
@@ -719,8 +718,7 @@ window.openapi = {
                         }
                       }
                     }
-                  },
-                  "$ref": "#/components/schemas/TeamProgress"
+                  }
                 }
               }
             }
