@@ -4,6 +4,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./test/setup'],
+    pool: 'threads',
     deps: {
       optimizer: {
         ssr: {

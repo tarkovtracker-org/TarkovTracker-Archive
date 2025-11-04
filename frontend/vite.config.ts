@@ -1,23 +1,56 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
 import { execSync } from 'child_process';
+import { defineConfig } from 'vite';
 
 // Get the directory name in an ESM context
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const formatGitError = (error: unknown) => {
+  if (error && typeof error === 'object') {
+    const code = (error as { code?: unknown }).code;
+    const message = (error as { message?: unknown }).message;
+    const parts: string[] = [];
+    if (typeof code === 'string') {
+      parts.push(code);
+    }
+    if (typeof message === 'string') {
+      parts.push(message);
+    }
+    return parts.join(' - ') || 'unknown error';
+  }
+
+  return String(error);
+};
+
+let cachedCommitHash: string | null = null;
+
 // Get git commit hash and build time
 const getCommitHash = () => {
-  try {
-    return execSync('git rev-parse HEAD').toString().trim();
-  } catch (error) {
-    console.warn('Could not get git commit hash:', error);
-    return 'unknown';
+  if (cachedCommitHash !== null) {
+    return cachedCommitHash;
   }
+
+  if (process.env.VITE_COMMIT_HASH) {
+    cachedCommitHash = process.env.VITE_COMMIT_HASH;
+    return cachedCommitHash;
+  }
+
+  try {
+    cachedCommitHash = execSync('git rev-parse HEAD', {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .toString()
+      .trim();
+  } catch (error) {
+    console.warn('Skipping git commit hash lookup:', formatGitError(error));
+    cachedCommitHash = 'unknown';
+  }
+  return cachedCommitHash;
 };
 
 const getBuildTime = () => {

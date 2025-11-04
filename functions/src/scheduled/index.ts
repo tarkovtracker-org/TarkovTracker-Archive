@@ -365,7 +365,6 @@ async function updateTarkovDataImplInternal(
     }
 
     // Update items with retry and validation
-    let itemsUpdateSuccessful = false;
     try {
       const itemsResponse = await fetchWithRetry<ItemsResponse>(
         TARKOV_DEV_GRAPHQL_ENDPOINT,
@@ -379,8 +378,11 @@ async function updateTarkovDataImplInternal(
 
       // Sharding configuration
       const SHARD_TARGET_MAX = 700_000; // Conservative target below 1MB limit
-      const itemsShardsCollectionRef = db.collection('tarkovData').doc('items').collection('shards');
-      
+      const itemsShardsCollectionRef = db
+        .collection('tarkovData')
+        .doc('items')
+        .collection('shards');
+
       // Helper function to approximate JSON size in bytes
       const approximateSize = (obj: unknown): number => {
         try {
@@ -404,21 +406,21 @@ async function updateTarkovDataImplInternal(
 
       for (const item of itemsResponse.items) {
         const itemSize = approximateSize(item);
-        
+
         // Check if adding this item would exceed target size
         if (currentShardSize + itemSize > SHARD_TARGET_MAX && currentShard.length > 0) {
           // Save current shard and start new one
           shards.push({
             data: [...currentShard],
             index: shardIndex.toString().padStart(3, '0'),
-            size: currentShardSize
+            size: currentShardSize,
           });
-          
+
           currentShard = [];
           currentShardSize = 0;
           shardIndex++;
         }
-        
+
         currentShard.push(item);
         currentShardSize += itemSize;
       }
@@ -428,7 +430,7 @@ async function updateTarkovDataImplInternal(
         shards.push({
           data: currentShard,
           index: shardIndex.toString().padStart(3, '0'),
-          size: currentShardSize
+          size: currentShardSize,
         });
       }
 
@@ -444,7 +446,7 @@ async function updateTarkovDataImplInternal(
           const shardRef = itemsShardsCollectionRef.doc(shard.index);
           shardBatch.set(shardRef, {
             data: shard.data,
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           });
         });
 
@@ -453,7 +455,7 @@ async function updateTarkovDataImplInternal(
           logger.info(
             `Committed shard chunk ${Math.floor(i / BATCH_SIZE) + 1}, wrote ${shardChunk.length} shards.`
           );
-          
+
           // Log individual shard details for debugging
           shardChunk.forEach((shard) => {
             logger.debug(
@@ -471,7 +473,7 @@ async function updateTarkovDataImplInternal(
       // Clean up stale shards - list existing shards and delete those not in current set
       try {
         const existingShardsSnapshot = await itemsShardsCollectionRef.get();
-        const currentShardIds = shards.map(shard => shard.index);
+        const currentShardIds = shards.map((shard) => shard.index);
         const staleShardRefs: admin.firestore.DocumentReference[] = [];
 
         existingShardsSnapshot.forEach((doc) => {
@@ -485,9 +487,9 @@ async function updateTarkovDataImplInternal(
           for (let i = 0; i < staleShardRefs.length; i += deleteBatchSize) {
             const deleteChunk = staleShardRefs.slice(i, i + deleteBatchSize);
             const deleteBatch = db.batch();
-            
-            deleteChunk.forEach(ref => deleteBatch.delete(ref));
-            
+
+            deleteChunk.forEach((ref) => deleteBatch.delete(ref));
+
             try {
               await deleteBatch.commit();
               logger.info(`Deleted ${deleteChunk.length} stale shards`);
@@ -504,21 +506,20 @@ async function updateTarkovDataImplInternal(
 
       // Write parent metadata document after shards are successfully written
       const itemsMetadataRef = db.collection('tarkovData').doc('items');
-      const shardIds = shards.map(shard => shard.index);
-      
+      const shardIds = shards.map((shard) => shard.index);
+
       const metadataBatch = db.batch();
       metadataBatch.set(itemsMetadataRef, {
         sharded: true,
         shardCount: shards.length,
         shardIds: shardIds,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        schemaVersion: 2
+        schemaVersion: 2,
       });
 
       // Also include tasks and hideout updates in this final batch
       await metadataBatch.commit();
 
-      itemsUpdateSuccessful = true;
       logger.info(
         `Successfully sharded ${itemsResponse.items.length} items into ${shards.length} shards and updated metadata.`
       );
@@ -527,17 +528,15 @@ async function updateTarkovDataImplInternal(
       // Continue processing other resources (tasks, hideout) if possible
     }
 
-    // Commit the non-items batch (tasks, hideout) separately if items update failed
-    if (!itemsUpdateSuccessful) {
-      try {
-        await batch.commit();
-        logger.info('Committed non-items Tarkov data update.');
-      } catch (batchError) {
-        logger.error('Failed to commit non-items batch update to Firestore:', batchError);
-        throw new Error(
-          `Non-items batch commit failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`
-        );
-      }
+    // Commit the non-items batch (tasks, hideout) regardless of items update status
+    try {
+      await batch.commit();
+      logger.info('Committed non-items Tarkov data update.');
+    } catch (batchError) {
+      logger.error('Failed to commit non-items batch update to Firestore:', batchError);
+      throw new Error(
+        `Non-items batch commit failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`
+      );
     }
 
     logger.info('Completed scheduled Tarkov data update');
