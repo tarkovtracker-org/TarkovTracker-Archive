@@ -14,23 +14,12 @@ inputs:
     description: Working directory for install command
     required: false
     default: '.'
-  checkout:
-    description: Whether to run actions/checkout before installing dependencies
-    required: false
-    default: 'true'
 
 runs:
   using: composite
   steps:
-    # IMPORTANT: This action is designed to be used in workflows that have already established a trust boundary.
-    # For example, in `firebase-hosting-pull-request.yml`, this action is only invoked
-    # if `steps.guard.outputs.trusted == 'true'`, ensuring that untrusted PR code
-    # does not execute `npm ci` or `npm install` in a privileged context.
-    # This addresses the CodeQL finding `actions/untrusted-checkout/critical`.
-    - name: Checkout code
-      if: inputs.checkout == 'true'
-      uses: actions/checkout@v4
-
+    # IMPORTANT: Workflows must handle checkout explicitly to avoid running dependency installation
+    # against untrusted code in privileged contexts (CodeQL rule actions/untrusted-checkout/critical).
     - name: Determine cache dependency path
       id: resolve-cache-path
       shell: bash

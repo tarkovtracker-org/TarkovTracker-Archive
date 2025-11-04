@@ -73,7 +73,6 @@ jobs:
         uses: ./.github/actions/setup-node-and-install
         with:
           node-version: '22'
-          checkout: 'false'
       
       - name: Validate Firebase service account
         if: steps.guard.outputs.trusted == 'true'

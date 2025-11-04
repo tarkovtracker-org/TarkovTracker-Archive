@@ -24,5 +24,4 @@ jobs:
         uses: ./.github/actions/setup-node-and-install
         with:
           node-version: '22'
-          checkout: 'false'
           working-directory: ${{ matrix.directory }}
