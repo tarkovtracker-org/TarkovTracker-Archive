@@ -17,6 +17,7 @@ export default [
       '**/lib/**',
       '**/node_modules/**',
       'firebase-export-*/**',
+      'bmad/**',
       'frontend/public/**',
       'frontend/playwright-report/**',
       'docs/openapi.*',
