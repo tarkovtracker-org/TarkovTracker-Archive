@@ -34,6 +34,18 @@ All configuration values are clamped to sensible bounds to avoid accidental disa
 - **Short-Term Overrides** – Raise `ABUSE_GUARD_THRESHOLD` (or shrink `PATH_PREFIXES`) for high-traffic events; revert after collecting baseline data.
 - **Investigations** – Filter `rateLimitEvents` by `tokenOwner` or `cacheKey` to spot abusive patterns. The `tokenOwner` value mirrors the authenticated credential: individual tokens log the user UID, team API keys log the team document ID, and service/token-only credentials log the token document ID. Raw bearer strings are never stored, and the middleware prefers the most specific identifier (token ID > user UID > team ID). `cacheKey` uses a SHA-256 hash of the bearer token, so the raw value is never persisted.
 
+### Alerting
+
+Consider forwarding logger output to your observability pipeline to trigger alerts on frequent block events.
+
+### Future Enhancements
+
+Once baseline traffic is known, graduate to per-endpoint quotas, adaptive limits, or external rate-limiting infrastructure without replacing this guard.
+
+### Legitimate Traffic
+
+Legitimate realtime users should never see a 429 during normal gameplay updates. If they do, capture the event document and adjust thresholds accordingly.
+
 ## Event Schema
 
 The rateLimitEvents document stores the following fields:
@@ -45,8 +57,3 @@ The rateLimitEvents document stores the following fields:
 - message (string, optional): Warning or block reason.
 - ip (string, optional): Client IP if available.
 - userAgent (string, optional): User-Agent string if available.
-- **Alerting** – Consider forwarding logger output to your observability pipeline to trigger alerts on frequent block events.
-- **Future Enhancements** – Once baseline traffic is known, graduate to per-endpoint quotas, adaptive limits, or external rate-limiting infrastructure without replacing this guard.
-
-Legitimate realtime users should never see a 429 during normal gameplay updates. If they do, capture
-the event document and adjust thresholds accordingly.
