@@ -1,12 +1,10 @@
 # TarkovTracker Scripts Guide
 
 > **Location**: This documentation belongs in the `/scripts/` directory
-> **Purpose**: Documents all npm scripts and development workflows for the
-TarkovTracker monorepo
+> **Purpose**: Documents all npm scripts and development workflows for the TarkovTracker monorepo
 
 This is a monorepo with two main workspaces: `frontend` and `functions`.
-Scripts are
-organized to avoid confusion and provide clear entry points from the root.
+Scripts are organized to avoid confusion and provide clear entry points from the root.
 
 ## Dependency Management Scripts
 
