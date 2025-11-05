@@ -15,7 +15,7 @@ jobs:
   validate_and_build:
     runs-on: ubuntu-latest
     # Security: This runs in an unprivileged context - no access to repository secrets
-    
+
     steps:
       - name: Checkout PR code (untrusted)
         uses: actions/checkout@v4
@@ -35,14 +35,14 @@ jobs:
         run: npm run build
         env:
           # Use mock/test values for build - no real secrets needed
-          VITE_FIREBASE_API_KEY: "test-key-for-untrusted-build"
-          VITE_FIREBASE_AUTH_DOMAIN: "test-domain.firebaseapp.com"
-          VITE_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
-          VITE_FIREBASE_PROJECT_ID: "test-project"
-          VITE_FIREBASE_STORAGE_BUCKET: "test-project.appspot.com"
-          VITE_FIREBASE_MESSAGING_SENDER_ID: "123456789"
-          VITE_FIREBASE_APP_ID: "1:123456789:web:test"
-          VITE_FIREBASE_MEASUREMENT_ID: "G-XXXXXXXXXX"
+          VITE_FIREBASE_API_KEY: 'test-key-for-untrusted-build'
+          VITE_FIREBASE_AUTH_DOMAIN: 'test-domain.firebaseapp.com'
+          VITE_FIREBASE_DATABASE_URL: 'https://test-project.firebaseio.com'
+          VITE_FIREBASE_PROJECT_ID: 'test-project'
+          VITE_FIREBASE_STORAGE_BUCKET: 'test-project.appspot.com'
+          VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789'
+          VITE_FIREBASE_APP_ID: '1:123456789:web:test'
+          VITE_FIREBASE_MEASUREMENT_ID: 'G-XXXXXXXXXX'
 
       - name: Check build output integrity (untrusted)
         run: |
@@ -52,6 +52,13 @@ jobs:
             exit 1
           fi
           echo "✓ Build completed successfully in untrusted context"
+
+      - name: Cleanup artifacts on failure (untrusted)
+        if: failure()
+        run: |
+          # Remove temporary metadata directory on failure
+          rm -rf ./deployment-metadata
+          echo "✓ Cleanup completed after build failure"
 
       - name: Upload build artifacts (untrusted)
         uses: actions/upload-artifact@v4

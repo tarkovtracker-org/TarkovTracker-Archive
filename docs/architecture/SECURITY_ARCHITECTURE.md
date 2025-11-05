@@ -102,7 +102,7 @@ Used for account deletion (`requireRecentAuth` middleware):
 
 **Routes with Permission Checks**:
 
-```
+```bash
 GET  /api/progress           → requires 'GP'
 GET  /api/team/progress      → requires 'TP'
 POST /api/progress/level/:id → requires 'WP'
@@ -126,7 +126,7 @@ POST /api/progress/task/:id  → requires 'WP'
 
 #### 1. **system/{userId}** - User System Data
 
-```
+```text
 Permissions: Read/Write only by user
 Usage: Store team membership, tokens array
 Protection: User ID ownership check
@@ -134,7 +134,7 @@ Protection: User ID ownership check
 
 #### 2. **progress/{userId}** - User Progress Data
 
-```
+```text
 Create/Update: User ID match + validUserData()
 Read: User OR same team member
 Delete: User ID match
@@ -147,14 +147,14 @@ Validation:
 
 #### 3. **user/{userId}** - UI Preferences
 
-```
+```text
 Permissions: Read/Write only by user
 Usage: Store UI settings, preferences
 ```
 
 #### 4. **token/{tokenId}** - API Tokens
 
-```
+```text
 Create: User owns token + required fields present
 Read: Token owner only
 Update: Owner only, limited to 'calls' and 'note' fields
@@ -164,7 +164,7 @@ Protected Fields: owner, permissions, createdAt (immutable after creation)
 
 #### 5. **team/{teamId}** - Team Information
 
-```
+```text
 Create: User is owner + valid structure + max members ≤ 50
 Read: Team members or owner
 Update: 
@@ -264,7 +264,7 @@ sanitized.replace(/[<>"'&]/g, '')
 
 ---
 
-## 5. Rate Limiting & Abuse Protection
+## 5. Rate-Limiting & Abuse Protection
 
 **File**: `/functions/src/middleware/abuseGuard.ts`
 
@@ -272,7 +272,7 @@ sanitized.replace(/[<>"'&]/g, '')
 
 #### Configuration (Environment Variables)
 
-```
+```text
 ABUSE_GUARD_WINDOW_MS: 10,000ms (1-60s range)
 ABUSE_GUARD_THRESHOLD: 150 requests (20-2000 range)
 ABUSE_GUARD_WARN_RATIO: 0.8 (80% threshold triggers warning)
@@ -311,7 +311,7 @@ ABUSE_GUARD_PATH_PREFIXES: /api/progress,/api/team
 
 #### Dangerous Pattern Detection
 
-```
+```text
 1. 'null' origin (sandboxed iframes)
 2. 'file:' protocol (file:// local access)
 3. localhost / 127.0.0.1 (loopback, dev-only)
@@ -328,7 +328,7 @@ ABUSE_GUARD_PATH_PREFIXES: /api/progress,/api/team
 
 #### CORS Header Configuration
 
-```
+```text
 Access-Control-Allow-Origin: Validated origin or wildcard
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
 Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
@@ -337,7 +337,7 @@ Vary: Origin (cache awareness)
 
 #### Express CORS Middleware
 
-```
+```text
 credentials: false (Bearer tokens don't use cookies)
 optionsSuccessStatus: 200 (handle OPTIONS preflight)
 methods: GET, POST, PUT, DELETE, OPTIONS
@@ -397,6 +397,7 @@ validateImportData(jsonString):
 ## 8. Data Flow Diagram
 
 ```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                     FRONTEND (Vue 3 + Firebase)                  │
 │                                                                   │
@@ -517,7 +518,7 @@ validateImportData(jsonString):
    - Proper Authorization header format validation
    - Cryptographically secure generation
 
-3. **Rate Limiting**
+3. **Rate-Limiting**
    - Configurable thresholds via environment variables
    - Per-token AND per-IP tracking
    - Progressive enforcement (warning → blocking)
@@ -587,7 +588,7 @@ validateImportData(jsonString):
 
 ### 12.2 Defense-in-Depth Notes
 
-1. **If Rate Limiting Fails**: API throttling may still protect via Firebase quota
+1. **If Rate-Limiting Fails**: API throttling may still protect via Firebase quota
 2. **If Token Leaked**: Revocation via Firestore delete, checked on each request
 3. **If Auth Bypassed**: Firestore rules still enforce ownership checks
 4. **If Input Validation Fails**: Firestore rules validate gameMode structure
@@ -611,7 +612,7 @@ validateImportData(jsonString):
 5. ✅ **Audit Logging**: Operations logged with user context
 6. ✅ **Error Handling**: Consistent, sanitized responses
 7. ✅ **Token Management**: Secure generation, revocation, immutable creation
-8. ✅ **Rate Limiting**: Configurable, progressive, with history tracking
+8. ✅ **Rate-Limiting**: Configurable, progressive, with history tracking
 9. ✅ **Input Sanitization**: HTML chars removed, strings trimmed
 10. ✅ **Type Safety**: TypeScript enums prevent invalid values
 

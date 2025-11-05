@@ -34,6 +34,7 @@
     "clean": "shx rm -rf firebase-export-* *-debug.log firebase-debug*.log",
     "deps": "npx taze --r --I",
     "lint:md": "markdownlint \"**/*.md\"",
+    "lint:md:fix": "markdownlint --fix \"**/*.md\"",
     "lint:md:json": "markdownlint --json \"**/*.md\""
   },
   "devDependencies": {
