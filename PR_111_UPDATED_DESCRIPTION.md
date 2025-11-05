@@ -12,6 +12,8 @@ This PR represents a **major-integration branch** reconciling multiple feature s
 
 ### 🏗️ **Infrastructure & Dependencies** (Medium Risk)
 
+### 🏗️ **Infrastructure & Dependencies** (Medium Risk)
+
 - Firebase 12 upgrade with breaking changes migration
 - Dependency updates (ESLint, TypeScript, build tools)
 - Emulator wrapper with automatic cleanup
@@ -67,7 +69,7 @@ This PR represents a **major-integration branch** reconciling multiple feature s
 
 - Scheduled Tarkov data sync with sharding
 - Token inactivity expiration system
-- Rate limiting infrastructure
+- Rate-limiting infrastructure
 - LRU cache implementation
 - Team management refactoring
 

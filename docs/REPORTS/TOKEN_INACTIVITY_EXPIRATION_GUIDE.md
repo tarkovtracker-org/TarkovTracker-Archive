@@ -954,7 +954,7 @@ export const notifyExpiringTokens = onSchedule({
 });
 ```
 
-**⚠️ Important: Composite Index Required**
+### ⚠️ Important: Composite Index Required
 
 This query combines `where('revoked', '==', false)` and `where('lastUsed', '<', ...)` which requires a composite index in Firestore. Before deploying this function:
 
