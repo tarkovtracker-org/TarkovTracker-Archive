@@ -286,9 +286,8 @@ Main Container (#tracker-page-background-blur)
 **Phase 3 — Verification & Audit:**
 - [ ] 8. Test with 482 tasks
 - [ ] 9. Test with various counts
-- [ ] 10. Lighthouse audit
-*One-line description: Validate performance improvements and measure final metrics.*
 - [ ] 10. Run Lighthouse audit to confirm improvements
+*One-line description: Validate performance improvements and measure final metrics.*
 
 ---
 

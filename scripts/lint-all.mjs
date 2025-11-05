@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-env node */
 
 import { spawnSync } from 'node:child_process';
 
@@ -20,16 +21,28 @@ let didFail = false;
 for (const { label, command } of tasks) {
   console.log(`\n▶ ${label}`);
 
-  const { status } = spawnSync(command[0], command.slice(1), {
+  const result = spawnSync(command[0], command.slice(1), {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });
+  const { status, error } = result;
 
   if (status === 0) {
     console.log(`✔ ${label} passed`);
   } else {
     didFail = true;
-    console.error(`✖ ${label} failed (exit code ${status ?? 'unknown'})`);
+    const exitCode = status ?? 'unknown';
+    let message = `✖ ${label} failed (exit code ${exitCode})`;
+
+    if (status == null && error) {
+      const detail = error.message ?? String(error);
+      message += ` - spawn error: ${detail}`;
+    } else if (error) {
+      const detail = error.message ?? String(error);
+      message += ` - error: ${detail}`;
+    }
+
+    console.error(message);
   }
 }
 

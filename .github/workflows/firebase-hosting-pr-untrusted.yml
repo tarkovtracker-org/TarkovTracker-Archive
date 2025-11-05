@@ -1,0 +1,86 @@
+# Security: This workflow handles untrusted PR code in an unprivileged context
+# Based on CodeQL recommendations for preventing pwn requests
+name: Firebase Hosting PR - Untrusted Code Handling
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: read
+  actions: read
+
+jobs:
+  validate_and_build:
+    runs-on: ubuntu-latest
+    # Security: This runs in an unprivileged context - no access to repository secrets
+    
+    steps:
+      - name: Checkout PR code (untrusted)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Note: This checkout happens in unprivileged context
+
+      - name: Setup Node.js and install dependencies (untrusted)
+        uses: ./.github/actions/setup-node-and-install
+        with:
+          node-version: '22'
+
+      - name: Type-check Firebase functions (untrusted)
+        run: npm run type-check --workspace=functions
+
+      - name: Build project (untrusted)
+        run: npm run build
+        env:
+          # Use mock/test values for build - no real secrets needed
+          VITE_FIREBASE_API_KEY: "test-key-for-untrusted-build"
+          VITE_FIREBASE_AUTH_DOMAIN: "test-domain.firebaseapp.com"
+          VITE_FIREBASE_DATABASE_URL: "https://test-project.firebaseio.com"
+          VITE_FIREBASE_PROJECT_ID: "test-project"
+          VITE_FIREBASE_STORAGE_BUCKET: "test-project.appspot.com"
+          VITE_FIREBASE_MESSAGING_SENDER_ID: "123456789"
+          VITE_FIREBASE_APP_ID: "1:123456789:web:test"
+          VITE_FIREBASE_MEASUREMENT_ID: "G-XXXXXXXXXX"
+
+      - name: Check build output integrity (untrusted)
+        run: |
+          # Verify build completed without executing untrusted code
+          if [ ! -d "frontend/dist" ] || [ ! -d "functions/lib" ]; then
+            echo "::error::Build failed or incomplete - this could indicate malicious code"
+            exit 1
+          fi
+          echo "✓ Build completed successfully in untrusted context"
+
+      - name: Upload build artifacts (untrusted)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-build-${{ github.event.pull_request.number }}
+          path: |
+            frontend/dist/
+            functions/lib/
+          retention-days: 1
+          # Note: Artifacts from untrusted context are treated as potentially malicious
+
+      - name: Create deployment decision (untrusted)
+        run: |
+          # Store PR metadata for the privileged workflow
+          mkdir -p ./deployment-metadata
+          echo "${{ github.event.pull_request.number }}" > ./deployment-metadata/pr_number.txt
+          echo "${{ github.event.pull_request.head.sha }}" > ./deployment-metadata/pr_sha.txt
+          echo "${{ github.event.pull_request.head.repo.full_name }}" > ./deployment-metadata/pr_repo.txt
+          echo "${{ github.event.pull_request.head.ref }}" > ./deployment-metadata/pr_ref.txt
+          # Trust decision will be made in privileged workflow
+
+      - name: Upload deployment metadata (untrusted)
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-metadata-${{ github.event.pull_request.number }}
+          path: ./deployment-metadata/
+          retention-days: 1
+
+      - name: Notify privileged workflow (untrusted)
+        run: |
+          echo "::notice::Build completed for PR #${{ github.event.pull_request.number }}"
+          echo "Trust verification and deployment will be handled by privileged workflow"

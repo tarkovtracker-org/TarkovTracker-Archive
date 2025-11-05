@@ -217,6 +217,19 @@ Test on throttled connections:
 - [ ] Slow 3G (font-display: optional behavior)
 - [ ] Offline (skeleton loader fallback)
 
+### 6. CSS Containment Validation
+
+Verify that `contain: layout style paint` on task cards doesn't break interactive elements:
+
+- [ ] Task card tooltips appear correctly (not clipped)
+- [ ] Context menus/dropdowns render above adjacent cards
+- [ ] Modal overlays open from task cards (z-index behavior)
+- [ ] Focus states work on interactive elements (buttons, links)
+- [ ] Hover states trigger properly on contained elements
+- [ ] Absolutely positioned children remain visible
+
+**Note:** CSS containment can create new stacking contexts. Test any popovers, tooltips, or modals that rely on breaking out of their parent container.
+
 ---
 
 ## Next Steps (If Needed)

@@ -20,10 +20,9 @@ function findProjectRoot(startDir: string, markerFile: string): string | null {
 }
 const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
 if (!projectRoot) {
-  console.error(
-    "Failed to find project root. Make sure 'LICENSE.md' exists at the root of your project."
+  throw new Error(
+    "Failed to find project root: make sure 'LICENSE.md' exists at the project root."
   );
-  process.exit(1);
 }
 const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
 const swaggerOptions: swaggerJsdoc.Options = {
