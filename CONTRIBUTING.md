@@ -42,6 +42,18 @@ The guidelines below explain how to participate effectively and respectfully. If
 
 Maintainers will review submissions for correctness, accessibility, performance, and adherence to the project style. Expect constructive feedback and iterate as needed. Merge is performed by a maintainer after approval.
 
+## Code review format
+
+This repository uses GitHub Copilot and Claude Code for automated code reviews. Reviews follow an aggregated issue list format defined in [`.github/copilot-instructions.md`](.github/copilot-instructions.md) that:
+
+- **Provides a single consolidated review** instead of multiple scattered comments
+- **Uses categorized sections**: Critical Issues → Suggestions → Warnings → Good Practices
+- **Includes file references** in the format `path/to/file.ext:line` for easy IDE navigation
+- **Copy-paste friendly** for sharing with local AI agents, IDEs, or issue trackers
+- **Includes code examples** showing both issues and suggested fixes
+
+This format minimizes PR comment sprawl and makes it easier to track and address feedback systematically. When performing manual code reviews, maintainers are encouraged to follow this format for consistency.
+
 ## Coding standards
 - **Language & stack** – TypeScript is preferred across both the Vue frontend and Firebase functions. Avoid introducing plain JavaScript unless necessary.
 - **Formatting** – Prettier is configured through `npm run format`. Do not reformat unrelated files.
