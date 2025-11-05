@@ -34,7 +34,7 @@ for (const { label, command } of tasks) {
     const exitCode = status ?? 'unknown';
     let message = `✖ ${label} failed (exit code ${exitCode})`;
 
-    if (status == null && error) {
+    if ((status === null || status === undefined) && error) {
       const detail = error.message ?? String(error);
       message += ` - spawn error: ${detail}`;
     } else if (error) {
