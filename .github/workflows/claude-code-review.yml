@@ -27,12 +27,22 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
-            Please review this pull request and provide feedback on:
+            Please review this pull request following the aggregated issue list format specified in .github/copilot-instructions.md.
+            
+            Provide feedback on:
             - Code quality and best practices
             - Potential bugs or issues
             - Performance considerations
             - Security concerns
             - Test coverage
+            
+            IMPORTANT: Follow the review format requirements from .github/copilot-instructions.md:
+            - Provide ONE consolidated review comment (not multiple scattered comments)
+            - Use the categorized format: Critical Issues → Suggestions → Warnings → Good Practices
+            - Include file references in the format: path/to/file.ext:line
+            - Make all feedback copy-paste friendly for local agents and IDEs
+            - Include code examples and rationale for each issue
+            
             Use the repository's CLAUDE.md for guidance on style and conventions. Be constructive and helpful in your feedback.
             Use `gh pr comment` with your Bash tool to leave your review as a comment on the PR.
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
