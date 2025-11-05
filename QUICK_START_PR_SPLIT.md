@@ -32,6 +32,8 @@ Your PR #111 has **187 commits** - too large to review safely. These scripts spl
 | **3** | Refactoring | ⚠️⚠️ Medium | 90 min | Third |
 | **4** | New features | ⚠️⚠️⚠️ High | 2 hours | Fourth |
 
+*Estimates are approximate and may vary by project or team complexity.*
+
 ---
 
 ## Why This Helps
