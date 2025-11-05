@@ -608,7 +608,7 @@ REDUCE SOLO BURDEN
 5. Implement fallback to direct API if cache is stale/missing
 6. Add loading states for perceived performance
 7. Test and measure performance improvement
-  8. Document the caching architecture for future maintainers
+8. Document the caching architecture for future maintainers
 
 ##### Resources Needed
 - Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)
