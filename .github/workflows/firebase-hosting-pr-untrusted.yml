@@ -64,13 +64,18 @@ jobs:
           # Note: Artifacts from untrusted context are treated as potentially malicious
 
       - name: Create deployment decision (untrusted)
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           # Store PR metadata for the privileged workflow
           mkdir -p ./deployment-metadata
-          echo "${{ github.event.pull_request.number }}" > ./deployment-metadata/pr_number.txt
-          echo "${{ github.event.pull_request.head.sha }}" > ./deployment-metadata/pr_sha.txt
-          echo "${{ github.event.pull_request.head.repo.full_name }}" > ./deployment-metadata/pr_repo.txt
-          echo "${{ github.event.pull_request.head.ref }}" > ./deployment-metadata/pr_ref.txt
+          echo "$PR_NUMBER" > ./deployment-metadata/pr_number.txt
+          echo "$PR_SHA" > ./deployment-metadata/pr_sha.txt
+          echo "$PR_REPO" > ./deployment-metadata/pr_repo.txt
+          echo "$PR_REF" > ./deployment-metadata/pr_ref.txt
           # Trust decision will be made in privileged workflow
 
       - name: Upload deployment metadata (untrusted)
