@@ -33,9 +33,9 @@
     "test:functions": "npm run test --workspace=functions",
     "clean": "shx rm -rf firebase-export-* *-debug.log firebase-debug*.log",
     "deps": "npx taze --r --I",
-    "lint:md": "markdownlint \"**/*.md\"",
-    "lint:md:fix": "markdownlint --fix \"**/*.md\"",
-    "lint:md:json": "markdownlint --json \"**/*.md\""
+    "lint:md": "markdownlint --ignore-path .markdownlintignore \"**/*.md\"",
+    "lint:md:fix": "markdownlint --ignore-path .markdownlintignore --fix \"**/*.md\"",
+    "lint:md:json": "markdownlint --ignore-path .markdownlintignore --json \"**/*.md\""
   },
   "devDependencies": {
     "@types/swagger-ui": "^5.21.1",
