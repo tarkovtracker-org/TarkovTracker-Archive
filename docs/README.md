@@ -77,8 +77,10 @@ docs/
 ### External Resources
 
 - **GitHub Repository:**
-  [TarkovTracker/TarkovTracker](https://github.com/TarkovTracker/TarkovTracker)
-- **Live Application:** [TarkovTracker.app](https://tarkovtracker.app)
+  [tarkovtracker-org/TarkovTracker](https://github.com/tarkovtracker-org/TarkovTracker)
+- **Live Application:** [TarkovTracker.org](https://tarkovtracker.org)
+- **Original Project (historical reference):**
+  [TarkovTracker.io](https://tarkovtracker.io)
 - **API Documentation:** [Generated OpenAPI Spec](../functions/openapi/openapi.json)
 
 ## 📝 Documentation Guidelines

@@ -95,7 +95,7 @@ The root `package.json` exposes helpful scripts for daily development:
 | `npm run dev:full` | Starts frontend + Firebase backend emulators. |
 | `npm run dev:firebase` | Builds everything + starts all emulators including hosting. |
 | `npm run build` | Builds both frontend and functions. |
-| `npm run lint` | Runs ESLint and TypeScript checks across the monorepo. |
+| `npm run lint` | Runs the lint orchestrator (ESLint, TypeScript type-checks, markdownlint). |
 | `npm run format` | Formats the codebase using Prettier. |
 | `npm run docs` | Builds functions + generates API docs. |
 | `npm run test` | Runs all tests (frontend + functions). |

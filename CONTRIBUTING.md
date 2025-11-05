@@ -29,7 +29,7 @@ The guidelines below explain how to participate effectively and respectfully. If
 4. **Make your changes** in small, logically grouped commits. Keep unrelated changes in separate pull requests.
 5. **Write or update tests/docs** when applicable. Documentation updates are expected for user-facing changes.
 6. **Run quality checks** before submitting your pull request:
-   - `npm run lint`
+   - `npm run lint` (runs ESLint, TypeScript type-checks, markdownlint)
    - `npm run format` (if files need formatting)
    - `npm run build`
 7. **Open a pull request** targeting the `main` branch and fill in the template completely. Reference related issues with `Fixes #<issue-number>` when appropriate.
@@ -50,7 +50,7 @@ Maintainers will review submissions for correctness, accessibility, performance,
 
 - **Language & stack** – TypeScript is preferred across both the Vue frontend and Firebase functions. Avoid introducing plain JavaScript unless necessary.
 - **Formatting** – Prettier is configured through `npm run format`. Do not reformat unrelated files.
-- **Linting** – Follow ESLint rules enforced via `npm run lint`. Address warnings unless explicitly waived by maintainers.
+- **Linting** – Follow the lint orchestrator (`npm run lint`) which covers ESLint, TypeScript type-checks, and markdownlint. Address warnings unless explicitly waived by maintainers.
 - **Testing** – Add or update automated tests once they are available. Until then, include manual testing steps in the PR description.
 - **Dependencies** – Introduce new dependencies sparingly. Justify additions in the pull request and ensure licenses are compatible with GPLv3.
 
