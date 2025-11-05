@@ -29,24 +29,22 @@ const tasks = [
     label: 'functions type-check',
     command: ['npm', 'run', 'type-check', '--workspace=functions'],
   },
-  { label: 'markdownlint', command: ['npm', 'run', 'lint:md'] },
+  {
+    label: 'markdownlint',
+    command: ['npm', 'run', 'lint:md'],
+    requiresScript: 'lint:md'
+  },
 ];
 
 let didFail = false;
 
-for (const { label, command } of tasks) {
+for (const { label, command, requiresScript } of tasks) {
   console.log(`\n▶ ${label}`);
 
-  if (
-    label === 'markdownlint' &&
-    command[0] === 'npm' &&
-    command[1] === 'run' &&
-    command[2] === 'lint:md' &&
-    !rootScripts['lint:md']
-  ) {
+  if (requiresScript && !rootScripts[requiresScript]) {
     didFail = true;
     console.error(
-      '✖ markdownlint skipped: root package.json is missing the lint:md script.'
+      `✖ ${label} skipped: root package.json is missing the ${requiresScript} script.`
     );
     continue;
   }

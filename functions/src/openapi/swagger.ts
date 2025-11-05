@@ -20,8 +20,19 @@ function findProjectRoot(startDir: string, markerFile: string): string | null {
 }
 const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
 if (!projectRoot) {
+  const searchedDirs = [__dirname];
+  let currentDir = __dirname;
+  while (true) {
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break;
+    searchedDirs.push(parentDir);
+    currentDir = parentDir;
+  }
   throw new Error(
-    "Failed to find project root: make sure 'LICENSE.md' exists at the project root."
+    `Failed to find project root: 'LICENSE.md' not found in any parent directory.\n` +
+    `Searched directories (from ${__dirname} upwards):\n` +
+    searchedDirs.map(dir => `  - ${dir}`).join('\n') + '\n' +
+    `Ensure LICENSE.md exists at the project root.`
   );
 }
 const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
