@@ -29,7 +29,6 @@ This document tracks active technical debt items requiring architectural refacto
 
 **Target Structure:**
 
-
 ```text
 functions/src/progress/
 ├── interfaces/

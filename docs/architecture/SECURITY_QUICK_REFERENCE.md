@@ -67,9 +67,9 @@ Token can have any combination: `['GP']`, `['GP', 'WP']`, `['TP']`, etc.
 ```
 
 **Key Config**:
-- Default window: 10 seconds
-- Default threshold: 150 requests
-- Default breach limit: 2 consecutive
+- Default 10-second window
+- Default 150-request threshold
+- Default two-consecutive-breach limit
 
 ---
 
@@ -295,4 +295,3 @@ NODE_ENV=development|production
 - **Visual Summary**: See `SECURITY_SUMMARY.txt`
 - **CORS Details**: See `CORS_SECURITY.md`
 - **Code**: `/functions/src/middleware/`, `/functions/src/services/`
-
