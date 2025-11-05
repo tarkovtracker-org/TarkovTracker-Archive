@@ -18,7 +18,6 @@ import {
   zhHans as vuetifyZh,
 } from 'vuetify/locale';
 
-// @ts-expect-error - Assuming messages are untyped or need specific setup
 import messages from '@intlify/unplugin-vue-i18n/messages';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
