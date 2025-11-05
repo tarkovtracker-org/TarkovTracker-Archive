@@ -110,6 +110,20 @@ export default [
       'no-console': 'off',
     },
   },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
   // Apollo config (CommonJS)
   {
     files: ['apollo.config.js'],

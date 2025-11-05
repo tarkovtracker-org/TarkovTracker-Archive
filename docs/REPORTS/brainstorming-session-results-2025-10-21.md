@@ -223,9 +223,9 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Priority: Implement testing infrastructure first
    - Can optimize/consolidate testing approaches later
 
-#### Key Insight
+#### Key Insight (SCAMPER - Combine): Combination opportunities are limited
 
-"Combination opportunities are limited - more about ELIMINATION of duplicates than merging."
+Combination opportunities are limited; focus on eliminating duplicates rather than merging.
 
 ### A - ADAPT: What patterns from other projects to borrow?
 
@@ -235,9 +235,9 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Want: Automated testing, building, deployment, quality checks
    - Benefit: Confidence in changes, faster iteration, contributor safety net
 
-#### Key Insight
+#### Key Insight (SCAMPER - Adapt): CI/CD is the missing professional infrastructure
 
-"CI/CD is the missing professional infrastructure - would provide automation and confidence currently lacking."
+CI/CD would provide the automation and confidence the project currently lacks.
 
 #### M - MODIFY: What to adjust or tweak in existing code?
 
@@ -258,9 +258,9 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Better documentation for new contributors
    - Make it EASY for others to help
 
-#### Key Insight
+#### Key Insight (SCAMPER - Modify): Target reduction and improvement
 
-"Modifications focus on REDUCTION (comments, complexity, barriers) and IMPROVEMENT (performance, organization, DX)."
+Modifications prioritize reducing comments, complexity, and barriers while improving performance, organization, and DX.
 
 #### P - PUT TO OTHER USE: Repurpose existing pieces?
 
@@ -290,9 +290,9 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Keep only where needed for readability
    - Tighten up code density
 
-#### Key Insight
+#### Key Insight (SCAMPER - Eliminate): Biggest wins come from removing friction
 
-"ELIMINATION is where the biggest wins are - removing friction, bloat, and barriers."
+Elimination efforts deliver the biggest wins by removing friction, bloat, and barriers.
 
 #### R - REVERSE/REARRANGE: Flip the approach or reorder?
 
@@ -316,9 +316,9 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Depends on performance impact
    - "If it works, it works" - test and measure
 
-#### Key Insight
+#### Key Insight (SCAMPER - Reverse): Invert friction points to relieve friction
 
-"REVERSALS focus on inverting friction points - generate instead of write, mock instead of require, cache instead of fetch."
+Reversals center on inverting friction points: generate instead of write, mock instead of require, cache instead of fetch.
 
 ---
 
@@ -372,9 +372,9 @@ Every identified improvement is achievable with zero budget:
 - ✅ Documentation generation - TypeDoc or similar (free)
 - ✅ Dependency cleanup - Free
 
-#### Key Insight
+#### Key Insight (Constraint - Budget): Time and knowledge are the real limits
 
-"Budget is NOT the constraint - time and knowledge are the constraints."
+Budget is not the constraint; time and knowledge are.
 
 #### Question 3: If you could only work solo (no contributors for six months), what focus?
 
@@ -389,9 +389,9 @@ Reality check:
 - Broke a lot of stuff along the way (no test safety net)
 - Solo maintenance fatigue is real
 
-#### Key Insight
+#### Key Insight (Constraint - Solo Work): Prioritize escaping solo maintenance
 
-"The solo grind is unsustainable - you've BEEN doing solo for a year. The real question is: how do you STOP being solo?"
+The solo grind is unsustainable; focus on making it easier for others to help.
 
 This reframes everything:
 
@@ -426,9 +426,9 @@ Both are:
 - Infrastructure work (unglamorous but essential)
 - Things that compound over time (investment pays back)
 
-#### Key Insight
+#### Key Insight (Magic Wand): Infrastructure outranks framework swaps
 
-"The framework doesn't matter - CI/CD and tests matter. Stop wishing for React; wish for infrastructure that makes Vue maintainable."
+Framework choice is secondary; invest in CI/CD and tests to make Vue maintainable.
 
 ---
 
