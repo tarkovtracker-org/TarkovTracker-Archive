@@ -105,7 +105,7 @@
         // Start minimum duration timer
         skeletonTimerId = setTimeout(() => {
           skeletonTimerId = null;
-        }, MIN_SKELETON_DURATION);
+        }, SKELETON_CONFIG.MIN_SKELETON_DURATION);
       } else if (!newLoading && oldLoading) {
         // Clear existing cleanup timer if any
         if (cleanupTimerId) {
@@ -117,7 +117,7 @@
           cleanupTimerId = setTimeout(() => {
             cleanupTimerId = null;
             isInitialLoading.value = false;
-          }, MIN_SKELETON_DURATION);
+          }, SKELETON_CONFIG.MIN_SKELETON_DURATION);
         } else {
           isInitialLoading.value = false;
         }
