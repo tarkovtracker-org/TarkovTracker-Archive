@@ -229,7 +229,7 @@ rg "console\.(log|warn|error|debug)" functions/src/ \
 
 **Step 2: AST-Based Replacement**
 
-Use `ts-morph` or TypeScript compiler API to programmatically change only real call expressions (skip literals, comments, templates):
+Use `ts-morph` or TypeScript compiler API to programmatically change only real call expressions (skip literals, comments, templates). The snippet below is TypeScript:
 
 ```typescript
 // Example using ts-morph

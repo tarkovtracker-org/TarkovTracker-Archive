@@ -593,89 +593,92 @@ REDUCE SOLO BURDEN
 
 #### #1 Priority: Connect Firebase Cached Tarkov.dev Data
 
-- **Rationale:**
-  - Biggest user-facing performance impact
-  - Infrastructure 90% built - scheduled function already fetches data daily
-  - Just needs frontend connection to cached data
-  - Quick win that users will immediately feel
-  - Every user on every load currently waits for API call
+##### Rationale
+- Biggest user-facing performance impact
+- Infrastructure 90% built - scheduled function already fetches data daily
+- Just needs frontend connection to cached data
+- Quick win that users will immediately feel
+- Every user on every load currently waits for API call
 
-- **Next steps:**
-  1. Verification — Owner: Backend lead (TT Core Team). Confirm where the scheduled Cloud Function persists Tarkov.dev data (Firestore vs Storage), validate schema/retention/freshness, and ensure frontend read permissions with expected latency (<200ms). Gate: only continue to steps 2-8 after acceptance criteria met. Acceptance criteria: storage location and schema documented, retention/freshness proven via latest run logs, and frontend read path validated in emulator + staging with latency measurement captured. Success measured by archived verification notes and latency report linked in project tracker.
-  2. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
-  3. Identify where frontend currently calls Tarkov.dev API directly
-  4. Replace direct API calls with Firebase cache reads
-  5. Implement fallback to direct API if cache is stale/missing
-  6. Add loading states for perceived performance
-  7. Test and measure performance improvement
+##### Next Steps
+1. Verification — Owner: Backend lead (TT Core Team). Confirm where the scheduled Cloud Function persists Tarkov.dev data (Firestore vs Storage), validate schema/retention/freshness, and ensure frontend read permissions with expected latency (<200ms). Gate: only continue to steps 2-8 after acceptance criteria met. Acceptance criteria: storage location and schema documented, retention/freshness proven via latest run logs, and frontend read path validated in emulator + staging with latency measurement captured. Success measured by archived verification notes and latency report linked in project tracker.
+2. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
+3. Identify where frontend currently calls Tarkov.dev API directly
+4. Replace direct API calls with Firebase cache reads
+5. Implement fallback to direct API if cache is stale/missing
+6. Add loading states for perceived performance
+7. Test and measure performance improvement
   8. Document the caching architecture for future maintainers
 
-- **Resources needed:**
-  - Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)
-  - Firebase documentation for reading cached data
-  - Testing with real users to validate performance gains
-  - Zero financial cost (all on Firebase free tier)
+##### Resources Needed
+- Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)
+- Firebase documentation for reading cached data
+- Testing with real users to validate performance gains
+- Zero financial cost (all on Firebase free tier)
 
-- **Timeline:** 2-4 weeks (30 days max)
+##### Timeline
+2-4 weeks (30 days max)
 
 ---
 
 #### #2 Priority: Eliminate Firebase Emulator / Improve Contributor Onboarding
 
-- **Rationale:**
-  - >50% of contributor onboarding friction
-  - Java requirement and confusing setup scares away potential help
-  - Solo maintenance is unsustainable - need to enable contributors
-  - Frontend-only dev mode would let UI developers contribute without backend knowledge
-  - Unlocks ability to grow the contributor base
+##### Rationale
+- >50% of contributor onboarding friction
+- Java requirement and confusing setup scares away potential help
+- Solo maintenance is unsustainable - need to enable contributors
+- Frontend-only dev mode would let UI developers contribute without backend knowledge
+- Unlocks ability to grow the contributor base
 
-- **Next steps:**
-  1. Create frontend-only development mode with mocked backend
-  2. Stub out Firebase auth for local dev (fake login)
-  3. Mock Firestore responses with local JSON fixtures
-  4. Document "Quick Start" for frontend-only development
-  5. Keep emulator setup documented for backend work
-  6. Add clear separation: "Frontend dev" vs "Full-stack dev" paths
-  7. Update CONTRIBUTING.md with simplified onboarding
+##### Next Steps
+1. Create frontend-only development mode with mocked backend
+2. Stub out Firebase auth for local dev (fake login)
+3. Mock Firestore responses with local JSON fixtures
+4. Document "Quick Start" for frontend-only development
+5. Keep emulator setup documented for backend work
+6. Add clear separation: "Frontend dev" vs "Full-stack dev" paths
+7. Update CONTRIBUTING.md with simplified onboarding
 
-- **Resources needed:**
-  - Research Vue dev mode configuration options
-  - Create mock data fixtures for typical user scenarios
-  - Write clear contributor documentation
-  - Test with fresh contributor perspective (ask friend to try setup)
-  - Zero financial cost
+##### Resources Needed
+- Research Vue dev mode configuration options
+- Create mock data fixtures for typical user scenarios
+- Write clear contributor documentation
+- Test with fresh contributor perspective (ask friend to try setup)
+- Zero financial cost
 
-- **Timeline:** 4-6 weeks (after performance work)
+##### Timeline
+4-6 weeks (after performance work)
 
 ---
 
 #### #3 Priority: Implement CI/CD Pipeline
 
-- **Rationale:**
-  - Safety net for you and contributors
-  - Automated testing catches regressions before merge
-  - Reduces fear of breaking things during refactoring
-  - Professional infrastructure builds contributor confidence
-  - Compounds over time - every PR gets safer
-  - GitHub Actions free tier is generous
+##### Rationale
+- Safety net for you and contributors
+- Automated testing catches regressions before merge
+- Reduces fear of breaking things during refactoring
+- Professional infrastructure builds contributor confidence
+- Compounds over time - every PR gets safer
+- GitHub Actions free tier is generous
 
-- **Next steps:**
-  1. Set up GitHub Actions workflow for PR checks
-  2. Configure automated linting (ESLint already setup?)
-  3. Configure TypeScript type checking on CI
-  4. Add build verification (ensure project builds)
-  5. Integrate existing Vitest tests into CI
-  6. Add automated deployment to staging/production
-  7. Configure branch protection rules (require CI pass)
-  8. Document CI/CD setup for future modifications
+##### Next Steps
+1. Set up GitHub Actions workflow for PR checks
+2. Configure automated linting (ESLint already setup?)
+3. Configure TypeScript type checking on CI
+4. Add build verification (ensure project builds)
+5. Integrate existing Vitest tests into CI
+6. Add automated deployment to staging/production
+7. Configure branch protection rules (require CI pass)
+8. Document CI/CD setup for future modifications
 
-- **Resources needed:**
-  - GitHub Actions documentation
-  - Example Vue/Vite CI/CD configs to reference
-  - Time to debug CI environment differences
-  - Zero financial cost (GitHub Actions free tier)
+##### Resources Needed
+- GitHub Actions documentation
+- Example Vue/Vite CI/CD configs to reference
+- Time to debug CI environment differences
+- Zero financial cost (GitHub Actions free tier)
 
-- **Timeline:** 3-4 weeks (can overlap with #2)
+##### Timeline
+3-4 weeks (can overlap with #2)
 
 ## Reflection and Follow-up
 
@@ -716,18 +719,18 @@ For future brainstorming sessions:
 
 ### Next Session Planning
 
-- **Suggested topics:**
-  - Technical deep-dive: Firebase caching architecture investigation
-  - Contributor journey mapping: What does the ideal onboarding look like?
-  - Testing strategy: How to build test coverage incrementally
+#### Suggested Topics
+- Technical deep-dive: Firebase caching architecture investigation
+- Contributor journey mapping: What does the ideal onboarding look like?
+- Testing strategy: How to build test coverage incrementally
 
-- **Recommended timeframe:**
-  - After completing Priority #1 (performance fix) - ~30 days
-  - Celebrate the win, then brainstorm next phase
+#### Recommended Timeframe
+- After completing Priority #1 (performance fix) - ~30 days
+- Celebrate the win, then brainstorm next phase
 
-- **Preparation needed:**
-  - Document findings from Firebase caching investigation
-  - Measure actual performance improvements with metrics
+#### Preparation Needed
+- Document findings from Firebase caching investigation
+- Measure actual performance improvements with metrics
   - Collect any contributor feedback about onboarding pain points
   - List components >300 lines that need decomposition
 
