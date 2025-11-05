@@ -744,8 +744,7 @@ echo "=============================="
 
 # 1. Build check
 echo "📦 Building project..."
-npm run build > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if npm run build; then
   echo "✅ Build successful"
 else
   echo "❌ Build failed"
@@ -754,8 +753,7 @@ fi
 
 # 2. Test check
 echo "🧪 Running tests..."
-npm test -- --run > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if npm test -- --run; then
   echo "✅ Tests passing"
 else
   echo "❌ Tests failing"
@@ -764,8 +762,7 @@ fi
 
 # 3. Lint check
 echo "🔍 Linting code..."
-npm run lint > /dev/null 2>&1
-if [ $? -eq 0 ]; then
+if npm run lint; then
   echo "✅ No lint errors"
 else
   echo "⚠️  Lint warnings present"
@@ -773,11 +770,18 @@ fi
 
 # 4. Type check
 echo "📘 Type checking..."
-cd frontend && npm run type-check > /dev/null 2>&1
-if [ $? -eq 0 ]; then
-  echo "✅ No type errors"
+if pushd frontend > /dev/null; then
+  npm run type-check
+  TYPE_EXIT_CODE=$?
+  popd > /dev/null
+  if [ $TYPE_EXIT_CODE -eq 0 ]; then
+    echo "✅ No type errors"
+  else
+    echo "❌ Type errors found"
+    exit 1
+  fi
 else
-  echo "❌ Type errors found"
+  echo "❌ Unable to enter frontend directory"
   exit 1
 fi
 

@@ -9,6 +9,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
 ## 1. Security Frameworks & Libraries in Use
 
 ### Backend (Functions)
+
 - **Firebase Admin SDK** (`firebase-admin@^13.5.0`)
   - Handles Firebase authentication verification and token validation
   - Manages Firestore operations with admin privileges
@@ -24,6 +25,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
   - SHA-256 hashing for rate limiting key generation
 
 ### Frontend (Vue 3 SPA)
+
 - **Firebase JavaScript SDK** (`firebase@^12.5.0`)
   - Client-side authentication with Google and GitHub OAuth providers
   - Firestore client SDK with real-time listeners
@@ -34,6 +36,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
   - Input validation services (DataValidationService)
 
 ### Validation Libraries
+
 - **Custom Validation Service** (ValidationService.ts)
   - Type-safe parameter validation
   - Enum-based status validation
@@ -54,6 +57,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
 ```
 
 #### Bearer Token Flow
+
 1. Client sends: `Authorization: Bearer <token>`
 2. Middleware validates token format and extracts token string
 3. TokenService looks up token in Firestore `token` collection
@@ -70,6 +74,7 @@ TarkovTracker implements a **multi-layered security architecture** using Firebas
 **Source**: `/functions/src/services/TokenService.ts`
 
 #### Firebase ID Token Verification (Sensitive Operations)
+
 Used for account deletion (`requireRecentAuth` middleware):
 - Verifies Firebase ID token with revocation check
 - Checks authentication recency (within 5 minutes)
@@ -90,11 +95,13 @@ Used for account deletion (`requireRecentAuth` middleware):
 ### 2.3 Authorization Patterns
 
 #### Permission-Based Access Control
+
 - **Permissions**: `'GP'` (Get Progress), `'TP'` (Team Progress), `'WP'` (Write Progress)
 - **Middleware**: `requirePermission(permission)` factory function
 - **Validation**: Array membership check on token permissions
 
 **Routes with Permission Checks**:
+
 ```
 GET  /api/progress           → requires 'GP'
 GET  /api/team/progress      → requires 'TP'
@@ -103,6 +110,7 @@ POST /api/progress/task/:id  → requires 'WP'
 ```
 
 #### Role-Based Game Mode Restrictions
+
 - Tokens have `gameMode`: `'pvp'`, `'pve'`, or `'dual'`
 - Single-mode tokens enforce strict game mode
 - Dual-mode tokens allow query parameter override
@@ -117,6 +125,7 @@ POST /api/progress/task/:id  → requires 'WP'
 ### Database Collections & Access Control
 
 #### 1. **system/{userId}** - User System Data
+
 ```
 Permissions: Read/Write only by user
 Usage: Store team membership, tokens array
@@ -124,6 +133,7 @@ Protection: User ID ownership check
 ```
 
 #### 2. **progress/{userId}** - User Progress Data
+
 ```
 Create/Update: User ID match + validUserData()
 Read: User OR same team member
@@ -136,12 +146,14 @@ Validation:
 ```
 
 #### 3. **user/{userId}** - UI Preferences
+
 ```
 Permissions: Read/Write only by user
 Usage: Store UI settings, preferences
 ```
 
 #### 4. **token/{tokenId}** - API Tokens
+
 ```
 Create: User owns token + required fields present
 Read: Token owner only
@@ -151,6 +163,7 @@ Protected Fields: owner, permissions, createdAt (immutable after creation)
 ```
 
 #### 5. **team/{teamId}** - Team Information
+
 ```
 Create: User is owner + valid structure + max members ≤ 50
 Read: Team members or owner
@@ -164,6 +177,7 @@ Validation:
 ```
 
 ### Key Security Rules
+
 1. **Owner-based access**: Most resources check `request.auth.uid == resource.data.owner`
 2. **Team-based collaboration**: Members can read team progress
 3. **Field-level restrictions**: Certain fields (owner, createdAt) prevent updates
@@ -179,6 +193,7 @@ Validation:
 **File**: `/functions/src/services/ValidationService.ts`
 
 #### Type-Safe Validators
+
 ```typescript
 // Task Status Validation
 validateTaskStatus(status): 'completed' | 'failed' | 'uncompleted'
@@ -200,6 +215,7 @@ validateMultipleTaskUpdate(body): Array of { id, state } with min 1 item
 ```
 
 #### Request Body Validators
+
 1. **Task Updates**: Single task with state validation
 2. **Multiple Tasks**: Array validation with per-item checks
 3. **Objectives**: State and count validation (count must be non-negative integer)
@@ -208,6 +224,7 @@ validateMultipleTaskUpdate(body): Array of { id, state } with min 1 item
 ### 4.2 Sanitization Patterns
 
 **Display Names**:
+
 ```typescript
 // Remove potentially harmful characters
 sanitized.replace(/[<>"'&]/g, '')
@@ -254,6 +271,7 @@ sanitized.replace(/[<>"'&]/g, '')
 ### Rate Limiting Strategy
 
 #### Configuration (Environment Variables)
+
 ```
 ABUSE_GUARD_WINDOW_MS: 10,000ms (1-60s range)
 ABUSE_GUARD_THRESHOLD: 150 requests (20-2000 range)
@@ -265,17 +283,20 @@ ABUSE_GUARD_PATH_PREFIXES: /api/progress,/api/team
 ```
 
 #### Throttling Mechanism
+
 1. **Request Counting**: Tracks hits per token (hashed) or IP
 2. **Warning Phase**: At 80% of threshold, emits warning event
 3. **Blocking Phase**: On second consecutive breach, blocks for WINDOW_MS
 4. **Logging**: All violations logged to Firestore `rateLimitEvents` collection
 
 #### Cache Key Resolution (Priority Order)
+
 1. **Token-based**: Hash of Bearer token (if present)
 2. **IP-based**: X-Forwarded-For header or request IP
 3. **Skip**: If no identifier found
 
 #### Event Recording
+
 - Logs to Firestore with: type, method, path, tokenOwner, blockDuration, consecutiveBreaches
 - Firebase Functions logger captures real-time alerts
 - Development mode: all violations logged
@@ -289,6 +310,7 @@ ABUSE_GUARD_PATH_PREFIXES: /api/progress,/api/team
 ### Origin Validation Strategy
 
 #### Dangerous Pattern Detection
+
 ```
 1. 'null' origin (sandboxed iframes)
 2. 'file:' protocol (file:// local access)
@@ -300,10 +322,12 @@ ABUSE_GUARD_PATH_PREFIXES: /api/progress,/api/team
 ```
 
 #### Environment-Based Policy
+
 - **Production**: All suspicious origins blocked, whitelist disabled
 - **Development**: Localhost origins allowed, suspicious patterns warned
 
 #### CORS Header Configuration
+
 ```
 Access-Control-Allow-Origin: Validated origin or wildcard
 Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
@@ -312,6 +336,7 @@ Vary: Origin (cache awareness)
 ```
 
 #### Express CORS Middleware
+
 ```
 credentials: false (Bearer tokens don't use cookies)
 optionsSuccessStatus: 200 (handle OPTIONS preflight)
@@ -436,6 +461,7 @@ validateImportData(jsonString):
 ## 9. Secure Coding Patterns Used
 
 ### 9.1 Token Management
+
 - **Cryptographic Generation**: Uses `crypto.getRandomValues()` or `crypto.randomBytes()`
 - **Secure Storage**: Tokens stored as Firestore doc IDs (not readable in plain text)
 - **Token Versioning**: gameMode support, permissions array
@@ -443,18 +469,21 @@ validateImportData(jsonString):
 - **Revocation**: Simple deletion, checked on every request
 
 ### 9.2 Permission Enforcement
+
 - **Declarative**: `@requirePermission('GP')` middleware
 - **Consistent**: Array membership check across all handlers
 - **Typed**: Enum-like permission values
 - **Auditable**: Logged with owner and context
 
 ### 9.3 Database Operations
+
 - **Transactional**: TokenService uses `db.runTransaction()` for atomic updates
 - **Async Handlers**: `asyncHandler()` wrapper catches Promise rejections
 - **Error Propagation**: ApiError types bubble up properly
 - **Logging**: Operation context logged with user ID, not sensitive data
 
 ### 9.4 Input Validation
+
 - **Fail-Closed**: Invalid input returns 400 Bad Request
 - **Type-Safe**: TypeScript enums for status values
 - **Boundary Checking**: Range validation (level 1-79, edition 1-6)
@@ -462,12 +491,14 @@ validateImportData(jsonString):
 - **Trimming**: All strings trimmed, empty strings rejected
 
 ### 9.5 Error Handling
+
 - **Consistent Format**: All errors use ApiError class
 - **Precise Messages**: Error codes for client-side handling
 - **Debug Info**: Stack traces only in development
 - **Redaction**: Token strings partially logged (first 8 chars + '...')
 
 ### 9.6 Logging Practices
+
 - **User Context**: Logged with owner/user ID when available
 - **Sensitivity Aware**: No full tokens, passwords, or secrets logged
 - **Structured**: Firebase Functions logger with context objects
@@ -514,23 +545,27 @@ validateImportData(jsonString):
 ## 11. Data Protection Measures
 
 ### 11.1 Authentication Data
+
 - Passwords: Managed by Firebase Authentication (hashed, salted)
 - ID Tokens: Short-lived, verified with revocation check on sensitive ops
 - API Tokens: Document ID (not queryable directly, owner verified)
 
 ### 11.2 User Data (Firestore)
+
 - Progress: Encrypted at rest by Google Cloud (managed)
 - Team Info: Visible only to team members
 - Preferences: Private to user
 - Call Counts: Incremented asynchronously (eventual consistency acceptable)
 
 ### 11.3 Logging
+
 - Partial token hashes (first 8 chars + '...')
 - Error IDs (UUID format) for client reference
 - User IDs logged with operations for audit trail
 - Sensitive fields (passwords) never logged
 
 ### 11.4 Transport Security
+
 - HTTPS enforced (Firebase Hosting + Cloud Functions)
 - CORS validation prevents cross-origin abuse
 - Origin validation blocks private IPs in production
@@ -541,8 +576,9 @@ validateImportData(jsonString):
 ## 12. Potential Security Considerations
 
 ### 12.1 Current Protections
+
 - ✅ Bearer token validation on every request
-- ✅ Rate limiting with progressive enforcement
+- ✅ Rate-limiting with progressive enforcement
 - ✅ Firestore rules for data access control
 - ✅ Input validation (types, ranges, sanitization)
 - ✅ Permission-based authorization
@@ -550,6 +586,7 @@ validateImportData(jsonString):
 - ✅ Error handling with redaction
 
 ### 12.2 Defense Depth Notes
+
 1. **If Rate Limiting Fails**: API throttling may still protect via Firebase quota
 2. **If Token Leaked**: Revocation via Firestore delete, checked on each request
 3. **If Auth Bypassed**: Firestore rules still enforce ownership checks
@@ -557,6 +594,7 @@ validateImportData(jsonString):
 5. **If CORS Fails**: Browser enforces same-origin policy
 
 ### 12.3 Monitoring & Alerting
+
 - Rate limit events logged to Firestore for analysis
 - Firebase Functions logger captures all security events
 - Error responses include error IDs for debugging
@@ -582,6 +620,7 @@ validateImportData(jsonString):
 ## 14. Testing & Validation Coverage
 
 ### 14.1 Existing Tests
+
 - **Auth Middleware**: `/functions/test/middleware/auth.test.ts`
 - **Abuse Guard**: `/functions/test/middleware/abuseGuard.test.ts`
 - **Input Validation**: `/functions/test/` suite
@@ -589,6 +628,7 @@ validateImportData(jsonString):
 - **API Integration**: `/functions/test/apiv2.test.js`
 
 ### 14.2 Test Pattern
+
 - Unit tests for middleware behavior
 - Integration tests for full request flow
 - Mock Firebase Admin for isolated testing
@@ -602,7 +642,7 @@ TarkovTracker implements a **robust, multi-layered security architecture** that 
 - **Bearer token authentication** for API access
 - **Firestore rules** for database-level access control
 - **Input validation** at multiple stages (frontend, API, database)
-- **Rate limiting** with configurable thresholds
+- **Rate-limiting** with configurable thresholds
 - **CORS validation** with dangerous pattern detection
 - **Permission-based authorization** with three permission levels
 - **Comprehensive error handling** with proper status codes

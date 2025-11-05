@@ -78,11 +78,15 @@
     MIN_SKELETON_DURATION: 400, // Minimum time (ms) to show skeleton to avoid flicker
   };
 
+  const MIN_SKELETON_DURATION = SKELETON_CONFIG.MIN_SKELETON_DURATION;
+
   // Calculate dynamic skeleton count based on viewport height
   const calculateSkeletonCount = () => {
     if (typeof window === 'undefined') return SKELETON_CONFIG.MIN_SKELETONS;
     const viewportHeight = window.innerHeight;
-    const count = Math.ceil(viewportHeight / (SKELETON_CONFIG.CARD_HEIGHT + SKELETON_CONFIG.CARD_VERTICAL_SPACING));
+    const count = Math.ceil(
+      viewportHeight / (SKELETON_CONFIG.CARD_HEIGHT + SKELETON_CONFIG.CARD_VERTICAL_SPACING)
+    );
     return Math.max(SKELETON_CONFIG.MIN_SKELETONS, Math.min(SKELETON_CONFIG.MAX_SKELETONS, count));
   };
 

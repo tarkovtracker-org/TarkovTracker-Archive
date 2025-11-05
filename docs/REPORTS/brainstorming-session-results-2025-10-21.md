@@ -119,7 +119,7 @@ Current Stack Reality:
 - ✅ **Pinia + Firestore sync** - State management working
 - ⚠️ **Vitest** - Testing started but incomplete
 - ❌ **Vue/Vuetify** - Framework mismatch (you're a React developer)
-- ❌ **Firebase DX pain** - Java emulator is terrible, only using hosting/auth/cloud functions
+- ❌ **Firebase DX pain** - Java emulator is terrible, primarily relying on hosting, auth, cloud functions, and Firestore
 
 Stack Tension Points:
 
@@ -580,13 +580,14 @@ _Key realizations from the session_
   - Every user on every load currently waits for API call
 
 - **Next steps:**
-  1. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
-  2. Identify where frontend currently calls Tarkov.dev API directly
-  3. Replace direct API calls with Firebase cache reads
-  4. Implement fallback to direct API if cache is stale/missing
-  5. Add loading states for perceived performance
-  6. Test and measure performance improvement
-  7. Document the caching architecture for future maintainers
+  1. Verification — Owner: Backend lead (TT Core Team). Confirm where the scheduled Cloud Function persists Tarkov.dev data (Firestore vs Storage), validate schema/retention/freshness, and ensure frontend read permissions with expected latency (<200ms). Gate: only continue to steps 2-8 after acceptance criteria met. Acceptance criteria: storage location and schema documented, retention/freshness proven via latest run logs, and frontend read path validated in emulator + staging with latency measurement captured. Success measured by archived verification notes and latency report linked in project tracker.
+  2. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
+  3. Identify where frontend currently calls Tarkov.dev API directly
+  4. Replace direct API calls with Firebase cache reads
+  5. Implement fallback to direct API if cache is stale/missing
+  6. Add loading states for perceived performance
+  7. Test and measure performance improvement
+  8. Document the caching architecture for future maintainers
 
 - **Resources needed:**
   - Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)

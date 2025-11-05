@@ -87,8 +87,22 @@ describe('useTarkovTime', () => {
     const { tarkovTime } = mountUseTarkovTime();
     await nextTick();
 
-    // Should be 03:00 / 15:00 format
-    expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
+    const expectedTarkovTime = (() => {
+      const oneHourMs = 60 * 60 * 1000;
+      const timeAtTarkovSpeed = (midnightUTC.getTime() * 7) % (24 * oneHourMs);
+      const tarkovTimeObj = new Date(timeAtTarkovSpeed + 3 * oneHourMs);
+      const tarkovHour = tarkovTimeObj.getUTCHours();
+      const tarkovMinute = tarkovTimeObj.getUTCMinutes();
+      const tarkovSecondHour = (tarkovHour + 12) % 24;
+
+      return `${tarkovHour.toString().padStart(2, '0')}:${tarkovMinute
+        .toString()
+        .padStart(2, '0')} / ${tarkovSecondHour.toString().padStart(2, '0')}:${tarkovMinute
+        .toString()
+        .padStart(2, '0')}`;
+    })();
+
+    expect(tarkovTime.value).toBe(expectedTarkovTime);
   });
 
   it('handles time wraparound at 23:59 to 00:00', async () => {

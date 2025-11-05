@@ -77,7 +77,9 @@ export const backupLocalProgress = (data: ProgressData): void => {
 export const saveLocalProgress = (data: unknown): void => {
   try {
     const sanitizedData =
-      data && typeof data === 'object' ? sanitizeProgressData(data as Record<string, unknown>) : data;
+      data && typeof data === 'object'
+        ? sanitizeProgressData(data as Record<string, unknown>)
+        : data;
     localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(sanitizedData));
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local progress:', error);
@@ -87,7 +89,9 @@ export const saveLocalProgress = (data: unknown): void => {
 export const saveLocalUserState = (state: unknown): void => {
   try {
     const sanitizedState =
-      state && typeof state === 'object' ? sanitizeProgressData(state as Record<string, unknown>) : state;
+      state && typeof state === 'object'
+        ? sanitizeProgressData(state as Record<string, unknown>)
+        : state;
     localStorage.setItem(LOCAL_USER_STATE_KEY, JSON.stringify(sanitizedState));
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local user state:', error);

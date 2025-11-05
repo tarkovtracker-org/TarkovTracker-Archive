@@ -33,7 +33,7 @@ Welcome to the TarkovTracker user guides section. Here you'll find comprehensive
 
 ### Developers
 
-- [API Documentation](../../functions/openapi/openapi.json) - API reference
+- [API Documentation](../openapi.json) - API reference
 - [Contributing Guidelines](../../CONTRIBUTING.md) - How to contribute
 - [AI Assistant Guidelines](../../CLAUDE.md) - Identical AI development instructions (see also [AGENTS.md](../../AGENTS.md))
 

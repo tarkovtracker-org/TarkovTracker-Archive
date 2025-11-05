@@ -71,7 +71,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
       // If user is logged in, sync the gamemode change to backend
       if (fireuser.uid) {
         // Skip Firestore sync when dev auth is enabled
-        if (!isDevAuthEnabled) {
+        if (!isDevAuthEnabled()) {
           try {
             const userProgressRef = doc(firestore, 'progress', fireuser.uid);
             // Send complete state to satisfy Firestore security rules validation
@@ -107,7 +107,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
         this.$patch(migratedData);
 
         // If user is logged in, save the migrated structure to Firestore
-        if (fireuser.uid && !isDevAuthEnabled) {
+        if (fireuser.uid && !isDevAuthEnabled()) {
           try {
             const userProgressRef = doc(firestore, 'progress', fireuser.uid);
             setDoc(userProgressRef, migratedData);
@@ -126,7 +126,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
         const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
 
         // Only write to Firestore if dev auth is not enabled
-        if (!isDevAuthEnabled) {
+        if (!isDevAuthEnabled()) {
           const userProgressRef = doc(firestore, 'progress', fireuser.uid);
           await setDoc(userProgressRef, freshDefaultState);
         }
@@ -191,7 +191,7 @@ export const useTarkovStore = defineStore('swapTarkov', {
         const updateData = { [mode]: freshProgressData };
 
         // Only write to Firestore if dev auth is not enabled
-        if (!isDevAuthEnabled) {
+        if (!isDevAuthEnabled()) {
           const userProgressRef = doc(firestore, 'progress', fireuser.uid);
           await setDoc(userProgressRef, updateData, { merge: true });
         }

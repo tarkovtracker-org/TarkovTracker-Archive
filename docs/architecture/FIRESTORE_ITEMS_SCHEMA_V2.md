@@ -93,3 +93,4 @@ This operation should also be performed in batched chunks to respect Firestore l
 - This change is backward-incompatible. Any code that directly reads the `tarkovData/items` document expecting an `items` array will need to be updated to use the new subcollection pattern.
 - The composable `useFirestoreTarkovItems` has been updated and should be used for all future item data access to ensure consistency.
 - The `schemaVersion` field in the metadata document can be used by clients to detect the storage format and handle migrations if necessary, though the primary goal is for the composable to abstract this away.
+

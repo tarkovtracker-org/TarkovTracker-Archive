@@ -57,16 +57,16 @@
   import { useRoute } from 'vue-router';
   const route = useRoute();
   const currentPreloadLink = ref<HTMLLinkElement | null>(null);
-  const preloadBackgroundImage = (backgroundKey: unknown) => {
+  const preloadBackgroundImage = (backgroundKey: string | undefined) => {
     if (typeof document === 'undefined') {
       return;
     }
-    if (typeof backgroundKey !== 'string' || backgroundKey.length === 0) {
+    if (!backgroundKey?.length) {
       return;
     }
     // Remove previous preload link if it exists
-    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
-      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+    if (currentPreloadLink.value) {
+      currentPreloadLink.value.remove();
       currentPreloadLink.value = null;
     }
     const href = `/img/background/${backgroundKey}.webp`;
@@ -78,12 +78,14 @@
     document.head.appendChild(link);
     currentPreloadLink.value = link;
   };
+  const routeBackgroundKey = computed(() =>
+    typeof route.meta?.background === 'string' ? route.meta.background : undefined
+  );
   const backgroundImage = computed(() => {
-    if (route?.meta?.background) {
-      return `url(/img/background/${route.meta.background}.webp)`;
-    } else {
-      return '';
+    if (routeBackgroundKey.value) {
+      return `url(/img/background/${routeBackgroundKey.value}.webp)`;
     }
+    return '';
   });
   // const backgroundImage = computed(() => {
   //   if (route.meta.background) {
@@ -99,7 +101,7 @@
   const showBackToTop = ref(false);
   const backToTopThreshold = 400;
   watch(
-    () => route.meta?.background,
+    () => routeBackgroundKey.value,
     (newBackground) => {
       preloadBackgroundImage(newBackground);
     },
@@ -130,8 +132,8 @@
     }
     window.removeEventListener('scroll', handleScroll);
     // Cleanup preload link on component unmount
-    if (currentPreloadLink.value && currentPreloadLink.value.parentNode) {
-      currentPreloadLink.value.parentNode.removeChild(currentPreloadLink.value);
+    if (currentPreloadLink.value) {
+      currentPreloadLink.value.remove();
       currentPreloadLink.value = null;
     }
   });

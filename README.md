@@ -143,7 +143,7 @@ We welcome additional documentation improvements! Open an issue or pull request 
 - **Questions & ideas** – Use
   [GitHub Discussions](https://github.com/tarkovtracker-org/TarkovTracker/discussions) or open an
   issue.
-- **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) to coordinate
+- **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6) to coordinate
   raids, ask questions in real time, or hang out with fellow Tarkov fans.
 - **Bug reports** – File an issue with clear reproduction steps and screenshots/logs when possible.
 - **Security concerns** – Follow our [security policy](SECURITY.md) for responsible disclosure.

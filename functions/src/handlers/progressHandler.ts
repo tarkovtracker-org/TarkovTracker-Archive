@@ -3,16 +3,10 @@ import { ApiResponse, ApiToken } from '../types/api.js';
 import { ProgressService } from '../services/ProgressService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { createLazy } from '../utils/factory.js';
 
 // Lazy-initialized service instance to ensure Firebase Admin is initialized first
-let progressService: ProgressService | undefined;
-
-function getProgressService(): ProgressService {
-  if (!progressService) {
-    progressService = new ProgressService();
-  }
-  return progressService;
-}
+const getProgressService = createLazy(() => new ProgressService());
 
 // Enhanced request interface
 interface AuthenticatedRequest extends Request {

@@ -7,6 +7,7 @@ import tarkovDataQuery from '@/utils/tarkovdataquery';
 import tarkovHideoutQuery from '@/utils/tarkovhideoutquery';
 import fallbackMapsData from './maps.json';
 import { logger } from '@/utils/logger';
+import { LRUCache } from '@/utils/lruCache';
 
 import { useSafeLocale, extractLanguageCode } from '@/composables/utils/i18nHelpers';
 
@@ -69,7 +70,12 @@ async function getTarkovDataDb(): Promise<IDBDatabase | null> {
 }
 
 function resolveTarkovDataCacheKey(variables: TarkovDataVariables): string {
-  return `${TARKOV_DATA_CACHE_PREFIX}${variables.lang}:${variables.gameMode}`;
+  // Create deterministic cache key using JSON stringify with sorted keys
+  const sortedVars = {
+    gameMode: variables.gameMode,
+    lang: variables.lang,
+  };
+  return `${TARKOV_DATA_CACHE_PREFIX}${JSON.stringify(sortedVars)}`;
 }
 
 async function loadTarkovDataCache(key: string): Promise<TarkovDataCachePayload | null> {
@@ -246,7 +252,7 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
     return promise;
   };
 
-  watch(
+  const stopWatch = watch(
     variablesSource,
     (vars, _prev, onCleanup) => {
       const controller = new AbortController();
@@ -288,7 +294,12 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
     await startFetch(merged);
   };
 
-  return { result, error, loading, refetch } as const;
+  const cleanup = () => {
+    stopWatch();
+    activeController?.abort();
+  };
+
+  return { result, error, loading, refetch, cleanup } as const;
 }
 
 export function useTarkovApi() {
@@ -320,9 +331,17 @@ export function useTarkovApi() {
 
 let sharedTarkovDataQueryResource: SharedTarkovDataResource | null = null;
 
-// Map to store hideout query resources keyed by variables (gameMode + languageCode)
-// This ensures each unique combination has its own shared resource instance
-const hideoutQueryResources = new Map<string, ReturnType<typeof useGraphQLResource>>();
+// LRU cache to store hideout query resources keyed by variables (gameMode + languageCode)
+// Limited to 10 entries to prevent unbounded growth; evicts least recently used entries
+// and properly cleans up watchers/subscriptions to prevent memory leaks
+const hideoutQueryResources = new LRUCache<string, ReturnType<typeof useGraphQLResource>>(
+  10,
+  (_key, resource) => {
+    // Cleanup function called when a resource is evicted from the cache
+    // This stops the watcher and aborts any active fetch controllers
+    resource.cleanup();
+  }
+);
 
 export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   const { languageCode } = useTarkovApi();
@@ -388,8 +407,9 @@ export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed((
     const key = resourceKey.value;
 
     // Return existing resource if available
-    if (hideoutQueryResources.has(key)) {
-      return hideoutQueryResources.get(key)!;
+    const existing = hideoutQueryResources.get(key);
+    if (existing) {
+      return existing;
     }
 
     // Create new resource for this unique combination and store it

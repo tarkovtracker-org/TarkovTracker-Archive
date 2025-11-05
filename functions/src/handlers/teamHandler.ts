@@ -3,16 +3,10 @@ import { ApiResponse, ApiToken } from '../types/api.js';
 import { TeamService } from '../services/TeamService.js';
 import { ValidationService } from '../services/ValidationService.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { createLazy } from '../utils/factory.js';
 
 // Lazy-initialized service instance to ensure Firebase Admin is initialized first
-let teamService: TeamService | undefined;
-
-function getTeamService(): TeamService {
-  if (!teamService) {
-    teamService = new TeamService();
-  }
-  return teamService;
-}
+const getTeamService = createLazy(() => new TeamService());
 
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;

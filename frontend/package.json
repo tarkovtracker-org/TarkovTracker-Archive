@@ -28,7 +28,7 @@
   "dependencies": {
     "@fontsource/share-tech-mono": "^5.2.7",
     "@mdi/font": "^7.4.47",
-    "@scalar/api-reference": "^1.38.1",
+    "@scalar/api-reference": "^1.39.0",
     "@vueuse/core": "^14.0.0",
     "d3": "^7.9.0",
     "firebase": "^12.5.0",
@@ -44,7 +44,7 @@
     "vuetify": "^3.10.8"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.0",
+    "@eslint/js": "^9.39.1",
     "@intlify/unplugin-vue-i18n": "^11.0.1",
     "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -55,7 +55,7 @@
     "@vitest/coverage-v8": "^4.0.6",
     "@vitest/ui": "^4.0.6",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^9.39.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.5.1",
     "globals": "^16.5.0",
@@ -66,11 +66,11 @@
     "rollup-plugin-visualizer": "^6.0.5",
     "sass": "^1.93.3",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2",
+    "typescript-eslint": "^8.46.3",
     "vite": "^7.1.12",
     "vite-plugin-vuetify": "^2.1.2",
     "vitest": "^4.0.6",
     "vue-eslint-parser": "^10.2.0",
-    "vue-tsc": "^3.1.2"
+    "vue-tsc": "^3.1.3"
   }
 }

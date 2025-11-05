@@ -9,6 +9,24 @@
 import { logger } from 'firebase-functions';
 import type { Request as FunctionsRequest } from 'firebase-functions/v2/https';
 
+/**
+ * Static allowlist of headers for CORS preflight responses.
+ * Security: Never reflect client-sent headers dynamically.
+ */
+const ALLOW_HEADERS = [
+  'Content-Type',
+  'Authorization',
+  'X-Requested-With',
+  'X-App-Version',
+  'Accept',
+  'Origin',
+].join(', ');
+
+/**
+ * Static allowlist of HTTP methods for CORS responses.
+ */
+const ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].join(', ');
+
 interface CorsRequest {
   headers: FunctionsRequest['headers'];
 }
@@ -114,8 +132,8 @@ export function getExpressCorsOptions() {
     },
     credentials: false,
     optionsSuccessStatus: 200,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    methods: ALLOW_METHODS.split(', '),
+    allowedHeaders: ALLOW_HEADERS.split(', '),
   };
 }
 export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
@@ -131,14 +149,11 @@ export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
     res.set('Access-Control-Allow-Origin', '*');
   } else if (typeof validatedOrigin === 'string') {
     res.set('Access-Control-Allow-Origin', validatedOrigin);
-    res.set('Vary', 'Origin');
+    res.set('Vary', 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
   }
 
-  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.set(
-    'Access-Control-Allow-Headers',
-    req.headers['access-control-request-headers'] || 'Content-Type, Authorization, X-Requested-With'
-  );
+  res.set('Access-Control-Allow-Methods', ALLOW_METHODS);
+  res.set('Access-Control-Allow-Headers', ALLOW_HEADERS);
 
   return true;
 }

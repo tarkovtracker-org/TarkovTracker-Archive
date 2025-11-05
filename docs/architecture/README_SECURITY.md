@@ -5,6 +5,7 @@ This directory contains comprehensive security analysis and documentation for th
 ## Documentation Files
 
 ### 1. [SECURITY_QUICK_REFERENCE.md](./SECURITY_QUICK_REFERENCE.md) - START HERE
+
 **Size**: 8 KB | **Reading Time**: 10 minutes
 
 A practical quick-start guide for developers. Contains:
@@ -12,7 +13,7 @@ A practical quick-start guide for developers. Contains:
 - Critical file locations
 - Authentication flow diagram
 - Three-permission model (GP, TP, WP)
-- Rate limiting tiers visualization
+- Rate-limiting tiers visualization
 - Input validation rules
 - Firestore rules by collection
 - Error status codes
@@ -29,13 +30,14 @@ A practical quick-start guide for developers. Contains:
 ---
 
 ### 2. [SECURITY_SUMMARY.txt](./SECURITY_SUMMARY.txt) - VISUAL REFERENCE
+
 **Size**: 16 KB | **Reading Time**: 20 minutes
 
 Formatted reference document with ASCII diagrams and tables. Contains:
 - Authentication & authorization overview
 - Complete middleware chain (8-layer diagram)
 - Firestore security rules by collection (table)
-- Rate limiting configuration (table)
+- Rate-limiting configuration (table)
 - Input validation examples (table)
 - CORS origin validation rules
 - Error response format
@@ -52,6 +54,7 @@ Formatted reference document with ASCII diagrams and tables. Contains:
 ---
 
 ### 3. [SECURITY_ARCHITECTURE.md](./SECURITY_ARCHITECTURE.md) - DEEP DIVE
+
 **Size**: 23 KB | **Reading Time**: 45 minutes
 
 Comprehensive technical analysis. Contains 14 sections:
@@ -59,7 +62,7 @@ Comprehensive technical analysis. Contains 14 sections:
 2. Authentication & authorization architecture
 3. Firestore security rules (detailed)
 4. API-level input validation
-5. Rate limiting & abuse protection
+5. Rate-limiting & abuse protection
 6. CORS & origin validation
 7. Frontend security patterns
 8. Data flow diagram
@@ -82,6 +85,7 @@ Plus a complete summary section.
 ---
 
 ### 4. [CORS_SECURITY.md](./CORS_SECURITY.md) - CORS DETAILS
+
 **Size**: 1.8 KB | **Reading Time**: 5 minutes
 
 Focused documentation on CORS configuration. Contains:
@@ -102,26 +106,31 @@ Focused documentation on CORS configuration. Contains:
 ### By Role
 
 #### API Developer
+
 1. Read: SECURITY_QUICK_REFERENCE.md (Implementation section)
 2. Reference: SECURITY_SUMMARY.txt (Middleware chain, error codes)
 3. Check: SECURITY_ARCHITECTURE.md (Sections 2-4)
 
 #### Security Auditor
+
 1. Read: SECURITY_ARCHITECTURE.md (full)
 2. Cross-reference: SECURITY_SUMMARY.txt (checklist)
 3. Verify: Code files in `/functions/src/middleware/`
 
 #### DevOps / Infrastructure
+
 1. Read: SECURITY_QUICK_REFERENCE.md (Environment variables)
-2. Reference: SECURITY_SUMMARY.txt (Rate limiting config)
+2. Reference: SECURITY_SUMMARY.txt (Rate-limiting config)
 3. Check: SECURITY_ARCHITECTURE.md (Section 5)
 
 #### New Team Member
+
 1. Start: SECURITY_QUICK_REFERENCE.md (At a Glance)
 2. Visual: SECURITY_SUMMARY.txt (Diagrams)
 3. Deep dive: SECURITY_ARCHITECTURE.md (as needed)
 
 #### Tech Lead / Architect
+
 1. Read: SECURITY_ARCHITECTURE.md (all sections)
 2. Cross-check: SECURITY_SUMMARY.txt (Summary section)
 3. Reference: SECURITY_QUICK_REFERENCE.md (Checklist)
@@ -129,26 +138,31 @@ Focused documentation on CORS configuration. Contains:
 ### By Task
 
 #### Understanding Bearer Token Flow
+
 - SECURITY_QUICK_REFERENCE.md (Authentication Flow section)
 - SECURITY_ARCHITECTURE.md (Section 2.1)
 - SECURITY_SUMMARY.txt (Middleware Chain diagram)
 
 #### Adding a New API Endpoint
+
 - SECURITY_QUICK_REFERENCE.md (Security Checklist)
 - SECURITY_ARCHITECTURE.md (Section 9 - Patterns)
 - SECURITY_SUMMARY.txt (Error codes, rate limiting)
 
 #### Troubleshooting 401 / 403 / 429 Errors
+
 - SECURITY_SUMMARY.txt (Error Response Format)
 - SECURITY_QUICK_REFERENCE.md (Testing section)
 - SECURITY_ARCHITECTURE.md (Middleware chain)
 
 #### Configuring Rate Limiting
+
 - SECURITY_QUICK_REFERENCE.md (Environment Variables)
 - SECURITY_SUMMARY.txt (Rate Limiting Config table)
 - SECURITY_ARCHITECTURE.md (Section 5)
 
 #### Understanding Firestore Access Control
+
 - SECURITY_ARCHITECTURE.md (Section 3)
 - SECURITY_SUMMARY.txt (Firestore Rules table)
 - Code: `/firestore.rules`
@@ -158,15 +172,18 @@ Focused documentation on CORS configuration. Contains:
 ## Key Concepts
 
 ### Authentication Methods (2)
+
 1. **Bearer Tokens** - API access (document ID in Firestore)
 2. **Firebase ID Tokens** - Sensitive operations (account deletion)
 
 ### Authorization Levels (3)
+
 - **GP** - Get Progress (read-only)
 - **TP** - Team Progress (read team data)
 - **WP** - Write Progress (modify own data)
 
 ### Middleware Layers (8)
+
 ```
 1. CORS Validation
 2. Body Parser (1MB limit)
@@ -179,17 +196,20 @@ Focused documentation on CORS configuration. Contains:
 ```
 
 ### Rate Limiting
+
 - Window: 10 seconds (configurable)
 - Threshold: 150 requests (configurable)
 - Progressive: Warning → Blocking
 
 ### Input Validation
+
 - Types: integers, strings, enums
 - Ranges: Level 1-79, Edition 1-6
 - Sanitization: Remove HTML chars
 - Trimming: All strings trimmed
 
 ### Firestore Collections (5)
+
 - `progress/{userId}` - Game progress
 - `token/{tokenId}` - API tokens
 - `team/{teamId}` - Team info
@@ -201,10 +221,11 @@ Focused documentation on CORS configuration. Contains:
 ## Files Referenced in Documentation
 
 ### Core Security Middleware
+
 ```
 functions/src/middleware/
   ├── auth.ts                 # Bearer token validation
-  ├── abuseGuard.ts           # Rate limiting
+  ├── abuseGuard.ts           # Rate-limiting
   ├── permissions.ts          # Permission checking
   ├── reauth.ts               # Recent auth verification
   ├── errorHandler.ts         # Error handling
@@ -212,6 +233,7 @@ functions/src/middleware/
 ```
 
 ### Validation & Services
+
 ```
 functions/src/services/
   ├── ValidationService.ts    # Input validation
@@ -221,6 +243,7 @@ functions/src/services/
 ```
 
 ### Configuration
+
 ```
 functions/src/
   ├── config/corsConfig.ts    # CORS validation
@@ -229,11 +252,13 @@ functions/src/
 ```
 
 ### Database
+
 ```
 firestore.rules              # Security rules
 ```
 
 ### Frontend
+
 ```
 frontend/src/
   ├── plugins/firebase.ts     # Firebase init
@@ -282,11 +307,13 @@ NODE_ENV=development|production
 ## Monitoring & Alerts
 
 ### Logs to Monitor
+
 - Firebase Functions logger for auth failures
 - Firestore `rateLimitEvents` collection
 - Error responses in development
 
 ### Recommended Alerts
+
 - Multiple 401 errors from single IP
 - Multiple 429 errors from token
 - Firestore rule denials
@@ -334,6 +361,6 @@ Refer to the appropriate document:
 
 ---
 
-**Last Updated**: November 2, 2024  
+**Last Updated**: November 3, 2025
 **Status**: Complete  
 **Coverage**: Authentication, Authorization, Validation, Rate Limiting, CORS, Error Handling

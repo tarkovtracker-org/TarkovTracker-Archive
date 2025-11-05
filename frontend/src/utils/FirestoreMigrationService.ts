@@ -11,9 +11,7 @@ import {
   transformTraderStandings,
 } from './DataTransformService';
 import { backupLocalProgress, saveLocalUserState } from './LocalDataService';
-
-// Check if dev auth is enabled - if so, skip Firestore writes
-const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+import { isDevAuthEnabled } from '@/utils/devAuth';
 
 const getProgressRef = (uid: string) => doc(firestore, 'progress', uid);
 
@@ -84,18 +82,17 @@ export const migrateLocalDataToUser = async (
 
     const enrichedData = enrichLocalDataForMigration({ ...localData });
 
+    // Always update local state first to preserve data
+    backupLocalProgress(enrichedData);
+
     // Skip Firestore write when dev auth is enabled
-    if (!isDevAuthEnabled) {
-      await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
-      backupLocalProgress(enrichedData);
+    if (isDevAuthEnabled()) {
+      logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
       return true;
-    } else {
-      logger.debug(
-        `[FirestoreMigrationService] Skipped Firestore write to ${progressRef.path} due to dev auth`
-      );
-      backupLocalProgress(enrichedData);
-      return 'skipped';
     }
+
+    await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
+    return true;
   } catch (error) {
     logger.error('[FirestoreMigrationService] Error migrating local data to Firestore:', error);
     return false;
@@ -189,17 +186,17 @@ export const importDataToUser = async (
 
     const newUserState = buildImportedUserState(importedData, existingData);
 
+    // Always update local state first to preserve data
+    saveLocalUserState(newUserState);
+
     // Skip Firestore write when dev auth is enabled
-    if (!isDevAuthEnabled) {
-      await setDoc(progressRef, newUserState as DocumentData, { merge: true });
-      saveLocalUserState(newUserState);
+    if (isDevAuthEnabled()) {
+      logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
       return true;
-    } else {
-      logger.debug(
-        `[FirestoreMigrationService] Skipped Firestore write for user ${uid} due to dev auth`
-      );
-      return 'skipped';
     }
+
+    await setDoc(progressRef, newUserState as DocumentData, { merge: true });
+    return true;
   } catch (error) {
     logger.error(
       `[FirestoreMigrationService] General error in importDataToUser for user ${uid}:`,

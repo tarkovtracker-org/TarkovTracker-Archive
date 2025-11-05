@@ -1,3 +1,4 @@
+import { print } from 'graphql';
 import type { DocumentNode } from 'graphql';
 
 const DEFAULT_ENDPOINT = 'https://api.tarkov.dev/graphql';
@@ -47,11 +48,11 @@ function queryToString(query: string | DocumentNode): string {
     return query;
   }
   // Extract the query string from the DocumentNode
-  const body = query.loc?.source.body;
-  if (!body) {
-    throw new Error('Invalid GraphQL DocumentNode: missing query source body');
+  const queryString = print(query);
+  if (!queryString) {
+    throw new Error('Invalid GraphQL DocumentNode: unable to print query');
   }
-  return body;
+  return queryString;
 }
 
 function validateResponse(response: Response): void {
