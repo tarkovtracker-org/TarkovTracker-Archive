@@ -34,6 +34,10 @@ const localStorageMock = {
 vi.stubGlobal('localStorage', localStorageMock);
 
 describe('user store', () => {
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.clearAllMocks();

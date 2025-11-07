@@ -136,17 +136,17 @@ describe('useProgressQueries', () => {
     // This test focuses on the composable behavior with empty/partial data
 
     // Clear all data to test empty state
-    mockProgressStoreInstance.visibleTeamStores = {};
-    mockProgressStoreInstance.unlockedTasks = {};
-    mockProgressStoreInstance.tasksCompletions = {};
-    mockProgressStoreInstance.objectiveCompletions = {};
-    mockProgressStoreInstance.moduleCompletions = {};
-    mockProgressStoreInstance.modulePartCompletions = {};
-    mockProgressStoreInstance.hideoutLevels = {};
-    mockProgressStoreInstance.playerFaction = {};
-    mockProgressStoreInstance.traderLevelsAchieved = {};
-    mockProgressStoreInstance.traderStandings = {};
-    mockProgressStoreInstance.gameEditionData = [];
+    mockProgressStoreInstance.visibleTeamStores.value = {};
+    mockProgressStoreInstance.unlockedTasks.value = {};
+    mockProgressStoreInstance.tasksCompletions.value = {};
+    mockProgressStoreInstance.objectiveCompletions.value = {};
+    mockProgressStoreInstance.moduleCompletions.value = {};
+    mockProgressStoreInstance.modulePartCompletions.value = {};
+    mockProgressStoreInstance.hideoutLevels.value = {};
+    mockProgressStoreInstance.playerFaction.value = {};
+    mockProgressStoreInstance.traderLevelsAchieved.value = {};
+    mockProgressStoreInstance.traderStandings.value = {};
+    mockProgressStoreInstance.gameEditionData.value = [];
 
     const {
       visibleTeamIds,
@@ -164,22 +164,22 @@ describe('useProgressQueries', () => {
     expect(getTaskCompletionMap('nonexistent')).toEqual({});
 
     // Restore initial data for subsequent tests
-    mockProgressStoreInstance.visibleTeamStores = initialTeamStores;
-    mockProgressStoreInstance.unlockedTasks = initialUnlockedTasks;
-    mockProgressStoreInstance.tasksCompletions = initialTaskCompletions;
-    mockProgressStoreInstance.objectiveCompletions = initialObjectiveCompletions;
-    mockProgressStoreInstance.moduleCompletions = initialModuleCompletions;
-    mockProgressStoreInstance.modulePartCompletions = initialModulePartCompletions;
-    mockProgressStoreInstance.hideoutLevels = initialHideoutLevels;
-    mockProgressStoreInstance.playerFaction = initialPlayerFaction;
-    mockProgressStoreInstance.traderLevelsAchieved = {};
-    mockProgressStoreInstance.traderStandings = {};
-    mockProgressStoreInstance.gameEditionData = [{ version: 1, defaultStashLevel: 2 }];
+    mockProgressStoreInstance.visibleTeamStores.value = initialTeamStores;
+    mockProgressStoreInstance.unlockedTasks.value = initialUnlockedTasks;
+    mockProgressStoreInstance.tasksCompletions.value = initialTaskCompletions;
+    mockProgressStoreInstance.objectiveCompletions.value = initialObjectiveCompletions;
+    mockProgressStoreInstance.moduleCompletions.value = initialModuleCompletions;
+    mockProgressStoreInstance.modulePartCompletions.value = initialModulePartCompletions;
+    mockProgressStoreInstance.hideoutLevels.value = initialHideoutLevels;
+    mockProgressStoreInstance.playerFaction.value = initialPlayerFaction;
+    mockProgressStoreInstance.traderLevelsAchieved.value = {};
+    mockProgressStoreInstance.traderStandings.value = {};
+    mockProgressStoreInstance.gameEditionData.value = [{ version: 1, defaultStashLevel: 2 }];
   });
 
   it('handles team data with mixed completion states', () => {
     // Set up complex completion scenario according to current unlock logic
-    mockProgressStoreInstance.unlockedTasks = {
+    mockProgressStoreInstance.unlockedTasks.value = {
       complexTask: {
         alpha: true,
         beta: false,
@@ -188,7 +188,7 @@ describe('useProgressQueries', () => {
       } as any,
     };
 
-    mockProgressStoreInstance.tasksCompletions = {
+    mockProgressStoreInstance.tasksCompletions.value = {
       complexTask: {
         alpha: true,
         beta: false,
@@ -213,7 +213,7 @@ describe('useProgressQueries', () => {
     expect(isTaskUnlockedByAny('complexTask')).toBe(true);
 
     // Test with completely locked task
-    mockProgressStoreInstance.unlockedTasks['lockedTask'] = {
+    mockProgressStoreInstance.unlockedTasks.value['lockedTask'] = {
       alpha: false,
       beta: false,
       gamma: false,
@@ -221,13 +221,13 @@ describe('useProgressQueries', () => {
     expect(isTaskUnlockedByAny('lockedTask')).toBe(false);
 
     // Restore initial data
-    mockProgressStoreInstance.unlockedTasks = initialUnlockedTasks;
-    mockProgressStoreInstance.tasksCompletions = initialTaskCompletions;
+    mockProgressStoreInstance.unlockedTasks.value = initialUnlockedTasks;
+    mockProgressStoreInstance.tasksCompletions.value = initialTaskCompletions;
   });
 
   it('handles empty and undefined team stores', () => {
     // Test with completely empty team stores
-    mockProgressStoreInstance.visibleTeamStores = {} as any;
+    mockProgressStoreInstance.visibleTeamStores.value = {} as any;
 
     const { visibleTeamIds } = useProgressQueries();
 
@@ -235,12 +235,12 @@ describe('useProgressQueries', () => {
     expect(visibleTeamIds.value).toEqual([]);
 
     // Restore initial data
-    mockProgressStoreInstance.visibleTeamStores = initialTeamStores;
+    mockProgressStoreInstance.visibleTeamStores.value = initialTeamStores;
   });
 
   it('handles missing hideout level data', () => {
     // Clear hideout level data
-    mockProgressStoreInstance.hideoutLevels = {} as any;
+    mockProgressStoreInstance.hideoutLevels.value = {} as any;
 
     const { getHideoutLevelFor } = useProgressQueries();
 
@@ -249,13 +249,13 @@ describe('useProgressQueries', () => {
     expect(getHideoutLevelFor('station1', 'missingTeam')).toBe(0);
 
     // Restore initial data
-    mockProgressStoreInstance.hideoutLevels = initialHideoutLevels;
+    mockProgressStoreInstance.hideoutLevels.value = initialHideoutLevels;
   });
 
   it('handles missing module completion data', () => {
     // Clear module completion data
-    mockProgressStoreInstance.moduleCompletions = {} as any;
-    mockProgressStoreInstance.modulePartCompletions = {} as any;
+    mockProgressStoreInstance.moduleCompletions.value = {} as any;
+    mockProgressStoreInstance.modulePartCompletions.value = {} as any;
 
     const { isModuleCompleteFor, getModuleCompletionMap, getModulePartCompletionMap } =
       useProgressQueries();
@@ -266,13 +266,13 @@ describe('useProgressQueries', () => {
     expect(getModulePartCompletionMap('missingPart')).toEqual({});
 
     // Restore initial data
-    mockProgressStoreInstance.moduleCompletions = initialModuleCompletions;
-    mockProgressStoreInstance.modulePartCompletions = initialModulePartCompletions;
+    mockProgressStoreInstance.moduleCompletions.value = initialModuleCompletions;
+    mockProgressStoreInstance.modulePartCompletions.value = initialModulePartCompletions;
   });
 
   it('handles player faction and display name retrieval', () => {
     // Update faction data to produce explicit factions for alpha and gamma
-    mockProgressStoreInstance.playerFaction = {
+    mockProgressStoreInstance.playerFaction.value = {
       alpha: 'USEC',
       beta: 'BEAR',
       gamma: 'USEC',
@@ -294,17 +294,17 @@ describe('useProgressQueries', () => {
     expect(getLevel('alpha')).toBe(15); // mock returns constant 15
 
     // Restore initial data
-    mockProgressStoreInstance.playerFaction = initialPlayerFaction;
+    mockProgressStoreInstance.playerFaction.value = initialPlayerFaction;
   });
 
   it('handles trader level and standing data', () => {
     // Set up trader data
-    mockProgressStoreInstance.traderLevelsAchieved = {
+    mockProgressStoreInstance.traderLevelsAchieved.value = {
       alpha: { prapor: 2, therapist: 3 },
       beta: { prapor: 1 },
     };
 
-    mockProgressStoreInstance.traderStandings = {
+    mockProgressStoreInstance.traderStandings.value = {
       alpha: { prapor: 0.85, therapist: 0.92 },
     };
 
@@ -324,8 +324,8 @@ describe('useProgressQueries', () => {
     });
 
     // Restore initial data
-    mockProgressStoreInstance.traderLevelsAchieved = {};
-    mockProgressStoreInstance.traderStandings = {};
+    mockProgressStoreInstance.traderLevelsAchieved.value = {};
+    mockProgressStoreInstance.traderStandings.value = {};
   });
 
   it('handles game edition data correctly', () => {
