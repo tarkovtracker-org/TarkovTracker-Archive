@@ -73,6 +73,7 @@ export default [
       'frontend/e2e/**/*.ts',
     ],
     languageOptions: {
+      parser: tseslint.parser,
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: {
@@ -80,7 +81,6 @@ export default [
         ...globals.es2022,
       },
       parserOptions: {
-        parser: tseslint.parser,
         allowImportExportEverywhere: false,
       },
     },
