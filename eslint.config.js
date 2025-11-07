@@ -190,8 +190,6 @@ export default [
       'frontend/src/**/*.spec.ts',
       'frontend/src/**/*.test.ts',
       'frontend/src/**/__tests__/**/*',
-      'frontend/src/**/*test*',
-      'frontend/src/**/*spec*',
     ],
     rules: {
       // Disable complexity for test helpers and setups
