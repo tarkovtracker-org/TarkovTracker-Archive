@@ -50,6 +50,18 @@ jobs:
           node-version: '22'
       - name: Generate API docs
         run: npm run docs
+      - name: Verify API docs generated
+        run: |
+          if [ ! -d "./functions/openapi" ]; then
+            echo "Error: functions/openapi directory does not exist"
+            exit 1
+          fi
+          if [ ! -f "./functions/openapi/openapi.json" ]; then
+            echo "Error: functions/openapi/openapi.json was not generated"
+            exit 1
+          fi
+          echo "✅ API documentation generated successfully"
+          ls -lh ./functions/openapi/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact

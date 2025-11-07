@@ -37,7 +37,7 @@ export default [
 
   // Frontend TypeScript/Vue source files with typed linting
   {
-    files: ['frontend/**/*.ts', 'frontend/**/*.vue'],
+    files: ['frontend/src/**/*.ts', 'frontend/src/**/*.vue'],
     languageOptions: {
       parser: vueParser,
       ecmaVersion: 'latest',
