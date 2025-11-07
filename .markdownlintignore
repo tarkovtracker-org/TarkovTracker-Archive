@@ -1,4 +1,5 @@
 bmad/
+bmad/**
 **/node_modules/**
 **/.*/node_modules/**
 LICENSE.md
