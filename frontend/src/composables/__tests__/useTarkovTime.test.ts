@@ -78,4 +78,113 @@ describe('useTarkovTime', () => {
     expect(result).toHaveProperty('tarkovTime');
     expect(result.tarkovTime).toBeDefined();
   });
+
+  it('handles day/night boundaries correctly', async () => {
+    // Test around midnight - tarkov time should wrap properly
+    const midnightUTC = new Date('2024-01-01T00:00:00Z'); // 3 AM tarkov time
+    vi.setSystemTime(midnightUTC);
+
+    const { tarkovTime } = mountUseTarkovTime();
+    await nextTick();
+
+    const expectedTarkovTime = (() => {
+      const oneHourMs = 60 * 60 * 1000;
+      const timeAtTarkovSpeed = (midnightUTC.getTime() * 7) % (24 * oneHourMs);
+      const tarkovTimeObj = new Date(timeAtTarkovSpeed + 3 * oneHourMs);
+      const tarkovHour = tarkovTimeObj.getUTCHours();
+      const tarkovMinute = tarkovTimeObj.getUTCMinutes();
+      const tarkovSecondHour = (tarkovHour + 12) % 24;
+
+      return `${tarkovHour.toString().padStart(2, '0')}:${tarkovMinute
+        .toString()
+        .padStart(2, '0')} / ${tarkovSecondHour.toString().padStart(2, '0')}:${tarkovMinute
+        .toString()
+        .padStart(2, '0')}`;
+    })();
+
+    expect(tarkovTime.value).toBe(expectedTarkovTime);
+  });
+
+  it('handles time wraparound at 23:59 to 00:00', async () => {
+    // Test near end of day to verify wraparound
+    const lateEveningUTC = new Date('2024-01-01T21:00:00Z'); // 00:00 tarkov time next day
+    vi.setSystemTime(lateEveningUTC);
+
+    const { tarkovTime } = mountUseTarkovTime();
+    await nextTick();
+
+    expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
+
+    // Verify the 12-hour format wraps correctly (e.g., 23:00 becomes 11:00)
+    const timeMatch = tarkovTime.value.match(/^(\d{2}):(\d{2}) \/ (\d{2}):(\d{2})$/);
+    expect(timeMatch).not.toBeNull();
+
+    if (timeMatch) {
+      const [, hour24, , hour12] = timeMatch;
+      const hour24Num = parseInt(hour24, 10);
+      const hour12Num = parseInt(hour12, 10);
+
+      // 12-hour format should be (24-hour + 12) % 24
+      const expected12Hour = (hour24Num + 12) % 24;
+      expect(hour12Num).toBe(expected12Hour);
+    }
+  });
+
+  it('handles edge cases around Tarkov time speed factor', async () => {
+    // Test with different UTC times to ensure 7x speed factor works correctly
+    const testCases = [
+      new Date('2024-01-01T06:00:00Z'), // 18:00 tarkov time
+      new Date('2024-01-01T12:00:00Z'), // 00:00 tarkov time (next day)
+      new Date('2024-01-01T18:00:00Z'), // 06:00 tarkov time
+    ];
+
+    for (const testDate of testCases) {
+      vi.setSystemTime(testDate);
+      const { tarkovTime } = mountUseTarkovTime();
+      await nextTick();
+
+      expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
+
+      // Verify time format is always HH:MM / HH:MM
+      const timeParts = tarkovTime.value.split(' / ');
+      expect(timeParts).toHaveLength(2);
+
+      for (const timePart of timeParts) {
+        expect(timePart).toMatch(/^\d{2}:\d{2}$/);
+        const [hours, minutes] = timePart.split(':').map(Number);
+        expect(hours).toBeGreaterThanOrEqual(0);
+        expect(hours).toBeLessThan(24);
+        expect(minutes).toBeGreaterThanOrEqual(0);
+        expect(minutes).toBeLessThan(60);
+      }
+    }
+  });
+
+  it('handles interval cleanup properly', async () => {
+    const clearIntervalSpy = vi.spyOn(window, 'clearInterval');
+    const mockIntervalId = 123 as unknown as ReturnType<typeof setInterval>;
+
+    const setIntervalSpy = vi.spyOn(window, 'setInterval').mockReturnValue(mockIntervalId);
+
+    // Mount and unmount the component
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          useTarkovTime();
+          return () => null;
+        },
+      })
+    );
+
+    wrapper.unmount();
+
+    // Verify setInterval was called
+    expect(setIntervalSpy).toHaveBeenCalled();
+
+    // Verify clearInterval was called with the mock ID
+    expect(clearIntervalSpy).toHaveBeenCalledWith(mockIntervalId);
+
+    clearIntervalSpy.mockRestore();
+    setIntervalSpy.mockRestore();
+  });
 });

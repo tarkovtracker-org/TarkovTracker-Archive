@@ -29,6 +29,14 @@ export const createFirestoreMock = () => {
     },
   });
 
+  // Create a batch mock factory
+  const createBatchMock = () => ({
+    set: vi.fn().mockResolvedValue({}),
+    update: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue({}),
+    commit: vi.fn().mockResolvedValue({}),
+  });
+
   // Create a base mock object
   const firestoreMock = {
     collection: vi.fn(),
@@ -36,6 +44,7 @@ export const createFirestoreMock = () => {
     where: vi.fn(),
     orderBy: vi.fn(),
     limit: vi.fn(),
+    batch: vi.fn().mockImplementation(createBatchMock),
     get: vi.fn().mockResolvedValue(createDocumentSnapshotMock()),
     set: vi.fn().mockResolvedValue({}),
     add: vi.fn().mockResolvedValue({ id: 'mock-doc-id' }),
