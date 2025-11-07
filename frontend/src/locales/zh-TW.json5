@@ -344,6 +344,7 @@
     ratscanner: 'Rat Scanner',
     tarkovguru: 'Tarkov Guru',
     tarkovchanges: 'Tarkov Changes',
+    tarkovmonitor: 'Tarkov Monitor',
   },
   tips: {
     hide_tip: '隱藏提示',
@@ -376,7 +377,19 @@
     },
     teammembers: {
       title: '隊伍成員',
-      description: '這是您的隊伍成員清單。您可以點擊眼睛圖示來隱藏或顯示他們的任務與所需物品。',
+      description: '這是您的團隊成員列表。您可以點擊眼睛圖標來隱藏或顯示他們的任務和所需物品，同時使用追蹤器的其他部分。',
+    },
+  },
+  generic: {
+    item: '物品',
+    items: '物品',
+    close_button: '關閉',
+    loading: '載入中...',
+    error: '錯誤',
+  },
+  'task.kappa_req': 'Kappa 任務所需',
+  'task.level_req': '所需等級：{level}',
+}
     },
   },
 }

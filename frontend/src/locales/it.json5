@@ -152,7 +152,7 @@
       },
     },
     settings: {
-      title: 'API',
+      title: 'Impostazioni',
       card: {
         apitokens: {
           title: 'Token API',
@@ -186,14 +186,14 @@
           button: 'Gestisci team',
           membercard: {
             this_is_you: '(Tu)',
-            taskscomplete: '{completed}/{total} compiti completati',
+            taskscomplete: '{completed}/{total} missioni completate',
           },
         },
         teamoptions: {
           title: 'Opzioni team',
           button: 'Opzioni',
-          task_hide_all: 'Nascondi tutti i compiti dei membri del team',
-          task_show_all: 'Mostra tutti i compiti dei membri del team',
+          task_hide_all: 'Nascondi tutte le missioni dei membri del team',
+          task_show_all: 'Mostra tutte le missioni dei membri del team',
           items_hide_all: 'Nascondi tutti gli oggetti necessari dei membri del team',
           items_show_all: 'Mostra tutti gli oggetti necessari dei membri del team',
           items_show_non_fir: 'Mostra tutti gli oggetti necessari dei membri del team (inclusi oggetti non FIR)',
@@ -325,7 +325,7 @@
     logout: 'Logout',
     level: 'Livello',
     team: 'Team',
-    tasks: 'Compiti',
+    tasks: 'Missioni',
     hideout: 'Rifugio',
     neededitems: 'Oggetti necessari',
     tarkovdev: 'Tarkov.dev',

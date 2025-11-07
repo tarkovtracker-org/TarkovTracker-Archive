@@ -152,7 +152,7 @@
       },
     },
     settings: {
-      title: 'API',
+      title: 'Nastavení',
       card: {
         apitokens: {
           title: 'API Tokeny',

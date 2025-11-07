@@ -152,7 +152,7 @@
       },
     },
     settings: {
-      title: 'API',
+      title: 'Beállítások',
       card: {
         apitokens: {
           title: 'API tokenek',
