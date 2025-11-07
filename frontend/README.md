@@ -69,9 +69,11 @@ The application will be available at `http://localhost:3000`
 - `npm run build:dev` - Build for development
 - `npm run build:prod` - Build for production
 - `npm run serve` - Preview production build
-- `npm run lint` - Run ESLint
+- `npm run lint` - Run ESLint (frontend workspace)
 - `npm run type-check` - Run TypeScript type checking
 - `npm run format` - Format code with Prettier
+
+> **Note:** From the repository root, `npm run lint` runs the full lint orchestrator (ESLint, TypeScript type-checks, markdownlint) across all workspaces.
 
 ## Architecture
 

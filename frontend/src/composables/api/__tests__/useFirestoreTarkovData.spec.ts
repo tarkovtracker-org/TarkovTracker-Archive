@@ -176,7 +176,9 @@ describe('useFirestoreTarkovItems', () => {
     expect(items.value).toEqual([]);
     expect(loading.value).toBe(false);
     expect(error.value).toBeNull();
-    expect(mockLogger.warn).toHaveBeenCalledWith('Tarkov items document exists but has no items field');
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Tarkov items document exists but has no items field'
+    );
   });
 
   it('should initialize with loading state (AC: 2)', async () => {
