@@ -16,6 +16,7 @@ import {
   ja as vuetifyJa,
   ko as vuetifyKo,
   zhHans as vuetifyZh,
+  zhHant as vuetifyZhTw,
 } from 'vuetify/locale';
 
 import messages from '@intlify/unplugin-vue-i18n/messages';
@@ -46,6 +47,7 @@ const vuetifyLocales: Record<string, any> = {
   ja: vuetifyJa,
   ko: vuetifyKo,
   zh: vuetifyZh,
+  'zh-TW': vuetifyZhTw,
 };
 
 const typedMessages = messages as AppMessages;
@@ -60,12 +62,6 @@ for (const [locale, vuetifyLocale] of Object.entries(vuetifyLocales)) {
   } else {
     typedMessages[locale] = { $vuetify: vuetifyLocale };
   }
-}
-
-if (typedMessages['zh-TW']) {
-  typedMessages['zh-TW'].$vuetify = vuetifyZh;
-} else {
-  typedMessages['zh-TW'] = { $vuetify: vuetifyZh };
 }
 
 const i18n: I18n<
