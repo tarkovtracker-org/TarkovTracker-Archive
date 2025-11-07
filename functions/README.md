@@ -174,7 +174,7 @@ npm run docs:serve # Generate docs + serve instructions
 
 ```typescript
 // openapi.ts configuration
-const swaggerOptions = {
+const openapiOptions = {
   definition: {
     openapi: '3.0.0',
     info: {

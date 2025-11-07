@@ -21,8 +21,8 @@
     "emulators": "npm run build:functions && firebase emulators:start",
     "emulators:backend": "npm run build:functions && firebase emulators:start --only auth,firestore,functions",
     "emulators:local": "firebase emulators:start --import=./local_data --export-on-exit=./local_data",
-    "docs": "npm run build:functions && npm run swagger --workspace=functions && echo 'API docs generated! Open docs/index.html in your browser to view the Swagger UI.'",
-    "docs:generate": "npm run swagger --workspace=functions && shx mkdir -p frontend/public/api && shx cp docs/openapi.json frontend/public/api/openapi.json",
+    "docs": "npm run build:functions && npm run openapi --workspace=functions && echo 'OpenAPI spec generated! View Scalar UI via frontend/public/api/openapi.json'",
+    "docs:generate": "npm run openapi --workspace=functions && shx mkdir -p frontend/public/api && shx cp functions/openapi/openapi.json frontend/public/api/openapi.json",
     "deploy:staging": "npm run build:functions && npm run docs && npm run build:frontend && firebase hosting:channel:deploy staging --expires 7d",
     "deploy:prod": "npm run build:functions && npm run docs && npm run build:frontend && firebase deploy",
     "lint": "node scripts/lint-all.mjs",
@@ -38,7 +38,6 @@
     "lint:md:json": "markdownlint --json \"**/*.md\""
   },
   "devDependencies": {
-    "@types/swagger-ui": "^5.21.1",
     "concurrently": "^9.2.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",

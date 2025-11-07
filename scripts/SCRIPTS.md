@@ -147,15 +147,15 @@ npm run deploy:prod      # Deploy to production environment
 
 #### `npm run docs`
 
-- **Purpose**: Build functions + generate docs + show viewing instructions
-- **Process**: Builds functions, generates Swagger docs, and shows how to view them
+- **Purpose**: Build functions + generate OpenAPI spec + show viewing instructions
+- **Process**: Builds functions, generates OpenAPI spec (via swagger-jsdoc), and provides viewing hint for Scalar UI
 - **Output**: `functions/openapi/openapi.json`
 - **Best for**: Complete documentation workflow
 
 #### `npm run docs:generate`
 
-- **Purpose**: Generate docs and copy to frontend
-- **Process**: Generates Swagger docs and copies to frontend/public/api/
+- **Purpose**: Generate OpenAPI spec and copy to frontend
+- **Process**: Generates OpenAPI spec and copies to `frontend/public/api/openapi.json` consumed by Scalar UI
 - **Output**: `frontend/public/api/openapi.json`
 - **Best for**: Making API docs available in deployed frontend
 

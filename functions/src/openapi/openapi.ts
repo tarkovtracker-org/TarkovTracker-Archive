@@ -1,4 +1,4 @@
-import swaggerJsdoc from 'swagger-jsdoc';
+import openapiJSDoc from 'swagger-jsdoc';
 import fs from 'fs';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -30,13 +30,14 @@ if (!projectRoot) {
   }
   throw new Error(
     `Failed to find project root: 'LICENSE.md' not found in any parent directory.\n` +
-    `Searched directories (from ${__dirname} upwards):\n` +
-    searchedDirs.map(dir => `  - ${dir}`).join('\n') + '\n' +
-    `Ensure LICENSE.md exists at the project root.`
+      `Searched directories (from ${__dirname} upwards):\n` +
+      searchedDirs.map((dir) => `  - ${dir}`).join('\n') +
+      '\n' +
+      `Ensure LICENSE.md exists at the project root.`
   );
 }
 const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
-const swaggerOptions: swaggerJsdoc.Options = {
+const openapiOptions: import('swagger-jsdoc').Options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -89,11 +90,12 @@ const swaggerOptions: swaggerJsdoc.Options = {
   },
   apis: [sourceGlob],
 };
-const openapiSpecification = swaggerJsdoc(swaggerOptions);
+const openapiSpecification = openapiJSDoc(openapiOptions);
 // Define the output paths relative to the dynamically found project root
-const outputPath = path.join(projectRoot, 'docs/openapi.json');
-const jsOutputPath = path.join(projectRoot, 'docs/openapi.js');
-const outputDir = path.dirname(outputPath); // This will be projectRoot/docs
+// We generate into functions/openapi to align with CI and Scalar UI ingestion
+const outputPath = path.join(projectRoot, 'functions/openapi/openapi.json');
+const jsOutputPath = path.join(projectRoot, 'functions/openapi/openapi.js');
+const outputDir = path.dirname(outputPath);
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });

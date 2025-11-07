@@ -1,4 +1,4 @@
-{
+window.openapi = {
   "openapi": "3.0.0",
   "info": {
     "title": "TarkovTracker API (Fork)",
@@ -1011,4 +1011,4 @@
       }
     }
   }
-}
+};
