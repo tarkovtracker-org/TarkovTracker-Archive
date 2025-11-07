@@ -294,7 +294,7 @@
       title: '隐私政策',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: '通过 RESTful API 以编程方式访问你的进度数据',
         create_token: '创建令牌',
@@ -356,6 +356,9 @@
           message: '请重试，如果问题仍然存在，请联系支持人员',
         },
       },
+    },
+    api_docs: {
+      title: 'API 文档',
     },
     settings: {
       title: '设置',

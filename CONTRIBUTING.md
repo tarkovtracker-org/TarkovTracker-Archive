@@ -10,7 +10,7 @@ The guidelines below explain how to participate effectively and respectfully. If
 
 - **Familiarize yourself with the project** – Read the [README](README.md) and explore the application so you understand what exists today.
 - **Search first** – Look for existing issues, pull requests, or discussions that relate to your idea. Commenting on an active thread helps consolidate effort.
-- **Talk to us** – For substantial changes (e.g., major refactors, architectural changes), start a [GitHub Discussion](https://github.com/TarkovTracker/tarkovtracker/discussions), chat in the [TarkovTracker Discord](https://discord.gg/zeAP4Ng), or open an issue to align with the maintainers before investing significant time.
+- **Talk to us** – For substantial changes (e.g., major refactors, architectural changes), start a [GitHub Discussion](https://github.com/tarkovtracker-org/TarkovTracker/discussions), chat in the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6), or open an issue to align with the maintainers before investing significant time.
 - **Be kind** – Participation in this community is covered by our [Code of Conduct](CODE_OF_CONDUCT.md). If you observe unacceptable behavior, email [report@tarkovtracker.org](mailto:report@tarkovtracker.org).
 
 ## Ways to contribute
@@ -29,7 +29,7 @@ The guidelines below explain how to participate effectively and respectfully. If
 4. **Make your changes** in small, logically grouped commits. Keep unrelated changes in separate pull requests.
 5. **Write or update tests/docs** when applicable. Documentation updates are expected for user-facing changes.
 6. **Run quality checks** before submitting your pull request:
-   - `npm run lint`
+   - `npm run lint` (runs ESLint, TypeScript type-checks, markdownlint)
    - `npm run format` (if files need formatting)
    - `npm run build`
 7. **Open a pull request** targeting the `main` branch and fill in the template completely. Reference related issues with `Fixes #<issue-number>` when appropriate.
@@ -50,7 +50,7 @@ Maintainers will review submissions for correctness, accessibility, performance,
 
 - **Language & stack** – TypeScript is preferred across both the Vue frontend and Firebase functions. Avoid introducing plain JavaScript unless necessary.
 - **Formatting** – Prettier is configured through `npm run format`. Do not reformat unrelated files.
-- **Linting** – Follow ESLint rules enforced via `npm run lint`. Address warnings unless explicitly waived by maintainers.
+- **Linting** – Follow the lint orchestrator (`npm run lint`) which covers ESLint, TypeScript type-checks, and markdownlint. Address warnings unless explicitly waived by maintainers.
 - **Testing** – Add or update automated tests once they are available. Until then, include manual testing steps in the PR description.
 - **Dependencies** – Introduce new dependencies sparingly. Justify additions in the pull request and ensure licenses are compatible with GPLv3.
 
@@ -76,7 +76,7 @@ Maintainers will review submissions for correctness, accessibility, performance,
 
 ## Getting help
 
-- Ask implementation questions in [Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) under the `Q&A` category or in the development channels on the [TarkovTracker Discord](https://discord.gg/zeAP4Ng).
+- Ask implementation questions in [Discussions](https://github.com/tarkovtracker-org/TarkovTracker/discussions) under the `Q&A` category or in the development channels on the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6).
 - For sensitive or security-related topics, email [support@tarkovtracker.org](mailto:support@tarkovtracker.org) or [security@tarkovtracker.org](mailto:security@tarkovtracker.org).
 - Join playtesting or community events announced via Discussions to collaborate synchronously.
 

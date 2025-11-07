@@ -401,6 +401,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'Documentación de la API',
+    },
     not_found: {
       title: 'Página no encontrada',
       not_found_description: 'Lo sentimos, no se ha encontrado la página.',

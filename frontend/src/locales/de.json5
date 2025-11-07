@@ -343,7 +343,7 @@
       title: 'Datenschutzerklärung',
     },
     api: {
-      title: 'TarkovTracker API',
+      title: 'API',
       hero: {
         description: 'Zugriff auf Ihre Fortschrittsdaten programmatisch mit unserer RESTful API',
         create_token: 'Token erstellen',
@@ -406,10 +406,13 @@
         },
       },
     },
+    api_docs: {
+      title: 'API-Dokumentation',
+    },
     not_found: {
       title: 'Seite nicht gefunden',
       not_found_description: 'Entschuldigung die Seite konnte nicht gefunden werden!',
-    },
+    }
   },
   footer: {
     call_to_action: {
