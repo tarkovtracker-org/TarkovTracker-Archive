@@ -6,7 +6,7 @@
 
 ## Executive Summary
 
-The `/tasks` route exhibits **severe performance and layout stability issues** when rendering large task lists. The primary concern is an extremely high Cumulative Layout Shift (CLS) score of **0.694**, which is **5.5x worse** than the "poor" threshold of 0.25.
+The `/tasks` route exhibits **severe performance and layout stability issues** when rendering large task lists. The primary concern is an extremely high Cumulative Layout Shift (CLS) score of **0.694**, which is **~2.8x worse** than the "poor" threshold of 0.25.
 
 ### Critical Metrics
 
@@ -70,6 +70,8 @@ Main Container (#tracker-page-background-blur)
 ---
 
 ## Specific Problem Areas
+
+*Note: Code snippets in this section are representative examples and should be verified against the local repository for exact file paths and line numbers.*
 
 ### 1. **No Explicit Dimensions for Containers**
 
@@ -266,18 +268,26 @@ Main Container (#tracker-page-background-blur)
 
 ---
 
-## Implementation Checklist
+## Phased Rollout Plan
 
-- [ ] 1. Add font preload links to `index.html`
-- [ ] 2. Add `font-display: optional` to font-face declarations
-- [ ] 3. Add explicit `min-height: 203px` to task cards
-- [ ] 4. Add CSS `contain: layout` to task cards
-- [ ] 5. Implement skeleton loaders for task list
-- [ ] 6. Install and configure virtual scroller
-- [ ] 7. Add intersection observer for lazy loading
-- [ ] 8. Test with 482 tasks again (verify CLS < 0.1)
-- [ ] 9. Test with different task counts (10, 50, 200, 482)
+**Phase 1 — Critical CLS & Render Stability:**
+- [ ] 1. Font preload links
+- [ ] 2. `font-display: optional`
+- [ ] 3. Explicit `min-height` on task cards
+- [ ] 4. `contain: layout`
+- [ ] 5. Skeleton loaders
+*One-line description: Stabilize visual layout and prevent cumulative layout shift.*
+
+**Phase 2 — Runtime List Optimizations:**
+- [ ] 6. Virtual scroller
+- [ ] 7. Intersection observer for lazy-loading
+*One-line description: Optimize rendering and memory for large task lists.*
+
+**Phase 3 — Verification & Audit:**
+- [ ] 8. Test with 482 tasks
+- [ ] 9. Test with various counts
 - [ ] 10. Run Lighthouse audit to confirm improvements
+*One-line description: Validate performance improvements and measure final metrics.*
 
 ---
 

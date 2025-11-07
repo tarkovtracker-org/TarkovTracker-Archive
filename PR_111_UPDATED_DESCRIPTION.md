@@ -2,13 +2,15 @@
 
 ## Summary
 
-This PR represents a **major integration branch** reconciling multiple feature streams. It contains **188 commits** across several areas.
+This PR represents a **major-integration branch** reconciling multiple feature streams. It contains **188 commits** across several areas.
 
 ⚠️ **Note**: This PR is large. I've added tooling to split it into smaller PRs if reviewers prefer. See `QUICK_START_PR_SPLIT.md` for details.
 
 ---
 
 ## Changes Breakdown
+
+### 🏗️ **Infrastructure & Dependencies** (Medium Risk)
 
 ### 🏗️ **Infrastructure & Dependencies** (Medium Risk)
 
@@ -67,7 +69,7 @@ This PR represents a **major integration branch** reconciling multiple feature s
 
 - Scheduled Tarkov data sync with sharding
 - Token inactivity expiration system
-- Rate limiting infrastructure
+- Rate-limiting infrastructure
 - LRU cache implementation
 - Team management refactoring
 

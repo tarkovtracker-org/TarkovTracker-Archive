@@ -18,6 +18,24 @@ function findProjectRoot(startDir: string, markerFile: string): string | null {
     currentDir = parentDir;
   }
 }
+const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
+if (!projectRoot) {
+  const searchedDirs = [__dirname];
+  let currentDir = __dirname;
+  while (true) {
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break;
+    searchedDirs.push(parentDir);
+    currentDir = parentDir;
+  }
+  throw new Error(
+    `Failed to find project root: 'LICENSE.md' not found in any parent directory.\n` +
+    `Searched directories (from ${__dirname} upwards):\n` +
+    searchedDirs.map(dir => `  - ${dir}`).join('\n') + '\n' +
+    `Ensure LICENSE.md exists at the project root.`
+  );
+}
+const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
 const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -69,42 +87,32 @@ const swaggerOptions: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ['lib/**/*.js'],
+  apis: [sourceGlob],
 };
-// Find the project root
-const projectRoot = findProjectRoot(__dirname, 'package.json');
-if (!projectRoot) {
-  console.error(
-    `Failed to find project root while searching for 'package.json'.\n` +
-      `Current working directory: ${process.cwd()}\n` +
-      `Script directory (__dirname): ${__dirname}\n` +
-      `\n` +
-      `This script must be run from the project root (or package.json must exist in a parent directory).\n` +
-      `Next steps:\n` +
-      `  1. Verify that package.json exists at the project root\n` +
-      `  2. Run this script from the project root directory\n` +
-      `  3. If needed, update the marker file name or provide an alternate root path`
-  );
-  process.exit(1);
-}
 const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
-const outputPath = path.join(projectRoot, 'openapi/openapi.json');
-const outputDir = path.dirname(outputPath); // This will be projectRoot/openapi
+const outputPath = path.join(projectRoot, 'docs/openapi.json');
+const jsOutputPath = path.join(projectRoot, 'docs/openapi.js');
+const outputDir = path.dirname(outputPath); // This will be projectRoot/docs
 // Ensure the output directory exists
-try {
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+// Write the specification to a JSON file
+fs.writeFile(outputPath, JSON.stringify(openapiSpecification, null, 2), (err) => {
+  if (err) {
+    console.error('Error writing OpenAPI specification:', err);
+    process.exit(1);
+  } else {
+    console.log(`OpenAPI specification created successfully at ${outputPath}`);
+    const jsContent = `window.openapi = ${JSON.stringify(openapiSpecification, null, 2)};`;
+    fs.writeFile(jsOutputPath, jsContent, (err) => {
+      if (err) {
+        console.error('Error writing OpenAPI JS file:', err);
+        process.exit(1);
+      } else {
+        console.log(`OpenAPI JS file created successfully at ${jsOutputPath}`);
+      }
+    });
   }
-} catch (error) {
-  console.error('Error ensuring OpenAPI output directory:', error);
-  process.exit(1);
-}
-// Write the specification to the JSON file used by Scalar
-try {
-  fs.writeFileSync(outputPath, JSON.stringify(openapiSpecification, null, 2));
-  console.log(`OpenAPI specification created successfully at ${outputPath}`);
-} catch (error) {
-  console.error('Error writing OpenAPI specification:', error);
-  process.exit(1);
-}
+});

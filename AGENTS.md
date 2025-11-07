@@ -76,8 +76,9 @@ Mock auth persists a generated dev user ID in localStorage; disable (`false` or 
 - Linting/formatting:
   - `npm run lint` – ESLint, type-check, and markdown linting for
   all files.
-  - `npm run lint:md` – Run only markdown linting for documentation files (human-readable output).
-  - `npm run lint:md:json` – Run markdown linting with condensed JSON output (80% reduction in verbosity).
+  - `npm run lint:md` – Run only markdown linting for documentation files (human-readable output, respects `.markdownlintignore`).
+  - `npm run lint:md:fix` – Auto-fix markdown issues wherever the markdownlint CLI supports it (respects `.markdownlintignore`).
+  - `npm run lint:md:json` – Run markdown linting with condensed JSON output (80% reduction in verbosity, respects `.markdownlintignore`).
   - `npm run format` / `npm run format:check` – Prettier across
   `.vue`/`.ts` sources.
 

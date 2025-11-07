@@ -1,7 +1,7 @@
 # Technical Debt - Completed Items
 
 **Archive Date:** 2025-11-02
-**Status:** 📦 Historical Record
+**Status:** 📜 Historical Record
 
 This document contains technical debt items that have been successfully resolved.
 
@@ -275,12 +275,12 @@ Total Time: ~37 hours
 ## References
 
 **Related Commits:**
-- `6d0a230` - chore: improve build tooling and test infrastructure
-- `353313f` - docs: update API documentation reference from Swagger to Scalar UI
-- `dcd13e2` - refactor: add defensive error handling to progress store
-- `eea8f3f` - refactor: add null safety and error boundaries to user store
-- `7cbcb18` - refactor: improve logger message formatting for readability
-- `3fd7c79` - test: add comprehensive test suites for stores and composables
+- `6d0a2309177275b7f04280efdba3917a73e776ab` - chore: improve build tooling and test infrastructure
+- `353313f5dd4f5ea04de18b1835478ef0a6733535` - docs: update API documentation reference from Swagger to Scalar UI
+- `dcd13e25056b11f582a35a76c5d56deb5150e670` - refactor: add defensive error handling to progress store
+- `eea8f3fad02bbe5e57b82510ea7e2afdc9f3e310` - refactor: add null safety and error boundaries to user store
+- `7cbcb18462192436dcacf9be8a93cfcb69fa8ec1` - refactor: improve logger message formatting for readability
+- `3fd7c798d2a96eb173e0906ccaffba3b71048d94` - test: add comprehensive test suites for stores and composables
 
 **Related Documentation:**
 - [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) - Active technical debt items

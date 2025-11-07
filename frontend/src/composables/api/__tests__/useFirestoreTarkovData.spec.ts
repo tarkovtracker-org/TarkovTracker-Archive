@@ -8,18 +8,14 @@ import { ref, nextTick } from 'vue';
 
 // Mock VueFire BEFORE imports
 const mockUseDocument = vi.fn();
-const mockUseCollection = vi.fn();
 vi.mock('vuefire', () => ({
   useDocument: mockUseDocument,
-  useCollection: mockUseCollection,
 }));
 
 // Mock Firebase
 const mockDoc = vi.fn();
-const mockCollection = vi.fn();
 vi.mock('firebase/firestore', () => ({
   doc: mockDoc,
-  collection: mockCollection,
 }));
 
 // Mock Firebase plugin
@@ -44,22 +40,22 @@ describe('useFirestoreTarkovItems', () => {
 
     // Clear all mocks
     vi.clearAllMocks();
-    mockCollection.mockReturnValue({ path: 'tarkovData/items/data' });
+    mockDoc.mockReturnValue({ path: 'tarkovData/items' });
   });
 
-  it('should successfully retrieve item data from Firestore /tarkovData/items/data (AC: 1, 3)', async () => {
+  it('should successfully retrieve item data from Firestore /tarkovData/items (AC: 1, 3)', async () => {
     // Arrange
     const mockItems = [
       { id: 'item1', name: 'Item 1' },
       { id: 'item2', name: 'Item 2' },
     ];
 
-    const mockCollectionData = ref(mockItems);
-    const mockCollectionError = ref(null);
+    const mockDocData = ref({ items: mockItems });
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act - dynamically import to reset singleton
@@ -71,24 +67,22 @@ describe('useFirestoreTarkovItems', () => {
 
     // Assert
     const { firestore } = await import('@/plugins/firebase');
-    expect(mockCollection).toHaveBeenCalledWith(firestore, 'tarkovData', 'items', 'data');
-    expect(mockUseCollection).toHaveBeenCalled();
+    expect(mockDoc).toHaveBeenCalledWith(firestore, 'tarkovData', 'items');
+    expect(mockUseDocument).toHaveBeenCalled();
     expect(items.value).toEqual(mockItems);
     expect(loading.value).toBe(false);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Loaded 2 Tarkov items from Firestore subcollection cache'
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Loaded 2 Tarkov items from Firestore cache');
   });
 
   it('should utilize VueFire for reactive data binding (AC: 4)', async () => {
     // Arrange
-    const mockCollectionData = ref([]);
-    const mockCollectionError = ref(null);
+    const mockDocData = ref({ items: [] });
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act
@@ -98,22 +92,22 @@ describe('useFirestoreTarkovItems', () => {
     // Wait for initialization
     await nextTick();
 
-    // Assert - verify VueFire useCollection was called
-    expect(mockUseCollection).toHaveBeenCalledWith(
-      { path: 'tarkovData/items/data' },
-      { ssrKey: 'tarkov-items-collection' }
+    // Assert - verify VueFire useDocument was called
+    expect(mockUseDocument).toHaveBeenCalledWith(
+      { path: 'tarkovData/items' },
+      { ssrKey: 'tarkov-items' }
     );
   });
 
   it('should implement singleton pattern - only initialize once (AC: 5)', async () => {
     // Arrange
     const mockItems = [{ id: 'item1', name: 'Item 1' }];
-    const mockCollectionData = ref(mockItems);
-    const mockCollectionError = ref(null);
+    const mockDocData = ref({ items: mockItems });
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act - import once and call multiple times
@@ -125,8 +119,8 @@ describe('useFirestoreTarkovItems', () => {
     // Wait for watchers
     await nextTick();
 
-    // Assert - useCollection should only be called once (singleton)
-    expect(mockUseCollection).toHaveBeenCalledTimes(1);
+    // Assert - useDocument should only be called once (singleton)
+    expect(mockUseDocument).toHaveBeenCalledTimes(1);
 
     // All calls should return the same cached data
     expect(result1.items.value).toEqual(result2.items.value);
@@ -136,12 +130,12 @@ describe('useFirestoreTarkovItems', () => {
   it('should handle Firestore errors gracefully (AC: 2)', async () => {
     // Arrange
     const mockError = new Error('Firestore connection failed');
-    const mockCollectionData = ref(undefined);
-    const mockCollectionError = ref(mockError);
+    const mockDocData = ref(undefined);
+    const mockDocError = ref(mockError);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act
@@ -156,19 +150,19 @@ describe('useFirestoreTarkovItems', () => {
     expect(items.value).toEqual([]);
     expect(loading.value).toBe(false);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      'Failed to load Tarkov items from Firestore collection:',
+      'Failed to load Tarkov items from Firestore:',
       mockError
     );
   });
 
-  it('should handle empty subcollection (AC: 2)', async () => {
+  it('should handle missing items field in document (AC: 2)', async () => {
     // Arrange
-    const mockCollectionData = ref([]); // Subcollection exists but is empty
-    const mockCollectionError = ref(null);
+    const mockDocData = ref({}); // Document exists but no 'items' field
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act
@@ -182,19 +176,19 @@ describe('useFirestoreTarkovItems', () => {
     expect(items.value).toEqual([]);
     expect(loading.value).toBe(false);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Loaded 0 Tarkov items from Firestore subcollection cache'
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'Tarkov items document exists but has no items field'
     );
   });
 
   it('should initialize with loading state (AC: 2)', async () => {
     // Arrange
-    const mockCollectionData = ref(undefined); // Not loaded yet
-    const mockCollectionError = ref(null);
+    const mockDocData = ref(undefined); // Not loaded yet
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act
@@ -207,12 +201,12 @@ describe('useFirestoreTarkovItems', () => {
 
   it('should handle empty items array (AC: 2)', async () => {
     // Arrange
-    const mockCollectionData = ref([]); // Empty array
-    const mockCollectionError = ref(null);
+    const mockDocData = ref({ items: [] });
+    const mockDocError = ref(null);
 
-    mockUseCollection.mockReturnValue({
-      data: mockCollectionData,
-      error: mockCollectionError,
+    mockUseDocument.mockReturnValue({
+      data: mockDocData,
+      error: mockDocError,
     });
 
     // Act
@@ -225,15 +219,13 @@ describe('useFirestoreTarkovItems', () => {
     // Assert
     expect(items.value).toEqual([]);
     expect(error.value).toBeNull();
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Loaded 0 Tarkov items from Firestore subcollection cache'
-    );
+    expect(mockLogger.info).toHaveBeenCalledWith('Loaded 0 Tarkov items from Firestore cache');
   });
 
   it('should handle initialization errors (AC: 2)', async () => {
     // Arrange
     const initError = new Error('Initialization failed');
-    mockCollection.mockImplementation(() => {
+    mockDoc.mockImplementation(() => {
       throw initError;
     });
 
@@ -249,7 +241,7 @@ describe('useFirestoreTarkovItems', () => {
     expect(loading.value).toBe(false);
     expect(items.value).toEqual([]);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      'Error initializing Firestore Tarkov items collection:',
+      'Error initializing Firestore Tarkov items:',
       initError
     );
   });

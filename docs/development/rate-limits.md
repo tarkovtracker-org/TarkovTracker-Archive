@@ -9,7 +9,7 @@ without slowing down legitimate realtime updates.
 - **Scope** – Only applies to mutation verbs (`POST`, `PUT`, `PATCH`, `DELETE`) hitting the configured path prefixes. Read-only endpoints remain untouched.
 - **Sliding Window** – Requests are counted per token hash (with IP fallback) inside a short time window. Counts reset automatically when the window expires.
 - **Warning vs Block** – When usage crosses 80% of the window threshold a warning event is logged. A 429 response is returned only if the threshold is exceeded across multiple consecutive windows.
-- **Event Logging** – Warnings are always logged via logger.warn for each warning or block. Additionally, when the Firebase Admin SDK is initialized, a rate-limit event (rateLimitEvents) is written to Firestore; otherwise, only logging occurs.
+- **Event Logging** – Warnings are always logged via logger.warn for each warning or block. When the Firebase Admin SDK is initialized, a rate-limit event is also written to the rateLimitEvents collection in Firestore. Otherwise, only logging occurs.
 - **In-Memory Counters** – Rate-limit counters are stored in-process and scoped per server instance, resetting on cold start or restart. They are not coordinated across instances, so distributed enforcement requires a shared store.
 
 ## Configuration

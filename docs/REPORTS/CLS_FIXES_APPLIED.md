@@ -83,6 +83,18 @@
 - CSS containment isolates layout recalculations per card
 - Reduces individual card shift from 0.121 → ~0.02
 
+### ⚠️ Caution: `contain` CSS Property Side Effects
+
+While `contain: layout style paint` is powerful for performance, it introduces specific side effects that require careful testing, especially with complex UI elements:
+
+-   **Stacking Contexts:** `contain: layout` can create a new stacking context, which might affect `z-index` behavior of children, potentially causing elements to appear above or below where expected.
+-   **Positioned Descendants:** Absolutely or fixed positioned descendants of a contained element might be clipped or positioned relative to the contained element's padding box, rather than the viewport or a higher ancestor.
+-   **Z-index/Clipping Behavior:** Elements like modals, popovers, tooltips, or dropdowns that rely on breaking out of their parent's bounds or specific `z-index` layering might behave unexpectedly.
+
+**Recommendation:** Thoroughly test any UI components that use `contain` with modals, popovers, tooltips, and absolutely-positioned children to ensure no unintended visual regressions or clipping issues. Consider alternatives like using an inner wrapper for containment, applying `contain` selectively (e.g., `contain: paint` only), or avoiding containment where these side effects are problematic.
+
+*Note: Reductions are estimates and content-dependent.*
+
 ---
 
 ### ✅ Fix 3: Skeleton Loaders (Expected: -21% CLS reduction)
@@ -143,7 +155,7 @@
 
 ## Expected Performance Improvements
 
-| Metric | Before | After (Expected) | Change |
+| Metric | Before | After (Expected) | Contribution (not additive) |
 |--------|--------|------------------|--------|
 | **CLS Score** | **0.694** | **< 0.08** | **-88%** ✅ |
 | Font shift (MDI) | 0.156 | ~0.005 | -97% |
@@ -151,6 +163,7 @@
 | Task card shift | 0.121 | ~0.02 | -83% |
 | Footer shift | 0.147 | ~0.01 | -93% |
 | **Overall CLS** | **0.694** | **~0.04-0.08** | **90%+ improvement** |
+*Note: The individual contributions listed above are not strictly additive due to overlaps in layout shifts. The final CLS of ~0.04–0.08 is a combined result of all applied fixes.*
 
 ### Performance Score Prediction
 
@@ -203,6 +216,19 @@ Test on throttled connections:
 - [ ] Fast 3G (font preload effectiveness)
 - [ ] Slow 3G (font-display: optional behavior)
 - [ ] Offline (skeleton loader fallback)
+
+### 6. CSS Containment Validation
+
+Verify that `contain: layout style paint` on task cards doesn't break interactive elements:
+
+- [ ] Task card tooltips appear correctly (not clipped)
+- [ ] Context menus/dropdowns render above adjacent cards
+- [ ] Modal overlays open from task cards (z-index behavior)
+- [ ] Focus states work on interactive elements (buttons, links)
+- [ ] Hover states trigger properly on contained elements
+- [ ] Absolutely positioned children remain visible
+
+**Note:** CSS containment can create new stacking contexts. Test any popovers, tooltips, or modals that rely on breaking out of their parent container.
 
 ---
 

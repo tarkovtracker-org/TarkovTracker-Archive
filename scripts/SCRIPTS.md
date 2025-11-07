@@ -1,12 +1,10 @@
 # TarkovTracker Scripts Guide
 
 > **Location**: This documentation belongs in the `/scripts/` directory
-> **Purpose**: Documents all npm scripts and development workflows for the
-> TarkovTracker monorepo
+> **Purpose**: Documents all npm scripts and development workflows for the TarkovTracker monorepo
 
 This is a monorepo with two main workspaces: `frontend` and `functions`.
-Scripts are
-organized to avoid confusion and provide clear entry points from the root.
+Scripts are organized to avoid confusion and provide clear entry points from the root.
 
 ## Dependency Management Scripts
 
@@ -182,8 +180,8 @@ npm run deploy:prod      # Deploy to production environment
 #### `npm run lint`
 
 - **Purpose**: Lint all code
-- **Process**: Runs ESLint on entire monorepo
-- **Best for**: Code quality checks
+- **Process**: Runs `scripts/lint-all.mjs`, which executes ESLint, TypeScript type-checking for both workspaces, and markdownlint (via npm script invocation of `npm run lint:md`)
+- **Best for**: Code quality checks across JS/TS/Vue and documentation
 
 #### `npm run format`
 

@@ -64,7 +64,7 @@ src/
 
    ```bash
    npm run build        # Compile TypeScript
-   npm run lint         # Code linting
+   npm run lint         # Lint orchestrator (ESLint, TS checks, markdown)
    npm run test         # Run test suite
    ```
 

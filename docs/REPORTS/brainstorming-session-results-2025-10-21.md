@@ -175,7 +175,8 @@ The infrastructure ALREADY EXISTS but isn't connected:
 - ❌ **Unknown reason** - The connection between backend cache and frontend is broken/missing
 - 🤷 **Accepted as-is** - Limited Firebase knowledge led to leaving it broken
 
-**ROOT CAUSE REVELATION:**
+#### Root Cause Revelation
+
 This is another abandoned WIP from the original maintainer! The caching architecture was partially implemented but never completed/connected.
 
 **The Performance Fix Might Already Be 90% Built** - you just need to:
@@ -194,7 +195,7 @@ This is another abandoned WIP from the original maintainer! The caching architec
 
 We'll rapid-fire through each lens to generate concrete refactoring ideas.
 
-#### **S - SUBSTITUTE: What to replace/swap out?**
+#### S - SUBSTITUTE: What to replace or swap out?
 
 1. **Substitute Vuetify → Quasar** (exploring already)
 2. **SUBSTITUTE FIREBASE EMULATOR** ⭐ - This is a MAJOR pain point
@@ -209,7 +210,7 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Fix `tarkovdata.ts` → `useTarkovGameData.ts` or similar
    - Make naming consistent and descriptive across codebase
 
-#### **C - COMBINE: What to merge/consolidate?**
+#### C - COMBINE: What to merge or consolidate?
 
 1. **Consolidate dual legacy systems** - Replace most static data with Tarkov.dev API
    - Static data like levels, trader info → fetch from API
@@ -222,11 +223,11 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Priority: Implement testing infrastructure first
    - Can optimize/consolidate testing approaches later
 
-## Key insight
+#### Key Insight (SCAMPER - Combine): Combination opportunities are limited
 
-"Combination opportunities are limited - more about ELIMINATION of duplicates than merging."
+Combination opportunities are limited; focus on eliminating duplicates rather than merging.
 
-### **A - ADAPT: What patterns from other projects to borrow?**
+### A - ADAPT: What patterns from other projects to borrow?
 
 1. **ADAPT CI/CD PATTERNS** ⭐ - Main adaptation desire
    - Most modern projects have extensive CI/CD setup
@@ -234,9 +235,11 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Want: Automated testing, building, deployment, quality checks
    - Benefit: Confidence in changes, faster iteration, contributor safety net
 
-**Key insight: "CI/CD is the missing professional infrastructure - would provide automation and confidence currently lacking."**
+#### Key Insight (SCAMPER - Adapt): CI/CD is the missing professional infrastructure
 
-#### **M - MODIFY: What to adjust/tweak in existing code?**
+CI/CD would provide the automation and confidence the project currently lacks.
+
+#### M - MODIFY: What to adjust or tweak in existing code?
 
 1. **Modify component size/complexity** - Break down large components
    - Target: Components >300-400 lines
@@ -255,14 +258,16 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Better documentation for new contributors
    - Make it EASY for others to help
 
-**Key insight: "Modifications focus on REDUCTION (comments, complexity, barriers) and IMPROVEMENT (performance, organization, DX)."**
+#### Key Insight (SCAMPER - Modify): Target reduction and improvement
 
-#### **P - PUT TO OTHER USE: Repurpose existing pieces?**
+Modifications prioritize reducing comments, complexity, and barriers while improving performance, organization, and DX.
+
+#### P - PUT TO OTHER USE: Repurpose existing pieces?
 
 - **No clear repurposing opportunities identified** (uncertain what's possible)
 - This lens less applicable to current refactoring needs
 
-#### **E - ELIMINATE: What to DELETE ruthlessly?**
+#### E - ELIMINATE: What to delete ruthlessly?
 
 1. **ELIMINATE Over-commenting** ⭐
    - Remove excessive inline comments
@@ -285,9 +290,11 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Keep only where needed for readability
    - Tighten up code density
 
-**Key insight: "ELIMINATION is where the biggest wins are - removing friction, bloat, and barriers."**
+#### Key Insight (SCAMPER - Eliminate): Biggest wins come from removing friction
 
-#### **R - REVERSE/REARRANGE: Flip the approach or reorder?**
+Elimination efforts deliver the biggest wins by removing friction, bloat, and barriers.
+
+#### R - REVERSE/REARRANGE: Flip the approach or reorder?
 
 1. **REVERSE: Generate docs FROM code** ⭐
    - Instead of writing docs separately (that go stale)
@@ -309,11 +316,13 @@ We'll rapid-fire through each lens to generate concrete refactoring ideas.
    - Depends on performance impact
    - "If it works, it works" - test and measure
 
-**Key insight: "REVERSALS focus on inverting friction points - generate instead of write, mock instead of require, cache instead of fetch."**
+#### Key Insight (SCAMPER - Reverse): Invert friction points to relieve friction
+
+Reversals center on inverting friction points: generate instead of write, mock instead of require, cache instead of fetch.
 
 ---
 
-### **SCAMPER COMPLETE - Idea Generation Summary**
+### SCAMPER COMPLETE - Idea Generation Summary
 
 Generated concrete ideas across all 7 lenses:
 
@@ -329,9 +338,9 @@ Generated concrete ideas across all 7 lenses:
 
 ### Phase 4: Resource Constraints - Ruthless Prioritization
 
-**Forcing Question: If you could ONLY fix ONE thing in 30 days, what has biggest impact?**
+#### Forcing question: If you could only fix one thing in 30 days, what has biggest impact?
 
-**ANSWER: PERFORMANCE** ⭐⭐⭐
+##### Answer: Performance ⭐⭐⭐
 
 Rationale for prioritizing performance:
 
@@ -340,16 +349,16 @@ Rationale for prioritizing performance:
 - **Quick win potential** - Just need to connect frontend to cached data
 - **Cascading benefits** - Fast app = better user retention, easier to demo, professional feel
 
-**30-Day Performance Focus:**
+#### 30-Day Performance Focus
 
 1. Connect frontend to Firebase cached Tarkov.dev data
 2. Eliminate direct API calls to Tarkov.dev for game data
 3. Implement loading states for instant perceived performance
 4. Measure and optimize bundle size
 
-**Question 2: If you could only spend $0 (free/open-source only), which improvements?**
+#### Question 2: If you could only spend $0 (free/open-source only), which improvements?
 
-**ANSWER: ALL OF THEM** ✅
+##### Answer: All of them ✅
 
 Every identified improvement is achievable with zero budget:
 
@@ -363,11 +372,15 @@ Every identified improvement is achievable with zero budget:
 - ✅ Documentation generation - TypeDoc or similar (free)
 - ✅ Dependency cleanup - Free
 
-**Key insight: "Budget is NOT the constraint - time and knowledge are the constraints."**
+#### Key Insight (Constraint - Budget): Time and knowledge are the real limits
 
-**Question 3: If you could only work solo (no contributors for 6 months), what focus?**
+Budget is not the constraint; time and knowledge are.
 
-**CONTEXT: Already spent a YEAR solo doing cleanup/refactoring/bug fixes**
+#### Question 3: If you could only work solo (no contributors for six months), what focus?
+
+#### Context
+
+Already spent a YEAR solo doing cleanup/refactoring/bug fixes
 
 Reality check:
 
@@ -376,7 +389,9 @@ Reality check:
 - Broke a lot of stuff along the way (no test safety net)
 - Solo maintenance fatigue is real
 
-**Key insight: "The solo grind is unsustainable - you've BEEN doing solo for a year. The real question is: how do you STOP being solo?"**
+#### Key Insight (Constraint - Solo Work): Prioritize escaping solo maintenance
+
+The solo grind is unsustainable; focus on making it easier for others to help.
 
 This reframes everything:
 
@@ -384,22 +399,22 @@ This reframes everything:
 - Optimize for REDUCING solo burden
 - Priority shifts to: **Making it easier for others to help**
 
-**If forced to stay solo 6 more months:**
+#### If forced to stay solo six more months
 
 - Focus on the performance win (quick, user-visible)
 - Then pivot HARD to contributor onboarding (eliminate emulator, add CI/CD)
 - Goal: Don't be solo by month 7
 
-**Question 4: Magic wand - ONE thing done perfectly by experts tomorrow?**
+#### Question 4: Magic wand - ONE thing done perfectly by experts tomorrow?
 
-**HARDEST: React/Next.js migration**
+#### Hardest option: React/Next.js migration
 
 - Would take excessively long
 - Likely introduces MORE issues than it solves
 - Not worth the cost (effort vs benefit)
 - **Verdict: Keep Vue - stop dreaming of React**
 
-**PRACTICAL magic wand choices:**
+#### Practical magic wand choices
 
 1. **CI/CD pipeline** - Time-consuming but totally doable
 2. **Test coverage** - Time-consuming but totally doable
@@ -411,28 +426,34 @@ Both are:
 - Infrastructure work (unglamorous but essential)
 - Things that compound over time (investment pays back)
 
-**Key insight: "The framework doesn't matter - CI/CD and tests matter. Stop wishing for React; wish for infrastructure that makes Vue maintainable."**
+#### Key Insight (Magic Wand): Infrastructure outranks framework swaps
+
+Framework choice is secondary; invest in CI/CD and tests to make Vue maintainable.
 
 ---
 
-### **Resource Constraints - Final Prioritization**
+### Resource Constraints - Final Prioritization
 
 Combining all constraint questions:
 
-**Top Priority (30 days): PERFORMANCE**
+#### Top Priority (30 days)
+
+PERFORMANCE
 
 - Connect Firebase cached data
 - Biggest user impact
 - Quick win with existing infrastructure
 
-**Second Priority (60 days): REDUCE SOLO BURDEN**
+#### Second Priority (60 days)
+
+REDUCE SOLO BURDEN
 
 - Eliminate Firebase emulator barrier
 - Implement CI/CD (GitHub Actions)
 - Add basic test coverage
 - Goal: Make contributing EASY
 
-**Deprioritized:**
+#### Deprioritized
 
 - ❌ React/Next.js migration (too costly, wrong battle)
 - ⏸️ Complete refactoring (do incrementally, not big bang)
@@ -442,7 +463,7 @@ Combining all constraint questions:
 
 ### Immediate Opportunities
 
-_Quick wins ready to implement now (0-30 days)_
+#### Quick wins ready to implement now (0-30 days)
 
 1. **Connect Firebase cached Tarkov.dev data to frontend** ⭐⭐⭐
    - Infrastructure 90% built, just needs connection
@@ -471,7 +492,7 @@ _Quick wins ready to implement now (0-30 days)_
 
 ### Future Innovations
 
-_Bigger lifts requiring development (30-90 days)_
+#### Bigger lifts requiring development (30-90 days)
 
 1. **Eliminate Firebase Java emulator requirement** ⭐⭐⭐
    - Biggest contributor onboarding barrier (>50% friction)
@@ -506,7 +527,7 @@ _Bigger lifts requiring development (30-90 days)_
 
 ### Moonshots
 
-_Ambitious, transformative concepts (>90 days or wishlist)_
+#### Ambitious, transformative concepts (>90 days or wishlist)
 
 1. **Migrate to React/Next.js** (DEPRIORITIZED)
    - Verdict: Too costly, introduces more issues than it solves
@@ -528,7 +549,7 @@ _Ambitious, transformative concepts (>90 days or wishlist)_
 
 ### Insights and Learnings
 
-_Key realizations from the session_
+#### Key realizations from the session
 
 1. **The performance bottleneck is a disconnected feature, not missing architecture**
    - Firebase Cloud Function ALREADY fetches Tarkov.dev data daily
@@ -572,89 +593,92 @@ _Key realizations from the session_
 
 #### #1 Priority: Connect Firebase Cached Tarkov.dev Data
 
-- **Rationale:**
-  - Biggest user-facing performance impact
-  - Infrastructure 90% built - scheduled function already fetches data daily
-  - Just needs frontend connection to cached data
-  - Quick win that users will immediately feel
-  - Every user on every load currently waits for API call
+##### Rationale
+- Biggest user-facing performance impact
+- Infrastructure 90% built - scheduled function already fetches data daily
+- Just needs frontend connection to cached data
+- Quick win that users will immediately feel
+- Every user on every load currently waits for API call
 
-- **Next steps:**
-  1. Verification — Owner: Backend lead (TT Core Team). Confirm where the scheduled Cloud Function persists Tarkov.dev data (Firestore vs Storage), validate schema/retention/freshness, and ensure frontend read permissions with expected latency (<200ms). Gate: only continue to steps 2-8 after acceptance criteria met. Acceptance criteria: storage location and schema documented, retention/freshness proven via latest run logs, and frontend read path validated in emulator + staging with latency measurement captured. Success measured by archived verification notes and latency report linked in project tracker.
-  2. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
-  3. Identify where frontend currently calls Tarkov.dev API directly
-  4. Replace direct API calls with Firebase cache reads
-  5. Implement fallback to direct API if cache is stale/missing
-  6. Add loading states for perceived performance
-  7. Test and measure performance improvement
-  8. Document the caching architecture for future maintainers
+##### Next Steps
+1. Verification — Owner: Backend lead (TT Core Team). Confirm where the scheduled Cloud Function persists Tarkov.dev data (Firestore vs Storage), validate schema/retention/freshness, and ensure frontend read permissions with expected latency (<200ms). Gate: only continue to steps 2-8 after acceptance criteria met. Acceptance criteria: storage location and schema documented, retention/freshness proven via latest run logs, and frontend read path validated in emulator + staging with latency measurement captured. Success measured by archived verification notes and latency report linked in project tracker.
+2. Investigate how the scheduled Cloud Function stores Tarkov.dev data (Firestore? Storage?)
+3. Identify where frontend currently calls Tarkov.dev API directly
+4. Replace direct API calls with Firebase cache reads
+5. Implement fallback to direct API if cache is stale/missing
+6. Add loading states for perceived performance
+7. Test and measure performance improvement
+8. Document the caching architecture for future maintainers
 
-- **Resources needed:**
-  - Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)
-  - Firebase documentation for reading cached data
-  - Testing with real users to validate performance gains
-  - Zero financial cost (all on Firebase free tier)
+##### Resources Needed
+- Time to learn Firebase data flow (Cloud Functions → Storage/Firestore)
+- Firebase documentation for reading cached data
+- Testing with real users to validate performance gains
+- Zero financial cost (all on Firebase free tier)
 
-- **Timeline:** 2-4 weeks (30 days max)
+##### Timeline
+2-4 weeks (30 days max)
 
 ---
 
 #### #2 Priority: Eliminate Firebase Emulator / Improve Contributor Onboarding
 
-- **Rationale:**
-  - >50% of contributor onboarding friction
-  - Java requirement and confusing setup scares away potential help
-  - Solo maintenance is unsustainable - need to enable contributors
-  - Frontend-only dev mode would let UI developers contribute without backend knowledge
-  - Unlocks ability to grow the contributor base
+##### Rationale
+- >50% of contributor onboarding friction
+- Java requirement and confusing setup scares away potential help
+- Solo maintenance is unsustainable - need to enable contributors
+- Frontend-only dev mode would let UI developers contribute without backend knowledge
+- Unlocks ability to grow the contributor base
 
-- **Next steps:**
-  1. Create frontend-only development mode with mocked backend
-  2. Stub out Firebase auth for local dev (fake login)
-  3. Mock Firestore responses with local JSON fixtures
-  4. Document "Quick Start" for frontend-only development
-  5. Keep emulator setup documented for backend work
-  6. Add clear separation: "Frontend dev" vs "Full-stack dev" paths
-  7. Update CONTRIBUTING.md with simplified onboarding
+##### Next Steps
+1. Create frontend-only development mode with mocked backend
+2. Stub out Firebase auth for local dev (fake login)
+3. Mock Firestore responses with local JSON fixtures
+4. Document "Quick Start" for frontend-only development
+5. Keep emulator setup documented for backend work
+6. Add clear separation: "Frontend dev" vs "Full-stack dev" paths
+7. Update CONTRIBUTING.md with simplified onboarding
 
-- **Resources needed:**
-  - Research Vue dev mode configuration options
-  - Create mock data fixtures for typical user scenarios
-  - Write clear contributor documentation
-  - Test with fresh contributor perspective (ask friend to try setup)
-  - Zero financial cost
+##### Resources Needed
+- Research Vue dev mode configuration options
+- Create mock data fixtures for typical user scenarios
+- Write clear contributor documentation
+- Test with fresh contributor perspective (ask friend to try setup)
+- Zero financial cost
 
-- **Timeline:** 4-6 weeks (after performance work)
+##### Timeline
+4-6 weeks (after performance work)
 
 ---
 
 #### #3 Priority: Implement CI/CD Pipeline
 
-- **Rationale:**
-  - Safety net for you and contributors
-  - Automated testing catches regressions before merge
-  - Reduces fear of breaking things during refactoring
-  - Professional infrastructure builds contributor confidence
-  - Compounds over time - every PR gets safer
-  - GitHub Actions free tier is generous
+##### Rationale
+- Safety net for you and contributors
+- Automated testing catches regressions before merge
+- Reduces fear of breaking things during refactoring
+- Professional infrastructure builds contributor confidence
+- Compounds over time - every PR gets safer
+- GitHub Actions free tier is generous
 
-- **Next steps:**
-  1. Set up GitHub Actions workflow for PR checks
-  2. Configure automated linting (ESLint already setup?)
-  3. Configure TypeScript type checking on CI
-  4. Add build verification (ensure project builds)
-  5. Integrate existing Vitest tests into CI
-  6. Add automated deployment to staging/production
-  7. Configure branch protection rules (require CI pass)
-  8. Document CI/CD setup for future modifications
+##### Next Steps
+1. Set up GitHub Actions workflow for PR checks
+2. Configure automated linting (ESLint already setup?)
+3. Configure TypeScript type checking on CI
+4. Add build verification (ensure project builds)
+5. Integrate existing Vitest tests into CI
+6. Add automated deployment to staging/production
+7. Configure branch protection rules (require CI pass)
+8. Document CI/CD setup for future modifications
 
-- **Resources needed:**
-  - GitHub Actions documentation
-  - Example Vue/Vite CI/CD configs to reference
-  - Time to debug CI environment differences
-  - Zero financial cost (GitHub Actions free tier)
+##### Resources Needed
+- GitHub Actions documentation
+- Example Vue/Vite CI/CD configs to reference
+- Time to debug CI environment differences
+- Zero financial cost (GitHub Actions free tier)
 
-- **Timeline:** 3-4 weeks (can overlap with #2)
+##### Timeline
+3-4 weeks (can overlap with #2)
 
 ## Reflection and Follow-up
 
@@ -695,21 +719,20 @@ For future brainstorming sessions:
 
 ### Next Session Planning
 
-- **Suggested topics:**
-  - Technical deep-dive: Firebase caching architecture investigation
-  - Contributor journey mapping: What does the ideal onboarding look like?
-  - Testing strategy: How to build test coverage incrementally
+#### Suggested Topics
+- Technical deep-dive: Firebase caching architecture investigation
+- Contributor journey mapping: What does the ideal onboarding look like?
+- Testing strategy: How to build test coverage incrementally
 
-- **Recommended timeframe:**
-  - After completing Priority #1 (performance fix) - ~30 days
-  - Celebrate the win, then brainstorm next phase
+#### Recommended Timeframe
+- After completing Priority #1 (performance fix) - ~30 days
+- Celebrate the win, then brainstorm next phase
 
-- **Preparation needed:**
-  - Document findings from Firebase caching investigation
-  - Measure actual performance improvements with metrics
+#### Preparation Needed
+- Document findings from Firebase caching investigation
+- Measure actual performance improvements with metrics
   - Collect any contributor feedback about onboarding pain points
   - List components >300 lines that need decomposition
 
----
 
-_Session facilitated using the BMAD CIS brainstorming framework_
+Session facilitated using the BMAD CIS brainstorming framework.

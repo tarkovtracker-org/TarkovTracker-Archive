@@ -18,7 +18,7 @@ understanding and contributing to TarkovTracker.
 ### Code Organization
 
 - [Development Setup](../development/DEV_MODES_README.md) - Local development
-- [API-rate-limiting](../development/rate-limits.md) - API rate-limiting
+- [API rate-limiting](../development/rate-limits.md) - API rate-limiting
 
 ### Development Workflows
 

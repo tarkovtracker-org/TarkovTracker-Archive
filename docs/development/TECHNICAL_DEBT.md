@@ -62,6 +62,7 @@ functions/src/progress/
 
 ---
 
+
 ### 2. Refactor tarkovdataquery.ts
 
 **Priority:** 🟠 High
@@ -72,6 +73,7 @@ functions/src/progress/
 - One massive GraphQL query (600+ lines)
 - No reusability, difficult to modify
 - Fragments repeated across query
+
 
 **Target Structure:**
 
@@ -85,6 +87,7 @@ frontend/src/graphql/
 │   └── traderFragments.ts    # Trader data
 ├── queries/
 │   ├── tarkovDataQuery.ts    # Main query
+
 │   └── index.ts              # Re-export
 └── index.ts                  # Re-export all
 ```
@@ -140,6 +143,7 @@ frontend/src/stores/
 - No TypeScript errors
 - State persistence still works
 
+
 ---
 
 ### 4. Extract NeededItems.vue Components
@@ -156,6 +160,7 @@ frontend/src/features/neededitems/
 ├── components/
 │   ├── NeededItemsFilters.vue    # Filter controls (100 lines)
 │   ├── NeededItemsGrid.vue       # Grid display logic (100 lines)
+
 │   └── NeededItemsList.vue       # List display logic (100 lines)
 └── composables/
     ├── useNeededItemsFiltering.ts
@@ -223,7 +228,7 @@ rg "console\.(log|warn|error|debug)" functions/src/ \
 
 **Step 2: AST-Based Replacement**
 
-Use `ts-morph` or TypeScript compiler API to programmatically change only real call expressions (skip literals, comments, templates):
+Use `ts-morph` or TypeScript compiler API to programmatically change only real call expressions (skip literals, comments, templates). The snippet below is TypeScript:
 
 ```typescript
 // Example using ts-morph
