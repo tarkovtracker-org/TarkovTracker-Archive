@@ -146,7 +146,7 @@ export default [
   },
   // Root-level config files (JavaScript only, no TypeScript project linting)
   {
-    files: ['eslint.config.js', 'bmad/**/*.js'],
+    files: ['*.config.js', 'eslint.config.js', 'bmad/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -170,6 +170,22 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-console': 'off',
+    },
+  },
+  // Node.js scripts configuration (ES Modules)
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         ...globals.node,
         ...globals.es2022,
