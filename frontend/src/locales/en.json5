@@ -359,6 +359,9 @@
         },
       },
     },
+    api_docs: {
+      title: 'API Documentation',
+    },
     settings: {
       title: 'Settings',
       card: {
