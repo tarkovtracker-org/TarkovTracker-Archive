@@ -35,9 +35,9 @@ export default [
   // Vue configuration
   ...pluginVue.configs['flat/recommended'],
 
-  // Frontend TypeScript/Vue source files with typed linting
+  // Frontend Vue source files with typed linting
   {
-    files: ['frontend/src/**/*.ts', 'frontend/src/**/*.vue'],
+    files: ['frontend/src/**/*.vue'],
     languageOptions: {
       parser: vueParser,
       ecmaVersion: 'latest',
@@ -59,6 +59,30 @@ export default [
       'no-unused-vars': 'off',
       'vue/no-unused-vars': 'off',
       'vue/no-v-html': 'error',
+      'no-debugger': 'off',
+      'max-len': ['warn', { code: 100 }],
+    },
+  },
+  // Frontend TypeScript source files with typed linting
+  {
+    files: ['frontend/src/**/*.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.es2022,
+      },
+      parserOptions: {
+        project: ['./frontend/tsconfig.eslint.json'],
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn', // TODO: Fix and change to 'error'
+      'no-unused-vars': 'off',
       'no-debugger': 'off',
       'max-len': ['warn', { code: 100 }],
     },
