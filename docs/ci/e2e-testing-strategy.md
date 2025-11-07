@@ -15,12 +15,14 @@ End-to-end (E2E) tests using Playwright are configured to run strategically to b
 ### Why Skip E2E on PRs?
 
 E2E tests were taking **13+ minutes per PR** due to:
+
 - Testing across 5 browsers (Chromium, Firefox, WebKit, Mobile Chrome, Mobile Safari)
 - Serial execution with 1 worker
 - Multiple retry attempts
 - Hardcoded wait times in tests
 
 This slowed down the development cycle significantly. Since:
+
 - Unit tests and build tests catch most issues
 - E2E tests use mocked auth/API (not true end-to-end)
 - PRs are reviewed before merging anyway
@@ -31,11 +33,13 @@ This slowed down the development cycle significantly. Since:
 ## Optimizations Applied
 
 ### 1. Conditional Execution
+
 ```yaml
 if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
 ```
 
 ### 2. Playwright Configuration
+
 - **Browsers:** Only Chromium by default (4 others commented out)
 - **Workers:** Parallel execution with 2 workers on CI
 - **Retries:** Reduced from 2 to 1
@@ -44,13 +48,16 @@ if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.
 ## Running E2E Tests Locally
 
 ### Quick Test (Chromium only)
+
 ```bash
 cd frontend
 npm run test:e2e
 ```
 
 ### Cross-Browser Testing
+
 Uncomment additional browsers in `frontend/playwright.config.ts`:
+
 ```typescript
 projects: [
   { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
@@ -61,6 +68,7 @@ projects: [
 ```
 
 Then run:
+
 ```bash
 npm run test:e2e
 ```
@@ -88,6 +96,7 @@ Consider for future optimization:
 ## Testing Philosophy
 
 **Fast Feedback Loop:**
+
 - Unit tests (seconds) → Catch logic bugs
 - Build tests (minutes) → Catch integration issues  
 - E2E tests (minutes) → Catch UX/flow issues on main branches

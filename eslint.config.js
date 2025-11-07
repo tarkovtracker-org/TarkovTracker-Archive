@@ -17,6 +17,8 @@ export default [
       '**/dist/**',
       '**/lib/**',
       '**/node_modules/**',
+      // BMAD automation workspace with generated assets (non-source), skip linting
+      'bmad/**',
       'frontend/public/**',
       'docs/openapi.*',
       'functions/test/**/*.js',
@@ -105,6 +107,20 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
+      'no-console': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        ...globals.es2022,
+      },
+    },
+    rules: {
       'no-console': 'off',
     },
   },

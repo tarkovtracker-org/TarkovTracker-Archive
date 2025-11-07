@@ -1,0 +1,6 @@
+bmad/
+**/node_modules/**
+**/.*/node_modules/**
+LICENSE.md
+CLAUDE.md
+AGENTS.md
