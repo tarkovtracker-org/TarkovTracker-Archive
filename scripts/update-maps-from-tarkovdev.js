@@ -30,10 +30,6 @@ const MAX_ATTEMPTS = 3;
 const BACKOFF_BASE = 1000; // 1 second
 
 /**
- * Map tarkov.dev's normalizedName to our existing map keys
- */
-
-/**
  * Fetch with timeout and retry logic using AbortController
  */
 async function fetchWithTimeoutAndRetry(url, options = {}) {
@@ -74,7 +70,7 @@ async function fetchWithTimeoutAndRetry(url, options = {}) {
 }
 
 /**
- * Fetch tarkov.dev maps.json with robust retry logic
+ * Map tarkov.dev's normalizedName to our existing map keys
  */
 const NAME_MAPPING = {
   'streets-of-tarkov': 'streetsoftarkov',

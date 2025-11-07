@@ -42,31 +42,47 @@ async function cleanup() {
   }
 }
 
+// Store emulator process reference for signal handlers
+let emulatorProcess = null;
+
 // Setup signal handlers for graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n📴 Received SIGINT, shutting down...');
   await cleanup();
+  if (emulatorProcess && emulatorProcess.kill) {
+    emulatorProcess.kill();
+  }
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n📴 Received SIGTERM, shutting down...');
   await cleanup();
+  if (emulatorProcess && emulatorProcess.kill) {
+    emulatorProcess.kill();
+  }
   process.exit(0);
 });
 
 // Run the Firebase emulator command
 const args = process.argv.slice(2);
-const emulatorProcess = spawn('firebase', ['emulators:start', ...args], {
+emulatorProcess = spawn('firebase', ['emulators:start', ...args], {
   stdio: 'inherit',
   shell: true
 });
 
 // Handle process exit
-emulatorProcess.on('close', async (code) => {
-  console.log(`\n🔚 Emulators exited with code ${code}`);
+emulatorProcess.on('close', async (code, signal) => {
+  const exitMessage = code !== null ? `code ${code}` : `signal ${signal ?? 'unknown'}`;
+  console.log(`\n🔚 Emulators exited with ${exitMessage}`);
   await cleanup();
-  process.exit(code);
+
+  // If terminated by signal or code is null, exit with failure status
+  if (typeof code === 'number') {
+    process.exit(code);
+  }
+  // Signal or unknown termination – propagate as failure
+  process.exit(1);
 });
 
 emulatorProcess.on('error', async (error) => {
