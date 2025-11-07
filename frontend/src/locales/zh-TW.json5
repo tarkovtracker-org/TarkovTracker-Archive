@@ -390,6 +390,3 @@
   'task.kappa_req': 'Kappa 任務所需',
   'task.level_req': '所需等級：{level}',
 }
-    },
-  },
-}
