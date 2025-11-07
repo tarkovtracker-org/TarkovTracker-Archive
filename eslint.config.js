@@ -51,7 +51,6 @@ export default [
         project: ['./frontend/tsconfig.eslint.json'],
         tsconfigRootDir: __dirname,
         extraFileExtensions: ['.vue'],
-        allowImportExportEverywhere: false,
       },
     },
     rules: {
@@ -79,9 +78,6 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.es2022,
-      },
-      parserOptions: {
-        allowImportExportEverywhere: false,
       },
     },
     rules: {
@@ -143,7 +139,7 @@ export default [
     rules: {
       'no-console': 'off',
       'no-unused-vars': 'off',
-      'no-undef': 'off', // Allow console, global, etc. in test files
+      'no-undef': 'off', // Disable undefined variable checks in test files
       '@typescript-eslint/no-unused-vars': 'off', // Disable TypeScript rules for JS files
       '@typescript-eslint/no-explicit-any': 'off',
     },

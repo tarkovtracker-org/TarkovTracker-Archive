@@ -8,13 +8,9 @@ on:
     paths:
       # Deploy when sources for API docs change (OpenAPI config or function sources)
       - 'functions/src/openapi/**'
-      - 'functions/openapi/**'
-      # Only trigger on handlers, routes, and API surface definitions
+      # Trigger on API surface changes
       - 'functions/src/index.ts'
       - 'functions/src/handlers/**/*.ts'
-      - 'functions/src/routes/**/*.ts'
-      - 'functions/src/controllers/**/*.ts'
-      - 'functions/src/schemas/**/*.ts'
       - 'functions/src/types/**/*.ts'
 
   # Allows you to run this workflow manually from the Actions tab
@@ -52,23 +48,23 @@ jobs:
         run: npm run docs
       - name: Verify API docs generated
         run: |
-          if [ ! -d "./functions/openapi" ]; then
-            echo "Error: functions/openapi directory does not exist"
+          if [ ! -d "./docs" ]; then
+            echo "Error: docs directory does not exist"
             exit 1
           fi
-          if [ ! -f "./functions/openapi/openapi.json" ]; then
-            echo "Error: functions/openapi/openapi.json was not generated"
+          if [ ! -f "./docs/openapi.json" ]; then
+            echo "Error: docs/openapi.json was not generated"
             exit 1
           fi
           echo "✅ API documentation generated successfully"
-          ls -lh ./functions/openapi/
+          ls -lh ./docs/
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the OpenAPI folder with generated openapi.json
-          path: './functions/openapi'
+          # Upload the docs folder with generated openapi.json and openapi.js
+          path: './docs'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
