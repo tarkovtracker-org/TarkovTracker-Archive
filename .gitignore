@@ -36,6 +36,12 @@ functions/node_modules/
 frontend/dist/
 functions/lib/
 
+# TypeScript build info (incremental compilation cache)
+*.tsbuildinfo
+
+# Tooling caches
+.cache/
+
 # Coverage reports
 frontend/coverage/
 functions/coverage/

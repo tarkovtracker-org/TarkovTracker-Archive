@@ -1,4 +1,5 @@
-import { ref, computed, watch, type Ref } from 'vue';
+import { ref, computed, watch } from 'vue';
+import type { AbstractGraph } from 'graphology-types';
 import { useTarkovHideoutQuery } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import {
@@ -10,13 +11,7 @@ import {
   safeAddNode,
   safeAddEdge,
 } from '@/composables/utils/graphHelpers';
-import type {
-  HideoutStation,
-  HideoutModule,
-  NeededItemHideoutModule,
-  TarkovHideoutQueryResult,
-} from '@/types/tarkov';
-import type { AbstractGraph } from 'graphology-types';
+import type { HideoutStation, HideoutModule, NeededItemHideoutModule } from '@/types/tarkov';
 import { logger } from '@/utils/logger';
 /**
  * Composable for managing hideout data, station relationships, and requirements
@@ -30,15 +25,7 @@ export function useHideoutData() {
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
 
-  const {
-    result: queryResult,
-    error,
-    loading,
-  } = useTarkovHideoutQuery(currentGameMode) as {
-    result: Ref<TarkovHideoutQueryResult | null>;
-    error: Ref<Error | null>;
-    loading: Ref<boolean>;
-  };
+  const { result: queryResult, error, loading } = useTarkovHideoutQuery(currentGameMode);
   // Reactive state
   const hideoutStations = ref<HideoutStation[]>([]);
   const hideoutModules = ref<HideoutModule[]>([]);

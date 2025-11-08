@@ -135,20 +135,46 @@
   import { useMapZoom } from '@/composables/maps/useMapZoom';
   import { parseMapFileName, getMapSvgUrl, formatFloorLabel } from '@/utils/mapUtils';
 
-  // Opacity constants for multi-floor map rendering
-  const FLOOR_OPACITY_BELOW = 0.4;
-  const FLOOR_OPACITY_SELECTED = 1.0;
-  const FLOOR_OPACITY_ABOVE = 0.05;
+  /**
+   * Opacity settings for multi-floor map rendering.
+   * These values visually distinguish the selected floor (fully opaque),
+   * floors below (partially visible), and floors above (barely visible).
+   * Adjust for UX or accessibility needs; this can be overridden via props.
+   */
+  type FloorOpacity = {
+    BELOW: number; // Floors below the selected floor are partially visible
+    SELECTED: number; // Selected floor is fully opaque
+    ABOVE: number; // Floors above the selected floor are barely visible
+  };
+
+  /**
+   * Default opacity settings for multi-floor maps.
+   * BELOW: Dim but visible
+   * SELECTED: Fully visible
+   * ABOVE: Barely visible to reduce visual clutter
+   */
+  const DEFAULT_FLOOR_OPACITY: FloorOpacity = {
+    BELOW: 0.4,
+    SELECTED: 1.0,
+    ABOVE: 0.05,
+  };
 
   interface Props {
     map: TarkovMap;
     marks?: ObjectiveMarker[];
+    floorOpacity?: Partial<FloorOpacity>;
   }
 
   const randomMapId = ref(uuidv4());
   const props = withDefaults(defineProps<Props>(), {
     marks: () => [] as ObjectiveMarker[],
+    floorOpacity: undefined,
   });
+
+  const effectiveFloorOpacity = computed<FloorOpacity>(() => ({
+    ...DEFAULT_FLOOR_OPACITY,
+    ...(props.floorOpacity ?? {}),
+  }));
   const MapMarker = defineAsyncComponent(() => import('@/features/maps/MapMarker.vue'));
   const MapZone = defineAsyncComponent(() => import('@/features/maps/MapZone.vue'));
 
@@ -175,6 +201,9 @@
 
   // Cache for loaded SVG elements (to avoid re-fetching)
   const svgCache = ref(new Map<string, SVGSVGElement>());
+
+  // Cache for computed SVG URLs to avoid recomputing per floor per map
+  const svgUrlCache = ref(new Map<string, string>());
 
   const mapSvg = computed<MapSvgDefinition | undefined>(() => {
     const svg = props.map?.svg;
@@ -293,6 +322,9 @@
             wrapper.querySelectorAll('svg').forEach((node) => node.remove());
           }
         }
+        // Clear caches to avoid stale cross-map data
+        svgCache.value.clear();
+        svgUrlCache.value.clear();
         teardownZoom();
         currentMapId.value = newMap?.id;
       }
@@ -392,16 +424,17 @@
       const floorFileName = `${baseName}-${floor}.svg`;
 
       // Calculate opacity based on position relative to selected floor
-      let opacity = FLOOR_OPACITY_SELECTED;
+      // Floors below are dimmed, selected floor is fully opaque, floors above are barely visible.
+      let opacity = effectiveFloorOpacity.value.SELECTED;
       const isMainLayer = i === selectedFloorIndex;
       const isFirstLayer = i === 0; // First layer defines wrapper height
 
       if (i < selectedFloorIndex) {
-        opacity = FLOOR_OPACITY_BELOW;
+        opacity = effectiveFloorOpacity.value.BELOW;
       } else if (isMainLayer) {
-        opacity = FLOOR_OPACITY_SELECTED;
+        opacity = effectiveFloorOpacity.value.SELECTED;
       } else {
-        opacity = FLOOR_OPACITY_ABOVE;
+        opacity = effectiveFloorOpacity.value.ABOVE;
       }
 
       const loadedSvg = await drawFloorLayer(
@@ -432,30 +465,36 @@
   };
 
   /**
-   * Update opacity of existing floor SVGs without re-fetching
+   * Update opacity of existing floor SVGs without re-fetching.
+   * Applies effectiveFloorOpacity for BELOW/SELECTED/ABOVE and disables pointer events
+   * for non-selected layers, keeping only the active floor interactive.
    */
   const updateFloorOpacity = (wrapper: HTMLElement, selectedFloorIndex: number) => {
-    const svgs = wrapper.querySelectorAll('svg');
+    const svgs = wrapper.querySelectorAll<SVGSVGElement>('svg[data-floor-layer="true"]');
 
     svgs.forEach((svg, index) => {
-      let opacity = FLOOR_OPACITY_SELECTED;
+      // Floors below are dimmed, selected floor is fully opaque, floors above are barely visible.
+      let opacity = effectiveFloorOpacity.value.SELECTED;
       const isMainLayer = index === selectedFloorIndex;
 
       if (index < selectedFloorIndex) {
-        opacity = FLOOR_OPACITY_BELOW; // Floors below
+        opacity = effectiveFloorOpacity.value.BELOW;
       } else if (isMainLayer) {
-        opacity = FLOOR_OPACITY_SELECTED; // Selected floor
+        opacity = effectiveFloorOpacity.value.SELECTED;
       } else {
-        opacity = FLOOR_OPACITY_ABOVE; // Floors above
+        opacity = effectiveFloorOpacity.value.ABOVE;
       }
 
-      const currentSvg = svg as SVGSVGElement;
-      currentSvg.style.opacity = opacity.toString();
-      currentSvg.style.pointerEvents = isMainLayer ? 'auto' : 'none';
+      svg.style.opacity = opacity.toString();
 
-      // Update svgElement reference for main layer
+      // Only the selected floor layer should be interactive; others ignore pointer events.
       if (isMainLayer) {
-        svgElement.value = currentSvg;
+        svg.dataset.mainLayer = 'true';
+        svg.style.pointerEvents = 'auto';
+        svgElement.value = svg;
+      } else {
+        svg.dataset.mainLayer = 'false';
+        svg.style.pointerEvents = 'none';
       }
     });
   };
@@ -467,16 +506,17 @@
     wrapper: HTMLElement,
     fileName: string,
     opacity: number,
-    isMainLayer: boolean = false,
+    _isMainLayer: boolean = false,
     isFirstLayer: boolean = false
   ): Promise<SVGSVGElement | null> => {
     // Check cache first
     if (svgCache.value.has(fileName)) {
       const cachedSvg = svgCache.value.get(fileName)!;
 
-      // Update opacity and pointer events
+      // Update opacity; pointer-events/main-layer flags are managed by updateFloorOpacity.
       cachedSvg.style.opacity = opacity.toString();
-      cachedSvg.style.pointerEvents = isMainLayer ? 'auto' : 'none';
+      cachedSvg.removeAttribute('data-main-layer');
+      cachedSvg.style.pointerEvents = 'none'; // Let markers handle clicks, not the SVG layer itself
 
       // If not already in DOM, append it
       if (!wrapper.contains(cachedSvg)) {
@@ -486,8 +526,13 @@
       return cachedSvg;
     }
 
-    // Not in cache - fetch it
-    const svgUrl = getMapSvgUrl(fileName, props.map.name);
+    // Not in cache - fetch it (with memoized SVG URL)
+    const cacheKey = `${props.map.name}|${fileName}`;
+    let svgUrl = svgUrlCache.value.get(cacheKey);
+    if (!svgUrl) {
+      svgUrl = getMapSvgUrl(fileName, props.map.name);
+      svgUrlCache.value.set(cacheKey, svgUrl);
+    }
 
     try {
       const svg = await d3.svg(svgUrl);
@@ -515,8 +560,11 @@
       }
 
       rootElement.style.opacity = opacity.toString();
-      // All SVG layers should not intercept pointer events - let markers handle clicks
+      // Floor SVG layers are non-interactive by default. updateFloorOpacity will enable pointer events
+      // only on the currently selected floor so legitimate SVG interactions remain possible on that layer,
+      // while markers stay clickable via the markers-overlay above.
       rootElement.style.pointerEvents = 'none';
+      rootElement.removeAttribute('data-main-layer');
       rootElement.style.zIndex = '0'; // Keep SVGs below markers
 
       // Cache the SVG element
@@ -535,7 +583,13 @@
   const drawStandardMap = async (mapContainer: HTMLElement, fileName: string) => {
     // Lab uses old tarkovdata CDN (uses PNG tiles on tarkov.dev)
     // All others use tarkov.dev CDN
-    const svgUrl = getMapSvgUrl(fileName, props.map.name);
+    // Use cached SVG URL to avoid recomputing
+    const cacheKey = `${props.map.name}|${fileName}`;
+    let svgUrl = svgUrlCache.value.get(cacheKey);
+    if (!svgUrl) {
+      svgUrl = getMapSvgUrl(fileName, props.map.name);
+      svgUrlCache.value.set(cacheKey, svgUrl);
+    }
 
     try {
       const svg = await d3.svg(svgUrl);
@@ -579,7 +633,7 @@
             if (index > selectedFloorIndex) {
               const floorElement = svg.querySelector<SVGGraphicsElement>(`#${floor}`);
               if (floorElement) {
-                floorElement.style.opacity = FLOOR_OPACITY_ABOVE.toString();
+                floorElement.style.opacity = effectiveFloorOpacity.value.ABOVE.toString();
               }
             }
           });
@@ -664,7 +718,7 @@
     width: 100%;
     height: 100%;
     z-index: 10; /* Above SVG layers */
-    pointer-events: none; /* Don't block SVG, but children can have pointer-events: auto */
+    pointer-events: none; /* Overlay itself is transparent to events; children opt-in via auto */
     line-height: normal;
   }
 

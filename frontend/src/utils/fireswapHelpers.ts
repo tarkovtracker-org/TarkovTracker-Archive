@@ -1,5 +1,5 @@
 import type { Store } from 'pinia';
-import type { StoreWithFireswapExt, FireswapSettingInternal } from '@/plugins/pinia-firestore';
+import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 import { logger } from '@/utils/logger';
 import { isDevAuthEnabled } from '@/utils/devAuth';
 
@@ -37,23 +37,37 @@ export const restoreLocalStorageKeys = (preserved: Map<string, string>): void =>
 
 export const getPrimaryFireswapSetting = <StoreType extends Store>(
   store: StoreWithFireswapExt<StoreType>
-): FireswapSettingInternal | null => {
+) => {
   const settings = store?._fireswapSettings;
   return settings && settings.length > 0 ? settings[0] : null;
 };
 
-export const setFireswapLock = (setting: FireswapSettingInternal | null, locked: boolean): void => {
+export const setFireswapLock = <
+  StoreType extends Store,
+  Setting extends NonNullable<StoreWithFireswapExt<StoreType>['_fireswapSettings']>[number],
+>(
+  setting: Setting | null,
+  locked: boolean
+): void => {
   if (setting) {
     setting.lock = locked;
   }
 };
 
-export const cancelPendingUpload = (setting: FireswapSettingInternal | null): void => {
+export const cancelPendingUpload = <
+  StoreType extends Store,
+  Setting extends NonNullable<StoreWithFireswapExt<StoreType>['_fireswapSettings']>[number],
+>(
+  setting: Setting | null
+): void => {
   setting?.uploadDocument?.cancel?.();
 };
 
-export const scheduleLockRelease = (
-  setting: FireswapSettingInternal | null,
+export const scheduleLockRelease = <
+  StoreType extends Store,
+  Setting extends NonNullable<StoreWithFireswapExt<StoreType>['_fireswapSettings']>[number],
+>(
+  setting: Setting | null,
   delay = 100
 ): ReturnType<typeof setTimeout> | undefined => {
   if (!setting) {
@@ -90,23 +104,24 @@ export const saveToLocalStorage = (
 ): void => {
   const finalErrorMessage = errorMessage || DEFAULT_ERROR_MESSAGE;
 
-  // First, attempt JSON.stringify to detect circular references
+  // Attempt JSON.stringify first to detect circular references.
+  // If a circular reference is detected, log and return immediately (no storage or fallback).
   let serialized: string;
   try {
     serialized = JSON.stringify(value);
   } catch (error) {
-    // This is likely a circular reference error
     if (error instanceof TypeError) {
       logger.error(`Circular reference serialization failed for key '${key}':`, error);
-      // Do not attempt storage fallback for circular references
+      // No fallback attempted for circular references; function returns here.
       return;
     }
-    // For other errors, continue with the original error handling
+
+    // For non-TypeError cases (unexpected serialization issues), log and return.
     logger.error(finalErrorMessage, error);
     return;
   }
 
-  // If stringify succeeded, attempt to store the serialized value
+  // If serialization succeeded, attempt to store the serialized value.
   try {
     localStorage.setItem(key, serialized);
   } catch (error) {

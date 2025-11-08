@@ -21,14 +21,13 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineAsyncComponent } from 'vue';
+  import { computed } from 'vue';
   import { useDisplay } from 'vuetify';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useUserStore } from '@/stores/user';
   import { useTarkovData } from '@/composables/tarkovdata';
   import type { Task } from '@/types/tarkov';
-
-  const TaskInfo = defineAsyncComponent(() => import('./TaskInfo.vue'));
+  import TaskInfo from './TaskInfo.vue';
 
   const props = defineProps<{
     task: Task;

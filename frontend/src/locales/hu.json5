@@ -374,6 +374,11 @@
     loading: 'Betöltés...',
     error: 'Hiba',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Az API-dokumentáció betöltése sikertelen',
+    },
+  },
   'task.kappa_req': 'Szükséges a Kappa küldetéshez',
   'task.level_req': 'Szükséges szint: {level}',
 }

@@ -425,6 +425,11 @@
     loading: 'Yükleniyor...',
     error: 'Hata',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'API dokümantasyonu yüklenemedi',
+    },
+  },
   'task.kappa_req': 'Kappa görevi için gerekli',
   'task.level_req': 'Gereken seviye: {level}',
 }

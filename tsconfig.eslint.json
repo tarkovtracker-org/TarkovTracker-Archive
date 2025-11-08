@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./frontend/tsconfig.eslint.json" },
+    { "path": "./functions/tsconfig.eslint.json" }
+  ]
+}

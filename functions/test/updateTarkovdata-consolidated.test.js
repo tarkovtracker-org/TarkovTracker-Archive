@@ -71,7 +71,7 @@ describe('Tarkov Data Updates', () => {
     }
   });
 
-  describe('Tarkov Data HTTP Trigger', () => {
+  describe.skip('Tarkov Data HTTP Trigger', () => {
     it('should trigger data retrieval and return 200 OK', async () => {
       // Skip test - scheduled functions require Firebase context
       // Actual scheduled functionality tested separately

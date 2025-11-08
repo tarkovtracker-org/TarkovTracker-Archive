@@ -1,15 +1,15 @@
-import { computed, onMounted, ref, watch, type ComputedRef } from 'vue';
+import { computed, effectScope, onMounted, ref, watch, type ComputedRef, type Ref } from 'vue';
 
 import { executeGraphQL, queryToString } from '@/utils/graphqlClient';
 import { fetchTarkovDevMaps } from '@/utils/mapTransformUtils';
 import languageQuery from '@/utils/languagequery';
 import tarkovDataQuery from '@/utils/tarkovdataquery';
 import tarkovHideoutQuery from '@/utils/tarkovhideoutquery';
-import fallbackMapsData from './maps.json';
 import { logger } from '@/utils/logger';
 import { LRUCache } from '@/utils/lruCache';
 
 import { useSafeLocale, extractLanguageCode } from '@/composables/utils/i18nHelpers';
+import { DEFAULT_LANGUAGE } from '@/utils/constants';
 
 import type {
   LanguageQueryResult,
@@ -19,7 +19,13 @@ import type {
 } from '@/types/tarkov';
 
 const TARKOV_DATA_CACHE_PREFIX = 'tt:tarkov-data:';
-const TARKOV_DATA_CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+const DEFAULT_TARKOV_DATA_CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+const TARKOV_DATA_CACHE_TTL_MS = (() => {
+  const rawValue = import.meta.env?.VITE_TARKOV_DATA_CACHE_TTL_MS;
+  const parsed = Number(rawValue);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TARKOV_DATA_CACHE_TTL_MS;
+})();
+const TARKOV_DATA_RESOURCE_CACHE_SIZE = 6;
 
 interface TarkovDataCachePayload {
   timestamp: number;
@@ -31,9 +37,51 @@ interface TarkovDataCacheRecord extends TarkovDataCachePayload {
   key: string;
 }
 
+interface ResourceCacheEntry<T> {
+  data: T;
+  stale?: boolean;
+}
+
+interface ResourceCacheOptions<T, V> {
+  hydrate?: (variables: V) => ResourceCacheEntry<T> | Promise<ResourceCacheEntry<T> | null> | null;
+  persist?: (variables: V, data: T) => void | Promise<void>;
+}
+
+interface GraphQLResource<T, V extends Record<string, unknown>> {
+  result: Ref<T | null>;
+  error: Ref<Error | null>;
+  loading: Ref<boolean>;
+  refetch: (override?: Partial<V>) => Promise<void>;
+  cleanup: () => void;
+}
+
+type TarkovDataVariables = { lang: string; gameMode: string };
+type HideoutVariables = { gameMode: string; languageCode: string };
+
+const tarkovDataQueryResources = new LRUCache<
+  string,
+  GraphQLResource<TarkovDataQueryResult, TarkovDataVariables>
+>(TARKOV_DATA_RESOURCE_CACHE_SIZE, (_key, resource) => {
+  resource.cleanup();
+});
+
 let tarkovDataDbPromise: Promise<IDBDatabase | null> | null = null;
 const MAX_DB_RETRIES = 3;
 const DB_RETRY_BACKOFF_MS = 200;
+
+function openTarkovDataDbOnce(): Promise<IDBDatabase> {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = window.indexedDB.open('tt-cache', 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('tarkovData')) {
+        db.createObjectStore('tarkovData', { keyPath: 'key' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
+  });
+}
 
 async function getTarkovDataDb(): Promise<IDBDatabase | null> {
   if (typeof window === 'undefined' || typeof window.indexedDB === 'undefined') {
@@ -43,17 +91,7 @@ async function getTarkovDataDb(): Promise<IDBDatabase | null> {
     tarkovDataDbPromise = (async () => {
       for (let attempt = 1; attempt <= MAX_DB_RETRIES; attempt++) {
         try {
-          return await new Promise<IDBDatabase>((resolve, reject) => {
-            const request = window.indexedDB.open('tt-cache', 1);
-            request.onupgradeneeded = () => {
-              const db = request.result;
-              if (!db.objectStoreNames.contains('tarkovData')) {
-                db.createObjectStore('tarkovData', { keyPath: 'key' });
-              }
-            };
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error ?? new Error('Failed to open IndexedDB'));
-          });
+          return await openTarkovDataDbOnce();
         } catch (error) {
           if (attempt === MAX_DB_RETRIES) {
             logger.warn(`Failed to open IndexedDB after ${MAX_DB_RETRIES} attempts:`, error);
@@ -70,12 +108,8 @@ async function getTarkovDataDb(): Promise<IDBDatabase | null> {
 }
 
 function resolveTarkovDataCacheKey(variables: TarkovDataVariables): string {
-  // Create deterministic cache key using JSON stringify with sorted keys
-  const sortedVars = {
-    gameMode: variables.gameMode,
-    lang: variables.lang,
-  };
-  return `${TARKOV_DATA_CACHE_PREFIX}${JSON.stringify(sortedVars)}`;
+  // Deterministic cache key by concatenating normalized values
+  return `${TARKOV_DATA_CACHE_PREFIX}${variables.gameMode}:${variables.lang}`;
 }
 
 async function loadTarkovDataCache(key: string): Promise<TarkovDataCachePayload | null> {
@@ -93,10 +127,7 @@ async function loadTarkovDataCache(key: string): Promise<TarkovDataCachePayload 
     request.onsuccess = () => {
       const record = (request.result as TarkovDataCacheRecord | undefined) ?? null;
       if (record) {
-        const payload: TarkovDataCachePayload = {
-          timestamp: record.timestamp,
-          data: record.data,
-        };
+        const payload: TarkovDataCachePayload = record;
         inMemoryTarkovDataCache.set(key, payload);
         resolve(payload);
       } else {
@@ -109,7 +140,6 @@ async function loadTarkovDataCache(key: string): Promise<TarkovDataCachePayload 
     };
   });
 }
-
 async function writeTarkovDataCache(key: string, payload: TarkovDataCachePayload): Promise<void> {
   inMemoryTarkovDataCache.set(key, payload);
   const db = await getTarkovDataDb();
@@ -129,30 +159,75 @@ async function writeTarkovDataCache(key: string, payload: TarkovDataCachePayload
   });
 }
 
-interface ResourceCacheEntry<T> {
-  data: T;
-  stale?: boolean;
-}
-
-interface ResourceCacheOptions<T, V> {
-  hydrate?: (variables: V) => ResourceCacheEntry<T> | Promise<ResourceCacheEntry<T> | null> | null;
-  persist?: (variables: V, data: T) => void | Promise<void>;
-}
-
-type TarkovDataVariables = { lang: string; gameMode: string };
-type GraphQLResource<T, V extends Record<string, unknown>> = ReturnType<
-  typeof useGraphQLResource<T, V>
->;
-type SharedTarkovDataResource = GraphQLResource<TarkovDataQueryResult, TarkovDataVariables>;
-
 const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
 
 let languageFetchPromise: Promise<void> | null = null;
-let mapPromise: Promise<StaticMapData> | null = null;
+let remoteMapPromise: Promise<StaticMapData> | null = null;
+let fallbackMapPromise: Promise<StaticMapData> | null = null;
+
+async function loadFallbackMaps(): Promise<StaticMapData> {
+  if (!fallbackMapPromise) {
+    fallbackMapPromise = import('./maps.json').then((module) => module.default as StaticMapData);
+  }
+  return fallbackMapPromise;
+}
 let apiInitPromise: Promise<void> | null = null;
 
-const DEFAULT_LANGUAGE = 'en';
+async function hydrateTarkovDataResource(
+  vars: TarkovDataVariables
+): Promise<ResourceCacheEntry<TarkovDataQueryResult> | null> {
+  const key = resolveTarkovDataCacheKey(vars);
+  const cached = await loadTarkovDataCache(key);
+  if (!cached) {
+    return null;
+  }
+  const stale = Date.now() - cached.timestamp > TARKOV_DATA_CACHE_TTL_MS;
+  return { data: cached.data, stale };
+}
+
+async function persistTarkovDataResource(
+  vars: TarkovDataVariables,
+  data: TarkovDataQueryResult
+): Promise<void> {
+  const key = resolveTarkovDataCacheKey(vars);
+  await writeTarkovDataCache(key, { timestamp: Date.now(), data });
+}
+
+function createTarkovDataResource(
+  lang: string,
+  gameMode: string
+): GraphQLResource<TarkovDataQueryResult, TarkovDataVariables> {
+  const scope = effectScope(true);
+  const resource = scope.run(() => {
+    const variables = computed<TarkovDataVariables>(() => ({
+      lang,
+      gameMode,
+    }));
+    return useGraphQLResource<TarkovDataQueryResult, TarkovDataVariables>(
+      tarkovDataQuery,
+      variables,
+      {
+        hydrate: hydrateTarkovDataResource,
+        persist: persistTarkovDataResource,
+      }
+    );
+  });
+
+  if (!resource) {
+    scope.stop();
+    throw new Error('Failed to create Tarkov data resource');
+  }
+
+  const originalCleanup = resource.cleanup;
+  return {
+    ...resource,
+    cleanup: () => {
+      originalCleanup();
+      scope.stop();
+    },
+  };
+}
 
 function normalizeError(error: unknown): Error {
   if (error instanceof Error) {
@@ -172,7 +247,6 @@ async function ensureAvailableLanguages(): Promise<void> {
   if (languageFetchPromise) {
     return languageFetchPromise;
   }
-
   languageFetchPromise = (async () => {
     try {
       const data = await executeGraphQL<LanguageQueryResult>(languageQuery);
@@ -187,18 +261,43 @@ async function ensureAvailableLanguages(): Promise<void> {
       return languageFetchPromise;
     }
   })();
-
   return languageFetchPromise;
 }
 
-async function loadStaticMaps(): Promise<StaticMapData> {
-  if (!mapPromise) {
-    mapPromise = fetchTarkovDevMaps().catch((error) => {
-      logger.warn('Failed to fetch maps from tarkov.dev, using fallback data:', error);
-      return fallbackMapsData as StaticMapData;
-    });
+async function ensureFallbackStaticMaps(): Promise<StaticMapData> {
+  if (staticMapData.value) {
+    return staticMapData.value;
   }
-  return mapPromise;
+  const fallbackData = await loadFallbackMaps();
+  staticMapData.value = fallbackData;
+  return fallbackData;
+}
+
+async function startRemoteMapFetch(forceRefresh = false): Promise<StaticMapData> {
+  if (forceRefresh) {
+    remoteMapPromise = null;
+  }
+  if (!remoteMapPromise) {
+    remoteMapPromise = fetchTarkovDevMaps()
+      .then((data) => {
+        staticMapData.value = data;
+        return data;
+      })
+      .catch(async (error) => {
+        logger.warn('Failed to fetch maps from tarkov.dev, continuing with fallback data:', error);
+        return staticMapData.value ?? (await ensureFallbackStaticMaps());
+      });
+  }
+  return remoteMapPromise;
+}
+
+async function loadStaticMaps(options?: { background?: boolean; forceRefresh?: boolean }) {
+  await ensureFallbackStaticMaps();
+  if (options?.background) {
+    void startRemoteMapFetch(options.forceRefresh ?? false);
+    return staticMapData.value as StaticMapData;
+  }
+  return startRemoteMapFetch(options?.forceRefresh ?? false);
 }
 
 function useGraphQLResource<T, V extends Record<string, unknown>>(
@@ -210,18 +309,23 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
   const error = ref<Error | null>(null);
   const loading = ref(false);
   let activeController: AbortController | null = null;
+  let latestFetchId = 0;
 
   const startFetch = (variables: V, existingController?: AbortController) => {
-    activeController?.abort();
     const controller = existingController ?? new AbortController();
+    const previousController = activeController;
     activeController = controller;
+    if (previousController && previousController !== controller) {
+      previousController.abort();
+    }
+    const fetchId = ++latestFetchId;
     loading.value = true;
 
     // Convert query to string for execution
     const queryString = typeof query === 'string' ? query : queryToString(query);
     const promise = executeGraphQL<T, V>(queryString, variables, { signal: controller.signal })
       .then((data) => {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || fetchId !== latestFetchId) {
           return;
         }
         result.value = data;
@@ -234,13 +338,13 @@ function useGraphQLResource<T, V extends Record<string, unknown>>(
         }
       })
       .catch((err) => {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || fetchId !== latestFetchId) {
           return;
         }
         error.value = normalizeError(err);
       })
       .finally(() => {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || fetchId !== latestFetchId) {
           return;
         }
         if (activeController === controller) {
@@ -316,9 +420,7 @@ export function useTarkovApi() {
 
   onMounted(async () => {
     await apiInitPromise;
-    if (!staticMapData.value) {
-      staticMapData.value = await loadStaticMaps();
-    }
+    void loadStaticMaps({ background: true });
   });
 
   return {
@@ -329,63 +431,71 @@ export function useTarkovApi() {
   } as const;
 }
 
-let sharedTarkovDataQueryResource: SharedTarkovDataResource | null = null;
-
 // LRU cache to store hideout query resources keyed by variables (gameMode + languageCode)
 // Limited to 10 entries to prevent unbounded growth; evicts least recently used entries
 // and properly cleans up watchers/subscriptions to prevent memory leaks
-const hideoutQueryResources = new LRUCache<string, ReturnType<typeof useGraphQLResource>>(
-  10,
-  (_key, resource) => {
-    // Cleanup function called when a resource is evicted from the cache
-    // This stops the watcher and aborts any active fetch controllers
-    resource.cleanup();
-  }
-);
+const hideoutQueryResources = new LRUCache<
+  string,
+  GraphQLResource<TarkovHideoutQueryResult, HideoutVariables>
+>(10, (_key, resource) => {
+  // Cleanup function called when a resource is evicted from the cache
+  // This stops the watcher and aborts any active fetch controllers
+  resource.cleanup();
+});
 
 export function useTarkovDataQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
   const { languageCode } = useTarkovApi();
 
-  const variables = computed<TarkovDataVariables>(() => ({
-    lang: languageCode.value,
-    gameMode: gameMode.value,
-  }));
+  const currentResource = computed(() => {
+    const lang = languageCode.value;
+    const mode = gameMode.value;
+    const key = `${lang}:${mode}`;
 
-  if (!sharedTarkovDataQueryResource) {
-    const hydrate = async (
-      vars: TarkovDataVariables
-    ): Promise<ResourceCacheEntry<TarkovDataQueryResult> | null> => {
-      const key = resolveTarkovDataCacheKey(vars);
-      const cached = await loadTarkovDataCache(key);
-      if (!cached) {
-        return null;
-      }
-      const stale = Date.now() - cached.timestamp > TARKOV_DATA_CACHE_TTL_MS;
-      return { data: cached.data, stale };
-    };
-    const persist = async (vars: TarkovDataVariables, data: TarkovDataQueryResult) => {
-      const key = resolveTarkovDataCacheKey(vars);
-      await writeTarkovDataCache(key, { timestamp: Date.now(), data });
-    };
+    const existing = tarkovDataQueryResources.get(key);
+    if (existing) {
+      return existing;
+    }
 
-    sharedTarkovDataQueryResource = useGraphQLResource<TarkovDataQueryResult, TarkovDataVariables>(
-      tarkovDataQuery,
-      variables,
-      { hydrate, persist }
-    );
-  }
+    const resource = createTarkovDataResource(lang, mode);
+    tarkovDataQueryResources.set(key, resource);
+    return resource;
+  });
+
+  const result = computed<TarkovDataQueryResult | null>(() => {
+    const resource = currentResource.value;
+    return resource.result.value;
+  });
+  const error = computed<Error | null>(() => {
+    const resource = currentResource.value;
+    return resource.error.value;
+  });
+  const loading = computed<boolean>(() => {
+    const resource = currentResource.value;
+    return resource.loading.value;
+  });
+  const refetch = (override?: Partial<TarkovDataVariables>) => {
+    const resource = currentResource.value;
+    return resource.refetch(override);
+  };
 
   return {
-    result: sharedTarkovDataQueryResource.result,
-    error: sharedTarkovDataQueryResource.error,
-    loading: sharedTarkovDataQueryResource.loading,
-    refetch: sharedTarkovDataQueryResource.refetch,
+    result,
+    error,
+    loading,
+    refetch,
     languageCode,
     gameMode,
-  } as const;
+  };
 }
 
-export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed(() => 'regular')) {
+export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed(() => 'regular')): {
+  result: ComputedRef<TarkovHideoutQueryResult | null>;
+  error: ComputedRef<Error | null>;
+  loading: ComputedRef<boolean>;
+  refetch: (override?: Partial<HideoutVariables>) => void;
+  languageCode: ComputedRef<string>;
+  gameMode: ComputedRef<string>;
+} {
   const { languageCode } = useTarkovApi();
 
   // Computed variables that include both gameMode and languageCode
@@ -413,23 +523,40 @@ export function useTarkovHideoutQuery(gameMode: ComputedRef<string> = computed((
     }
 
     // Create new resource for this unique combination and store it
-    const newResource = useGraphQLResource<
-      TarkovHideoutQueryResult,
-      { gameMode: string; languageCode: string }
-    >(tarkovHideoutQuery, variables);
+    const newResource = useGraphQLResource<TarkovHideoutQueryResult, HideoutVariables>(
+      tarkovHideoutQuery,
+      variables
+    );
 
     hideoutQueryResources.set(key, newResource);
     return newResource;
   });
 
+  const result = computed<TarkovHideoutQueryResult | null>(() => {
+    const resource = currentResource.value;
+    return resource.result.value;
+  });
+  const error = computed<Error | null>(() => {
+    const resource = currentResource.value;
+    return resource.error.value;
+  });
+  const loading = computed<boolean>(() => {
+    const resource = currentResource.value;
+    return resource.loading.value;
+  });
+  const refetch = (override?: Partial<HideoutVariables>) => {
+    const resource = currentResource.value;
+    return resource.refetch(override);
+  };
+
   return {
-    result: currentResource.value.result,
-    error: currentResource.value.error,
-    loading: currentResource.value.loading,
-    refetch: currentResource.value.refetch,
+    result,
+    error,
+    loading,
+    refetch,
     languageCode,
     gameMode,
-  } as const;
+  };
 }
 
 export { loadStaticMaps };

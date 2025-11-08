@@ -14,7 +14,7 @@
   "scripts": {
     "dev": "cd frontend && npm run dev",
     "dev:firebase": "npm run build && firebase emulators:start",
-    "dev:full": "concurrently \"cd frontend && npm run dev\" \"npm run emulators:backend\"",
+    "dev:full": "concurrently --kill-others --kill-others-on-fail \"cd frontend && npm run dev\" \"npm run emulators:backend\"",
     "build": "npm run build:functions && npm run docs:generate && npm run build:frontend",
     "build:functions": "npm run build --workspace=functions",
     "build:frontend": "npm run build --workspace=frontend",

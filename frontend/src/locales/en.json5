@@ -710,6 +710,11 @@
     loading: 'Loading...',
     error: 'Error',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Failed to load API documentation',
+    },
+  },
   'task.kappa_req': 'Required for Kappa quest',
   'task.level_req': 'Level required: {level}',
 }

@@ -28,8 +28,9 @@ function resolveLogLevel(): LogLevel {
   return fallbackLevel;
 }
 
+const activeLevel: LogLevel = resolveLogLevel();
+
 function shouldLog(level: LogLevel) {
-  const activeLevel = resolveLogLevel();
   return LEVEL_WEIGHT[level] >= LEVEL_WEIGHT[activeLevel];
 }
 

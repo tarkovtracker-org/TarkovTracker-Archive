@@ -708,6 +708,11 @@
     loading: '加载中……',
     error: '错误',
   },
+  apiReference: {
+    error: {
+      loadFailed: '加载 API 文档失败',
+    },
+  },
   'task.kappa_req': 'Kappa 任务前置',
   'task.level_req': '所需等级：{level}',
 }

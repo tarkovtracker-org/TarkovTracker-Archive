@@ -1,5 +1,5 @@
 <template>
-  <div class="task-actions">
+  <div :class="['task-actions', { 'task-actions--xs': xs }]">
     <div v-if="experienceDisplay" class="task-experience">XP: {{ experienceDisplay }}</div>
     <template v-if="!isComplete && !isLocked">
       <ActionButton
@@ -62,11 +62,10 @@
 </template>
 
 <script setup>
-  import { defineAsyncComponent, computed } from 'vue';
+  import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-
-  const ActionButton = defineAsyncComponent(() => import('./ActionButton'));
-  const AlternativesList = defineAsyncComponent(() => import('./AlternativesList'));
+  import ActionButton from './ActionButton.vue';
+  import AlternativesList from './AlternativesList.vue';
 
   const props = defineProps({
     task: { type: Object, required: true },
@@ -97,6 +96,11 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
+    min-height: 96px;
+  }
+  .task-actions--xs {
+    min-height: 0;
+    align-items: stretch;
   }
 
   .task-experience {

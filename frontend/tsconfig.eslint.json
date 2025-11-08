@@ -1,5 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true
+  },
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
@@ -9,5 +12,5 @@
     "src/**/*.vue",
     "e2e/**/*.ts"
   ],
-  "exclude": ["../scripts/**/*"]
+  "exclude": ["../scripts/**/*", "node_modules", "dist"]
 }

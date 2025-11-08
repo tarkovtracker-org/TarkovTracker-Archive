@@ -2,14 +2,20 @@
  * Font Display Optimization
  * Ensures fonts use font-display: swap to prevent FOIT (Flash of Invisible Text)
  * This improves FCP and LCP scores by showing fallback text while fonts load
+ *
+ * Layout Shift Mitigation:
+ * - Uses size-adjust to match fallback font metrics and reduce CLS
+ * - Font-display: swap allows immediate text rendering with fallback
+ * - Preloaded in index.html for faster availability
  */
 
-/* Override Share Tech Mono to use font-display: swap */
+/* Override Share Tech Mono to use font-display: swap with size-adjust for CLS optimization */
 @font-face {
   font-family: 'Share Tech Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
+  size-adjust: 95%; /* Adjust to better match monospace fallback metrics */
   src: url('@fontsource/share-tech-mono/files/share-tech-mono-latin-400-normal.woff2')
     format('woff2');
   unicode-range:
@@ -17,11 +23,21 @@
     U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Ensure Material Design Icons use font-display: swap */
+/* Ensure Material Design Icons use font-display: swap with size-adjust */
 @font-face {
   font-family: 'Material Design Icons';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
+  size-adjust: 100%;
   src: url('@mdi/font/fonts/materialdesignicons-webfont.woff2') format('woff2');
+}
+
+/**
+ * Global CSS Custom Properties
+ */
+:root {
+  /* Task card dimensions - used for CLS optimization and consistent sizing
+   * NOTE: This value should match TASK_CARD_HEIGHT constant in gameConstants.ts */
+  --task-card-min-height: 203px;
 }

@@ -87,20 +87,8 @@ describe('useTarkovTime', () => {
     const { tarkovTime } = mountUseTarkovTime();
     await nextTick();
 
-    const expectedTarkovTime = (() => {
-      const oneHourMs = 60 * 60 * 1000;
-      const timeAtTarkovSpeed = (midnightUTC.getTime() * 7) % (24 * oneHourMs);
-      const tarkovTimeObj = new Date(timeAtTarkovSpeed + 3 * oneHourMs);
-      const tarkovHour = tarkovTimeObj.getUTCHours();
-      const tarkovMinute = tarkovTimeObj.getUTCMinutes();
-      const tarkovSecondHour = (tarkovHour + 12) % 24;
-
-      return `${tarkovHour.toString().padStart(2, '0')}:${tarkovMinute
-        .toString()
-        .padStart(2, '0')} / ${tarkovSecondHour.toString().padStart(2, '0')}:${tarkovMinute
-        .toString()
-        .padStart(2, '0')}`;
-    })();
+    // Pre-calculated expected value for 2024-01-01T00:00:00Z
+    const expectedTarkovTime = '03:00 / 15:00';
 
     expect(tarkovTime.value).toBe(expectedTarkovTime);
   });
@@ -115,18 +103,18 @@ describe('useTarkovTime', () => {
 
     expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
 
-    // Verify the 12-hour format wraps correctly (e.g., 23:00 becomes 11:00)
+    // Verify the second time is 12 hours ahead (e.g., 00:00 becomes 12:00)
     const timeMatch = tarkovTime.value.match(/^(\d{2}):(\d{2}) \/ (\d{2}):(\d{2})$/);
     expect(timeMatch).not.toBeNull();
 
     if (timeMatch) {
-      const [, hour24, , hour12] = timeMatch;
-      const hour24Num = parseInt(hour24, 10);
-      const hour12Num = parseInt(hour12, 10);
+      const [, currentHour, , oppositeHour] = timeMatch;
+      const currentHourNum = parseInt(currentHour, 10);
+      const oppositeHourNum = parseInt(oppositeHour, 10);
 
-      // 12-hour format should be (24-hour + 12) % 24
-      const expected12Hour = (hour24Num + 12) % 24;
-      expect(hour12Num).toBe(expected12Hour);
+      // Opposite time should be (current + 12) % 24
+      const expectedOppositeHour = (currentHourNum + 12) % 24;
+      expect(oppositeHourNum).toBe(expectedOppositeHour);
     }
   });
 
@@ -139,23 +127,37 @@ describe('useTarkovTime', () => {
     ];
 
     for (const testDate of testCases) {
-      vi.setSystemTime(testDate);
-      const { tarkovTime } = mountUseTarkovTime();
-      await nextTick();
+      let wrapper: VueWrapper | null = null;
+      try {
+        vi.setSystemTime(testDate);
+        const { tarkovTime } = mountUseTarkovTime();
+        // Get the last added wrapper
+        wrapper = activeWrappers[activeWrappers.length - 1];
+        await nextTick();
 
-      expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
+        expect(tarkovTime.value).toMatch(/^\d{2}:\d{2} \/ \d{2}:\d{2}$/);
 
-      // Verify time format is always HH:MM / HH:MM
-      const timeParts = tarkovTime.value.split(' / ');
-      expect(timeParts).toHaveLength(2);
+        // Verify time format is always HH:MM / HH:MM
+        const timeParts = tarkovTime.value.split(' / ');
+        expect(timeParts).toHaveLength(2);
 
-      for (const timePart of timeParts) {
-        expect(timePart).toMatch(/^\d{2}:\d{2}$/);
-        const [hours, minutes] = timePart.split(':').map(Number);
-        expect(hours).toBeGreaterThanOrEqual(0);
-        expect(hours).toBeLessThan(24);
-        expect(minutes).toBeGreaterThanOrEqual(0);
-        expect(minutes).toBeLessThan(60);
+        for (const timePart of timeParts) {
+          expect(timePart).toMatch(/^\d{2}:\d{2}$/);
+          const [hours, minutes] = timePart.split(':').map(Number);
+          expect(hours).toBeGreaterThanOrEqual(0);
+          expect(hours).toBeLessThan(24);
+          expect(minutes).toBeGreaterThanOrEqual(0);
+          expect(minutes).toBeLessThan(60);
+        }
+      } finally {
+        // Always unmount to avoid overlapping intervals, even if assertion throws
+        if (wrapper) {
+          wrapper.unmount();
+          const index = activeWrappers.indexOf(wrapper);
+          if (index > -1) {
+            activeWrappers.splice(index, 1);
+          }
+        }
       }
     }
   });
@@ -175,6 +177,8 @@ describe('useTarkovTime', () => {
         },
       })
     );
+
+    activeWrappers.push(wrapper);
 
     wrapper.unmount();
 

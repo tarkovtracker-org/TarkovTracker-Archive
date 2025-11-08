@@ -1,7 +1,7 @@
 <template>
   <v-list nav bg-color="transparent" class="mx-auto">
     <drawer-item
-      avatar="/img/logos/tarkovdevlogo.png"
+      :avatar-sources="logoSources('tarkovdevlogo')"
       locale-key="tarkovdev"
       href="https://tarkov.dev/"
       ext-link
@@ -15,7 +15,7 @@
       :is-collapsed="props.isCollapsed"
     />
     <drawer-item
-      avatar="/img/logos/ratscannerlogo.png"
+      :avatar-sources="logoSources('ratscannerlogo')"
       locale-key="ratscanner"
       href="https://ratscanner.com/"
       ext-link
@@ -30,14 +30,18 @@
     />
   </v-list>
 </template>
-<script setup>
-  import { defineAsyncComponent } from 'vue';
+<script setup lang="ts">
+  import DrawerItem from '@/features/drawer/DrawerItem.vue';
+  const logoSources = (name: string, fallbackExt = 'png') => ({
+    fallback: `/img/logos/${name}.${fallbackExt}`,
+    webp: `/img/logos/${name}.webp`,
+    avif: `/img/logos/${name}.avif`,
+  });
   const props = defineProps({
     isCollapsed: {
       type: Boolean,
       required: true,
     },
   });
-  const DrawerItem = defineAsyncComponent(() => import('@/features/drawer/DrawerItem'));
 </script>
 <style lang="scss" scoped></style>

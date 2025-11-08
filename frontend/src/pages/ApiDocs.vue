@@ -90,8 +90,207 @@
     error.value = null;
   };
 
-  // TarkovTracker custom CSS theme (empty for now)
-  const TARKOV_TRACKER_THEME_CSS = '';
+  // TarkovTracker custom CSS theme for Scalar API documentation
+  // Matches the application's dark theme with custom colors
+  const TARKOV_TRACKER_THEME_CSS = `
+    /* Scalar API Documentation - TarkovTracker Theme */
+    :root {
+      /* Primary colors matching TarkovTracker theme */
+      --scalar-primary: #0A0A09;
+      --scalar-primary-light: #1a1a19;
+      --scalar-secondary: #9A8866;
+      --scalar-secondary-light: #b8a885;
+      --scalar-accent: #242F35;
+      --scalar-accent-light: #344045;
+      --scalar-success: #2BA86A;
+      --scalar-warning: #391111;
+      --scalar-error: #FF0000;
+      --scalar-info: #181817;
+      
+      /* Surface colors */
+      --scalar-surface: #1E1E1E;
+      --scalar-surface-variant: #2a2a2a;
+      --scalar-background: #121212;
+      --scalar-card: #242424;
+      
+      /* Text colors */
+      --scalar-on-primary: #ffffff;
+      --scalar-on-surface: #e0e0e0;
+      --scalar-on-background: #ffffff;
+      --scalar-text-primary: #ffffff;
+      --scalar-text-secondary: #b0b0b0;
+      --scalar-text-muted: #808080;
+      
+      /* Border and divider colors */
+      --scalar-border: #333333;
+      --scalar-divider: #404040;
+      
+      /* Code blocks */
+      --scalar-code-bg: #1a1a1a;
+      --scalar-code-text: #e83e8c;
+      
+      /* API method colors */
+      --scalar-get: #2BA86A;
+      --scalar-post: #248F52;
+      --scalar-put: #C76A1F;
+      --scalar-delete: #FF0000;
+      --scalar-patch: #FF8C5A;
+      --scalar-head: #5BA9FF;
+      --scalar-options: #9A8866;
+    }
+    
+    /* Dark theme overrides */
+    .scalar-api-reference {
+      background-color: var(--scalar-background);
+      color: var(--scalar-on-background);
+    }
+    
+    .scalar-api-reference .scalar-card {
+      background-color: var(--scalar-card);
+      border: 1px solid var(--scalar-border);
+      border-radius: 8px;
+    }
+    
+    .scalar-api-reference .scalar-header {
+      background-color: var(--scalar-surface);
+      border-bottom: 1px solid var(--scalar-border);
+    }
+    
+    .scalar-api-reference .scalar-sidebar {
+      background-color: var(--scalar-surface);
+      border-right: 1px solid var(--scalar-border);
+    }
+    
+    /* Typography */
+    .scalar-api-reference h1,
+    .scalar-api-reference h2,
+    .scalar-api-reference h3,
+    .scalar-api-reference h4,
+    .scalar-api-reference h5,
+    .scalar-api-reference h6 {
+      color: var(--scalar-text-primary);
+    }
+    
+    .scalar-api-reference p,
+    .scalar-api-reference .scalar-description {
+      color: var(--scalar-text-secondary);
+    }
+    
+    /* Code styling */
+    .scalar-api-reference code {
+      background-color: var(--scalar-code-bg);
+      color: var(--scalar-code-text);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    
+    .scalar-api-reference pre {
+      background-color: var(--scalar-code-bg);
+      border: 1px solid var(--scalar-border);
+      border-radius: 6px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+    
+    .scalar-api-reference pre code {
+      background: none;
+      padding: 0;
+    }
+    
+    /* API method styling */
+    .scalar-api-reference .scalar-method--get {
+      color: var(--scalar-get);
+      background-color: rgba(43, 168, 106, 0.1);
+      border: 1px solid var(--scalar-get);
+    }
+    
+    .scalar-api-reference .scalar-method--post {
+      color: var(--scalar-post);
+      background-color: rgba(36, 143, 82, 0.1);
+      border: 1px solid var(--scalar-post);
+    }
+    
+    .scalar-api-reference .scalar-method--put {
+      color: var(--scalar-put);
+      background-color: rgba(199, 106, 31, 0.1);
+      border: 1px solid var(--scalar-put);
+    }
+    
+    .scalar-api-reference .scalar-method--delete {
+      color: var(--scalar-delete);
+      background-color: rgba(255, 0, 0, 0.1);
+      border: 1px solid var(--scalar-delete);
+    }
+    
+    .scalar-api-reference .scalar-method--patch {
+      color: var(--scalar-patch);
+      background-color: rgba(255, 140, 90, 0.1);
+      border: 1px solid var(--scalar-patch);
+    }
+    
+    /* Buttons and interactive elements */
+    .scalar-api-reference .scalar-button {
+      background-color: var(--scalar-primary);
+      color: var(--scalar-on-primary);
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    .scalar-api-reference .scalar-button:hover {
+      background-color: var(--scalar-primary-light);
+    }
+    
+    /* Tables */
+    .scalar-api-reference table {
+      background-color: var(--scalar-surface);
+      border: 1px solid var(--scalar-border);
+    }
+    
+    .scalar-api-reference th,
+    .scalar-api-reference td {
+      border-bottom: 1px solid var(--scalar-divider);
+      color: var(--scalar-text-secondary);
+    }
+    
+    .scalar-api-reference th {
+      background-color: var(--scalar-surface-variant);
+      color: var(--scalar-text-primary);
+    }
+    
+    /* Links */
+    .scalar-api-reference a {
+      color: var(--scalar-secondary);
+      text-decoration: none;
+    }
+    
+    .scalar-api-reference a:hover {
+      color: var(--scalar-secondary-light);
+      text-decoration: underline;
+    }
+    
+    /* Scrollbar styling */
+    .scalar-api-reference ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    .scalar-api-reference ::-webkit-scrollbar-track {
+      background: var(--scalar-surface);
+    }
+    
+    .scalar-api-reference ::-webkit-scrollbar-thumb {
+      background: var(--scalar-border);
+      border-radius: 4px;
+    }
+    
+    .scalar-api-reference ::-webkit-scrollbar-thumb:hover {
+      background: var(--scalar-divider);
+    }
+  `;
 
   // Scalar configuration with TarkovTracker theme
   const scalarConfig = computed(() => ({

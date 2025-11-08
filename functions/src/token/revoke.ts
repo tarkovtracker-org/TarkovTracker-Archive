@@ -158,7 +158,6 @@ export const revokeToken = onRequest(
     timeoutSeconds: 20,
   },
   async (req: FirebaseRequest, res) => {
-    // Check HTTP method first, before any authentication
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
       return;

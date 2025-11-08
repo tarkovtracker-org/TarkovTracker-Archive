@@ -7,6 +7,7 @@ import '@mdi/font/css/materialdesignicons.css';
 
 // Local project plugins and setup
 import './styles/fonts.css';
+import './styles/settings.scss';
 import App from './App.vue';
 import router from './router';
 import i18n from './plugins/i18n';

@@ -658,4 +658,9 @@
       description: 'Dies ist eine Liste deiner Teammitglieder, du kannst auf die Icons klicken um ihre benötigten Gegenstände und Aufgaben sichtbar zu machen oder sie zu verstecken.',
     },
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Fehler beim Laden der API-Dokumentation',
+    },
+  },
 }

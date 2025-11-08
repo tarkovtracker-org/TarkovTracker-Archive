@@ -5,37 +5,32 @@ import {
   hasUserData as firestoreHasUserData,
   migrateLocalDataToUser,
   importDataToUser as importDataToFirestore,
+  type MigrationResult,
 } from './FirestoreMigrationService';
 import { validateImportData as validateImportJson } from './DataValidationService';
 import { fetchDataWithApiToken } from './ExternalApiService';
-
 export { type ProgressData, type ExportObject } from './DataMigrationTypes';
-
+export type { MigrationResult } from './FirestoreMigrationService';
 export default class DataMigrationService {
   static hasLocalData(): boolean {
     return hasLocalProgress();
   }
-
   static getLocalData(): ProgressData | null {
     return getLocalData();
   }
-
   static async hasUserData(uid: string): Promise<boolean> {
     return firestoreHasUserData(uid);
   }
-
-  static async migrateDataToUser(uid: string): Promise<boolean> {
+  static async migrateDataToUser(uid: string): Promise<MigrationResult> {
     if (!uid) {
-      return false;
+      return { success: false, error: 'No UID provided' };
     }
     const localData = getLocalData();
     if (!localData) {
-      return false;
+      return { success: false, error: 'No local data available' };
     }
-    const result = await migrateLocalDataToUser(uid, localData);
-    return result !== 'skipped';
+    return migrateLocalDataToUser(uid, localData);
   }
-
   static exportDataForMigration(): ExportObject | null {
     const data = getLocalData();
     if (!data) return null;
@@ -46,19 +41,16 @@ export default class DataMigrationService {
       data,
     };
   }
-
   static validateImportData(jsonString: string): ProgressData | null {
     return validateImportJson(jsonString);
   }
-
   static async importDataToUser(
     uid: string,
     importedData: ProgressData,
     targetGameMode?: GameMode
-  ): Promise<boolean | 'skipped'> {
+  ): Promise<MigrationResult> {
     return importDataToFirestore(uid, importedData, targetGameMode);
   }
-
   static async fetchDataWithApiToken(
     apiToken: string,
     endpointUrl: string = import.meta.env.VITE_PROGRESS_ENDPOINT ||

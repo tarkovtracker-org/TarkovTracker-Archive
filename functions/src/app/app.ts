@@ -67,12 +67,14 @@ export async function createApp(): Promise<Express> {
 
 function setupRoutes(app: Express) {
   // User management routes
-  app.get(
-    '/api/user/test',
-    asyncHandler(async (_req: ExpressRequest, res: ExpressResponse) => {
-      res.status(200).json({ success: true, message: 'User deletion API is working' });
-    })
-  );
+  if (process.env.NODE_ENV !== 'production') {
+    app.get(
+      '/api/user/test',
+      asyncHandler(async (_req: ExpressRequest, res: ExpressResponse) => {
+        res.status(200).json({ success: true, message: 'User deletion API is working' });
+      })
+    );
+  }
   // Auth middleware for all /api routes
   app.use('/api', verifyBearer);
   app.use('/api', abuseGuard);

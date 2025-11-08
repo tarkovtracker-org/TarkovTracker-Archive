@@ -12,6 +12,54 @@
     <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
     <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
 
+    <!-- Preload critical dashboard background (LCP image) -->
+    <link
+      rel="preload"
+      as="image"
+      href="/img/background/sunset.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/img/background/sunset.webp"
+      type="image/webp"
+      fetchpriority="high"
+    />
+
+    <!-- Preload critical drawer background -->
+    <link
+      rel="preload"
+      as="image"
+      href="/img/background/sidebar-background.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/img/background/sidebar-background.webp"
+      type="image/webp"
+      fetchpriority="high"
+    />
+
+    <!-- Preload primary navigation logo (above-fold) -->
+    <link
+      rel="preload"
+      as="image"
+      href="/img/logos/tarkovtrackerlogo-light.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/img/logos/tarkovtrackerlogo-light.webp"
+      type="image/webp"
+      fetchpriority="high"
+    />
+
     <!-- Preload critical fonts for faster rendering -->
     <link
       rel="preload"

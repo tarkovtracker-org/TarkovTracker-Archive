@@ -1,5 +1,13 @@
 /// <reference types="vite/client" />
 
+// Vue module declaration
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const component: DefineComponent<object, object, any>;
+  export default component;
+}
+
 interface ImportMetaEnv {
   readonly VITE_FIREBASE_API_KEY: string;
   readonly VITE_FIREBASE_AUTH_DOMAIN: string;

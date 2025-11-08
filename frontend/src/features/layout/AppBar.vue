@@ -91,3 +91,13 @@
     }
   }
 </script>
+<style scoped lang="scss">
+  /* CLS optimization: Isolate loading spinner to prevent layout shifts */
+  :deep(.v-progress-circular) {
+    /* CSS containment to prevent layout recalculation */
+    contain: layout style paint;
+    /* Reserve fixed space for the spinner */
+    width: 24px;
+    height: 24px;
+  }
+</style>

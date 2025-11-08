@@ -4,6 +4,7 @@ import { Firestore, DocumentReference } from 'firebase-admin/firestore';
 import { Request, Response } from 'express';
 import { ApiResponse, ApiError } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
+import { createLazy } from '../utils/factory.js';
 
 interface UserDeletionRequest {
   confirmationText: string;
@@ -252,6 +253,9 @@ export class UserDeletionService {
   }
 }
 
+// Lazy-initialized service instance to ensure Firebase Admin is initialized first
+const getUserDeletionService = createLazy(() => new UserDeletionService());
+
 /**
  * HTTP handler for user deletion
  */
@@ -267,8 +271,7 @@ export async function deleteUserAccountHandler(
       throw errors.unauthorized('User not authenticated');
     }
 
-    const userDeletionService = new UserDeletionService();
-    const result = await userDeletionService.deleteUserAccount(userId, req.body);
+    const result = await getUserDeletionService().deleteUserAccount(userId, req.body);
 
     res.status(200).json(result);
   } catch (error) {

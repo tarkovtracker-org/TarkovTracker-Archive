@@ -34,11 +34,12 @@
     </template>
   </v-list>
 </template>
-<script setup>
+<script setup lang="ts">
   import { fireuser, auth } from '@/plugins/firebase';
-  import { defineAsyncComponent, computed } from 'vue';
+  import { computed } from 'vue';
   import { useUserStore } from '@/stores/user';
   import { signOut } from '@/plugins/firebase';
+  import DrawerItem from '@/features/drawer/DrawerItem.vue';
 
   defineProps({
     isCollapsed: {
@@ -47,8 +48,6 @@
     },
   });
   const userStore = useUserStore();
-  const DrawerItem = defineAsyncComponent(() => import('@/features/drawer/DrawerItem'));
-
   const avatarSrc = computed(() => {
     return userStore.getStreamerMode || !fireuser.photoURL
       ? '/img/default-avatar.svg'
@@ -56,7 +55,7 @@
   });
 
   const userDisplayName = computed(() => {
-    return userStore.getStreamerMode ? 'User' : fireuser.displayName;
+    return userStore.getStreamerMode ? 'User' : fireuser.displayName || 'User';
   });
 
   function logout() {

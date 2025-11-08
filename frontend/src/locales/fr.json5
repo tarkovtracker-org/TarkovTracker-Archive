@@ -381,4 +381,9 @@
       description: "Voici la liste des membres de votre équipe. Vous pouvez cliquer sur l'icône en forme d'œil pour masquer ou afficher leurs tâches et objets requis pendant que vous utilisez d'autres parties du tracker.",
     },
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Échec du chargement de la documentation de l\'API',
+    },
+  },
 }

@@ -65,12 +65,13 @@
   </span>
 </template>
 <script setup>
-  import { computed, ref, defineAsyncComponent, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useLiveData } from '@/composables/livedata';
   import TaskObjectiveKillTracker from './TaskObjectiveKillTracker.vue';
+  import TarkovItem from '@/features/game/TarkovItem.vue';
 
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
@@ -83,7 +84,6 @@
     },
   });
 
-  const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
   const { objectives } = useTarkovData();
   const tarkovStore = useTarkovStore();
   const { progressStore, unlockedTasks, objectiveCompletions } = useProgressQueries();

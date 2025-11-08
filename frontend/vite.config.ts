@@ -4,12 +4,10 @@ import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
 import { execSync } from 'child_process';
-import { defineConfig } from 'vite';
-
+import { defineConfig, type Plugin } from 'vite';
 // Get the directory name in an ESM context
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 const formatGitError = (error: unknown) => {
   if (error && typeof error === 'object') {
     const code = (error as { code?: unknown }).code;
@@ -23,23 +21,18 @@ const formatGitError = (error: unknown) => {
     }
     return parts.join(' - ') || 'unknown error';
   }
-
   return String(error);
 };
-
-let cachedCommitHash: string | null = null;
-
+let cachedCommitHash: string | undefined = undefined;
 // Get git commit hash and build time
 const getCommitHash = () => {
-  if (cachedCommitHash !== null) {
+  if (cachedCommitHash !== undefined) {
     return cachedCommitHash;
   }
-
   if (process.env.VITE_COMMIT_HASH) {
     cachedCommitHash = process.env.VITE_COMMIT_HASH;
     return cachedCommitHash;
   }
-
   try {
     cachedCommitHash = execSync('git rev-parse HEAD', {
       stdio: ['ignore', 'pipe', 'ignore'],
@@ -52,13 +45,53 @@ const getCommitHash = () => {
   }
   return cachedCommitHash;
 };
-
 const getBuildTime = () => {
   return new Date().toISOString();
 };
 
+// Plugin to defer non-critical CSS for better FCP
+function deferNonCriticalCSS(): Plugin {
+  return {
+    name: 'defer-non-critical-css',
+    enforce: 'post',
+    transformIndexHtml(html) {
+      // Only apply in production builds
+      if (process.env.NODE_ENV !== 'production') {
+        return html;
+      }
+
+      // Defer Vuetify and Scalar CSS (not needed for initial paint)
+      let noscriptLinks = '';
+      const transformedHtml = html.replace(
+        /<link\s+rel="stylesheet"[^>]*href="[^"]*(?:vuetify-vendor|scalar-vendor)[^"]*"[^>]*>/g,
+        (match) => {
+          // Store original link for noscript fallback
+          noscriptLinks += match;
+          // Add media="print" to defer loading, then switch to "all" after load
+          return match.replace(
+            /rel="stylesheet"/,
+            'rel="stylesheet" media="print" onload="this.media=\'all\'; this.onload=null;"'
+          );
+        }
+      );
+
+      // Add noscript fallback for deferred CSS
+      if (noscriptLinks) {
+        return transformedHtml.replace(
+          '</head>',
+          `<noscript>${noscriptLinks}</noscript></head>`
+        );
+      }
+
+      return transformedHtml;
+    },
+  };
+}
+
 export default defineConfig({
   optimizeDeps: {
+    // 'qrcode' needs to be pre-bundled due to ESM/CJS interop issues;
+    // Vite cannot analyze it statically, so we include it to avoid runtime errors.
     include: ['qrcode'],
   },
   resolve: {
@@ -99,27 +132,22 @@ export default defineConfig({
         manualChunks(id) {
           // Only split the heaviest vendors to improve performance
           // Everything else uses Vite's automatic chunking
-
           // Firebase (very heavy - split into own chunk)
           if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) {
             return 'firebase-vendor';
           }
-
           // Vuetify runtime (heavy UI framework - split into own chunk)
           if (id.includes('node_modules/vuetify')) {
             return 'vuetify-vendor';
           }
-
           // Scalar API Reference (very heavy - only loads on API docs page)
           if (id.includes('node_modules/@scalar')) {
             return 'scalar-vendor';
           }
-
           // D3 (heavy graphing library)
           if (id.includes('node_modules/d3')) {
             return 'd3-vendor';
           }
-
           // Let Vite handle everything else automatically
         },
       },
@@ -131,6 +159,7 @@ export default defineConfig({
       include: path.resolve(__dirname, './src/locales/**'),
     }),
     vuetify({ autoImport: true }),
+    deferNonCriticalCSS(),
   ],
   server: {
     port: 3000,

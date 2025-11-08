@@ -73,9 +73,6 @@ async function fetchWithTimeoutAndRetry(url, options = {}) {
   }
 }
 
-/**
- * Fetch tarkov.dev maps.json with robust retry logic
- */
 const NAME_MAPPING = {
   'streets-of-tarkov': 'streetsoftarkov',
   'ground-zero': 'groundzero',
@@ -172,12 +169,17 @@ function convertToOurFormat(rawData, existingMaps = {}) {
       // Add layers as additional floors
       if (interactive.layers) {
         for (const layer of interactive.layers) {
+          let layerName;
           if (layer.svgPath) {
             const layerMatch = layer.svgPath.match(/-([\w_]+)\.svg$/);
-            const layerName = layerMatch ? layerMatch[1] : layer.name.replace(/\s+/g, '_');
-            if (!floors.includes(layerName)) {
-              floors.push(layerName);
+            if (layerMatch) {
+              layerName = layerMatch[1];
+            } else if (typeof layer.name === 'string') {
+              layerName = layer.name.replace(/\s+/g, '_');
             }
+          }
+          if (layerName && !floors.includes(layerName)) {
+            floors.push(layerName);
           }
         }
       }

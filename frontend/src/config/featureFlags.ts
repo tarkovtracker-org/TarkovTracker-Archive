@@ -58,7 +58,7 @@ export const featureFlags = {
    * Env var: VITE_FEATURE_NEW_API_DOCS
    * Status: ✅ Completed - Remove this flag after next release
    */
-  // TODO: Remove this flag after next release - API docs are now stable
+  // TODO: Remove this flag after next release - API docs are now stable (tracked in #140)
   newApiDocs: envBool(import.meta.env.VITE_FEATURE_NEW_API_DOCS),
 
   /**

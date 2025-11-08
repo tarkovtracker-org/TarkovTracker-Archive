@@ -264,7 +264,7 @@ export async function fetchTarkovDevMaps(): Promise<StaticMapData> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
-  }, TIMEOUT_MS); // 8 second timeout
+  }, TIMEOUT_MS); // timeout in ms (see TIMEOUT_MS above)
 
   logger.info('Fetching maps from tarkov.dev...');
 

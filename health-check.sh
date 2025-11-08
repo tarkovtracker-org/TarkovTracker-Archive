@@ -36,6 +36,11 @@ if pushd frontend > /dev/null; then
   npm run type-check
   TYPE_EXIT_CODE=$?
   popd > /dev/null
+  POPD_EXIT_CODE=$?
+  if [ $POPD_EXIT_CODE -ne 0 ]; then
+    echo "❌ Failed to return from frontend directory"
+    exit 1
+  fi
   if [ $TYPE_EXIT_CODE -eq 0 ]; then
     echo "✅ No type errors"
   else

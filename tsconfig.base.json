@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    // Shared strict settings across all workspaces
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "isolatedModules": true
+  }
+}

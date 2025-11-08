@@ -434,6 +434,11 @@
     loading: '読み込み中...',
     error: 'エラー',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'APIドキュメントの読み込みに失敗しました',
+    },
+  },
   'task.kappa_req': 'Kappaクエストに必要',
   'task.level_req': '必要レベル：{level}',
 }

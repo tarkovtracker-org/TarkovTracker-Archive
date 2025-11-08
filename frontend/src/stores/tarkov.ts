@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { watch } from 'vue';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, deleteDoc } from 'firebase/firestore';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
 import { notify } from '@/utils/notify';
@@ -25,6 +25,9 @@ import {
   scheduleLockRelease,
   saveToLocalStorage,
 } from '@/utils/fireswapHelpers';
+
+// LocalStorage keys that should be preserved during profile reset operations
+const PRESERVED_STORAGE_KEYS = ['user', 'DEV_USER_ID'];
 
 // Define the Fireswap configuration type
 interface FireswapConfig {
@@ -67,7 +70,6 @@ export const useTarkovStore = defineStore('swapTarkov', {
     async switchGameMode(mode: GameMode) {
       // Switch the current game mode using the base action
       actions.switchGameMode.call(this, mode);
-
       // If user is logged in, sync the gamemode change to backend
       if (fireuser.uid) {
         // Skip Firestore sync when dev auth is enabled
@@ -99,13 +101,11 @@ export const useTarkovStore = defineStore('swapTarkov', {
         !this.pvp ||
         !this.pve ||
         ((this as unknown as Record<string, unknown>).level !== undefined && !this.pvp?.level); // Has legacy level but no pvp.level
-
       if (needsMigration) {
         logger.info('Migrating legacy data structure to gamemode-aware structure');
         const currentState = JSON.parse(JSON.stringify(this.$state));
         const migratedData = migrateToGameModeStructure(currentState);
         this.$patch(migratedData);
-
         // If user is logged in, save the migrated structure to Firestore
         if (fireuser.uid && !isDevAuthEnabled()) {
           try {
@@ -122,58 +122,157 @@ export const useTarkovStore = defineStore('swapTarkov', {
         logger.error('User not logged in. Cannot reset online profile.');
         return;
       }
-      try {
-        const freshDefaultState = JSON.parse(JSON.stringify(defaultState));
-
-        // Only write to Firestore if dev auth is not enabled
-        if (!isDevAuthEnabled()) {
-          const userProgressRef = doc(firestore, 'progress', fireuser.uid);
-          await setDoc(userProgressRef, freshDefaultState);
+      const extendedStore = this as unknown as StoreWithFireswapExt<
+        ReturnType<typeof useTarkovStore>
+      >;
+      const primarySetting = getPrimaryFireswapSetting(extendedStore);
+      if (!primarySetting) {
+        logger.error('Fireswap extension not available');
+        notify({
+          message: 'Fireswap extension unavailable — profile reset failed',
+          type: 'error',
+        });
+        return;
+      }
+      const resetContext = this.prepareProfileReset(primarySetting, fireuser.uid);
+      await this.executeProfileReset(resetContext);
+    },
+    prepareProfileReset(primarySetting: ReturnType<typeof getPrimaryFireswapSetting>, uid: string) {
+      const freshDefaultState = JSON.parse(JSON.stringify(defaultState)) as UserState;
+      const previousState = JSON.parse(JSON.stringify(this.$state)) as UserState;
+      const preservedData = preserveLocalStorageKeys(PRESERVED_STORAGE_KEYS);
+      const localStorageBackup = new Map<string, string>();
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        const value = localStorage.getItem(key);
+        if (value !== null) {
+          localStorageBackup.set(key, value);
         }
-
-        // Preserve user settings before clearing localStorage
-        const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
-
-        // Get access to the Fireswap plugin's lock mechanism
-        const extendedStore = this as unknown as StoreWithFireswapExt<
-          ReturnType<typeof useTarkovStore>
-        >;
-        const primarySetting = getPrimaryFireswapSetting(extendedStore);
-        if (!primarySetting) {
-          logger.error('Fireswap extension not available');
-          notify({
-            message: 'Fireswap extension unavailable — profile reset failed',
-            type: 'error',
-          });
-          return;
-        }
-        setFireswapLock(primarySetting, true);
-
-        // Clear ALL localStorage data for full account reset
+      }
+      const restoreLocalStorageFromBackup = () => {
+        const failedKeys: string[] = [];
         localStorage.clear();
-
-        // Restore preserved user settings
-        restoreLocalStorageKeys(preservedData);
-
-        // Save the fresh default state to localStorage
+        localStorageBackup.forEach((value, key) => {
+          try {
+            localStorage.setItem(key, value);
+          } catch (error) {
+            logger.error(`Failed to restore localStorage key '${key}' during rollback`, error);
+            failedKeys.push(key);
+          }
+        });
+        if (failedKeys.length > 0) {
+          throw new Error(
+            `Failed to restore ${failedKeys.length} localStorage key(s): ${failedKeys.join(', ')}`
+          );
+        }
+      };
+      return {
+        freshDefaultState,
+        previousState,
+        preservedData,
+        restoreLocalStorageFromBackup,
+        primarySetting,
+        userProgressRef: doc(firestore, 'progress', uid),
+      };
+    },
+    async executeProfileReset(
+      context: ReturnType<typeof useTarkovStore.prototype.prepareProfileReset>
+    ) {
+      let lockAcquired = false;
+      let firestoreWriteCompleted = false;
+      let firestoreBackup:
+        | { exists: true; data: UserState }
+        | { exists: false; data?: undefined }
+        | null = null;
+      try {
+        firestoreBackup = await this.backupAndResetFirestore(
+          context.userProgressRef,
+          context.freshDefaultState
+        );
+        firestoreWriteCompleted = !!firestoreBackup;
+        setFireswapLock(context.primarySetting, true);
+        lockAcquired = true;
+        localStorage.clear();
+        restoreLocalStorageKeys(context.preservedData);
         saveToLocalStorage(
           'progress',
-          freshDefaultState,
+          context.freshDefaultState,
           'Error saving default state to localStorage after reset:'
         );
-
-        // Cancel any pending debounced saves before updating state
-        cancelPendingUpload(primarySetting);
-
-        // Use $patch to update state while preserving reactivity
-        this.$patch(freshDefaultState as UserState);
-
-        // Ensure Vue has processed the state change before releasing the lock
-        scheduleLockRelease(primarySetting);
-
+        this.$patch(context.freshDefaultState);
         logger.info('Online profile reset successfully');
       } catch (error) {
-        logger.error('Error resetting online profile:', error);
+        logger.error(
+          `Error resetting online profile for user ${fireuser.uid}. Attempting rollback.`,
+          error
+        );
+        await this.rollbackProfileReset({
+          ...context,
+          firestoreWriteCompleted,
+          firestoreBackup,
+        });
+        notify({
+          message: 'Failed to reset online profile — previous data restored',
+          type: 'error',
+        });
+      } finally {
+        cancelPendingUpload(context.primarySetting);
+        if (lockAcquired) {
+          scheduleLockRelease(context.primarySetting);
+        }
+      }
+    },
+    async backupAndResetFirestore(
+      userProgressRef: ReturnType<typeof doc>,
+      freshDefaultState: UserState
+    ) {
+      if (isDevAuthEnabled()) {
+        return null;
+      }
+      const snapshot = await getDoc(userProgressRef);
+      const backup = snapshot.exists()
+        ? { exists: true as const, data: snapshot.data() as UserState }
+        : { exists: false as const };
+      await setDoc(userProgressRef, freshDefaultState);
+      return backup;
+    },
+    async rollbackProfileReset(context: {
+      restoreLocalStorageFromBackup: () => void;
+      previousState: UserState;
+      firestoreWriteCompleted: boolean;
+      firestoreBackup: { exists: true; data: UserState } | { exists: false } | null;
+      userProgressRef: ReturnType<typeof doc>;
+    }) {
+      try {
+        context.restoreLocalStorageFromBackup();
+      } catch (restoreError) {
+        logger.error('Failed to restore localStorage backup after reset failure:', restoreError);
+      }
+      try {
+        this.$patch(context.previousState);
+      } catch (stateError) {
+        logger.error('Failed to restore store state after reset failure:', stateError);
+      }
+      if (context.firestoreWriteCompleted && !isDevAuthEnabled()) {
+        await this.rollbackFirestoreState(context.userProgressRef, context.firestoreBackup);
+      }
+    },
+    async rollbackFirestoreState(
+      userProgressRef: ReturnType<typeof doc>,
+      firestoreBackup: { exists: true; data: UserState } | { exists: false } | null
+    ) {
+      try {
+        if (firestoreBackup && firestoreBackup.exists) {
+          await setDoc(userProgressRef, firestoreBackup.data);
+        } else {
+          await deleteDoc(userProgressRef);
+        }
+      } catch (remoteRestoreError) {
+        logger.error(
+          `Failed to rollback Firestore progress doc for user ${fireuser.uid}:`,
+          remoteRestoreError
+        );
       }
     },
     async resetCurrentGameModeData() {
@@ -185,17 +284,14 @@ export const useTarkovStore = defineStore('swapTarkov', {
         logger.error('User not logged in. Cannot reset game mode data.');
         return;
       }
-
       try {
         const freshProgressData = JSON.parse(JSON.stringify(defaultState[mode]));
         const updateData = { [mode]: freshProgressData };
-
         // Only write to Firestore if dev auth is not enabled
         if (!isDevAuthEnabled()) {
           const userProgressRef = doc(firestore, 'progress', fireuser.uid);
           await setDoc(userProgressRef, updateData, { merge: true });
         }
-
         // Create the new complete state with the reset game mode
         const otherMode = mode === 'pvp' ? 'pve' : 'pvp';
         const newCompleteState = {
@@ -204,10 +300,8 @@ export const useTarkovStore = defineStore('swapTarkov', {
           [mode]: freshProgressData,
           [otherMode]: JSON.parse(JSON.stringify(this[otherMode])), // Preserve other mode
         };
-
         // Preserve user settings before clearing localStorage
-        const preservedData = preserveLocalStorageKeys(['user', 'DEV_USER_ID']);
-
+        const preservedData = preserveLocalStorageKeys(PRESERVED_STORAGE_KEYS);
         // Get access to the Fireswap plugin's lock mechanism
         const extendedStore = this as unknown as StoreWithFireswapExt<
           ReturnType<typeof useTarkovStore>
@@ -222,29 +316,22 @@ export const useTarkovStore = defineStore('swapTarkov', {
           return;
         }
         setFireswapLock(primarySetting, true);
-
         // Clear all localStorage to ensure no stale data remains
         localStorage.clear();
-
         // Restore preserved user settings
         restoreLocalStorageKeys(preservedData);
-
         // Save the new complete state directly to localStorage
         saveToLocalStorage(
           'progress',
           newCompleteState,
           'Error saving state to localStorage after reset:'
         );
-
         // Cancel any pending debounced saves before updating state
         cancelPendingUpload(primarySetting);
-
         // Use $patch to update state while preserving reactivity
         this.$patch(newCompleteState as UserState);
-
         // Ensure Vue has processed the state change before releasing the lock
         scheduleLockRelease(primarySetting);
-
         logger.info(`${mode.toUpperCase()} game mode data reset successfully`);
       } catch (error) {
         logger.error(`Error resetting ${mode} game mode data:`, error);
@@ -302,7 +389,6 @@ watch(
             extendedStore.firebindAll();
           }
         }
-
         // Call migration after binding is complete
         setTimeout(() => {
           if (typeof tarkovStore.migrateDataIfNeeded === 'function') {
@@ -338,7 +424,6 @@ setTimeout(async () => {
     } else if (fireuser.loggedIn && typeof extendedStore.firebindAll === 'function') {
       extendedStore.firebindAll();
     }
-
     // Call migration after binding is complete
     setTimeout(() => {
       if (typeof tarkovStore.migrateDataIfNeeded === 'function') {

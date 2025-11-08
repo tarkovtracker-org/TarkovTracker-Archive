@@ -374,6 +374,11 @@
     loading: 'Caricamento...',
     error: 'Errore',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Impossibile caricare la documentazione delle API',
+    },
+  },
   'task.kappa_req': 'Richiesto per la missione Kappa',
   'task.level_req': 'Livello richiesto: {level}',
 }

@@ -1,5 +1,8 @@
 import { getMapIdGroup } from '@/utils/mapNormalization';
 import type { Task, TaskObjective } from '@/types/tarkov';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('TaskUtils');
 
 // ============================================================================
 // COUNTING UTILITIES
@@ -35,6 +38,10 @@ export const successorDepth = (task: Task, tasks: Task[]) => {
     }
 
     if (recursionStack.has(taskId)) {
+      logger.warn(`Cycle detected in task dependencies for task: ${taskId}`);
+      if (import.meta.env.DEV) {
+        console.warn('[TaskUtils] Task dependency cycle detected:', taskId, [...recursionStack]);
+      }
       return 0;
     }
 
@@ -46,7 +53,7 @@ export const successorDepth = (task: Task, tasks: Task[]) => {
       return 1;
     }
 
-    const successorDepths = successors.map((sid) => calculateDepth(sid, recursionStack));
+    const successorDepths = successors.map((sid) => calculateDepth(sid, new Set(recursionStack)));
     const depth = 1 + Math.max(...successorDepths);
     depthMemo.set(taskId, depth);
     return depth;
@@ -135,12 +142,15 @@ export const taskHasIncompleteObjectiveOnMap = (
   for (const objective of task.objectives || []) {
     const objectiveMapIds = resolveObjectiveMapIds(objective);
     if (!objectiveMapIds.some((id: string) => mapIdGroup.includes(id))) continue;
-    const completions = getObjectiveCompletionMap(objective.id) || {};
-    const isComplete =
-      activeUserView === 'all'
-        ? Object.values(completions).every(Boolean)
-        : completions[activeUserView] === true;
-    if (!isComplete) {
+    const completions = getObjectiveCompletionMap(objective.id);
+    if (activeUserView === 'all') {
+      if (!completions || Object.keys(completions).length === 0) {
+        return true;
+      }
+      if (Object.values(completions).some((value) => value !== true)) {
+        return true;
+      }
+    } else if (!completions || completions[activeUserView] !== true) {
       return true;
     }
   }

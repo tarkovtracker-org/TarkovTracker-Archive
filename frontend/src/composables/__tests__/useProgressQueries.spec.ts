@@ -179,23 +179,17 @@ describe('useProgressQueries', () => {
 
   it('handles team data with mixed completion states', () => {
     // Set up complex completion scenario according to current unlock logic
-    mockProgressStoreInstance.unlockedTasks = {
+    const complexTaskState: CompletionMap = {
       complexTask: {
         alpha: true,
         beta: false,
         gamma: true,
         delta: false,
-      } as any,
+      },
     };
 
-    mockProgressStoreInstance.tasksCompletions = {
-      complexTask: {
-        alpha: true,
-        beta: false,
-        gamma: true,
-        delta: false,
-      } as any,
-    };
+    mockProgressStoreInstance.unlockedTasks = complexTaskState;
+    mockProgressStoreInstance.tasksCompletions = complexTaskState;
 
     const { isTaskUnlockedFor, isTaskCompletedFor, isTaskUnlockedByAny } = useProgressQueries();
 
@@ -213,11 +207,12 @@ describe('useProgressQueries', () => {
     expect(isTaskUnlockedByAny('complexTask')).toBe(true);
 
     // Test with completely locked task
-    mockProgressStoreInstance.unlockedTasks['lockedTask'] = {
+    const lockedTaskState: Record<string, boolean> = {
       alpha: false,
       beta: false,
       gamma: false,
-    } as any;
+    };
+    mockProgressStoreInstance.unlockedTasks['lockedTask'] = lockedTaskState;
     expect(isTaskUnlockedByAny('lockedTask')).toBe(false);
 
     // Restore initial data
@@ -311,15 +306,12 @@ describe('useProgressQueries', () => {
     // These are exposed in the composable
     const { traderLevelsAchieved, traderStandings } = useProgressQueries();
 
-    // Unwrap nested refs consistently
-    expect(
-      (traderLevelsAchieved as any).value?.value ?? (traderLevelsAchieved as any).value
-    ).toEqual({
+    expect(traderLevelsAchieved.value).toEqual({
       alpha: { prapor: 2, therapist: 3 },
       beta: { prapor: 1 },
     });
 
-    expect((traderStandings as any).value?.value ?? (traderStandings as any).value).toEqual({
+    expect(traderStandings.value).toEqual({
       alpha: { prapor: 0.85, therapist: 0.92 },
     });
 
@@ -332,13 +324,6 @@ describe('useProgressQueries', () => {
     // Test with game edition data
     const { gameEditionData } = useProgressQueries();
 
-    // Compare plain objects/arrays by unwrapping proxies
-    expect(JSON.parse(JSON.stringify(gameEditionData.value))).toEqual([
-      { version: 1, defaultStashLevel: 2 },
-    ]);
-
-    // Note: gameEditionData is readonly from the store, so we test the current behavior
-    // The value is populated from the store's game edition configuration
-    expect(gameEditionData.value.length).toBeGreaterThan(0);
+    expect(gameEditionData.value).toEqual([{ version: 1, defaultStashLevel: 2 }]);
   });
 });

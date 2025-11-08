@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { readonly, ref } from 'vue';
 
 export interface NotificationOptions {
   message: string;
@@ -75,7 +75,7 @@ export function useNotification() {
   };
 
   return {
-    state: notificationState,
+    state: readonly(notificationState),
     notify,
     close,
   };

@@ -378,6 +378,11 @@
     loading: 'Načítání...',
     error: 'Chyba',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Nepodařilo se načíst dokumentaci API',
+    },
+  },
   'task.kappa_req': 'Požadováno pro úkol Kappa',
   'task.level_req': 'Požadovaná úroveň: {level}',
 }

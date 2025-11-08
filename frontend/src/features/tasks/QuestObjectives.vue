@@ -23,9 +23,7 @@
 </template>
 
 <script setup>
-  import { defineAsyncComponent } from 'vue';
-
-  const TaskObjective = defineAsyncComponent(() => import('./TaskObjective'));
+  import TaskObjective from './TaskObjective.vue';
 
   defineProps({
     objectives: { type: Array, required: true },

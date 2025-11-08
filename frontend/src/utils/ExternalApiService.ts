@@ -135,7 +135,7 @@ const buildHideoutParts = (
     acc[part.id] = {
       complete: Boolean(part.complete),
       count: part.count ?? 0,
-      ...(part.complete ? { timestamp: timestamp ?? Date.now() } : {}),
+      ...(part.complete ? { timestamp: getTimestamp(timestamp) } : {}),
     };
 
     return acc;
@@ -160,7 +160,7 @@ const buildTaskObjectives = (
     acc[objective.id] = {
       complete: Boolean(objective.complete),
       count: objective.count ?? 0,
-      ...(objective.complete ? { timestamp: timestamp ?? Date.now() } : {}),
+      ...(objective.complete ? { timestamp: getTimestamp(timestamp) } : {}),
     };
 
     return acc;

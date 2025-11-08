@@ -1,20 +1,17 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    // Frontend-specific settings
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "strict": true,
     "jsx": "preserve",
-    "sourceMap": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
-    "skipLibCheck": true,
     "noEmit": true,
     "allowJs": true,
     "types": ["vitest/globals"],
+    "composite": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

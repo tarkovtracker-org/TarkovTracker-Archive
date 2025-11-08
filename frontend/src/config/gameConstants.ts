@@ -67,3 +67,22 @@ export const TRADER_ORDER = [
   'Lightkeeper',
   'BTR Driver',
 ] as const;
+
+// UI Constants
+export const TASK_CARD_HEIGHT = 203 as const;
+
+// Skeleton loader configuration for task lists (CLS optimization)
+export const SKELETON_CONFIG = {
+  CARD_HEIGHT: TASK_CARD_HEIGHT, // Height matches --task-card-min-height CSS custom property (numeric for calculations)
+  CARD_VERTICAL_SPACING: 16, // Vertical spacing between skeleton cards in pixels
+  MIN_SKELETONS: 3, // Minimum number of skeleton cards to show
+  MAX_SKELETONS: 20, // Maximum number of skeleton cards to show
+  MIN_SKELETON_DURATION: 400, // Minimum time (ms) to show skeleton to avoid flicker
+} as const;
+
+// Individual exports for easy importing
+export const SKELETON_CARD_HEIGHT = SKELETON_CONFIG.CARD_HEIGHT;
+export const SKELETON_CARD_VERTICAL_SPACING = SKELETON_CONFIG.CARD_VERTICAL_SPACING;
+export const MIN_SKELETONS = SKELETON_CONFIG.MIN_SKELETONS;
+export const MAX_SKELETONS = SKELETON_CONFIG.MAX_SKELETONS;
+export const MIN_SKELETON_DURATION = SKELETON_CONFIG.MIN_SKELETON_DURATION;

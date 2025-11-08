@@ -27,17 +27,14 @@ import {
   objectiveIncompleteForUser,
 } from './taskMarkersUtils';
 import type { Task, TaskObjective } from '@/types/tarkov';
-
 interface ObjectiveWithUsers extends TaskObjective {
   users: string[];
 }
-
 interface SecondaryTaskCounts {
   available: number;
   locked: number;
   completed: number;
 }
-
 export function useTaskList() {
   const { t } = useI18n({ useScope: 'global' });
   const userStore = useUserStore();
@@ -58,7 +55,6 @@ export function useTaskList() {
   } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const { tasks, maps, traders, loading: tasksLoading, disabledTasks } = useTarkovData();
-
   const primaryViews = computed(() => [
     {
       title: t('page.tasks.primaryviews.all'),
@@ -88,7 +84,6 @@ export function useTaskList() {
       view: 'completed',
     },
   ]);
-
   const activePrimaryView = computed({
     get: () => userStore.getTaskPrimaryView,
     set: (value: string) => userStore.setTaskPrimaryView(value),
@@ -97,7 +92,6 @@ export function useTaskList() {
   if (!validPrimaryViews.has(activePrimaryView.value)) {
     activePrimaryView.value = 'all';
   }
-
   const activeMapView = computed({
     get: () => userStore.getTaskMapView,
     set: (value: string) => userStore.setTaskMapView(value),
@@ -119,7 +113,6 @@ export function useTaskList() {
       userStore.setTaskSecondaryView(value);
     },
   });
-
   const userViews = computed(() => {
     const views: Array<{ title: string; view: string }> = [];
     const teamStoreKeys = visibleTeamIds.value;
@@ -145,12 +138,10 @@ export function useTaskList() {
     }
     return views;
   });
-
   const traderAvatar = (id: string) => {
     const trader = traders.value.find((t) => t.id === id);
     return trader?.imageLink;
   };
-
   const getSelfGameEdition = () =>
     typeof tarkovStore.getGameEdition === 'function' ? tarkovStore.getGameEdition() : 0;
   const isEditionEod = (edition: number | null | undefined) => EOD_EDITIONS.has(edition ?? 0);
@@ -182,7 +173,6 @@ export function useTaskList() {
         ? 'page.tasks.filters.tooltips.show_non_endgame_tasks_eod'
         : 'page.tasks.filters.tooltips.show_non_endgame_tasks',
   });
-
   const requirementFilterOptions = computed(() => ({
     showKappa: showKappaRequiredTasks.value,
     showLightkeeper: showLightkeeperRequiredTasks.value,
@@ -190,7 +180,6 @@ export function useTaskList() {
     hideNonEndgame: hideNonKappaTasks.value,
     treatEodAsEndgame: isSelfEod.value,
   }));
-
   type RequirementOptions = {
     showKappa: boolean;
     showLightkeeper: boolean;
@@ -198,7 +187,6 @@ export function useTaskList() {
     hideNonEndgame: boolean;
     treatEodAsEndgame: boolean;
   };
-
   const getEditionForView = (viewId: string) => {
     if (viewId === 'all') return null;
     if (viewId === 'self') {
@@ -211,7 +199,6 @@ export function useTaskList() {
     }
     return 0;
   };
-
   const loadingTasks = computed(() => {
     if (tasksLoading.value) return true;
     if (!tasks.value || tasks.value.length === 0) {
@@ -222,7 +209,6 @@ export function useTaskList() {
     }
     return false;
   });
-
   const reloadingTasks = ref(false);
   const visibleTasks: ShallowRef<Task[]> = shallowRef([]);
   const secondaryTaskCounts = ref<SecondaryTaskCounts>({
@@ -230,14 +216,13 @@ export function useTaskList() {
     locked: 0,
     completed: 0,
   });
-
+  const initialVisibleTasksHydrated = ref(false);
   const {
     renderedTasks,
     hasMoreTasks,
     loadMore,
     reset: resetVirtualTasks,
   } = useVirtualTaskList(visibleTasks as Ref<Task[]>);
-
   const visibleGPS = computed<ObjectiveWithUsers[]>(() => {
     if (activePrimaryView.value !== 'maps' || activeSecondaryView.value !== 'available') {
       return [];
@@ -255,9 +240,7 @@ export function useTaskList() {
       )
     );
   });
-
   const selectedMap = computed(() => maps.value.find((m) => m.id === activeMapView.value) ?? null);
-
   // Performance optimization: Only calculate map task totals when map view is active
   // This prevents expensive iterations through all tasks when viewing other tabs
   const mapTaskTotals = computed<Record<string, number>>(() => {
@@ -271,7 +254,6 @@ export function useTaskList() {
       return acc;
     }, {});
   });
-
   const countTasksForMap = (mapId: string, options: RequirementOptions) => {
     const mapIdGroup = getMapIdGroup(mapId, maps.value);
     return tasks.value.reduce((total, task) => {
@@ -302,18 +284,15 @@ export function useTaskList() {
         : total;
     }, 0);
   };
-
   const taskShouldBeConsidered = (task: Task, options: RequirementOptions, hideGlobal: boolean) => {
     if (disabledTasks.includes(task.id)) return false;
     if (hideGlobal && collectTaskLocationIds(task).size === 0) return false;
     return taskMatchesRequirementFilters(task, options);
   };
-
   const taskTouchesMap = (task: Task, mapIdGroup: string[]) => {
     const taskLocations = collectTaskLocationIds(task);
     return mapIdGroup.some((id) => taskLocations.has(id));
   };
-
   const applyRequirementFilters = (taskList: Task[]) => {
     const requirementOptions = requirementFilterOptions.value;
     return taskList.filter((task) => {
@@ -336,7 +315,6 @@ export function useTaskList() {
       return true;
     });
   };
-
   const filterTasksForAllUsersAvailable = (taskList: Task[], includeNeededBy = false) =>
     taskList.reduce<Task[]>((acc, task) => {
       const usersWhoNeedTask = computeUsersNeedingTask(task);
@@ -348,10 +326,8 @@ export function useTaskList() {
       );
       return acc;
     }, []);
-
   const computeUsersNeedingTask = (task: Task) =>
     visibleTeamIds.value.filter((teamId) => userNeedsTask(teamId, task));
-
   const userNeedsTask = (teamId: string, task: Task) => {
     if (!isTaskUnlockedFor(task.id, teamId)) {
       return false;
@@ -362,7 +338,6 @@ export function useTaskList() {
     const userFaction = playerFaction.value?.[teamId];
     return task.factionName === 'Any' || task.factionName === userFaction;
   };
-
   const filterTasksForSpecificUser = (taskList: Task[], secondaryView: string) => {
     let filtered = [...taskList];
     if (secondaryView === 'available') {
@@ -411,7 +386,6 @@ export function useTaskList() {
       );
     });
   };
-
   const buildTasksForSecondaryView = (taskList: Task[], secondaryView: string, options = {}) => {
     const { includeNeededBy = false } = options as { includeNeededBy?: boolean };
     let filtered: Task[] = [];
@@ -426,7 +400,6 @@ export function useTaskList() {
     }
     return applyRequirementFilters(filtered);
   };
-
   const buildTaskViewEntries = (baseTaskList: Task[], includeNeededBy: boolean) =>
     secondaryViews.value.reduce<Record<string, Task[]>>((acc, view) => {
       acc[view.view] = buildTasksForSecondaryView(baseTaskList, view.view, {
@@ -434,21 +407,19 @@ export function useTaskList() {
       });
       return acc;
     }, {});
-
   const shouldSkipVisibleTaskUpdate = () =>
     loadingTasks.value ||
     !Array.isArray(disabledTasks) ||
     !Array.isArray(tasks.value) ||
     tasks.value.length === 0;
-
   // Performance optimization: Memoization cache for filter results
   // Prevents redundant filtering when filter state hasn't changed
-  let filterCache: {
+  // Instance-specific cache to avoid shared state across composable instances
+  const filterCache = ref<{
     key: string;
     baseTaskList: Task[];
     taskViewEntries: Record<string, Task[]>;
-  } | null = null;
-
+  } | null>(null);
   const getFilterCacheKey = () => {
     // Create deterministic cache key from primitive filter values
     // Note: level is only included if it actually affects filtering
@@ -466,70 +437,97 @@ export function useTaskList() {
     ];
     return parts.join('|');
   };
-
-  const updateVisibleTasks = async () => {
+  const shouldInvalidateCache = () => {
+    // Invalidate cache if we have progress data to ensure fresh data
+    return Boolean(unlockedTasks.value || tasksCompletions.value || objectiveCompletions.value);
+  };
+  const getOrComputeTaskViews = (
+    cacheKey: string
+  ): { baseTaskList: Task[]; taskViewEntries: Record<string, Task[]> } => {
+    const hasValidCache = filterCache.value && filterCache.value.key === cacheKey;
+    if (hasValidCache) {
+      // Cache hit: reuse filtered results
+      return {
+        baseTaskList: filterCache.value!.baseTaskList,
+        taskViewEntries: filterCache.value!.taskViewEntries,
+      };
+    }
+    // Cache miss: perform filtering and cache results
+    const baseTaskList = filterTasksByPrimaryView(
+      [...tasks.value],
+      activePrimaryView.value,
+      activeMapView.value,
+      maps.value,
+      collectTaskLocationIds,
+      activeTraderView.value
+    );
+    const includeNeededBy =
+      activeUserView.value === 'all' && activeSecondaryView.value === 'available';
+    const taskViewEntries = buildTaskViewEntries(baseTaskList, includeNeededBy);
+    // Store in cache
+    filterCache.value = { key: cacheKey, baseTaskList, taskViewEntries };
+    return { baseTaskList, taskViewEntries };
+  };
+  const ensureInitialHydration = () => {
+    if (!initialVisibleTasksHydrated.value) {
+      initialVisibleTasksHydrated.value = true;
+    }
+  };
+  const updateVisibleTasks = () => {
     if (shouldSkipVisibleTaskUpdate()) {
       return;
     }
     try {
       reloadingTasks.value = true;
-
+      // Additional safety: If we have progress data, invalidate cache to ensure fresh data
+      // This prevents using stale cache when tasks are completed/unlocked
+      if (shouldInvalidateCache()) {
+        filterCache.value = null;
+      }
       // Performance optimization: Check cache before expensive filtering
       const cacheKey = getFilterCacheKey();
-      let baseTaskList: Task[];
-      let taskViewEntries: Record<string, Task[]>;
-
-      if (filterCache && filterCache.key === cacheKey) {
-        // Cache hit: reuse filtered results
-        baseTaskList = filterCache.baseTaskList;
-        taskViewEntries = filterCache.taskViewEntries;
-      } else {
-        // Cache miss: perform filtering and cache results
-        baseTaskList = filterTasksByPrimaryView(
-          [...tasks.value],
-          activePrimaryView.value,
-          activeMapView.value,
-          maps.value,
-          collectTaskLocationIds,
-          activeTraderView.value
-        );
-        const includeNeededBy =
-          activeUserView.value === 'all' && activeSecondaryView.value === 'available';
-        taskViewEntries = buildTaskViewEntries(baseTaskList, includeNeededBy);
-
-        // Store in cache
-        filterCache = { key: cacheKey, baseTaskList, taskViewEntries };
-      }
-
+      const { taskViewEntries } = getOrComputeTaskViews(cacheKey);
       // Calculate badge counts synchronously to prevent layout shifts
       // Async updates would cause badges to appear after initial render
       secondaryTaskCounts.value = summarizeSecondaryTaskCounts(taskViewEntries);
-
       visibleTasks.value = sortVisibleTasks(
         taskViewEntries[activeSecondaryView.value] || [],
         activeUserView.value,
         tasks.value
       );
+      ensureInitialHydration();
     } catch (error) {
       logger.error('Error updating visible tasks:', error);
       visibleTasks.value = [];
     } finally {
+      ensureInitialHydration();
       reloadingTasks.value = false;
     }
   };
-
   // Performance optimization: Debounce filter updates to reduce render blocking
-  // Debounce delay is configurable; 100ms is responsive for most user interactions
-  const FILTER_DEBOUNCE_DELAY = 100;
+  // Debounce delay can be configured via VITE_FILTER_DEBOUNCE_DELAY env variable
+  const FILTER_DEBOUNCE_DELAY =
+    typeof import.meta.env.VITE_FILTER_DEBOUNCE_DELAY !== 'undefined'
+      ? Number(import.meta.env.VITE_FILTER_DEBOUNCE_DELAY) || 100
+      : 100;
   const debouncedUpdateVisibleTasks = debounce(updateVisibleTasks, FILTER_DEBOUNCE_DELAY);
-
-  watchEffect(async () => {
+  const invalidateFilterCacheAndUpdate = () => {
     if (loadingTasks.value) {
       return;
     }
-    await updateVisibleTasks();
+    filterCache.value = null;
+    debouncedUpdateVisibleTasks();
+  };
+  watchEffect(() => {
+    if (loadingTasks.value) {
+      return;
+    }
+    // Initial load should not rely on any previous cache
+    filterCache.value = null;
+    debouncedUpdateVisibleTasks();
   });
-
+  // Watch core filter controls and trigger debounced updates with cache invalidation.
+  // Progress maps are additionally covered by a dedicated deep watcher below.
   watch(
     [
       activePrimaryView,
@@ -543,29 +541,37 @@ export function useTaskList() {
       hideLightkeeperRequiredTasks,
       showEodOnlyTasks,
       currentPlayerLevel,
-      unlockedTasks,
-      tasksCompletions,
-      objectiveCompletions,
     ],
     () => {
-      if (!loadingTasks.value) {
-        debouncedUpdateVisibleTasks();
-      }
+      invalidateFilterCacheAndUpdate();
     }
   );
-
+  // Explicit deep watch for progress-dependent sources that can mutate independently:
+  // - unlockedTasks
+  // - tasksCompletions
+  // - objectiveCompletions
+  // - playerFaction (per-team faction affects availability)
+  // Any mutation invalidates the memoized filter results before invoking the debounced update.
+  watch(
+    [unlockedTasks, tasksCompletions, objectiveCompletions, playerFaction],
+    () => {
+      if (!loadingTasks.value) {
+        filterCache.value = null;
+        debouncedUpdateVisibleTasks();
+      }
+    },
+    { deep: true }
+  );
   // Clean up on unmount
   onBeforeUnmount(() => {
     debouncedUpdateVisibleTasks.cancel();
-    filterCache = null; // Clear memoization cache
+    filterCache.value = null; // Clear memoization cache
     visibleTasks.value = [];
   });
-
   // Reset virtualization when tasks change
   watch(visibleTasks, () => {
     resetVirtualTasks();
   });
-
   const traderOrder: string[] = [...TRADER_ORDER];
   const orderedTraders = computed(() => {
     const traderList = Array.isArray(traders.value) ? traders.value : [];
@@ -575,16 +581,13 @@ export function useTaskList() {
       return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
     });
   });
-
   function objectiveHasLocation(objective: TaskObjective) {
     return Boolean(objective.possibleLocations?.length || objective.zones?.length);
   }
-
   onMounted(() => {
     // Ensure virtualization starts with correct count after initial mount
     resetVirtualTasks();
   });
-
   return {
     primaryViews,
     secondaryViews,
@@ -603,6 +606,7 @@ export function useTaskList() {
     hasMoreTasks,
     loadMoreTasks: loadMore,
     secondaryTaskCounts,
+    initialVisibleTasksHydrated,
     mapTaskTotals,
     visibleGPS,
     selectedMap,

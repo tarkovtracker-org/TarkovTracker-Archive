@@ -19,13 +19,27 @@ const tarkovItemsCache: Ref<TarkovItem[] | null> = ref(null);
 const loading = ref(false);
 const error: Ref<Error | null> = ref(null);
 
+function processShardData(shardDocs: unknown) {
+  const shardsArray = Array.isArray(shardDocs) ? shardDocs : null;
+  const aggregatedItems =
+    shardsArray?.flatMap((shard) => (Array.isArray(shard?.data) ? shard.data : [])) ?? [];
+
+  if (shardsArray && aggregatedItems.length > 0) {
+    tarkovItemsCache.value = aggregatedItems;
+    logger.info(`Loaded ${aggregatedItems.length} Tarkov items from Firestore shard cache`);
+  } else {
+    logger.warn('Tarkov items document exists but has no items field');
+    tarkovItemsCache.value = [];
+  }
+}
+
 /**
  * Composable for loading Tarkov items from Firestore cache
  * This replaces the direct Apollo GraphQL calls to tarkov.dev API
  *
- * Data structure: /tarkovData/items/data subcollection, with one doc per item.
- * A metadata doc at /tarkovData/items holds schemaVersion, itemCount, lastUpdated.
- * Cached by scheduledTarkovDataFetch Cloud Function (runs daily at midnight UTC)
+ * Data structure: /tarkovData/items (metadata) with /shards subcollection.
+ * Each shard document stores an array of items (<=700 KB) for Firestore limits.
+ * Cached by scheduledTarkovDataFetch Cloud Function (runs daily at midnight UTC).
  *
  * Implements singleton pattern to prevent duplicate Firestore listeners
  */
@@ -34,38 +48,28 @@ export function useFirestoreTarkovItems() {
   if (!isInitialized.value) {
     isInitialized.value = true;
     loading.value = true;
-
     try {
-      // Create Firestore collection reference for the subcollection pattern
-      const itemsColRef = collection(firestore, 'tarkovData', 'items', 'data');
-
+      // Create Firestore collection reference for sharded items cache
+      const itemsShardsRef = collection(firestore, 'tarkovData', 'items', 'shards');
       // Use VueFire's useCollection for reactive Firestore access
-      const firestoreCollection = useCollection<TarkovItem>(itemsColRef, {
-        ssrKey: 'tarkov-items-collection',
+      const firestoreShards = useCollection<{ data?: TarkovItem[] }>(itemsShardsRef, {
+        ssrKey: 'tarkov-item-shards',
       });
-
       // Watch for data load
       let stopWatch: (() => void) | null = null;
       stopWatch = watch(
-        [firestoreCollection.data, firestoreCollection.error],
-        ([colData, colError]) => {
-          if (colData !== undefined || colError) {
+        [firestoreShards.data, firestoreShards.error, firestoreShards.pending],
+        ([shardDocs, shardError, pending]) => {
+          const isPending = pending ?? true;
+          if (!isPending || shardError) {
             loading.value = false;
-
-            if (colError) {
-              logger.error('Failed to load Tarkov items from Firestore collection:', colError);
-              error.value = colError as Error;
-            } else if (colData) {
-              tarkovItemsCache.value = colData;
-              logger.info(
-                `Loaded ${colData.length} Tarkov items from Firestore subcollection cache`
-              );
-            } else {
-              logger.warn('Tarkov items subcollection exists but is empty');
+            if (shardError) {
+              logger.error('Failed to load Tarkov items from Firestore:', shardError);
+              error.value = shardError as Error;
               tarkovItemsCache.value = [];
+            } else {
+              processShardData(shardDocs);
             }
-
-            // Stop watching after first load
             if (stopWatch) {
               stopWatch();
             }
@@ -74,7 +78,7 @@ export function useFirestoreTarkovItems() {
         { immediate: true }
       );
     } catch (err) {
-      logger.error('Error initializing Firestore Tarkov items collection:', err);
+      logger.error('Error initializing Firestore Tarkov items:', err);
       error.value = err as Error;
       loading.value = false;
     }

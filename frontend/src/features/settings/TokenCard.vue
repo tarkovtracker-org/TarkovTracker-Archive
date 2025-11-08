@@ -234,17 +234,27 @@
 
     if (!qrDataUrl.value) {
       loading.value = true;
+      const currentToken = props.token; // Capture token at start to detect staleness
       try {
         qrError.value = false;
-        qrDataUrl.value = await QRCode.toDataURL(props.token, {
+        const dataUrl = await QRCode.toDataURL(currentToken, {
           errorCorrectionLevel: 'M',
           type: 'image/png',
           width: 256,
         });
+
+        // Only apply the result if the token hasn't changed
+        if (currentToken === props.token) {
+          qrDataUrl.value = dataUrl;
+        }
       } catch (error) {
-        qrError.value = true;
-        logger.error('QR code generation failed', error);
+        // Only apply the error if the token hasn't changed
+        if (currentToken === props.token) {
+          qrError.value = true;
+          logger.error('QR code generation failed', error);
+        }
       } finally {
+        // Always clear loading regardless of token changes
         loading.value = false;
       }
     }
@@ -265,6 +275,7 @@
     () => {
       qrDataUrl.value = '';
       qrError.value = false;
+      loading.value = false;
     }
   );
 </script>

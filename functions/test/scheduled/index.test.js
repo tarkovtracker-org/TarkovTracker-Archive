@@ -45,7 +45,7 @@ function setupGraphQLMocks(overrides = {}) {
       return Promise.resolve(overrides.items ?? { items });
     }
 
-    // Default rejection for unknown queries - don't reject, just log it
+    // Default behavior for unknown queries - log and reject with an Error
     console.warn(`MockGraphQL: Unknown query: ${queryStr.substring(0, 100)}`);
     return Promise.reject(new Error(`Unknown query: ${queryStr.substring(0, 50)}`));
   });

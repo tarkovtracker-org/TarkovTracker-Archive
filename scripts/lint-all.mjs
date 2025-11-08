@@ -11,16 +11,17 @@ const rootScripts = (() => {
     const parsed = JSON.parse(contents);
     return parsed?.scripts ?? {};
   } catch (error) {
-    console.warn(
-      '⚠ Unable to read root package.json while preparing lint tasks:',
-      error
-    );
+    console.warn('⚠ Unable to read root package.json while preparing lint tasks:', error);
     return {};
   }
 })();
 
 const tasks = [
-  { label: 'eslint', command: ['eslint', '.'] },
+  // Use ESLint cache to dramatically speed up reruns; store cache in a stable path
+  {
+    label: 'eslint',
+    command: ['eslint', '--cache', '--cache-location', '.cache/eslint', '.'],
+  },
   {
     label: 'frontend type-check',
     command: ['npm', 'run', 'type-check', '--workspace=frontend'],
@@ -32,7 +33,7 @@ const tasks = [
   {
     label: 'markdownlint',
     command: ['npm', 'run', 'lint:md'],
-    requiresScript: 'lint:md'
+    requiresScript: 'lint:md',
   },
 ];
 

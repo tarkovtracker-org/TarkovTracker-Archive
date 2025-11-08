@@ -3,30 +3,30 @@ import type { _GettersTree } from 'pinia';
 export type GameMode = 'pvp' | 'pve';
 
 // State interfaces
-interface TaskObjective {
+export interface TaskObjective {
   count?: number;
   complete?: boolean;
   timestamp?: number;
 }
 
-interface TaskCompletion {
+export interface TaskCompletion {
   complete?: boolean;
   failed?: boolean;
   timestamp?: number;
 }
 
-interface HideoutPart {
+export interface HideoutPart {
   count?: number;
   complete?: boolean;
   timestamp?: number;
 }
 
-interface HideoutModule {
+export interface HideoutModule {
   complete?: boolean;
   timestamp?: number;
 }
 
-interface TraderProgress {
+export interface TraderProgress {
   loyaltyLevel: number;
   standing: number;
 }

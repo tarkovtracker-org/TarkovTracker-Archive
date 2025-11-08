@@ -425,6 +425,11 @@
     loading: 'Ładowanie...',
     error: 'Błąd',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Nie udało się załadować dokumentacji API',
+    },
+  },
   'task.kappa_req': 'Wymagane do misji Kappa',
   'task.level_req': 'Wymagany poziom: {level}',
 }

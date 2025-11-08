@@ -62,9 +62,9 @@ export const usersWithIncompleteObjective = (
 ) => {
   const completionMap = getObjectiveCompletionMap(objectiveId);
   if (!completionMap) {
-    return [];
+    return candidateUsers;
   }
-  return candidateUsers.filter((userId) => completionMap[userId] === false);
+  return candidateUsers.filter((userId) => completionMap[userId] !== true);
 };
 
 export const objectiveIncompleteForUser = (
@@ -73,5 +73,8 @@ export const objectiveIncompleteForUser = (
   getObjectiveCompletionMap: (objectiveId: string) => Record<string, boolean>
 ) => {
   const completionMap = getObjectiveCompletionMap(objectiveId);
-  return completionMap ? completionMap[userId] === false : false;
+  if (!completionMap) {
+    return true;
+  }
+  return completionMap[userId] !== true;
 };

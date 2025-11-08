@@ -97,14 +97,6 @@
     cursor: pointer;
     padding: 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-
-    &:hover:not(:disabled) {
-      will-change: background, color, transform;
-    }
-
-    &:focus-visible {
-      will-change: outline;
-    }
   }
 
   .kill-tracker__control--reset {

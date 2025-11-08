@@ -387,6 +387,11 @@
     loading: '載入中...',
     error: '錯誤',
   },
+  apiReference: {
+    error: {
+      loadFailed: '載入 API 文件失敗',
+    },
+  },
   'task.kappa_req': 'Kappa 任務所需',
   'task.level_req': '所需等級：{level}',
 }

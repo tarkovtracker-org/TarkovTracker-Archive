@@ -175,11 +175,10 @@
 </template>
 
 <script setup>
-  import { computed, defineAsyncComponent } from 'vue';
+  import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-
-  const TaskLink = defineAsyncComponent(() => import('./TaskLink'));
-  const InfoRow = defineAsyncComponent(() => import('./InfoRow'));
+  import TaskLink from './TaskLink.vue';
+  import InfoRow from './InfoRow.vue';
 
   const props = defineProps({
     task: { type: Object, required: true },

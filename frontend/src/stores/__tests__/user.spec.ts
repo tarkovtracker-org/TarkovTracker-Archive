@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useUserStore } from '../user';
 
@@ -81,6 +81,7 @@ describe('user store', () => {
         hideLightkeeperRequiredTasks: false,
         hideEodOnlyTasks: false,
         itemsNeededHideNonFIR: false,
+        itemsTeamHideNonFIR: false,
         showExperienceRewards: false,
         showNextTasks: false,
         showTaskIds: false,
@@ -349,8 +350,7 @@ describe('user store', () => {
         store.setItemsTeamHideNonFIR(true);
 
         expect(store.itemsTeamHideNonFIR).toBe(true);
-        // Use correct property name from saving state structure
-        expect(store.saving?.itemsNeededHideNonFIR).toBe(true);
+        expect(store.saving?.itemsTeamHideNonFIR).toBe(true);
       });
 
       it('should set items team hide hideout', () => {
@@ -528,21 +528,63 @@ describe('user store', () => {
   });
 
   describe('saving state initialization', () => {
-    // eslint-disable-next-line complexity
-    it('should initialize saving state on store creation', () => {
+    it('should define saving state on store creation', () => {
       const store = useUserStore();
-
       expect(store.saving).toBeDefined();
+    });
+
+    it('should initialize streamerMode to false', () => {
+      const store = useUserStore();
       expect(store.saving?.streamerMode).toBe(false);
+    });
+
+    it('should initialize hideGlobalTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.hideGlobalTasks).toBe(false);
+    });
+
+    it('should initialize hideNonKappaTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.hideNonKappaTasks).toBe(false);
+    });
+
+    it('should initialize hideKappaRequiredTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.hideKappaRequiredTasks).toBe(false);
+    });
+
+    it('should initialize hideLightkeeperRequiredTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.hideLightkeeperRequiredTasks).toBe(false);
+    });
+
+    it('should initialize hideEodOnlyTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.hideEodOnlyTasks).toBe(false);
+    });
+
+    it('should initialize itemsNeededHideNonFIR to false', () => {
+      const store = useUserStore();
       expect(store.saving?.itemsNeededHideNonFIR).toBe(false);
+    });
+
+    it('should initialize showExperienceRewards to false', () => {
+      const store = useUserStore();
       expect(store.saving?.showExperienceRewards).toBe(false);
+    });
+
+    it('should initialize showNextTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.showNextTasks).toBe(false);
+    });
+
+    it('should initialize showTaskIds to false', () => {
+      const store = useUserStore();
       expect(store.saving?.showTaskIds).toBe(false);
+    });
+
+    it('should initialize showPreviousTasks to false', () => {
+      const store = useUserStore();
       expect(store.saving?.showPreviousTasks).toBe(false);
     });
   });

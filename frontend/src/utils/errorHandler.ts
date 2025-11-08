@@ -1,5 +1,7 @@
-import { ref } from 'vue';
+import { ref, readonly } from 'vue';
 import { logger } from '@/utils/logger';
+
+export const DEFAULT_OBJECT_PREVIEW_LIMIT = 10;
 
 export interface ErrorInfo {
   id: string;
@@ -14,17 +16,31 @@ class ErrorHandler {
   private errors = ref<ErrorInfo[]>([]);
   private maxErrors = 50; // Keep only last 50 errors in memory
   private userIdProvider?: () => string | undefined;
+  private objectPreviewLimit = DEFAULT_OBJECT_PREVIEW_LIMIT;
 
   /**
    * Set user ID provider function
    * @param provider - Function that returns current user ID
    * @throws Error if provider is not a function
+   * @remarks The provider is invoked inside a try/catch when used. Exceptions are logged and ignored.
    */
   setUserIdProvider(provider: () => string | undefined): void {
     if (typeof provider !== 'function') {
       throw new Error('User ID provider must be a function');
     }
     this.userIdProvider = provider;
+  }
+
+  /**
+   * Set the object preview limit for error stringification
+   * @param limit - Maximum number of properties to include in object previews (1-100)
+   * @throws Error if limit is not an integer between 1 and 100
+   */
+  setObjectPreviewLimit(limit: number): void {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new Error('Object preview limit must be an integer between 1 and 100');
+    }
+    this.objectPreviewLimit = limit;
   }
 
   /**
@@ -125,27 +141,31 @@ class ErrorHandler {
   }
 
   private generateErrorId(): string {
+    // Try modern crypto.randomUUID() first (most secure)
     try {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
         return `err_${crypto.randomUUID()}`;
       }
-    } catch {
-      // Fallback if randomUUID fails
+    } catch (error) {
+      // randomUUID may throw in restricted contexts (e.g., insecure origins)
+      logger.debug('crypto.randomUUID() unavailable, using fallback', error);
     }
 
-    // Fallback using crypto.getRandomValues
+    // Fallback to crypto.getRandomValues (widely supported)
     try {
-      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
         const array = new Uint32Array(4);
         crypto.getRandomValues(array);
-        const randomHex = Array.from(array, (dec) => dec.toString(16)).join('');
+        const randomHex = Array.from(array, (dec) => dec.toString(16).padStart(8, '0')).join('');
         return `err_${randomHex}`;
       }
-    } catch {
-      // Fallback if getRandomValues fails
+    } catch (error) {
+      // getRandomValues may fail in some environments
+      logger.debug('crypto.getRandomValues() unavailable, using fallback', error);
     }
 
-    // Ultimate fallback
+    // Ultimate fallback: timestamp + Math.random (less secure but always works)
+    logger.debug('Using timestamp-based error ID fallback');
     return `err_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
@@ -156,6 +176,7 @@ class ErrorHandler {
   /**
    * Safely converts any error value to a string without throwing.
    * This avoids JSON.stringify which can throw on circular references.
+   * Uses the configured object preview limit to control property enumeration.
    */
   private safeStringifyError(error: unknown): string {
     // Handle Error instances with their well-known properties
@@ -186,9 +207,9 @@ class ErrorHandler {
         // Get the object's type for context
         const typeInfo = Object.prototype.toString.call(error);
 
-        // Get up to 10 enumerable properties to avoid verbosity
+        // Get up to objectPreviewLimit enumerable properties to avoid verbosity
         // and prevent deep structure traversal
-        const properties = Object.keys(error).slice(0, 10);
+        const properties = Object.keys(error).slice(0, this.objectPreviewLimit);
         const propsString = properties
           .map((key) => {
             try {
@@ -212,7 +233,15 @@ class ErrorHandler {
   }
 
   private getCurrentUserId(): string | undefined {
-    return this.userIdProvider ? this.userIdProvider() : undefined;
+    if (!this.userIdProvider) {
+      return undefined;
+    }
+    try {
+      return this.userIdProvider();
+    } catch (error) {
+      logger.error('User ID provider threw during retrieval', error);
+      return undefined;
+    }
   }
 
   private logError(errorInfo: ErrorInfo): void {
@@ -224,6 +253,13 @@ class ErrorHandler {
       logger.error(logMessage, errorInfo.details);
     }
   }
+
+  /**
+   * Get a readonly reference to the errors array
+   */
+  getErrorsRef() {
+    return readonly(this.errors);
+  }
 }
 
 // Export singleton instance
@@ -232,12 +268,19 @@ export const errorHandler = new ErrorHandler();
 // Export composable for use in Vue components
 export function useErrorHandler() {
   return {
-    handleError: errorHandler.handleError.bind(errorHandler),
-    handleAsyncError: errorHandler.handleAsyncError.bind(errorHandler),
-    getErrors: errorHandler.getErrors.bind(errorHandler),
-    getErrorsByContext: errorHandler.getErrorsByContext.bind(errorHandler),
-    clearErrors: errorHandler.clearErrors.bind(errorHandler),
-    clearErrorsByContext: errorHandler.clearErrorsByContext.bind(errorHandler),
-    createErrorBoundary: errorHandler.createErrorBoundary.bind(errorHandler),
+    errors: errorHandler.getErrorsRef(),
+    handleError: (...args: Parameters<typeof errorHandler.handleError>) =>
+      errorHandler.handleError(...args),
+    handleAsyncError: <R>(promise: Promise<R>, context?: string) =>
+      errorHandler.handleAsyncError(promise, context),
+    getErrors: () => errorHandler.getErrors(),
+    getErrorsByContext: (context: string) => errorHandler.getErrorsByContext(context),
+    clearErrors: () => errorHandler.clearErrors(),
+    clearErrorsByContext: (context: string) => errorHandler.clearErrorsByContext(context),
+    createErrorBoundary: (context: string, fallback?: () => void) =>
+      errorHandler.createErrorBoundary(context, fallback),
+    setUserIdProvider: (provider: () => string | undefined) =>
+      errorHandler.setUserIdProvider(provider),
+    setObjectPreviewLimit: (limit: number) => errorHandler.setObjectPreviewLimit(limit),
   };
 }

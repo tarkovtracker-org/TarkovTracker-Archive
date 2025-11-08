@@ -54,9 +54,9 @@
     </drawer-item>
   </v-list>
 </template>
-<script setup>
-  import { defineAsyncComponent } from 'vue';
+<script setup lang="ts">
   import { fireuser } from '@/plugins/firebase';
+  import DrawerItem from '@/features/drawer/DrawerItem.vue';
 
   const props = defineProps({
     isCollapsed: {
@@ -64,7 +64,5 @@
       required: true,
     },
   });
-
-  const DrawerItem = defineAsyncComponent(() => import('@/features/drawer/DrawerItem'));
 </script>
 <style lang="scss" scoped></style>

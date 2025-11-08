@@ -1,5 +1,5 @@
 // Consolidated team-related tests
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach, beforeAll } from 'vitest';
 import { createFirebaseFunctionsMock } from './mocks';
 
 // Set up mocks before imports
@@ -62,6 +62,30 @@ adminMock.firestore.Timestamp = TimestampMock;
 const TEAM_ID = 'mock-team-id';
 const GENERATED_PASSWORD = 'mock-generated-password';
 
+const mockTeamService = {
+  getTeamProgress: vi.fn(),
+  createTeam: vi.fn(),
+  joinTeam: vi.fn(),
+  leaveTeam: vi.fn(),
+};
+
+const TeamServiceConstructor = vi.fn();
+
+class MockTeamService {
+  constructor() {
+    TeamServiceConstructor();
+    Object.assign(this, mockTeamService);
+  }
+}
+const createResponseMock = () => {
+  return {
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn(),
+  };
+};
+
+const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
+
 // Mock Firebase modules
 vi.mock('firebase-admin', () => ({
   default: adminMock,
@@ -97,24 +121,21 @@ vi.mock('uid-generator', () => ({
   },
 }));
 
+vi.mock('../lib/services/TeamService.js', () => ({
+  TeamService: MockTeamService,
+}));
+
 // Import the team functions with dynamic imports to handle ESM
 let createTeamLogic;
 let joinTeamLogic;
 let leaveTeamLogic;
 
 describe('Team Management', () => {
-  // Mock user contexts
-  const mockContextOwner = {
-    auth: { uid: 'owner-uid' },
-  };
-
-  const mockContextMember = {
-    auth: { uid: 'member-uid' },
-  };
-
-  const buildCallableRequest = (uid, data) => ({
-    data,
-    auth: { uid },
+  beforeAll(async () => {
+    const teamModule = await import('../lib/handlers/teamHandler.js');
+    createTeamLogic = teamModule.createTeam;
+    joinTeamLogic = teamModule.joinTeam;
+    leaveTeamLogic = teamModule.leaveTeam;
   });
 
   beforeEach(() => {
@@ -145,67 +166,88 @@ describe('Team Management', () => {
     transactionMock.set.mockResolvedValue({});
     transactionMock.update.mockResolvedValue({});
     transactionMock.delete.mockResolvedValue({});
-  });
 
-  // Dynamic imports for the actual function logic
-  it('should import team functions', async () => {
-    try {
-      // Import from the correct location - teamHandler
-      const teamModule = await import('../lib/handlers/teamHandler.js');
-
-      // Extract the handler functions that actually exist
-      createTeamLogic = teamModule.createTeam;
-      joinTeamLogic = teamModule.joinTeam;
-      leaveTeamLogic = teamModule.leaveTeam;
-
-      expect(createTeamLogic).toBeDefined();
-      expect(joinTeamLogic).toBeDefined();
-      expect(leaveTeamLogic).toBeDefined();
-    } catch (err) {
-      console.error('Error importing team functions:', err.message);
-      // Skip test if import fails
-      expect(true).toBe(true);
-    }
+    Object.values(mockTeamService).forEach((mockFn) => mockFn.mockReset());
+    TeamServiceConstructor.mockClear();
   });
 
   // Team Creation Tests
   describe('Team Creation', () => {
-    it('should create a team successfully', async () => {
-      // Skip test - Express handlers expect different input format
-      // Actual team functionality is tested in dedicated service tests
-      return expect(true).toBe(true);
+    it('responds with created team payload for valid requests', async () => {
+      const req = {
+        apiToken: { owner: 'owner-uid' },
+        body: { password: '  hunter2  ', maximumMembers: 8 },
+      };
+      const res = createResponseMock();
+      const next = vi.fn();
+      const serviceResult = { team: TEAM_ID, password: GENERATED_PASSWORD };
+      mockTeamService.createTeam.mockResolvedValue(serviceResult);
+
+      await createTeamLogic(req, res, next);
+      await flushPromises();
+
+      expect(mockTeamService.createTeam).toHaveBeenCalledWith('owner-uid', {
+        password: 'hunter2',
+        maximumMembers: 8,
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: serviceResult,
+      });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
   // Team Join Tests
   describe('Team Joining', () => {
-    it('should allow a user to join a team', async () => {
-      // Skip test - Express handlers expect different input format
-      // Actual team functionality is tested in dedicated service tests
-      return expect(true).toBe(true);
+    it('returns join confirmation when id and password are provided', async () => {
+      const req = {
+        apiToken: { owner: 'member-uid' },
+        body: { id: '  TEAM-99  ', password: 'secret-pass' },
+      };
+      const res = createResponseMock();
+      const next = vi.fn();
+      const serviceResult = { joined: true };
+      mockTeamService.joinTeam.mockResolvedValue(serviceResult);
+
+      await joinTeamLogic(req, res, next);
+      await flushPromises();
+
+      expect(mockTeamService.joinTeam).toHaveBeenCalledWith('member-uid', {
+        id: 'TEAM-99',
+        password: 'secret-pass',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: serviceResult,
+      });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
   // Team Leave Tests
   describe('Team Leaving', () => {
-    it('should allow a member to leave a team', async () => {
-      // Skip test - Express handlers expect different input format
-      // Actual team functionality is tested in dedicated service tests
-      return expect(true).toBe(true);
-    });
+    it('returns confirmation payload when member leaves', async () => {
+      const req = {
+        apiToken: { owner: 'member-uid' },
+      };
+      const res = createResponseMock();
+      const next = vi.fn();
+      const serviceResult = { left: true };
+      mockTeamService.leaveTeam.mockResolvedValue(serviceResult);
 
-    it('should delete the team when the owner leaves', async () => {
-      // Skip test - Express handlers expect different input format
-      // Actual team functionality is tested in dedicated service tests
-      return expect(true).toBe(true);
-    });
-  });
+      await leaveTeamLogic(req, res, next);
+      await flushPromises();
 
-  // Team Kick Tests
-  describe('Team Member Kicking', () => {
-    it('should allow the owner to kick a member', async () => {
-      // Skip test - kick functionality is not implemented in Express handlers
-      return expect(true).toBe(true);
+      expect(mockTeamService.leaveTeam).toHaveBeenCalledWith('member-uid');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: serviceResult,
+      });
+      expect(next).not.toHaveBeenCalled();
     });
   });
 });

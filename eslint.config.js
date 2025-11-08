@@ -17,6 +17,7 @@ export default [
       '**/lib/**',
       '**/node_modules/**',
       'firebase-export-*/**',
+      'functions/openapi/**',
       'bmad/**',
       'frontend/public/**',
       'frontend/playwright-report/**',
@@ -48,7 +49,7 @@ export default [
       },
       parserOptions: {
         parser: tseslint.parser,
-        project: ['./frontend/tsconfig.eslint.json'],
+        projectService: true,
         tsconfigRootDir: __dirname,
         extraFileExtensions: ['.vue'],
       },
@@ -75,7 +76,7 @@ export default [
         ...globals.es2022,
       },
       parserOptions: {
-        project: ['./frontend/tsconfig.eslint.json'],
+        projectService: true,
         tsconfigRootDir: __dirname,
       },
     },
@@ -124,7 +125,7 @@ export default [
         ...globals.es2022,
       },
       parserOptions: {
-        project: 'functions/tsconfig.eslint.json',
+        projectService: true,
         tsconfigRootDir: __dirname,
       },
     },

@@ -95,7 +95,7 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
   // Setup timeout handler
   const timeout = options.timeout ?? 10000; // Default 10 seconds
   const timeoutId = setTimeout(() => {
-    controller.abort(new Error(`GraphQL request timed out after ${timeout}ms`));
+    controller.abort(`GraphQL request timed out after ${timeout}ms`);
   }, timeout);
 
   try {
@@ -116,6 +116,18 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
 
     const payload = (await response.json()) as GraphQLResponse<T>;
     return validatePayload(payload);
+  } catch (error) {
+    // Detect abort errors and preserve the original timeout message
+    if (error instanceof DOMException && error.name === 'AbortError' && controller.signal.reason) {
+      // Re-throw the original reason if it's an Error
+      if (controller.signal.reason instanceof Error) {
+        throw controller.signal.reason;
+      }
+      // Otherwise create a new Error with the reason message
+      throw new Error(String(controller.signal.reason));
+    }
+    // Re-throw all other errors unchanged
+    throw error;
   } finally {
     clearTimeout(timeoutId);
     detachAbortListener?.();

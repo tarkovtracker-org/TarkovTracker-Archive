@@ -34,14 +34,15 @@
 </script>
 <style lang="scss" scoped>
   .stat-card {
-    // Remove height constraints to prevent text cutoff
+    // CLS optimization: Reserve minimum height to prevent layout shift
+    min-height: 120px;
     height: auto;
   }
 
   // Ensure compact layout on mobile
   @media (max-width: 600px) {
     .stat-card {
-      // Remove max-height constraint on mobile too
+      min-height: 100px;
       height: auto;
     }
 

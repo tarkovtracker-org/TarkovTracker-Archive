@@ -35,9 +35,7 @@
 </template>
 
 <script setup>
-  import { defineAsyncComponent } from 'vue';
-
-  const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
+  import TarkovItem from '@/features/game/TarkovItem.vue';
 
   defineProps({
     neededKeys: { type: Array, required: true },

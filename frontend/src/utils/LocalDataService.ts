@@ -4,22 +4,27 @@ import type { ProgressData } from './DataMigrationTypes';
 export const LOCAL_PROGRESS_KEY = 'progress';
 export const LOCAL_USER_STATE_KEY = 'user_state';
 
+// Sensitive field names that should be removed from data before localStorage storage
+export const SENSITIVE_FIELDS = [
+  'sourceUserId', // External user identifier
+  'sourceDomain', // API endpoint URL
+] as const;
+
 /**
  * Sanitizes progress data before localStorage storage by removing
  * potentially sensitive metadata fields that could identify users
  * or expose API endpoints.
  *
- * Fields removed:
- * - sourceUserId: External user identifier
- * - sourceDomain: API endpoint URL
+ * Fields removed are defined in SENSITIVE_FIELDS constant.
  *
  * @param data - The progress data to sanitize
  * @returns Sanitized copy of the data safe for localStorage
  */
 const sanitizeProgressData = <T extends Record<string, unknown>>(data: T): T => {
   const sanitized = { ...data };
-  delete sanitized.sourceUserId;
-  delete sanitized.sourceDomain;
+  for (const field of SENSITIVE_FIELDS) {
+    delete sanitized[field];
+  }
   return sanitized;
 };
 

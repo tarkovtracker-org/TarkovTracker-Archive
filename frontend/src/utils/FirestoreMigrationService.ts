@@ -59,7 +59,7 @@ const enrichLocalDataForMigration = (localData: ProgressData): ProgressData => (
 export const migrateLocalDataToUser = async (
   uid: string,
   localData: ProgressData
-): Promise<boolean | 'skipped'> => {
+): Promise<MigrationResult> => {
   try {
     const progressRef = getProgressRef(uid);
     let existingData: ProgressData | null = null;
@@ -72,33 +72,27 @@ export const migrateLocalDataToUser = async (
         error
       );
     }
-
     if (shouldAbortMigration(existingData)) {
       logger.warn(
         '[FirestoreMigrationService] User already has data, aborting automatic migration.'
       );
-      return 'skipped';
+      return { success: true, skipped: true };
     }
-
     const enrichedData = enrichLocalDataForMigration({ ...localData });
-
     // Always update local state first to preserve data
     backupLocalProgress(enrichedData);
-
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
       logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
-      return true;
+      return { success: true };
     }
-
     await setDoc(progressRef, enrichedData as DocumentData, { merge: true });
-    return true;
+    return { success: true };
   } catch (error) {
     logger.error('[FirestoreMigrationService] Error migrating local data to Firestore:', error);
-    return false;
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };
-
 const toTransformedProgressData = (importedData: ProgressData): UserProgressData => ({
   level: importedData.level || 1,
   pmcFaction: (importedData.pmcFaction?.toUpperCase() as 'USEC' | 'BEAR') || 'USEC',
@@ -109,12 +103,10 @@ const toTransformedProgressData = (importedData: ProgressData): UserProgressData
   hideoutModules: importedData.hideoutModules || {},
   traderStandings: transformTraderStandings(importedData.traderStandings || {}),
 });
-
 const parseGameEdition = (importedData: ProgressData): number =>
   typeof importedData.gameEdition === 'string'
     ? parseInt(importedData.gameEdition) || 1
     : importedData.gameEdition || 1;
-
 const attachImportedMetadata = (
   progressData: UserProgressData,
   importedData: ProgressData
@@ -128,49 +120,45 @@ const attachImportedMetadata = (
     sourceUserId: importedData.sourceUserId ?? undefined,
     sourceDomain: importedData.sourceDomain ?? undefined,
   };
-
   if (importedData.sourceUserId) {
     metadata.sourceUserId = importedData.sourceUserId;
   }
   if (importedData.sourceDomain) {
     metadata.sourceDomain = importedData.sourceDomain;
   }
-
   return metadata;
 };
-
 const buildImportedUserState = (importedData: ProgressData, existingData: UserState): UserState => {
   const transformedProgressData = toTransformedProgressData(importedData);
   const gameEdition = parseGameEdition(importedData);
   const gameDataWithMetadata = attachImportedMetadata(transformedProgressData, importedData);
-
   const newUserState: UserState = {
     ...existingData,
     currentGameMode: 'pvp',
     gameEdition,
     pvp: gameDataWithMetadata,
   };
-
   return newUserState;
 };
-
+export type MigrationResult =
+  | { success: true; skipped?: boolean }
+  | { success: false; error: string };
 export const importDataToUser = async (
   uid: string,
   importedData: ProgressData,
   _targetGameMode?: GameMode
-): Promise<boolean | 'skipped'> => {
+): Promise<MigrationResult> => {
   if (!uid) {
     logger.error('[FirestoreMigrationService] No UID provided for importDataToUser.');
-    return false;
+    return { success: false, error: 'No UID provided' };
   }
   if (!importedData) {
     logger.error('[FirestoreMigrationService] No data provided for importDataToUser.');
-    return false;
+    return { success: false, error: 'No data provided' };
   }
   try {
     const progressRef = getProgressRef(uid);
     let existingData: UserState = { ...defaultState };
-
     try {
       const existingDoc = await getDoc(progressRef);
       if (existingDoc.exists()) {
@@ -183,25 +171,21 @@ export const importDataToUser = async (
         error
       );
     }
-
     const newUserState = buildImportedUserState(importedData, existingData);
-
     // Always update local state first to preserve data
     saveLocalUserState(newUserState);
-
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
       logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
-      return true;
+      return { success: true };
     }
-
     await setDoc(progressRef, newUserState as DocumentData, { merge: true });
-    return true;
+    return { success: true };
   } catch (error) {
     logger.error(
       `[FirestoreMigrationService] General error in importDataToUser for user ${uid}:`,
       error
     );
-    return false;
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 };

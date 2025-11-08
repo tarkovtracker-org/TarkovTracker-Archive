@@ -1,17 +1,14 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "removeComments": false,
+    // Functions-specific settings
+    "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "target": "ES2022",
     "outDir": "lib",
     "rootDir": "src",
-    "sourceMap": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "removeComments": false,
+    "composite": true
   },
   "compileOnSave": true,
   "include": ["src/**/*.ts"],

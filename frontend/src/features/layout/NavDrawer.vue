@@ -20,27 +20,21 @@
     <drawer-external-links :is-collapsed="isRailActive" />
   </v-navigation-drawer>
 </template>
-<script setup>
-  import { defineAsyncComponent, computed } from 'vue';
+<script setup lang="ts">
+  import { computed } from 'vue';
   import { useAppStore } from '@/stores/app';
   import { useDisplay } from 'vuetify';
+  import TrackerLogo from '@/features/drawer/TrackerLogo.vue';
+  import DrawerLinks from '@/features/drawer/DrawerLinks.vue';
+  import DrawerAccount from '@/features/drawer/DrawerAccount.vue';
+  import DrawerLevel from '@/features/drawer/DrawerLevel.vue';
+  import DrawerTraderStandings from '@/features/drawer/DrawerTraderStandings.vue';
+  import DrawerExternalLinks from '@/features/drawer/DrawerExternalLinks.vue';
   const { mdAndDown } = useDisplay();
   const appStore = useAppStore();
 
   // Calculate the effective rail state
   const isRailActive = computed(() => !mdAndDown.value && appStore.drawerRail);
-
-  // Set up component loading
-  const TrackerLogo = defineAsyncComponent(() => import('@/features/drawer/TrackerLogo'));
-  const DrawerLinks = defineAsyncComponent(() => import('@/features/drawer/DrawerLinks'));
-  const DrawerAccount = defineAsyncComponent(() => import('@/features/drawer/DrawerAccount'));
-  const DrawerLevel = defineAsyncComponent(() => import('@/features/drawer/DrawerLevel'));
-  const DrawerTraderStandings = defineAsyncComponent(
-    () => import('@/features/drawer/DrawerTraderStandings')
-  );
-  const DrawerExternalLinks = defineAsyncComponent(
-    () => import('@/features/drawer/DrawerExternalLinks')
-  );
 </script>
 <style lang="scss" scoped>
   :deep(.v-list-group__items .v-list-item) {

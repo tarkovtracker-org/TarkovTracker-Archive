@@ -707,6 +707,11 @@
     loading: '불러오는 중...',
     error: '오류',
   },
+  apiReference: {
+    error: {
+      loadFailed: 'API 문서를 불러오는 데 실패했습니다',
+    },
+  },
   'task.kappa_req': 'Kappa 퀘스트에 필요',
   'task.level_req': '필요 레벨: {level}',
 }

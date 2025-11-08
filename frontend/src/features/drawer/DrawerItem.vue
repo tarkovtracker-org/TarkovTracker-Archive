@@ -5,7 +5,19 @@
     :active="props.to === $route.path"
     @click="visitHref()"
   >
-    <template v-if="props.avatar">
+    <template v-if="avatarSources">
+      <v-avatar size="24">
+        <OptimizedImage
+          :src="avatarSources.fallback"
+          :webp="avatarSources.webp"
+          :avif="avatarSources.avif"
+          width="24"
+          height="24"
+          :alt="props.localeKey || props.text || 'Drawer item avatar'"
+        />
+      </v-avatar>
+    </template>
+    <template v-else-if="props.avatar">
       <v-avatar size="24">
         <v-img :src="props.avatar" />
       </v-avatar>
@@ -27,9 +39,11 @@
     </v-list-item-title>
   </v-list-item>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
+  import type { PropType } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import OptimizedImage from '@/features/ui/OptimizedImage.vue';
   const { t } = useI18n({ useScope: 'global' });
   const props = defineProps({
     icon: {
@@ -39,6 +53,15 @@
     },
     avatar: {
       type: String,
+      required: false,
+      default: null,
+    },
+    avatarSources: {
+      type: Object as PropType<{
+        fallback: string;
+        webp?: string | null;
+        avif?: string | null;
+      }> | null,
       required: false,
       default: null,
     },
@@ -85,6 +108,7 @@
     'v-drawer-item-full': !props.isCollapsed,
     'v-drawer-item-rail': props.isCollapsed,
   }));
+  const avatarSources = computed(() => props.avatarSources);
 </script>
 <style lang="scss" scoped>
   // Set up styles for rail and standard item

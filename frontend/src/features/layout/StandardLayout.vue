@@ -13,10 +13,22 @@
       flex-direction: column;
       padding-bottom: 0 !important;
       margin-bottom: 0 !important;
+      transition: none !important;
     "
   >
     <!-- <div id="tracker-page-background"> -->
-    <div id="tracker-page-background" style="flex: 1 1 auto; display: flex; flex-direction: column">
+    <div
+      id="tracker-page-background"
+      style="flex: 1 1 auto; display: flex; flex-direction: column; position: relative"
+    >
+      <!-- LCP-optimized background image -->
+      <img
+        v-if="routeBackgroundKey"
+        :src="`/img/background/${routeBackgroundKey}.webp`"
+        :alt="`${routeBackgroundKey} background`"
+        fetchpriority="high"
+        class="tracker-page-background-img"
+      />
       <div
         id="tracker-page-background-blur"
         class="d-flex flex-column justify-space-between"
@@ -53,60 +65,18 @@
   </v-main>
 </template>
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+  import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue';
   import { useRoute } from 'vue-router';
+  import NavDrawer from '@/features/layout/NavDrawer.vue';
+  import AppBar from '@/features/layout/AppBar.vue';
+  import AppFooter from '@/features/layout/AppFooter.vue';
   const route = useRoute();
-  const currentPreloadLink = ref<HTMLLinkElement | null>(null);
-  const preloadBackgroundImage = (backgroundKey: string | undefined) => {
-    if (typeof document === 'undefined') {
-      return;
-    }
-    if (!backgroundKey?.length) {
-      return;
-    }
-    // Remove previous preload link if it exists
-    if (currentPreloadLink.value) {
-      currentPreloadLink.value.remove();
-      currentPreloadLink.value = null;
-    }
-    const href = `/img/background/${backgroundKey}.webp`;
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = href;
-    link.setAttribute('data-preload-background', backgroundKey);
-    document.head.appendChild(link);
-    currentPreloadLink.value = link;
-  };
   const routeBackgroundKey = computed(() =>
     typeof route.meta?.background === 'string' ? route.meta.background : undefined
   );
-  const backgroundImage = computed(() => {
-    if (routeBackgroundKey.value) {
-      return `url(/img/background/${routeBackgroundKey.value}.webp)`;
-    }
-    return '';
-  });
-  // const backgroundImage = computed(() => {
-  //   if (route.meta.background) {
-  //     return `/img/background/${route.meta.background}.webp`
-  //   } else {
-  //     return ''
-  //   }
-  // })
-  const NavDrawer = defineAsyncComponent(() => import('@/features/layout/NavDrawer.vue'));
-  const AppFooter = defineAsyncComponent(() => import('@/features/layout/AppFooter.vue'));
-  const AppBar = defineAsyncComponent(() => import('@/features/layout/AppBar.vue'));
   const ConsentBanner = defineAsyncComponent(() => import('@/features/layout/ConsentBanner.vue'));
   const showBackToTop = ref(false);
   const backToTopThreshold = 400;
-  watch(
-    () => routeBackgroundKey.value,
-    (newBackground) => {
-      preloadBackgroundImage(newBackground);
-    },
-    { immediate: true }
-  );
   const handleScroll = () => {
     if (typeof window === 'undefined') {
       return;
@@ -131,39 +101,51 @@
       return;
     }
     window.removeEventListener('scroll', handleScroll);
-    // Cleanup preload link on component unmount
-    if (currentPreloadLink.value) {
-      currentPreloadLink.value.remove();
-      currentPreloadLink.value = null;
-    }
   });
 </script>
 <style lang="scss" scoped>
   #tracker-page-background {
-    background-image: v-bind(backgroundImage);
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: center;
     height: 100%;
     margin-bottom: 0;
     padding-bottom: 0;
   }
+
+  .tracker-page-background-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 0;
+    /* Ensure image loads with high priority */
+    content-visibility: auto;
+  }
   #tracker-page-background-blur {
     background: rgba(255, 255, 255, 0.01); // Make sure this color has an opacity of less than 1
     backdrop-filter: blur(8px) brightness(30%);
-    min-height: 100%;
-    min-width: 100%;
     margin-bottom: 0;
     padding-bottom: 0;
+    /* CLS optimization: Promote to own compositing layer to prevent layout shift from backdrop-filter */
+    will-change: transform;
+    transform: translateZ(0);
+    /* Additional compositing hints to force GPU layer */
+    isolation: isolate;
+    /* Ensure the element has a stacking context above the background image */
+    position: relative;
+    z-index: 1;
   }
   .main-content {
     flex: 1;
   }
 
-  // Global overrides to ensure no bottom spacing
+  // Global overrides to ensure no bottom spacing and prevent transitions
   :deep(.v-main) {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
+    /* CLS optimization: Prevent any Vuetify transitions */
+    transition: none !important;
   }
 
   :deep(.v-main__wrap) {

@@ -67,7 +67,13 @@
         </div>
       </div>
     </v-alert>
-    <v-row justify="center" class="stats-row">
+    <v-row v-if="!statsReady" justify="center" class="stats-row">
+      <!-- Skeleton loaders for instant render without blocking computations -->
+      <v-col v-for="i in 4" :key="`skeleton-${i}`" cols="12" sm="6" md="6" lg="3" xl="3" class="stats-col">
+        <v-skeleton-loader type="card" />
+      </v-col>
+    </v-row>
+    <v-row v-else justify="center" class="stats-row">
       <v-col cols="12" sm="6" md="6" lg="3" xl="3" class="stats-col">
         <tracker-stat icon="mdi-progress-check">
           <template #stat>
@@ -142,10 +148,26 @@
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useUserStore } from '@/stores/user';
-  import { computed, defineAsyncComponent } from 'vue';
+  import { computed, onMounted, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import TrackerStat from '@/features/dashboard/TrackerStat.vue';
   const { t } = useI18n({ useScope: 'global' });
-  const TrackerStat = defineAsyncComponent(() => import('@/features/dashboard/TrackerStat'));
+
+  // Defer heavy computations until after initial render for better LCP
+  const statsReady = ref(false);
+  onMounted(() => {
+    // Use requestIdleCallback to defer calculations until browser is idle
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => {
+        statsReady.value = true;
+      });
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        statsReady.value = true;
+      }, 0);
+    }
+  });
   const { tasks, objectives } = useTarkovData();
   const { tasksCompletions, objectiveCompletions } = useProgressQueries();
   const tarkovStore = useTarkovStore();
@@ -167,7 +189,8 @@
     },
   });
   const neededItemTaskObjectives = computed(() => {
-    if (!objectives || !objectives.value) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !objectives || !objectives.value) {
       return [];
     }
     // Filter objectives to include only those that involve items relevant for counting
@@ -183,8 +206,9 @@
     return objectives.value.filter((obj) => obj && itemObjectiveTypes.includes(obj.type));
   });
   const totalTasks = computed(() => {
-    if (!tasks.value) {
-      return 0; // Return 0 if tasks data isn't loaded yet
+    // Defer computation until after initial render
+    if (!statsReady.value || !tasks.value) {
+      return 0;
     }
     let relevantTasks = tasks.value.filter(
       (task) =>
@@ -219,8 +243,8 @@
     return relevantTasks;
   });
   const totalObjectives = computed(() => {
-    if (!tasks.value) {
-      // Check if tasks data is loaded
+    // Defer computation until after initial render
+    if (!statsReady.value || !tasks.value) {
       return 0;
     }
     let total = 0;
@@ -239,7 +263,8 @@
     return total;
   });
   const completedObjectives = computed(() => {
-    if (!objectives || !objectives.value || !tarkovStore) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !objectives || !objectives.value || !tarkovStore) {
       return 0;
     }
     return objectives.value.filter(
@@ -249,8 +274,8 @@
     ).length;
   });
   const completedTasks = computed(() => {
-    // Check if progressStore.tasksCompletions exists before getting values
-    if (!tasksCompletions.value) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !tasksCompletions.value) {
       return 0;
     }
     return Object.values(tasksCompletions.value).filter(
@@ -258,15 +283,16 @@
     ).length;
   });
   const completedTaskItems = computed(() => {
-    // Restore the original guard and logic
+    // Defer computation until after initial render
     if (
+      !statsReady.value ||
       !neededItemTaskObjectives.value ||
       !tasks.value ||
       !tasksCompletions.value ||
       !objectiveCompletions.value ||
       !tarkovStore
     ) {
-      return 0; // Return 0 if data isn't loaded yet
+      return 0;
     }
     let total = 0;
     neededItemTaskObjectives.value.forEach((objective) => {
@@ -319,7 +345,8 @@
     return total;
   });
   const totalTaskItems = computed(() => {
-    if (!objectives || !objectives.value || !tasks.value || !tarkovStore) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !objectives || !objectives.value || !tasks.value || !tarkovStore) {
       return 0;
     }
     let total = 0;
@@ -362,7 +389,8 @@
     return total;
   });
   const totalKappaTasks = computed(() => {
-    if (!tasks.value) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !tasks.value) {
       return 0;
     }
     return tasks.value.filter(
@@ -373,7 +401,8 @@
     ).length;
   });
   const completedKappaTasks = computed(() => {
-    if (!tasks.value || !tasksCompletions.value) {
+    // Defer computation until after initial render
+    if (!statsReady.value || !tasks.value || !tasksCompletions.value) {
       return 0;
     }
     return tasks.value.filter(

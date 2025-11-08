@@ -14,6 +14,7 @@ import type { Store } from 'pinia';
 import type { UserState, UserProgressData } from '@/shared_state';
 export const STASH_STATION_ID = HIDEOUT_STATION_IDS.STASH;
 export const CULTIST_CIRCLE_STATION_ID = HIDEOUT_STATION_IDS.CULTIST_CIRCLE;
+const FALLBACK_DISPLAY_NAME_LENGTH = 5;
 
 const getProgressDataFromStore = (
   store: Store<string, UserState> | null | undefined
@@ -93,7 +94,7 @@ export const useProgressStore = defineStore('progress', () => {
     const displayNameFromStore = progressData?.displayName;
 
     if (!displayNameFromStore) {
-      return String(teamId).slice(0, 5);
+      return String(teamId).slice(0, FALLBACK_DISPLAY_NAME_LENGTH);
     }
     return String(displayNameFromStore);
   };

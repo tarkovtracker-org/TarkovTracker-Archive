@@ -6,8 +6,11 @@ import { DocumentReference, WriteBatch, FieldValue } from 'firebase-admin/firest
 import UIDGenerator from 'uid-generator';
 
 // Shared UID generators
-export const PASSWORD_UID_GEN = new UIDGenerator(48, UIDGenerator.BASE62);
-export const TEAM_UID_GEN = new UIDGenerator(32);
+export const PASSWORD_UID_GEN: InstanceType<typeof UIDGenerator> = new UIDGenerator(
+  48,
+  UIDGenerator.BASE62
+);
+export const TEAM_UID_GEN: InstanceType<typeof UIDGenerator> = new UIDGenerator(32);
 
 // Hoist regex to avoid per-call compilation
 // eslint-disable-next-line no-useless-escape

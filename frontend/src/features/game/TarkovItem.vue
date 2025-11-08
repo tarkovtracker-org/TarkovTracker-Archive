@@ -23,7 +23,7 @@
           class="external-link"
           @click="openWikiLink()"
         >
-          <v-img src="/img/logos/wikilogo.png"></v-img>
+          <OptimizedImage src="/img/logos/wikilogo.png" :width="24" :height="24" alt="EFT Wiki" />
         </v-avatar>
       </v-col>
       <v-col cols="auto" class="mx-1">
@@ -34,7 +34,12 @@
           class="external-link"
           @click="openTarkovDevLink()"
         >
-          <v-img src="/img/logos/tarkovdevlogo.png"></v-img>
+          <OptimizedImage
+            src="/img/logos/tarkovdevlogo.png"
+            :width="24"
+            :height="24"
+            alt="Tarkov.dev"
+          />
         </v-avatar>
       </v-col>
       <v-col cols="auto" class="mx-1">
@@ -53,6 +58,7 @@
 </template>
 <script setup lang="ts">
   import { ref, watch } from 'vue';
+  import OptimizedImage from '@/features/ui/OptimizedImage.vue';
   const props = defineProps<{
     itemId: string;
     itemName: string | null;

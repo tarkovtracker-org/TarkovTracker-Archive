@@ -10,14 +10,13 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineAsyncComponent } from 'vue';
+  import { computed } from 'vue';
   import { useUserStore } from '@/stores/user';
   import { useTarkovStore } from '@/stores/tarkov';
   import { MAP_OBJECTIVE_TYPES } from '@/config/gameConstants';
   import type { Task, TaskObjective } from '@/types/tarkov';
-
-  const QuestKeys = defineAsyncComponent(() => import('./QuestKeys.vue'));
-  const QuestObjectives = defineAsyncComponent(() => import('./QuestObjectives.vue'));
+  import QuestKeys from './QuestKeys.vue';
+  import QuestObjectives from './QuestObjectives.vue';
 
   const props = defineProps<{
     task: Task;

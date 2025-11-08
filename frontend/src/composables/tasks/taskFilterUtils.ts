@@ -1,4 +1,7 @@
 import type { Task } from '@/types/tarkov';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('TaskFilterUtils');
 
 export const summarizeSecondaryTaskCounts = (
   entries: Record<string, Task[]>
@@ -28,6 +31,12 @@ export const successorDepth = (task: Task, tasks: Task[]) => {
     }
 
     if (recursionStack.has(taskId)) {
+      logger.warn(`Cycle detected in task dependencies for task: ${taskId}`);
+      if (import.meta.env.DEV) {
+        console.warn('[TaskFilterUtils] Task dependency cycle detected:', taskId, [
+          ...recursionStack,
+        ]);
+      }
       return 0;
     }
 
@@ -53,8 +62,8 @@ export const successorDepth = (task: Task, tasks: Task[]) => {
 };
 
 const checkParentChildRelation = (a: Task, b: Task) => {
-  if (a.parents && a.parents.includes(b.id)) return -1;
-  if (b.parents && b.parents.includes(a.id)) return 1;
+  if (a.parents?.includes(b.id)) return 1;
+  if (b.parents?.includes(a.id)) return -1;
   return 0;
 };
 

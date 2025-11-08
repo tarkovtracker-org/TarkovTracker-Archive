@@ -653,4 +653,9 @@
       description: 'Esta es la lista de los miembros de tu equipo. Puedes hacer clic en el icono del ojo para ocultar o mostrar sus tareas y objetos necesarios mientras utilizas otras partes del rastreador.',
     },
   },
+  apiReference: {
+    error: {
+      loadFailed: 'Error al cargar la documentación de la API',
+    },
+  },
 }

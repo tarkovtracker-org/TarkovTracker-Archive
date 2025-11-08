@@ -31,16 +31,16 @@ async function fetchWithRetry<T>(
   const { maxAttempts = MAX_RETRIES, backoff = defaultBackoff, delay = defaultDelay } = options;
   let lastError: Error | null = null;
 
-  for (let attempt = 0; attempt <= maxAttempts; attempt++) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const result = await request<T>(endpoint, query);
       return result;
     } catch (error) {
       lastError = error as Error;
       if (attempt < maxAttempts) {
-        const delayMs = backoff(attempt);
+        const delayMs = backoff(attempt - 1);
         logger.warn(
-          `Request failed (attempt ${attempt + 1}/${maxAttempts + 1}), retrying in ${delayMs}ms:`,
+          `Request failed (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms:`,
           error
         );
         await delay(delayMs);
@@ -436,7 +436,6 @@ async function updateTarkovDataImplInternal(
 
       // Write shards in batches (respecting 500 operation limit)
       const BATCH_SIZE = 500;
-      // let totalShardsWritten = 0; // Not used in final logging
 
       for (let i = 0; i < shards.length; i += BATCH_SIZE) {
         const shardChunk = shards.slice(i, i + BATCH_SIZE);

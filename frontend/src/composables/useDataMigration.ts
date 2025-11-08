@@ -121,7 +121,7 @@ export function useDataMigration() {
         importedData.value!,
         'pvp' // Force PvP mode only
       );
-      if (result) {
+      if (result.success) {
         importSuccess.value = true;
         markDataMigrated();
 
@@ -133,7 +133,7 @@ export function useDataMigration() {
           }, 1000);
         }
       } else {
-        importError.value = 'Failed to import data. Please try again.';
+        importError.value = result.error || 'Failed to import data. Please try again.';
       }
     } catch (error: unknown) {
       logger.error('Error during import:', error);

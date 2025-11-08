@@ -70,17 +70,17 @@
   </v-sheet>
 </template>
 <script setup>
-  import { defineAsyncComponent, computed, ref } from 'vue';
+  import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useDisplay } from 'vuetify';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useUserStore } from '@/stores/user';
   import { useTarkovData } from '@/composables/tarkovdata';
-  const TaskInfo = defineAsyncComponent(() => import('./TaskInfo'));
-  const QuestKeys = defineAsyncComponent(() => import('./QuestKeys'));
-  const QuestObjectives = defineAsyncComponent(() => import('./QuestObjectives'));
-  const TaskActions = defineAsyncComponent(() => import('./TaskActions'));
+  import TaskInfo from './TaskInfo.vue';
+  import QuestKeys from './QuestKeys.vue';
+  import QuestObjectives from './QuestObjectives.vue';
+  import TaskActions from './TaskActions.vue';
   const props = defineProps({
     task: { type: Object, required: true },
     activeUserView: { type: String, required: true },
@@ -378,14 +378,15 @@
   .taskContainer {
     position: relative;
     overflow: hidden;
-    /* CLS optimization: Explicit min-height (203px) derived from typical card height
+    /* CLS optimization: Explicit min-height derived from typical card height
        with quest info, objectives, and actions to prevent layout shift on initial render */
-    min-height: var(--task-card-min-height, 203px);
+    min-height: var(--task-card-min-height);
     /* CSS containment to isolate layout calculations and reduce reflow costs */
     contain: layout paint;
   }
 
   .task-card {
+    /* TODO: Add transitioning class dynamically for GPU acceleration during transitions */
     /* Temporary will-change for transitions to optimize GPU acceleration */
     &.transitioning {
       will-change: background;

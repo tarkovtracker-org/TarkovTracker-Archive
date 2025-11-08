@@ -4,6 +4,14 @@ import { ref } from 'vue';
 import { useProgressStore } from '../progress';
 import { useUserStore } from '../user';
 
+interface FirebasePluginMock {
+  firestore: Record<string, unknown>;
+  fireuser: {
+    loggedIn: boolean;
+    uid: string;
+  };
+}
+
 // Mock Firebase plugin at top-level to avoid Firestore access
 vi.mock(
   '@/plugins/firebase',
@@ -14,7 +22,7 @@ vi.mock(
         loggedIn: false,
         uid: 'test-uid',
       },
-    }) as any
+    }) as FirebasePluginMock
 );
 
 // Create reactive user store mock that can be modified in tests
@@ -162,12 +170,6 @@ describe('progress store', () => {
       // Access via .value if it's a ref, otherwise use directly
       const hasValueProp = 'value' in store.visibleTeamStores;
       const visibleStores = hasValueProp ? store.visibleTeamStores.value : store.visibleTeamStores;
-
-      // Skip this test if visibleTeamStores is undefined in test environment
-      if (visibleStores === undefined) {
-        console.warn('visibleTeamStores is undefined in test environment, skipping test');
-        return;
-      }
 
       // visibleTeamStores should be an object
       expect(typeof visibleStores).toBe('object');
@@ -317,8 +319,11 @@ describe('progress store', () => {
     it('should have game edition data', () => {
       const store = useProgressStore();
 
-      expect(store.gameEditionData).toBeDefined();
-      expect(store.gameEditionData.length).toBeGreaterThan(0);
+      const getValue = (item: any) => ('value' in item ? item.value : item);
+      const gameEditionData = getValue(store.gameEditionData);
+
+      expect(gameEditionData).toBeDefined();
+      expect(gameEditionData).toEqual([{ version: 1, defaultStashLevel: 2 }]);
     });
   });
 

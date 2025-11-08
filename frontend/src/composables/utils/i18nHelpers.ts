@@ -1,6 +1,7 @@
 import { computed, getCurrentInstance } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { logger } from '@/utils/logger';
+import { DEFAULT_LANGUAGE } from '@/utils/constants';
 
 // Global flag to track i18n readiness
 let i18nReady = false;
@@ -37,16 +38,19 @@ export function useSafeLocale() {
 }
 
 /**
- * Extracts language code from locale, falling back to 'en'
+ * Extracts language code from locale, falling back to DEFAULT_LANGUAGE
  */
-export function extractLanguageCode(locale: string, availableLanguages: string[] = ['en']): string {
+export function extractLanguageCode(
+  locale: string,
+  availableLanguages: string[] = [DEFAULT_LANGUAGE]
+): string {
   const browserLocale = locale.split(/[-_]/)[0];
-  return availableLanguages.includes(browserLocale) ? browserLocale : 'en';
+  return availableLanguages.includes(browserLocale) ? browserLocale : DEFAULT_LANGUAGE;
 }
 
 /**
  * Gets the browser's language preference as a fallback
  */
 export function getBrowserLanguage(): string {
-  return navigator.language.split(/[-_]/)[0] || 'en';
+  return navigator.language.split(/[-_]/)[0] || DEFAULT_LANGUAGE;
 }

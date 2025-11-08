@@ -1,5 +1,6 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
+import { isIdleCallbackSupported, safeRequestIdleCallback, safeCancelIdleCallback } from '@/utils/idleCallback';
 import { useTarkovStore } from '@/stores/tarkov';
 import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
 import {
@@ -25,13 +26,9 @@ import type {
 import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
 
-type IdleCallbackWindow = Window & {
-  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
-  cancelIdleCallback?: (handle: number) => void;
-};
-
 // Timeout for idle callback processing
 const IDLE_CALLBACK_TIMEOUT_MS = 2000;
+const TASK_IDLE_DEFER_THRESHOLD = 400;
 
 /**
  * Composable for managing task data, relationships, and derived information
@@ -339,27 +336,34 @@ export function useTaskData() {
       runProcessing();
       return;
     }
-    const idleWindow = window as IdleCallbackWindow;
-    if (
-      typeof idleWindow.requestIdleCallback === 'function' &&
-      typeof idleWindow.cancelIdleCallback === 'function'
-    ) {
-      const handle = idleWindow.requestIdleCallback(
-        () => {
-          runProcessing();
-        },
-        { timeout: IDLE_CALLBACK_TIMEOUT_MS }
-      );
+    const canUseIdleCallback =
+      taskList.length >= TASK_IDLE_DEFER_THRESHOLD && isIdleCallbackSupported();
+    if (!canUseIdleCallback) {
+      let cancelled = false;
       cancelDeferredProcessing = () => {
-        idleWindow.cancelIdleCallback?.(handle);
+        cancelled = true;
       };
+      const invoke = () => {
+        if (cancelled) {
+          return;
+        }
+        runProcessing();
+      };
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(invoke);
+      } else {
+        Promise.resolve().then(invoke);
+      }
       return;
     }
-    const timeoutHandle = window.setTimeout(() => {
-      runProcessing();
-    }, 0);
+    const handle = safeRequestIdleCallback(
+      () => {
+        runProcessing();
+      },
+      { timeout: IDLE_CALLBACK_TIMEOUT_MS }
+    );
     cancelDeferredProcessing = () => {
-      window.clearTimeout(timeoutHandle);
+      safeCancelIdleCallback(handle);
     };
   };
   watch(
