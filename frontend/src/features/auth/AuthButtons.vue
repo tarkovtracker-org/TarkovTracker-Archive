@@ -123,7 +123,7 @@
       await nextTick();
       await new Promise((resolve) => setTimeout(resolve, 100));
       // Check for local data
-      hasLocalData.value = DataMigrationService.hasLocalData();
+      hasLocalData.value = await DataMigrationService.hasLocalData();
       // If a user is already logged in, set userId
       if (fireuser.uid) {
         userId.value = fireuser.uid;

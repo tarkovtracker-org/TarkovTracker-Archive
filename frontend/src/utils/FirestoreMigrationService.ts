@@ -80,7 +80,7 @@ export const migrateLocalDataToUser = async (
     }
     const enrichedData = enrichLocalDataForMigration({ ...localData });
     // Always update local state first to preserve data
-    backupLocalProgress(enrichedData);
+    await backupLocalProgress(enrichedData);
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
       logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');
@@ -173,7 +173,7 @@ export const importDataToUser = async (
     }
     const newUserState = buildImportedUserState(importedData, existingData);
     // Always update local state first to preserve data
-    saveLocalUserState(newUserState);
+    await saveLocalUserState(newUserState);
     // Skip Firestore write when dev auth is enabled
     if (isDevAuthEnabled()) {
       logger.debug('[Migration] Dev auth enabled: skipping Firestore writes; local state updated');

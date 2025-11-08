@@ -1,4 +1,5 @@
 import { logger } from '@/utils/logger';
+import { encryptData, decryptData, isEncrypted } from '@/utils/encryption';
 import type { ProgressData } from './DataMigrationTypes';
 
 export const LOCAL_PROGRESS_KEY = 'progress';
@@ -29,13 +30,26 @@ const sanitizeProgressData = <T extends Record<string, unknown>>(data: T): T => 
 };
 
 // eslint-disable-next-line complexity
-export const hasLocalData = (): boolean => {
+export const hasLocalData = async (): Promise<boolean> => {
   try {
-    const progressData =
+    const encryptedData =
       localStorage.getItem(LOCAL_USER_STATE_KEY) ?? localStorage.getItem(LOCAL_PROGRESS_KEY);
-    if (!progressData || progressData === '{}') {
+    if (!encryptedData || encryptedData === '{}') {
       return false;
     }
+
+    let progressData: string;
+    // Handle backward compatibility with unencrypted data
+    if (isEncrypted(encryptedData)) {
+      progressData = await decryptData(encryptedData);
+    } else {
+      progressData = encryptedData;
+      // Migrate unencrypted data to encrypted format
+      logger.info('[LocalDataService] Migrating unencrypted data to encrypted format');
+      const parsed = JSON.parse(progressData);
+      await saveLocalProgress(parsed);
+    }
+
     const parsedData: ProgressData = JSON.parse(progressData);
     const hasKeys = Object.keys(parsedData).length > 0;
     const hasProgress =
@@ -51,13 +65,26 @@ export const hasLocalData = (): boolean => {
   }
 };
 
-export const getLocalData = (): ProgressData | null => {
+export const getLocalData = async (): Promise<ProgressData | null> => {
   try {
-    const progressData =
+    const encryptedData =
       localStorage.getItem(LOCAL_USER_STATE_KEY) ?? localStorage.getItem(LOCAL_PROGRESS_KEY);
-    if (!progressData) {
+    if (!encryptedData) {
       return null;
     }
+
+    let progressData: string;
+    // Handle backward compatibility with unencrypted data
+    if (isEncrypted(encryptedData)) {
+      progressData = await decryptData(encryptedData);
+    } else {
+      progressData = encryptedData;
+      // Migrate unencrypted data to encrypted format
+      logger.info('[LocalDataService] Migrating unencrypted data to encrypted format');
+      const parsed = JSON.parse(progressData);
+      await saveLocalProgress(parsed);
+    }
+
     const parsedData: ProgressData = JSON.parse(progressData);
     if (Object.keys(parsedData).length > 0) {
       return JSON.parse(JSON.stringify(parsedData)) as ProgressData;
@@ -69,35 +96,41 @@ export const getLocalData = (): ProgressData | null => {
   }
 };
 
-export const backupLocalProgress = (data: ProgressData): void => {
+export const backupLocalProgress = async (data: ProgressData): Promise<void> => {
   const backupKey = `progress_backup_${new Date().toISOString()}`;
   try {
     const sanitizedData = sanitizeProgressData(data);
-    localStorage.setItem(backupKey, JSON.stringify(sanitizedData));
+    const jsonData = JSON.stringify(sanitizedData);
+    const encryptedData = await encryptData(jsonData);
+    localStorage.setItem(backupKey, encryptedData);
   } catch (error) {
     logger.warn('[LocalDataService] Failed to create local backup copy:', error);
   }
 };
 
-export const saveLocalProgress = (data: unknown): void => {
+export const saveLocalProgress = async (data: unknown): Promise<void> => {
   try {
     const sanitizedData =
       data && typeof data === 'object'
         ? sanitizeProgressData(data as Record<string, unknown>)
         : data;
-    localStorage.setItem(LOCAL_PROGRESS_KEY, JSON.stringify(sanitizedData));
+    const jsonData = JSON.stringify(sanitizedData);
+    const encryptedData = await encryptData(jsonData);
+    localStorage.setItem(LOCAL_PROGRESS_KEY, encryptedData);
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local progress:', error);
   }
 };
 
-export const saveLocalUserState = (state: unknown): void => {
+export const saveLocalUserState = async (state: unknown): Promise<void> => {
   try {
     const sanitizedState =
       state && typeof state === 'object'
         ? sanitizeProgressData(state as Record<string, unknown>)
         : state;
-    localStorage.setItem(LOCAL_USER_STATE_KEY, JSON.stringify(sanitizedState));
+    const jsonData = JSON.stringify(sanitizedState);
+    const encryptedData = await encryptData(jsonData);
+    localStorage.setItem(LOCAL_USER_STATE_KEY, encryptedData);
   } catch (error) {
     logger.warn('[LocalDataService] Failed to persist local user state:', error);
   }

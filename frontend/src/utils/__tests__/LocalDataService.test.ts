@@ -9,6 +9,18 @@ import {
   LOCAL_USER_STATE_KEY,
 } from '../LocalDataService';
 import type { ProgressData } from '../DataMigrationTypes';
+
+// Mock the encryption module to avoid dealing with Web Crypto API in tests
+vi.mock('../encryption', () => ({
+  encryptData: vi.fn(async (data: string) => btoa(data)), // Simple base64 encoding for tests
+  decryptData: vi.fn(async (data: string) => atob(data)), // Simple base64 decoding for tests
+  isEncrypted: vi.fn((data: string) => {
+    // Check if it looks like base64
+    const base64Regex = /^[A-Za-z0-9+/]+=*$/;
+    return base64Regex.test(data);
+  }),
+}));
+
 describe('LocalDataService', () => {
   let localStorageMock: { [key: string]: string };
   beforeEach(() => {
@@ -33,92 +45,92 @@ describe('LocalDataService', () => {
     vi.clearAllMocks();
   });
   describe('hasLocalData', () => {
-    it('returns false when no data exists', () => {
-      expect(hasLocalData()).toBe(false);
+    it('returns false when no data exists', async () => {
+      expect(await hasLocalData()).toBe(false);
     });
-    it('returns false when data is empty object', () => {
-      localStorageMock[LOCAL_USER_STATE_KEY] = '{}';
-      expect(hasLocalData()).toBe(false);
+    it('returns false when data is empty object', async () => {
+      localStorageMock[LOCAL_USER_STATE_KEY] = btoa('{}');
+      expect(await hasLocalData()).toBe(false);
     });
-    it('returns true when progress data exists with level > 1', () => {
+    it('returns true when progress data exists with level > 1', async () => {
       const data: ProgressData = { level: 2 };
-      localStorageMock[LOCAL_USER_STATE_KEY] = JSON.stringify(data);
-      expect(hasLocalData()).toBe(true);
+      localStorageMock[LOCAL_USER_STATE_KEY] = btoa(JSON.stringify(data));
+      expect(await hasLocalData()).toBe(true);
     });
-    it('returns true when task completions exist', () => {
+    it('returns true when task completions exist', async () => {
       const data: ProgressData = { level: 1, taskCompletions: { task1: { complete: true } } };
-      localStorageMock[LOCAL_USER_STATE_KEY] = JSON.stringify(data);
-      expect(hasLocalData()).toBe(true);
+      localStorageMock[LOCAL_USER_STATE_KEY] = btoa(JSON.stringify(data));
+      expect(await hasLocalData()).toBe(true);
     });
-    it('returns false on parse error', () => {
+    it('returns false on parse error', async () => {
       localStorageMock[LOCAL_USER_STATE_KEY] = 'invalid json';
-      expect(hasLocalData()).toBe(false);
+      expect(await hasLocalData()).toBe(false);
     });
   });
   describe('getLocalData', () => {
-    it('returns null when no data exists', () => {
-      expect(getLocalData()).toBeNull();
+    it('returns null when no data exists', async () => {
+      expect(await getLocalData()).toBeNull();
     });
-    it('returns parsed data when it exists', () => {
+    it('returns parsed data when it exists', async () => {
       const data: ProgressData = { level: 5, taskCompletions: { task1: { complete: true } } };
-      localStorageMock[LOCAL_USER_STATE_KEY] = JSON.stringify(data);
-      const result = getLocalData();
+      localStorageMock[LOCAL_USER_STATE_KEY] = btoa(JSON.stringify(data));
+      const result = await getLocalData();
       expect(result).toEqual(data);
     });
-    it('returns null for empty object', () => {
-      localStorageMock[LOCAL_USER_STATE_KEY] = '{}';
-      expect(getLocalData()).toBeNull();
+    it('returns null for empty object', async () => {
+      localStorageMock[LOCAL_USER_STATE_KEY] = btoa('{}');
+      expect(await getLocalData()).toBeNull();
     });
   });
   describe('Sensitive Field Removal for Privacy Protection', () => {
-    it('sanitizes sensitive fields when backing up progress', () => {
+    it('sanitizes sensitive fields when backing up progress', async () => {
       const sensitiveData: ProgressData = {
         level: 10,
         sourceUserId: 'external-user-123',
         sourceDomain: 'https://api.example.com/v2/progress',
         taskCompletions: { task1: { complete: true } },
       };
-      backupLocalProgress(sensitiveData);
+      await backupLocalProgress(sensitiveData);
       // Find the backup key
       const backupKeys = Object.keys(localStorageMock).filter((k) =>
         k.startsWith('progress_backup_')
       );
       expect(backupKeys.length).toBe(1);
-      const storedData = JSON.parse(localStorageMock[backupKeys[0]]);
+      const storedData = JSON.parse(atob(localStorageMock[backupKeys[0]]));
       expect(storedData.level).toBe(10);
       expect(storedData.taskCompletions).toEqual({ task1: { complete: true } });
       expect(storedData.sourceUserId).toBeUndefined();
       expect(storedData.sourceDomain).toBeUndefined();
     });
-    it('sanitizes sensitive fields when saving local progress', () => {
+    it('sanitizes sensitive fields when saving local progress', async () => {
       const sensitiveData: ProgressData = {
         level: 15,
         sourceUserId: 'external-user-456',
         sourceDomain: 'https://tarkovtracker.io/api/v2/progress',
         hideoutModules: { module1: { complete: true } },
       };
-      saveLocalProgress(sensitiveData);
-      const storedData = JSON.parse(localStorageMock[LOCAL_PROGRESS_KEY]);
+      await saveLocalProgress(sensitiveData);
+      const storedData = JSON.parse(atob(localStorageMock[LOCAL_PROGRESS_KEY]));
       expect(storedData.level).toBe(15);
       expect(storedData.hideoutModules).toEqual({ module1: { complete: true } });
       expect(storedData.sourceUserId).toBeUndefined();
       expect(storedData.sourceDomain).toBeUndefined();
     });
-    it('sanitizes sensitive fields when saving user state', () => {
+    it('sanitizes sensitive fields when saving user state', async () => {
       const sensitiveState: ProgressData = {
         level: 20,
         displayName: 'TestUser',
         sourceUserId: 'external-789',
         sourceDomain: 'https://api.tarkovtracker.io/api/v2/progress',
       };
-      saveLocalUserState(sensitiveState);
-      const storedState = JSON.parse(localStorageMock[LOCAL_USER_STATE_KEY]);
+      await saveLocalUserState(sensitiveState);
+      const storedState = JSON.parse(atob(localStorageMock[LOCAL_USER_STATE_KEY]));
       expect(storedState.level).toBe(20);
       expect(storedState.displayName).toBe('TestUser');
       expect(storedState.sourceUserId).toBeUndefined();
       expect(storedState.sourceDomain).toBeUndefined();
     });
-    it('preserves all other fields when sanitizing', () => {
+    it('preserves all other fields when sanitizing', async () => {
       const data: ProgressData = {
         level: 25,
         gameEdition: 'EOD',
@@ -136,8 +148,8 @@ describe('LocalDataService', () => {
         imported: true,
         importedFromApi: true,
       };
-      saveLocalProgress(data);
-      const stored = JSON.parse(localStorageMock[LOCAL_PROGRESS_KEY]);
+      await saveLocalProgress(data);
+      const stored = JSON.parse(atob(localStorageMock[LOCAL_PROGRESS_KEY]));
       expect(stored.level).toBe(25);
       expect(stored.gameEdition).toBe('EOD');
       expect(stored.pmcFaction).toBe('USEC');
@@ -151,33 +163,33 @@ describe('LocalDataService', () => {
       expect(stored.sourceUserId).toBeUndefined();
       expect(stored.sourceDomain).toBeUndefined();
     });
-    it('handles non-object data gracefully in saveLocalProgress', () => {
-      saveLocalProgress('string data');
-      expect(localStorageMock[LOCAL_PROGRESS_KEY]).toBe('"string data"');
+    it('handles non-object data gracefully in saveLocalProgress', async () => {
+      await saveLocalProgress('string data');
+      expect(atob(localStorageMock[LOCAL_PROGRESS_KEY])).toBe('"string data"');
     });
-    it('handles null data gracefully', () => {
-      saveLocalProgress(null);
-      expect(localStorageMock[LOCAL_PROGRESS_KEY]).toBe('null');
+    it('handles null data gracefully', async () => {
+      await saveLocalProgress(null);
+      expect(atob(localStorageMock[LOCAL_PROGRESS_KEY])).toBe('null');
     });
   });
   describe('Error Handling', () => {
-    it('handles localStorage errors gracefully when backing up', () => {
+    it('handles localStorage errors gracefully when backing up', async () => {
       const mockSetItem = vi.fn(() => {
         throw new Error('Storage quota exceeded');
       });
       global.localStorage.setItem = mockSetItem;
       const data: ProgressData = { level: 10 };
       // Should not throw
-      expect(() => backupLocalProgress(data)).not.toThrow();
+      await expect(backupLocalProgress(data)).resolves.not.toThrow();
     });
-    it('handles localStorage errors gracefully when saving progress', () => {
+    it('handles localStorage errors gracefully when saving progress', async () => {
       const mockSetItem = vi.fn(() => {
         throw new Error('Storage quota exceeded');
       });
       global.localStorage.setItem = mockSetItem;
       const data: ProgressData = { level: 10 };
       // Should not throw
-      expect(() => saveLocalProgress(data)).not.toThrow();
+      await expect(saveLocalProgress(data)).resolves.not.toThrow();
     });
   });
 });

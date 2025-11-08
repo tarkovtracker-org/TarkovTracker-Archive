@@ -12,11 +12,11 @@ import { fetchDataWithApiToken } from './ExternalApiService';
 export { type ProgressData, type ExportObject } from './DataMigrationTypes';
 export type { MigrationResult } from './FirestoreMigrationService';
 export default class DataMigrationService {
-  static hasLocalData(): boolean {
-    return hasLocalProgress();
+  static async hasLocalData(): Promise<boolean> {
+    return await hasLocalProgress();
   }
-  static getLocalData(): ProgressData | null {
-    return getLocalData();
+  static async getLocalData(): Promise<ProgressData | null> {
+    return await getLocalData();
   }
   static async hasUserData(uid: string): Promise<boolean> {
     return firestoreHasUserData(uid);
@@ -25,14 +25,14 @@ export default class DataMigrationService {
     if (!uid) {
       return { success: false, error: 'No UID provided' };
     }
-    const localData = getLocalData();
+    const localData = await getLocalData();
     if (!localData) {
       return { success: false, error: 'No local data available' };
     }
     return migrateLocalDataToUser(uid, localData);
   }
-  static exportDataForMigration(): ExportObject | null {
-    const data = getLocalData();
+  static async exportDataForMigration(): Promise<ExportObject | null> {
+    const data = await getLocalData();
     if (!data) return null;
     return {
       type: 'tarkovtracker-migration',
