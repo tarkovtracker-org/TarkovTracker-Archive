@@ -1,85 +1,69 @@
+# OS junk — not part of source
 .DS_Store
 
-# Logs
+# Logs — dev/runtime noise you can always regenerate
 logs/
 *.log
-
-/.firebase/
-/.firebase-emulator-savedata/
-/firebase-export-*
-/.firebaserc
-
-# local env files
-.env
-.env.local
-.env.*.local
-
-# AI Assistant files
-.gemini/
-.factory/
-.claude/
-
-# Log files
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Runtime data
+# Local runtime data — developer-only scratch
 local_data/
 
-# Dependencies
-node_modules/
-frontend/node_modules/
-functions/node_modules/
+# Dependencies — installed from lockfiles
+**/node_modules/
 
-# Build output
+# Build output — compiled artifacts
 frontend/dist/
 functions/lib/
 
-# TypeScript build info (incremental compilation cache)
+# TypeScript cache — speeds incremental builds
 *.tsbuildinfo
 
-# Tooling caches
+# Tool caches — ephemeral build tooling state
 .cache/
 
-# Coverage reports
-frontend/coverage/
-functions/coverage/
+# Coverage reports — produced by test runs
+**/coverage/
 
-# Environment files
-.env*
-!.env.example
-frontend/.env*
-!frontend/.env.example
+# Test artifacts — reports/output from test runners
+**/test-results/
+**/playwright-report/
+**/.playwright/
 
-# Firebase emulator and exports
+# Firebase (local emulators & exports) — machine-specific state
 .firebase/
 .firebase-emulator-savedata/
 firebase-export-*
 .firebaserc
 
-# Firebase function artifacts
+# Firebase function artifacts — generated file
 functions/openapi/openapi.json
 
-# AI assistant artifacts
+# AI assistant work dirs — local tooling state
 .gemini/
 .factory/
 .claude/
 
-# IDEs and editors
-.idea
+# IDE/editor cruft — personal settings & temp files
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Misc
-/bmad
-# Test artifacts
-**/test-results/
-**/playwright-report/
-**/.playwright/
-**/coverage/
-# Temporary files
+# Environment files — usually contain secrets; keep out of git
+# (These two lines ignore .env, .env.local, .env.test, etc. anywhere)
+**/.env
+
+# If your .env.test files are SAFE (no secrets) and must be committed,
+# uncomment the next line to include them:
+!**/.env.test
+
+# Misc project-specific ignores
+bmad/
+
+# Temporary files — throwaway patches, etc.
 *.patch
