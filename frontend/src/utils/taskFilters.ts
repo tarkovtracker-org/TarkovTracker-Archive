@@ -1,4 +1,4 @@
-import type { Task } from '@/types/tarkov';
+import type { Task } from '@/types/models/tarkov';
 
 export interface RequirementFilterOptions {
   showKappa: boolean;
@@ -24,14 +24,22 @@ const isLightkeeperTrader = (task: Task): boolean => {
  */
 export function taskMatchesRequirementFilters(
   task: Task,
-  {
+  options: RequirementFilterOptions | null | undefined
+): boolean {
+  // Null-safety: early return false when task or options are falsy
+  if (!task || !options) {
+    return false;
+  }
+
+  const {
     showKappa,
     showLightkeeper,
     showEod,
     hideNonEndgame,
     treatEodAsEndgame,
-  }: RequirementFilterOptions
-): boolean {
+  } = options;
+  
+  // Check for existence of task.requirements before accessing
   const hasKappaRequirement = task.kappaRequired === true;
   const hasLightkeeperRequirement = task.lightkeeperRequired === true;
   const isLightkeeperTraderTask = isLightkeeperTrader(task);

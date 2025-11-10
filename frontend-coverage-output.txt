@@ -1,0 +1,566 @@
+
+> frontend@0.0.0 test:coverage
+> vitest run --coverage
+
+
+[1m[46m RUN [49m[22m [36mv4.0.8 [39m[90m/home/lab/Github/TarkovTracker/frontend[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m src/utils/__tests__/DataValidationUtils.spec.ts [2m([22m[2m71 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/lruCache.spec.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/devAuth.spec.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/taskFilters.spec.ts [2m([22m[2m38 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould generate error IDs with err_ prefix
+[22m[39m[err_080fef54-306f-49b3-9205-6b0376041f55] Test error [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould generate unique error IDs
+[22m[39m[err_0897423e-09c2-4d03-8675-cc44d5af0cb8] Error 1 [90mundefined[39m
+[err_d6d8b12b-3191-4e71-9255-92d007d62fcb] Error 2 [90mundefined[39m
+
+[90mstdout[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould use fallback when crypto methods are unavailable
+[22m[39mUsing timestamp-based error ID fallback
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould use fallback when crypto methods are unavailable
+[22m[39m[err_1762760117503_66jbn7cgx] Test error without crypto methods [90mundefined[39m
+
+[90mstdout[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould fallback when crypto.randomUUID throws
+[22m[39mcrypto.randomUUID() unavailable, using fallback Error: randomUUID not available
+    at Crypto.<anonymous> [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/__tests__/errorHandler.spec.ts:42:15[90m)[39m
+    at Crypto.Mock [as randomUUID] (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/spy/dist/index.js:280:34)
+    at ErrorHandler.generateErrorId [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/errorHandler.ts:147:30[90m)[39m
+    at ErrorHandler.handleError [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/errorHandler.ts:53:26[90m)[39m
+    at [90m/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/__tests__/errorHandler.spec.ts:45:36
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:157:11
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:753:26
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1636:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1602:10)
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mgenerateErrorId[2m > [22m[2mshould fallback when crypto.randomUUID throws
+[22m[39m[err_ddf8ecc31bb23b231e2307dc8c4901a3] Test error with randomUUID failure [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshould handle Error instances
+[22m[39m[err_e4beeebd-5fc1-420e-9799-74003edd354b] Error: Test error message
+Error: Test error message
+    at /home/lab/Github/TarkovTracker/frontend/src/utils/__tests__/errorHandler.spec.ts:55:21
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:157:11
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:26
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1636:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1602:10)
+    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1309:12)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8) (Context: TestContext) [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshould handle string errors
+[22m[39m[err_ebc2d535-8eca-4dae-8c2d-801c6234742b] Simple string error [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshould handle unknown error types
+[22m[39m[err_4cdd8c78-b50d-4b69-a1f9-236a565d3662] [object Object] {custom=object} [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mhandleError[2m > [22m[2mshould include additional details
+[22m[39m[err_f4396726-2636-47af-a9fe-f87955427d9a] Login failed (Context: Auth) { userId: [32m'123'[39m, action: [32m'login'[39m }
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2mhandleAsyncError[2m > [22m[2mshould handle async errors and re-throw
+[22m[39m[err_a5388ffc-149d-4f2a-92da-f71a8dffb79d] Error: Async error
+Error: Async error
+    at /home/lab/Github/TarkovTracker/frontend/src/utils/__tests__/errorHandler.spec.ts:91:38
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:157:11
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:26
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1636:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1602:10)
+    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1309:12)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1468:8) (Context: AsyncContext) [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2merror management[2m > [22m[2mshould limit stored errors to maxErrors
+[22m[39m[err_43cef21c-c062-49bf-a83d-3798b3065716] Error 0 [90mundefined[39m
+[err_a14dc5cd-542c-44cc-bdd1-d31966305539] Error 1 [90mundefined[39m
+[err_88368ddc-ecc4-473c-a8e9-473a5862b2e9] Error 2 [90mundefined[39m
+[err_dc1fa892-730c-4691-8cb0-7c41639909a6] Error 3 [90mundefined[39m
+[err_768af6e4-275c-4bbe-9ae7-e89efc05abec] Error 4 [90mundefined[39m
+[err_745bd857-d567-4ed7-935a-ed51c11803c0] Error 5 [90mundefined[39m
+[err_6a8de46c-e376-4fc5-989e-58f66885f15f] Error 6 [90mundefined[39m
+[err_047bbfc3-f79c-436c-9ae4-bd92da6243fd] Error 7 [90mundefined[39m
+[err_f6bdd17d-72a4-44ca-99db-b09cd32f1257] Error 8 [90mundefined[39m
+[err_72df988e-789c-400a-8c25-44ff91fbb0ea] Error 9 [90mundefined[39m
+[err_606716d9-71c8-408a-9795-0ca1a3366a41] Error 10 [90mundefined[39m
+[err_dd2a4329-3b2f-4149-a6c6-cf010004f897] Error 11 [90mundefined[39m
+[err_cd081b05-e627-453f-b79f-8571fe39e753] Error 12 [90mundefined[39m
+[err_0f29e024-deb9-42ff-8a9d-2311c3c94471] Error 13 [90mundefined[39m
+[err_7dc28d44-732b-493d-b568-a60b0307488d] Error 14 [90mundefined[39m
+[err_d4211754-b465-4a74-bec4-70db6ac77314] Error 15 [90mundefined[39m
+[err_670d2836-ad4d-4a10-af8a-18c2a2add690] Error 16 [90mundefined[39m
+[err_57b22fd3-7eb1-4eaa-875c-602c0f7e23ff] Error 17 [90mundefined[39m
+[err_784e1838-e8dc-473a-9a55-4dccd197412e] Error 18 [90mundefined[39m
+[err_447b18e4-6cb9-4c59-8b80-24b308869fa7] Error 19 [90mundefined[39m
+[err_292ff69f-fcf9-4871-9d0c-e674068367bc] Error 20 [90mundefined[39m
+[err_8c7318e2-c7a8-49fa-87d3-0423f31be4bd] Error 21 [90mundefined[39m
+[err_6e95a65c-2b97-4116-8586-025cc9aa1d99] Error 22 [90mundefined[39m
+[err_8adf07dc-a6ad-4bcc-91ce-60c749f2fddb] Error 23 [90mundefined[39m
+[err_55db4b55-624f-4499-95f3-a40c6ff8d825] Error 24 [90mundefined[39m
+[err_2571e152-16d0-4cba-9e0a-39f94a2459b8] Error 25 [90mundefined[39m
+[err_b039eac9-f701-4811-83e0-72f810f297d2] Error 26 [90mundefined[39m
+[err_fb0406e3-322c-41b3-9379-16b0cb7dd175] Error 27 [90mundefined[39m
+[err_066834b5-f187-46e2-9f06-a5640638bc7b] Error 28 [90mundefined[39m
+[err_8a85334d-c66f-4a4d-9af2-8a781dea6851] Error 29 [90mundefined[39m
+[err_d9513ab0-1bc8-4fe1-8778-b189c2ad2dcb] Error 30 [90mundefined[39m
+[err_d3784e0b-ecf7-4cb7-a73f-577d4fe9d302] Error 31 [90mundefined[39m
+[err_b41d4171-70dc-49f7-b0b4-07d1a4e9eb85] Error 32 [90mundefined[39m
+[err_01b1eb27-de38-4e3f-aecf-accc5624c4ed] Error 33 [90mundefined[39m
+[err_0345c003-d315-4228-902a-88a272c9a971] Error 34 [90mundefined[39m
+[err_3905f8a5-1549-4297-85d5-67f9c7d2f8cf] Error 35 [90mundefined[39m
+[err_2598829e-1d3a-49ea-b7e2-f7ecff600de6] Error 36 [90mundefined[39m
+[err_9c7adb49-3a40-479b-a4d9-c11c4453d036] Error 37 [90mundefined[39m
+[err_e18dae0e-cbbb-4549-9d7c-cb7d76f3a4d7] Error 38 [90mundefined[39m
+[err_b612f596-8f4a-4626-8c1d-6035321a2697] Error 39 [90mundefined[39m
+[err_f564db72-5663-4129-93b5-4c7896938f60] Error 40 [90mundefined[39m
+[err_a9a841e5-1786-49d3-8e96-d8e16058eee8] Error 41 [90mundefined[39m
+[err_20b0d9e3-dc19-48a6-aafa-3f9d367e01b3] Error 42 [90mundefined[39m
+[err_a8c89a28-ee1b-46f5-88fc-c838ef7d0d3a] Error 43 [90mundefined[39m
+[err_0eccddb1-622b-49f8-ae10-71526308b77b] Error 44 [90mundefined[39m
+[err_c76c3caa-abcc-4af3-8fc4-c063d2493cd7] Error 45 [90mundefined[39m
+[err_bd454b3d-1fb6-46f0-b2a1-86965549bffb] Error 46 [90mundefined[39m
+[err_192ef14c-3030-492e-959e-167b636a93ad] Error 47 [90mundefined[39m
+[err_ed91b897-d45d-4ee7-87f3-93715e574d91] Error 48 [90mundefined[39m
+[err_6de76a2b-551f-424a-9385-1449ff193ad0] Error 49 [90mundefined[39m
+[err_01379aea-eb2e-4fe7-9126-0a668834a9a1] Error 50 [90mundefined[39m
+[err_f9671429-65dd-473d-9647-cae61d89218e] Error 51 [90mundefined[39m
+[err_151fad7b-d4da-4bd2-b3d6-89a652a1d9f1] Error 52 [90mundefined[39m
+[err_35bc2e0a-9f8d-4842-b427-53031f7b11e9] Error 53 [90mundefined[39m
+[err_e081f11d-01b0-4600-80a4-d2a19f777511] Error 54 [90mundefined[39m
+[err_1b63d6c2-bfdf-4e3a-9969-f2727d278fff] Error 55 [90mundefined[39m
+[err_92fbe1f4-3cb4-484a-9c6c-d0e871692c23] Error 56 [90mundefined[39m
+[err_96a37306-b9da-4d85-8b68-972b688f5d74] Error 57 [90mundefined[39m
+[err_7085bfb6-5e21-40a1-bf39-9c761ca5479d] Error 58 [90mundefined[39m
+[err_85252366-7ebe-4bfd-92ba-af1de1db0802] Error 59 [90mundefined[39m
+
+ [32m✓[39m src/features/tasks/composables/__tests__/useTaskSettings.spec.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/composables/__tests__/useTarkovTime.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2merror management[2m > [22m[2mshould keep most recent errors
+[22m[39m[err_9aa8ecee-d70e-40e8-be8d-0383220a61ae] Error 0 [90mundefined[39m
+[err_e8c82a30-d896-4d65-ba62-1ca6abd9ca6b] Error 1 [90mundefined[39m
+[err_ac13da19-29ff-41c1-9b64-853ec536bee2] Error 2 [90mundefined[39m
+[err_0e00da7a-7df9-4f1b-967a-a968f743119c] Error 3 [90mundefined[39m
+[err_e6b1f4c7-32fe-4bfc-a1e4-353dd2ed7298] Error 4 [90mundefined[39m
+[err_2cad1707-0c40-4356-b28b-d51dbc2aa31b] Error 5 [90mundefined[39m
+[err_996540e9-8542-4b70-90e7-2bdabf560c4a] Error 6 [90mundefined[39m
+[err_88ad2c4f-58c6-4686-b102-0e7e011d99bf] Error 7 [90mundefined[39m
+[err_c4dc6e6d-6c71-485a-9312-90b47f3d2f5c] Error 8 [90mundefined[39m
+[err_3fae5696-d65c-488f-9aa7-4ddb5e1c2fa5] Error 9 [90mundefined[39m
+[err_83eb133d-3a2f-415f-904f-fe8b7f3842bc] Error 10 [90mundefined[39m
+[err_44e328cc-8203-4595-90fe-a2ccd3c8d17a] Error 11 [90mundefined[39m
+[err_33b8d9f4-0d64-4728-bfa6-8dbf4f8aafba] Error 12 [90mundefined[39m
+[err_996e17cc-542f-4698-8adf-c72c15b1eca1] Error 13 [90mundefined[39m
+[err_3f94a134-c388-43a9-8188-c6176a06497f] Error 14 [90mundefined[39m
+[err_e3a7b4c8-5509-4d12-9210-b5ad19ca05ff] Error 15 [90mundefined[39m
+[err_ae5bcf78-1c7e-4d01-9ece-cb5c3f9e1ace] Error 16 [90mundefined[39m
+[err_150d1a5f-c64e-4de7-b648-8069cbc76cf4] Error 17 [90mundefined[39m
+[err_c8c2a6d2-a1cd-4d2d-910c-84a6f8e826f5] Error 18 [90mundefined[39m
+[err_2bccee31-d826-49dc-a256-4e0116db3aa0] Error 19 [90mundefined[39m
+[err_5087ae76-38ea-413e-84d8-4369bad9815d] Error 20 [90mundefined[39m
+[err_c0236b4d-1e60-42ba-a38d-cc32d49e505c] Error 21 [90mundefined[39m
+[err_71ab04fd-3105-47a4-8617-c9e24da086c9] Error 22 [90mundefined[39m
+[err_f683deed-180e-400d-83ce-6a738f798ee5] Error 23 [90mundefined[39m
+[err_8f5cd25a-b71a-4be5-a062-20d0b0739589] Error 24 [90mundefined[39m
+[err_518a192c-6245-4581-9a5a-3c3f94d2a48f] Error 25 [90mundefined[39m
+[err_0da0f4a4-bb93-4f92-ab57-06281cd74b22] Error 26 [90mundefined[39m
+[err_1c807249-be76-40bc-bc12-14895e7d03b4] Error 27 [90mundefined[39m
+[err_ac45b30d-474a-41ba-809e-4046f9209e45] Error 28 [90mundefined[39m
+[err_a1d7f7ec-66db-4561-9dbc-372865f22c2d] Error 29 [90mundefined[39m
+[err_262d6efd-266e-4cad-9982-1e42495833fd] Error 30 [90mundefined[39m
+[err_8452edce-1c2b-41d9-9844-80400f85f770] Error 31 [90mundefined[39m
+[err_fec42549-7434-4615-b80f-d104eeb69233] Error 32 [90mundefined[39m
+[err_99db988d-486c-461e-8f0c-0f8f4c11c3a6] Error 33 [90mundefined[39m
+[err_811cd65f-5f6a-4583-b388-1b6bae7825ec] Error 34 [90mundefined[39m
+[err_9754abb3-96f1-4861-8db6-a0905ef334ec] Error 35 [90mundefined[39m
+[err_e8acdbab-2636-4d4e-8c44-70fd41fe7a61] Error 36 [90mundefined[39m
+[err_2b9a3ca0-2e52-483d-b99a-97981fce5987] Error 37 [90mundefined[39m
+[err_1ad46eb4-2177-49c7-ba25-833d78f778d4] Error 38 [90mundefined[39m
+[err_0a8aaf84-8d06-4cdf-9226-4d32e2c473e1] Error 39 [90mundefined[39m
+[err_c23a9bc8-3106-4b41-b32b-30505124be61] Error 40 [90mundefined[39m
+[err_15171a39-5269-4ed7-ba75-9075514028d6] Error 41 [90mundefined[39m
+[err_cc33fbfa-e510-4317-b1dc-2b88792ac9d7] Error 42 [90mundefined[39m
+[err_434b09d4-a8ef-4f77-a16c-6a1ae403910b] Error 43 [90mundefined[39m
+[err_e8512508-9bc5-4d56-aef8-9ba8ebce76a8] Error 44 [90mundefined[39m
+[err_5c53e857-de63-4375-9e38-845cb4013cf4] Error 45 [90mundefined[39m
+[err_d78c4be0-a53e-4979-b0e9-6c2c171ba654] Error 46 [90mundefined[39m
+[err_97febb9b-5451-4072-8848-dec4d253f481] Error 47 [90mundefined[39m
+[err_3e57e961-0e3d-4f6d-a862-68d9d8e82e00] Error 48 [90mundefined[39m
+[err_2a440610-c49a-4540-8f81-96f6f30844e4] Error 49 [90mundefined[39m
+[err_c3f147ea-73e5-46e5-888f-3efd47492a9c] Error 50 [90mundefined[39m
+[err_844a5db5-49b4-4c52-b947-47187e5d0351] Error 51 [90mundefined[39m
+[err_13b85407-fc88-42c5-ac10-f763544dac26] Error 52 [90mundefined[39m
+[err_4257b201-1010-4dba-80fe-202a093686d2] Error 53 [90mundefined[39m
+[err_60c7dff5-0e1c-4d15-abd9-ac5ff8261a32] Error 54 [90mundefined[39m
+[err_c851418f-0442-4129-9547-68f739ee7e39] Error 55 [90mundefined[39m
+[err_c93503dd-46ed-4e17-81a3-c2ed9f64c3d4] Error 56 [90mundefined[39m
+[err_f2f311bb-15a3-4fca-b47b-a8a56b9f2299] Error 57 [90mundefined[39m
+[err_8f6726b8-763d-4a19-8b87-8f2bc1c3eb68] Error 58 [90mundefined[39m
+[err_e0cf3342-cc50-44f9-bc68-71673c5dd078] Error 59 [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2merror management[2m > [22m[2mshould filter errors by context
+[22m[39m[err_70237a6d-290b-4a2d-8adf-2c1c6009174c] Error 1 (Context: Context A) [90mundefined[39m
+[err_3df90fdb-9844-4c85-9412-afc55cb910c2] Error 2 (Context: Context B) [90mundefined[39m
+[err_63f9b9ff-c0ed-4b3e-bfc6-a9f11fd739c0] Error 3 (Context: Context A) [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2merror management[2m > [22m[2mshould clear errors by context
+[22m[39m[err_75d62ca6-440a-4fee-a322-b15a76311a09] Error 1 (Context: Context A) [90mundefined[39m
+[err_d6b35df8-22ac-4a5d-b0c7-01ed9a2e50a3] Error 2 (Context: Context B) [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2muser ID tracking[2m > [22m[2mshould include user ID when provider is set
+[22m[39m[err_e5ba4041-ffcf-4ea6-8e8f-bbe4f42a7d28] Test error [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2muser ID tracking[2m > [22m[2mshould handle undefined user ID
+[22m[39m[err_78995ac1-8a7f-45ab-a51f-5dbbe748e710] Test error [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2msafeStringifyError[2m > [22m[2mshould handle null
+[22m[39m[err_dffe925b-4bf2-48d0-bcb8-45643da4b9db] null [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2msafeStringifyError[2m > [22m[2mshould handle undefined
+[22m[39m[err_fae5ca14-fff1-4cf9-9c5c-558aee651a67] undefined [90mundefined[39m
+
+[90mstderr[2m | src/utils/__tests__/errorHandler.spec.ts[2m > [22m[2mErrorHandler[2m > [22m[2msafeStringifyError[2m > [22m[2mshould handle circular references
+[22m[39m[err_6fa5c45b-995e-4506-8f49-f72b816b04de] [object Object] {name=circular, self=[object Object]} [90mundefined[39m
+
+[90mstdout[2m | src/utils/__tests__/LocalDataService.test.ts[2m > [22m[2mLocalDataService[2m > [22m[2mhasLocalData[2m > [22m[2mreturns false on parse error
+[22m[39m[LocalDataService] Migrating unencrypted data to encrypted format
+
+[90mstderr[2m | src/utils/__tests__/LocalDataService.test.ts[2m > [22m[2mLocalDataService[2m > [22m[2mhasLocalData[2m > [22m[2mreturns false on parse error
+[22m[39m[LocalDataService] Error checking local data availability: SyntaxError: Unexpected token 'i', "invalid json" is not valid JSON
+    at JSON.parse (<anonymous>)
+    at Module.hasLocalData [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/LocalDataService.ts:49:27[90m)[39m
+    at [90m/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/__tests__/LocalDataService.test.ts:67:20
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:157:11
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:753:26
+    at file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1636:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1602:10)
+    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1309:12)
+    at runSuite (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/runner/dist/index.js:1468:8)
+
+ [32m✓[39m src/composables/__tests__/useProgressQueries.spec.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstderr[2m | src/utils/__tests__/LocalDataService.test.ts[2m > [22m[2mLocalDataService[2m > [22m[2mError Handling[2m > [22m[2mhandles localStorage errors gracefully when backing up
+[22m[39m[LocalDataService] Failed to create local backup copy: Error: Storage quota exceeded
+    at Object.<anonymous> [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/__tests__/LocalDataService.test.ts:178:15[90m)[39m
+    at Object.Mock [as setItem] (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/spy/dist/index.js:280:34)
+    at Module.backupLocalProgress [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/LocalDataService.ts:105:18[90m)[39m
+
+[90mstderr[2m | src/utils/__tests__/LocalDataService.test.ts[2m > [22m[2mLocalDataService[2m > [22m[2mError Handling[2m > [22m[2mhandles localStorage errors gracefully when saving progress
+[22m[39m[LocalDataService] Failed to persist local progress: Error: Storage quota exceeded
+    at Object.<anonymous> [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/__tests__/LocalDataService.test.ts:187:15[90m)[39m
+    at Object.Mock [as setItem] (file:///home/lab/Github/TarkovTracker/node_modules/[4m@vitest[24m/spy/dist/index.js:280:34)
+    at Module.saveLocalProgress [90m(/home/lab/Github/TarkovTracker/frontend/[39msrc/utils/LocalDataService.ts:119:18[90m)[39m
+
+ [32m✓[39m src/composables/tasks/__tests__/locationUtils.spec.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/logger.spec.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m src/composables/tasks/__tests__/taskCore.spec.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/errorHandler.spec.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/composables/__tests__/useTaskFiltering.spec.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/utils/__tests__/LocalDataService.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/stores/__tests__/user.spec.ts [2m([22m[2m54 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/composables/api/__tests__/useFirestoreTarkovData.spec.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 155[2mms[22m[39m
+[90mstdout[2m | src/composables/__tests__/usePrivacyConsent.spec.ts[2m > [22m[2musePrivacyConsent[2m > [22m[2mClarity integration[2m > [22m[2mwhen configured for production[2m > [22m[2mcalls clarity consent when enabled
+[22m[39mMicrosoft Clarity initialized
+Microsoft Clarity consent enabled
+
+[90mstdout[2m | src/composables/__tests__/usePrivacyConsent.spec.ts[2m > [22m[2musePrivacyConsent[2m > [22m[2mClarity integration[2m > [22m[2mwhen configured for production[2m > [22m[2mcalls clarity consent when disabled
+[22m[39mMicrosoft Clarity consent disabled
+
+ [32m✓[39m src/stores/__tests__/progress.spec.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/composables/__tests__/usePrivacyConsent.spec.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 270[2mms[22m[39m
+ [32m✓[39m src/features/auth/__tests__/AuthButtons.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 136[2mms[22m[39m
+ [32m✓[39m src/features/tasks/__tests__/AlternativesList.spec.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+Failed to parse file:///home/lab/Github/TarkovTracker/frontend/src/README.md. Excluding it from coverage.
+ Error [RollupError]: Expected ';', '}' or <eof>
+    at getRollupError (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at convertProgram (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:1098:26)
+    at parseAstAsync (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:2084:106)
+    at V8CoverageProvider.remapCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:135:10)
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:121:23
+    at async Promise.all (index 1)
+    at V8CoverageProvider.getCoverageMapForUncoveredFiles (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:111:4)
+    at V8CoverageProvider.generateCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:59:29)
+    at file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11621:22
+    at Vitest.runFiles (file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11634:10) {
+  code: 'PARSE_ERROR',
+  pos: 6
+}
+Failed to parse file:///home/lab/Github/TarkovTracker/frontend/src/services/readme.me. Excluding it from coverage.
+ Error [RollupError]: Expected ';', '}' or <eof>
+    at getRollupError (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at convertProgram (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:1098:26)
+    at parseAstAsync (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:2084:106)
+    at V8CoverageProvider.remapCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:135:10)
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:121:23
+    at async Promise.all (index 5)
+    at V8CoverageProvider.getCoverageMapForUncoveredFiles (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:111:4)
+    at V8CoverageProvider.generateCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:59:29)
+    at file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11621:22
+    at Vitest.runFiles (file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11634:10) {
+  code: 'PARSE_ERROR',
+  pos: 11
+}
+Failed to parse file:///home/lab/Github/TarkovTracker/frontend/src/utils/README.md. Excluding it from coverage.
+ Error [RollupError]: Expected ';', '}' or <eof>
+    at getRollupError (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at convertProgram (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:1098:26)
+    at parseAstAsync (file:///home/lab/Github/TarkovTracker/node_modules/rollup/dist/es/shared/parseAst.js:2084:106)
+    at V8CoverageProvider.remapCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:135:10)
+    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:121:23
+    at async Promise.all (index 4)
+    at V8CoverageProvider.getCoverageMapForUncoveredFiles (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:111:4)
+    at V8CoverageProvider.generateCoverage (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/coverage-v8/dist/provider.js:59:29)
+    at file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11621:22
+    at Vitest.runFiles (file:///home/lab/Github/TarkovTracker/node_modules/vitest/dist/chunks/cli-api.BQ-bjcRi.js:11634:10) {
+  code: 'PARSE_ERROR',
+  pos: 8
+}
+[1m[33m[@vue/compiler-sfc][0m[33m `withDefaults` is a compiler macro and no longer needs to be imported.[0m
+
+[1m[33m[@vue/compiler-sfc][0m[33m `defineProps` is a compiler macro and no longer needs to be imported.[0m
+
+
+[2m Test Files [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m      Tests [22m [1m[32m426 passed[39m[22m[90m (426)[39m
+[2m   Start at [22m 02:35:14
+[2m   Duration [22m 5.32s[2m (transform 18.10s, setup 39.81s, collect 3.35s, tests 856ms, environment 6.09s, prepare 508ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   13.73 |    11.37 |   11.94 |   14.02 |                   
+ src               |    4.79 |        0 |       0 |    5.07 |                   
+  App.vue          |       0 |        0 |       0 |       0 | 16-34             
+  main.ts          |       0 |        0 |       0 |       0 | 31-64             
+  shared_state.ts  |    5.98 |        0 |       0 |    6.42 | ...07-213,221-325 
+ src/composables   |    51.9 |    50.58 |   53.57 |   52.11 |                   
+  livedata.ts      |       0 |        0 |       0 |       0 | 15-42             
+  tarkovdata.ts    |   31.81 |        0 |       0 |   32.94 | ...,61-67,101-173 
+  ...aMigration.ts |       0 |        0 |       0 |       0 | 13-148            
+  ...tersection.ts |       0 |        0 |       0 |       0 | 4-27              
+  ...acyConsent.ts |   85.84 |    68.08 |   94.73 |   85.58 | ...16,121,127,132 
+  ...essQueries.ts |     100 |     87.5 |     100 |     100 | 28,33             
+  ...etonLoader.ts |       0 |        0 |       0 |       0 | 9-119             
+  useTarkovTime.ts |     100 |       50 |     100 |     100 | 31                
+  ...kFiltering.ts |   83.56 |     71.3 |    87.5 |   85.18 | ...50,274-297,305 
+ ...omposables/api |   16.93 |     17.6 |    9.75 |   17.27 |                   
+  maps.json        |       0 |        0 |       0 |       0 |                   
+  ...TarkovData.ts |   75.55 |    79.16 |      50 |      75 | 94-115            
+  useTarkovApi.ts  |    7.08 |     2.97 |    1.47 |    7.39 | ...80-426,443-552 
+ ...mposables/data |    1.38 |        0 |       0 |    1.48 |                   
+  ...ideoutData.ts |       0 |        0 |       0 |       0 | 20-244            
+  useMapData.ts    |     3.6 |        0 |       0 |    4.21 | 37-263            
+  useTaskData.ts   |    0.96 |        0 |       0 |       1 | 41-415            
+ ...ables/firebase |       0 |        0 |       0 |       0 |                   
+  ...seListener.ts |       0 |        0 |       0 |       0 | 39-163            
+ ...mposables/maps |       0 |        0 |       0 |       0 |                   
+  useMapZoom.ts    |       0 |        0 |       0 |       0 | 28-153            
+ ...posables/tasks |   27.23 |    26.64 |   22.88 |   25.83 |                   
+  taskCore.ts      |   95.96 |    86.51 |     100 |   99.01 | 75                
+  ...rkersUtils.ts |       0 |        0 |       0 |       0 | 7-79              
+  useTaskList.ts   |       0 |        0 |       0 |       0 | 40-571            
+  ...alTaskList.ts |       0 |        0 |       0 |       0 | 7-35              
+ ...posables/utils |    1.81 |        0 |     3.7 |    1.86 |                   
+  graphHelpers.ts  |    1.92 |        0 |      10 |    1.92 | 8-102,117-144     
+  i18nHelpers.ts   |    6.66 |        0 |       0 |    7.69 | 13-55             
+  storeHelpers.ts  |       0 |        0 |       0 |       0 | 13-130            
+ src/config        |   46.87 |        0 |       0 |      50 |                   
+  featureFlags.ts  |       0 |        0 |       0 |       0 | 47-126            
+  gameConstants.ts |     100 |      100 |     100 |     100 |                   
+ src/features/auth |   76.31 |    83.33 |     100 |   75.67 |                   
+  AuthButtons.vue  |   76.31 |    83.33 |     100 |   75.67 | ...56-157,167-168 
+ ...ures/dashboard |       0 |      100 |     100 |       0 |                   
+  TrackerStat.vue  |       0 |      100 |     100 |       0 | 5-27              
+ ...eatures/drawer |       0 |        0 |       0 |       0 |                   
+  ...erAccount.vue |       0 |        0 |       0 |       0 | 8-62              
+  ...rnalLinks.vue |       0 |        0 |       0 |       0 | 35-40             
+  DrawerItem.vue   |       0 |        0 |       0 |       0 | 6-112             
+  DrawerLevel.vue  |       0 |        0 |       0 |       0 | 2-129             
+  DrawerLinks.vue  |       0 |        0 |     100 |       0 | 61                
+  ...Standings.vue |       0 |        0 |       0 |       0 | 7-340             
+  TrackerLogo.vue  |       0 |        0 |       0 |       0 | 29-41             
+ src/features/game |       0 |        0 |       0 |       0 |                   
+  TarkovItem.vue   |       0 |        0 |       0 |       0 | 5-95              
+ ...atures/hideout |       0 |        0 |       0 |       0 |                   
+  HideoutCard.vue  |       0 |        0 |       0 |       0 | 17-308            
+  StationLink.vue  |       0 |      100 |       0 |       0 | 14-21             
+ ...eatures/layout |       0 |        0 |       0 |       0 |                   
+  AppBar.vue       |       0 |        0 |       0 |       0 | 4-98              
+  AppFooter.vue    |       0 |      100 |       0 |       0 | 65-154            
+  ...entBanner.vue |       0 |        0 |       0 |       0 | 7-88              
+  ...NameInput.vue |       0 |        0 |       0 |       0 | 3-40              
+  NavDrawer.vue    |       0 |        0 |       0 |       0 | 3-58              
+  OverflowMenu.vue |       0 |        0 |       0 |       0 | 5-174             
+  ...ardLayout.vue |       0 |        0 |       0 |       0 | 22-103            
+ src/features/maps |       0 |        0 |       0 |       0 |                   
+  MapMarker.vue    |       0 |        0 |       0 |       0 | 9-146             
+  MapZone.vue      |       0 |        0 |       0 |       0 | 9-177             
+  TarkovMap.scss   |       0 |        0 |       0 |       0 |                   
+  TarkovMap.vue    |       0 |        0 |       0 |       0 | 6-511             
+ ...es/neededitems |       0 |        0 |       0 |       0 |                   
+  NeededItem.vue   |       0 |        0 |       0 |       0 | 6-377             
+  ...ediumCard.vue |       0 |        0 |       0 |       0 | 39-207            
+  ...edItemRow.vue |       0 |        0 |       0 |       0 | 50-414            
+  ...SmallCard.vue |       0 |        0 |       0 |       0 | 8-267             
+  ...Visibility.ts |       0 |        0 |       0 |       0 | 6-123             
+ ...ems/components |       0 |        0 |       0 |       0 |                   
+  ...tControls.vue |       0 |      100 |       0 |       0 | 2-10              
+  ItemImage.vue    |       0 |        0 |       0 |       0 | 2-38              
+  ...ementInfo.vue |       0 |        0 |       0 |       0 | 2-36              
+  ...dsDisplay.vue |       0 |      100 |       0 |       0 | 2-28              
+ ...tures/settings |       0 |        0 |       0 |       0 |                   
+  ...etionCard.vue |       0 |        0 |       0 |       0 | 2-360             
+  ApiTokens.vue    |       0 |        0 |       0 |       0 | 14-377            
+  ...ationCard.vue |       0 |        0 |       0 |       0 | 11-140            
+  ...eviewCard.vue |       0 |        0 |       0 |       0 | 12-134            
+  ...irmDialog.vue |       0 |      100 |       0 |       0 | 5-52              
+  ...tionSteps.vue |       0 |      100 |     100 |       0 | 2                 
+  TokenCard.vue    |       0 |        0 |       0 |       0 | 11-282            
+ ...features/tasks |    1.02 |     0.44 |    0.43 |    1.21 |                   
+  ActionButton.vue |       0 |      100 |       0 |       0 | 2-10              
+  ...tivesList.vue |     100 |      100 |     100 |     100 |                   
+  InfoRow.vue      |       0 |        0 |     100 |       0 | 5-8               
+  QuestKeys.vue    |       0 |      100 |     100 |       0 | 28                
+  ...bjectives.vue |       0 |      100 |       0 |       0 | 9-29              
+  TaskActions.vue  |       0 |        0 |       0 |       0 | 3-89              
+  TaskCard.vue     |       0 |        0 |       0 |       0 | 4-373             
+  TaskCardInfo.vue |       0 |        0 |       0 |       0 | 32-141            
+  TaskCardList.vue |       0 |        0 |       0 |       0 | 42-120            
+  ...bjectives.vue |       0 |        0 |       0 |       0 | 2-56              
+  ...mptyState.vue |       0 |      100 |       0 |       0 | 5-14              
+  ...terDialog.vue |       0 |        0 |       0 |       0 | 3-149             
+  TaskInfo.vue     |       0 |        0 |       0 |       0 | 7-206             
+  TaskLink.vue     |   18.75 |        0 |       0 |      25 | 44-63             
+  ...dingState.vue |       0 |      100 |       0 |       0 | 4-16              
+  ...apDisplay.vue |       0 |        0 |       0 |       0 | 3-41              
+  TaskMapPanel.vue |       0 |        0 |       0 |       0 | 3-41              
+  TaskMapTabs.vue  |       0 |        0 |       0 |       0 | 6-62              
+  ...Objective.vue |       0 |        0 |       0 |       0 | 5-252             
+  ...llTracker.vue |       0 |        0 |     100 |       0 | 2                 
+  ...TeamNeeds.vue |       0 |        0 |       0 |       0 | 2-10              
+  ...wSelector.vue |       0 |        0 |       0 |       0 | 7-236             
+ ...ks/composables |   23.78 |        0 |   34.32 |   23.93 |                   
+  ...ardActions.ts |       0 |        0 |       0 |       0 | 17-147            
+  ...quirements.ts |       0 |        0 |       0 |       0 | 24-139            
+  ...skSettings.ts |    87.5 |      100 |   76.66 |   86.53 | ...60,165,170,175 
+ src/features/team |       0 |        0 |       0 |       0 |                   
+  MyTeam.vue       |       0 |        0 |       0 |       0 | 4-206             
+  TeamInputRow.vue |       0 |      100 |       0 |       0 | 12-17             
+  TeamInvite.vue   |       0 |        0 |       0 |       0 | 22-130            
+  TeamMembers.vue  |       0 |        0 |       0 |       0 | 4-71              
+  TeamOptions.vue  |       0 |        0 |       0 |       0 | 4-134             
+  TeamSettings.vue |       0 |      100 |       0 |       0 | 4-18              
+  ...emberCard.vue |       0 |        0 |       0 |       0 | 69-176            
+ src/features/ui   |       0 |        0 |       0 |       0 |                   
+  FittedCard.vue   |       0 |      100 |       0 |       0 | 12-58             
+  ...eSelector.vue |       0 |        0 |       0 |       0 | 6-60              
+  IconCard.vue     |       0 |      100 |     100 |       0 | 8-19              
+  ...nSnackbar.vue |       0 |      100 |       0 |       0 | 8-26              
+  ...izedImage.vue |       0 |        0 |       0 |       0 | 3-67              
+  ...eshButton.vue |       0 |        0 |       0 |       0 | 2-31              
+  TrackerTip.vue   |       0 |        0 |       0 |       0 | 6-68              
+ src/locales       |       0 |        0 |       0 |       0 |                   
+  cs.json5         |       0 |        0 |       0 |       0 |                   
+  de.json5         |       0 |        0 |       0 |       0 |                   
+  en.json5         |       0 |        0 |       0 |       0 |                   
+  es.json5         |       0 |        0 |       0 |       0 |                   
+  fr.json5         |       0 |        0 |       0 |       0 |                   
+  hu.json5         |       0 |        0 |       0 |       0 |                   
+  it.json5         |       0 |        0 |       0 |       0 |                   
+  ja.json5         |       0 |        0 |       0 |       0 |                   
+  ko.json5         |       0 |        0 |       0 |       0 |                   
+  pl.json5         |       0 |        0 |       0 |       0 |                   
+  pt-BR.json5      |       0 |        0 |       0 |       0 |                   
+  ru.json5         |       0 |        0 |       0 |       0 |                   
+  tr.json5         |       0 |        0 |       0 |       0 |                   
+  uk.json5         |       0 |        0 |       0 |       0 |                   
+  zh-TW.json5      |       0 |        0 |       0 |       0 |                   
+  zh.json5         |       0 |        0 |       0 |       0 |                   
+ src/pages         |       0 |        0 |       0 |       0 |                   
+  ApiDocs.vue      |       0 |        0 |       0 |       0 | 12-337            
+  HideoutList.vue  |       0 |        0 |       0 |       0 | 9-167             
+  ...Interface.vue |       0 |        0 |       0 |       0 | 2-42              
+  NeededItems.vue  |       0 |        0 |       0 |       0 | 2-498             
+  NotFound.vue     |       0 |      100 |       0 |       0 | 3-10              
+  ...acyPolicy.vue |       0 |      100 |       0 |       0 | 15-202            
+  TaskList.vue     |       0 |        0 |       0 |       0 | 2-95              
+  ...anagement.vue |       0 |        0 |       0 |       0 | 2-34              
+  ...OfService.vue |       0 |      100 |       0 |       0 | 17-156            
+  ...Dashboard.vue |       0 |        0 |       0 |       0 | 4-430             
+  ...rSettings.vue |       0 |        0 |       0 |       0 | 43-225            
+  UserSettings.vue |       0 |        0 |       0 |       0 | 7-282             
+  ...Components.ts |       0 |      100 |       0 |       0 | 6-24              
+ src/plugins       |   10.84 |     7.48 |    7.14 |   11.29 |                   
+  dev-auth.ts      |       0 |        0 |       0 |       0 | 31-125            
+  firebase.ts      |   36.11 |    30.55 |   42.85 |   36.11 | ...77-193,197-203 
+  i18n.ts          |       0 |        0 |     100 |       0 | 31-67             
+  ...-firestore.ts |       0 |        0 |       0 |       0 | 16-250            
+  pinia.ts         |       0 |      100 |     100 |       0 | 4-5               
+  ...nitializer.ts |    8.33 |        0 |       0 |    8.33 | 9-36              
+  vuetify.ts       |       0 |      100 |     100 |       0 | 29-66             
+ src/router        |       0 |      100 |       0 |       0 |                   
+  index.ts         |       0 |      100 |     100 |       0 | 4                 
+  routes.ts        |       0 |      100 |       0 |       0 | 3-80              
+ src/services      |       0 |        0 |       0 |       0 |                   
+  ...ityService.ts |       0 |        0 |       0 |       0 | 22-279            
+ src/stores        |    38.4 |    21.48 |   41.95 |   38.72 |                   
+  app.ts           |       0 |      100 |       0 |       0 | 3-32              
+  progress.ts      |   93.13 |    67.44 |   88.23 |   94.89 | ...28,136,150,158 
+  tarkov.ts        |    3.72 |        0 |   15.38 |    3.78 | ...74-413,419-441 
+  ...ystemStore.ts |       0 |        0 |       0 |       0 | 11-52             
+  useTeamStore.ts  |       0 |        0 |       0 |       0 | 22-197            
+  user.ts          |    74.8 |    29.89 |   62.12 |    74.6 | ...49-352,446-451 
+ ...tores/progress |       0 |        0 |       0 |       0 |                   
+  ...utProgress.ts |       0 |        0 |       0 |       0 | 11-134            
+  taskProgress.ts  |       0 |        0 |       0 |       0 | 26-121            
+  ...erProgress.ts |       0 |        0 |       0 |       0 | 13-41             
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ src/stores/utils  |       0 |        0 |       0 |       0 |                   
+  ...odeHelpers.ts |       0 |        0 |       0 |       0 | 19-35             
+ src/styles        |       0 |        0 |       0 |       0 |                   
+  fonts.css        |       0 |        0 |       0 |       0 |                   
+  settings.scss    |       0 |        0 |       0 |       0 |                   
+ src/types         |       0 |        0 |       0 |       0 |                   
+  ...ationTypes.ts |       0 |        0 |       0 |       0 |                   
+  d3.d.ts          |       0 |        0 |       0 |       0 |                   
+  global.d.ts      |       0 |        0 |       0 |       0 |                   
+  maps.ts          |       0 |        0 |       0 |       0 |                   
+  tarkov.ts        |       0 |        0 |       0 |       0 |                   
+  vite-env.d.ts    |       0 |        0 |       0 |       0 |                   
+ src/utils         |   29.48 |    30.83 |   29.12 |   29.72 |                   
+  ...ionService.ts |       0 |        0 |       0 |       0 | 16-59             
+  ...ationTypes.ts |       0 |        0 |       0 |       0 |                   
+  ...ormService.ts |       0 |        0 |       0 |       0 | 8-85              
+  ...ionService.ts |       0 |        0 |       0 |       0 | 4-28              
+  ...ationUtils.ts |     100 |      100 |     100 |     100 |                   
+  ...ApiService.ts |       0 |        0 |       0 |       0 | 11-165            
+  ...rviceTypes.ts |       0 |        0 |       0 |       0 |                   
+  ...ionService.ts |       0 |        0 |       0 |       0 | 16-189            
+  ...ataService.ts |   89.06 |    93.93 |     100 |   89.06 | 81-85,94-95,135   
+  ...ermissions.ts |       0 |      100 |     100 |       0 | 8                 
+  constants.ts     |     100 |      100 |     100 |     100 |                   
+  debounce.ts      |       0 |        0 |       0 |       0 | 8-54              
+  devAuth.ts       |   78.57 |    80.76 |     100 |   78.57 | 17,41-45          
+  encryption.ts    |       0 |        0 |       0 |       0 | 13-179            
+  errorHandler.ts  |   73.33 |    72.97 |   54.83 |   72.41 | ...43,261,270-284 
+  ...wapHelpers.ts |   19.23 |        0 |       0 |   19.23 | ...,91-96,105-136 
+  gameEditions.ts  |       0 |        0 |       0 |       0 | 1-11              
+  graphqlClient.ts |    3.92 |     5.88 |       0 |    4.16 | 32-133            
+  idleCallback.ts  |       0 |        0 |       0 |       0 | 10-59             
+  languagequery.ts |     100 |      100 |     100 |     100 |                   
+  logger.ts        |    87.5 |    61.11 |     100 |   86.95 | 24-28             
+  lruCache.ts      |     100 |      100 |     100 |     100 |                   
+  ...malization.ts |   36.36 |    26.47 |   54.54 |   39.13 | ...80-144,177-178 
+  ...sformUtils.ts |    4.25 |        0 |       0 |    4.44 | 86-296            
+  mapUtils.ts      |       0 |        0 |       0 |       0 | 1-24              
+  notify.ts        |   15.78 |        0 |       0 |   15.78 | 32-64             
+  ...vdataquery.ts |     100 |      100 |     100 |     100 |                   
+  ...deoutquery.ts |     100 |      100 |     100 |     100 |                   
+  taskFilters.ts   |     100 |      100 |     100 |     100 |                   
+  ...quirements.ts |       0 |        0 |       0 |       0 | 1-64              
+-------------------|---------|----------|---------|---------|-------------------

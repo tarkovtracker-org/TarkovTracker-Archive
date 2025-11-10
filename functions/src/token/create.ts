@@ -1,6 +1,6 @@
 import * as logger from 'firebase-functions/logger';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 import UIDGenerator from 'uid-generator';
 import {
   Firestore,
@@ -10,20 +10,11 @@ import {
   CollectionReference,
 } from 'firebase-admin/firestore';
 import { TokenGameMode } from '../types/api.js';
+import type { SystemDocData, TokenDocData } from './types.js';
 interface CreateTokenData {
   note: string;
   permissions: string[];
   gameMode?: TokenGameMode;
-}
-interface SystemDocData {
-  tokens?: string[];
-}
-interface TokenDocData {
-  owner: string;
-  note: string;
-  permissions: string[];
-  gameMode?: TokenGameMode;
-  createdAt: admin.firestore.Timestamp | admin.firestore.FieldValue;
 }
 // Core logic extracted into a separate, testable function
 export async function _createTokenLogic(

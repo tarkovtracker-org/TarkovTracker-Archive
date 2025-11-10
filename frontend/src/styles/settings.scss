@@ -4,12 +4,12 @@
 
 // Task card dimensions
 :root {
-  // Task card minimum height - matches TASK_CARD_HEIGHT constant (203px)
+  /* Task card minimum height - matches TASK_CARD_HEIGHT constant (203px) */
   --task-card-min-height: 203px;
 
-  // Vertical spacing between task cards in the list (8px)
+  /* Vertical spacing between task cards in the list (8px) */
   --task-card-vertical-spacing: 8px;
 
-  // Skeleton-specific vertical spacing (16px)
+  /* Skeleton-specific vertical spacing (16px) */
   --task-card-skeleton-vertical-spacing: 16px;
 }

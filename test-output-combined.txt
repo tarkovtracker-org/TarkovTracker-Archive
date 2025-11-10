@@ -1,0 +1,738 @@
+
+> test
+> npm run test:functions && npm run test:frontend
+
+
+> test:functions
+> npm run test --workspace=functions
+
+
+> functions@3.0.0 test
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.8 [39m[90m/home/lab/Github/TarkovTracker/functions[39m
+
+ [32m✓[39m test/token-api.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m test/token/create.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m test/progress/progressUtils.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m test/updateTarkovdata-consolidated.test.js [2m([22m[2m3 tests[22m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m test/middleware/abuseGuard.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [31m❯[39m test/middleware/auth.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 14[2mms[22m[39m
+     [32m✓[39m passes through OPTIONS requests[32m 1[2mms[22m[39m
+     [32m✓[39m attaches token data when validation succeeds[32m 1[2mms[22m[39m
+     [32m✓[39m responds with 401 on validation errors[32m 1[2mms[22m[39m
+       [32m✓[39m validates Bearer token and populates req.user with next() call[32m 1[2mms[22m[39m
+       [32m✓[39m returns 401 for invalid Bearer token with structured error body[32m 1[2mms[22m[39m
+       [32m✓[39m returns 401 for expired token with proper error handling[32m 1[2mms[22m[39m
+       [32m✓[39m returns 401 for malformed Authorization header[32m 2[2mms[22m[39m
+       [32m✓[39m returns 401 when Authorization header is missing[32m 0[2mms[22m[39m
+       [32m✓[39m ensures no side effects when authentication fails[32m 0[2mms[22m[39m
+[31m       [31m×[31m handles non-Error objects in authentication failure[39m[32m 4[2mms[22m[39m
+ [32m✓[39m test/token-consolidated.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m test/token-integration.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 125[2mms[22m[39m
+ [32m✓[39m test/team-consolidated.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [31m❯[39m test/TokenService.test.ts [2m([22m[2m37 tests[22m[2m | [22m[31m15 failed[39m[2m)[22m[32m 40[2mms[22m[39m
+[31m       [31m×[31m should retrieve token information successfully[39m[32m 5[2mms[22m[39m
+       [32m✓[39m should throw unauthorized error for non-existent token[32m 3[2mms[22m[39m
+       [32m✓[39m should throw internal error when token data is undefined[32m 1[2mms[22m[39m
+[31m       [31m×[31m should increment token calls asynchronously[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should default gameMode to pvp for legacy tokens[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should handle Firestore errors gracefully[32m 0[2mms[22m[39m
+[31m       [31m×[31m should validate token from Authorization header[39m[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error when Authorization header is missing[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for invalid Authorization header format[32m 1[2mms[22m[39m
+       [32m✓[39m should throw error for missing token in Bearer format[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for non-Bearer token[32m 0[2mms[22m[39m
+[31m       [31m×[31m should create token successfully[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should generate unique secure tokens[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should trim note whitespace[39m[32m 0[2mms[22m[39m
+       [32m✓[39m should handle transaction failures[32m 1[2mms[22m[39m
+[31m       [31m×[31m should default to pvp game mode when not specified[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should revoke token successfully[32m 1[2mms[22m[39m
+       [32m✓[39m should throw not found error for non-existent token[32m 0[2mms[22m[39m
+       [32m✓[39m should throw forbidden error when user does not own token[32m 1[2mms[22m[39m
+       [32m✓[39m should handle Firestore errors gracefully[32m 1[2mms[22m[39m
+       [32m✓[39m should list all tokens for a user[32m 2[2mms[22m[39m
+       [32m✓[39m should return empty array when user has no tokens[32m 0[2mms[22m[39m
+       [32m✓[39m should default gameMode to pvp for legacy tokens[32m 0[2mms[22m[39m
+       [32m✓[39m should handle Firestore errors gracefully[32m 1[2mms[22m[39m
+       [32m✓[39m should validate valid permissions[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for empty permissions array[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for non-array permissions[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for invalid permissions[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for mixed valid and invalid permissions[32m 1[2mms[22m[39m
+[31m       [31m×[31m should generate cryptographically secure tokens[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should generate unique tokens across multiple calls[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should create token with specific scopes and persist to Firestore[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should validate and reject invalid scope requests[39m[32m 5[2mms[22m[39m
+[31m         [31m×[31m should reject revoked token with proper error code[39m[32m 4[2mms[22m[39m
+         [32m✓[39m should handle token validation errors without side effects[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle Firestore transaction failures gracefully[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should ensure atomic token creation operations[39m[32m 1[2mms[22m[39m
+ [31m❯[39m test/userDeletionHandler.test.ts [2m([22m[2m21 tests[22m[2m | [22m[31m14 failed[39m[2m)[22m[32m 36[2mms[22m[39m
+[31m         [31m×[31m should delete user account successfully with valid confirmation[39m[32m 4[2mms[22m[39m
+         [32m✓[39m should throw error for invalid confirmation text[32m 3[2mms[22m[39m
+         [32m✓[39m should throw error for missing confirmation text[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle team cleanup when user is not in a team[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should handle team member removal when user is not owner[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should transfer team ownership when user is owner and has other members[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should delete team when user is owner and has no other members[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should delete all user tokens[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle Firebase Auth user not found error[39m[32m 1[2mms[22m[39m
+         [32m✓[39m should handle Firestore errors during data deletion[32m 1[2mms[22m[39m
+         [32m✓[39m should handle errors during team ownership transfer[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle successful user deletion[39m[32m 6[2mms[22m[39m
+       [32m✓[39m should return 401 when user is not authenticated[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle API errors from service[39m[32m 3[2mms[22m[39m
+       [32m✓[39m should handle unexpected errors[32m 1[2mms[22m[39m
+       [32m✓[39m should handle missing user ID[32m 0[2mms[22m[39m
+[31m         [31m×[31m should delete user and all associated Firestore documents[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle team member removal when user is not owner[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle Firestore write failures and ensure no partial deletions[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should handle Firebase Auth deletion failure and maintain data integrity[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle transaction rollback semantics during team ownership transfer[39m[32m 1[2mms[22m[39m
+ [32m✓[39m test/ValidationService.test.ts [2m([22m[2m60 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [31m❯[39m test/token-management.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m9 failed[39m[2m)[22m[32m 26[2mms[22m[39m
+       [32m✓[39m should reject unauthenticated requests[32m 2[2mms[22m[39m
+       [32m✓[39m should reject requests with missing note[32m 1[2mms[22m[39m
+       [32m✓[39m should reject requests with missing permissions[32m 1[2mms[22m[39m
+       [32m✓[39m should reject requests with empty permissions array[32m 0[2mms[22m[39m
+       [32m✓[39m should reject invalid gameMode[32m 0[2mms[22m[39m
+       [32m✓[39m should reject when user has maximum tokens (5)[32m 1[2mms[22m[39m
+[31m       [31m×[31m should create token successfully with valid data[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should create system document if it does not exist[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should handle transaction errors gracefully[32m 1[2mms[22m[39m
+[31m       [31m×[31m should accept valid game modes[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should handle missing token in request body[32m 2[2mms[22m[39m
+       [32m✓[39m should reject non-POST requests[32m 1[2mms[22m[39m
+[31m       [31m×[31m should revoke token successfully when user owns it[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should return 404 when token does not exist[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should return 403 when user does not own the token[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should return token info when apiToken is present[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return 401 when apiToken is missing[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should return 401 when apiToken.token is missing[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle tokens with empty permissions[39m[32m 4[2mms[22m[39m
+ [32m✓[39m test/services/ProgressService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/direct-coverage.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 254[2mms[22m[39m
+ [32m✓[39m test/apiv2-integration.test.js [2m([22m[2m5 tests[22m[2m)[22m[33m 351[2mms[22m[39m
+ [32m✓[39m test/apiv2.test.js [2m([22m[2m21 tests[22m[2m)[22m[32m 272[2mms[22m[39m
+ [32m✓[39m test/scheduled/index.test.js [2m([22m[2m3 tests[22m[2m)[22m[33m 1551[2mms[22m[39m
+       [33m[2m✓[22m[39m should handle item fetch failure gracefully [33m 1502[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 39 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould retrieve token information successfully
+[31m[1mApiError[22m: Failed to retrieve token information[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m67:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m38:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould increment token calls asynchronously
+[31m[1mApiError[22m: Failed to retrieve token information[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m67:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m112:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould default gameMode to pvp for legacy tokens
+[31m[1mApiError[22m: Failed to retrieve token information[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m67:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m144:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mvalidateToken[2m > [22mshould validate token from Authorization header
+[31m[1mApiError[22m: Failed to retrieve token information[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m67:20[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mcreateToken[2m > [22mshould create token successfully
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m248:41[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mcreateToken[2m > [22mshould generate unique secure tokens
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m266:42[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mcreateToken[2m > [22mshould trim note whitespace
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m281:26[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mcreateToken[2m > [22mshould default to pvp game mode when not specified
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m305:41[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgenerateSecureToken[2m > [22mshould generate cryptographically secure tokens
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m531:40[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgenerateSecureToken[2m > [22mshould generate unique tokens across multiple calls
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m545:41[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mtoken creation with specific scopes[2m > [22mshould create token with specific scopes and persist to Firestore
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m587:43[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mtoken creation with specific scopes[2m > [22mshould validate and reject invalid scope requests
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Invalid permissions' but got 'Failed to create token'[39m
+
+Expected: [32m"Invalid permissions"[39m
+Received: [31m"Failed to create token"[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mvalidation of revoked tokens[2m > [22mshould reject revoked token with proper error code
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 'revoked-token-123' ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/TokenService.test.ts:[2m646:36[22m[39m
+    [90m644| [39m
+    [90m645| [39m        [90m// Ensure no Firestore mutations occurred for revoked tokens[39m
+    [90m646| [39m        expect(collectionMock.doc).toHaveBeenCalledWith('revoked-token…
+    [90m   | [39m                                   [31m^[39m
+    [90m647| [39m      })[33m;[39m
+    [90m648| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22merror handling and atomicity[2m > [22mshould handle Firestore transaction failures gracefully
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Transaction failed' but got 'Failed to create token'[39m
+
+Expected: [32m"Transaction failed"[39m
+Received: [31m"Failed to create token"[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22merror handling and atomicity[2m > [22mshould ensure atomic token creation operations
+[31m[1mAssertionError[22m: promise rejected "ApiError: Failed to create token { …(2) }" instead of resolving[39m
+[36m [2m❯[22m test/TokenService.test.ts:[2m705:9[22m[39m
+    [90m703| [39m        [35mawait[39m [34mexpect[39m(
+    [90m704| [39m          tokenService.createToken('test-user-123', 'Test token', ['GP…
+    [90m705| [39m        )[33m.[39mresolves[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m706| [39m      })[33m;[39m
+    [90m707| [39m    })[33m;[39m
+
+[31m[1mCaused by: ApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m704:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ statusCode: 500, code: 'INTERNAL_ERROR' }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Creation (_createTokenLogic)[2m > [22mshould create token successfully with valid data
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Creation (_createTokenLogic)[2m > [22mshould accept valid game modes
+[31m[1mError[22m: Failed to generate a unique token.[39m
+[36m [2m❯[22m src/token/create.ts:[2m85:15[22m[39m
+    [90m 83| [39m          owner[33m:[39m ownerUid[33m,[39m
+    [90m 84| [39m        })[33m;[39m
+    [90m 85| [39m        throw new HttpsError('internal', 'Failed to generate a unique …
+    [90m   | [39m              [31m^[39m
+    [90m 86| [39m      }
+    [90m 87| [39m      generatedToken [33m=[39m potentialToken[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Creation (_createTokenLogic)[2m > [22mshould create system document if it does not exist
+[31m[1mError[22m: An unexpected error occurred during token creation.[39m
+[36m [2m❯[22m Module._createTokenLogic src/token/create.ts:[2m136:13[22m[39m
+    [90m134| [39m      [35mthrow[39m e[33m;[39m
+    [90m135| [39m    } [35melse[39m {
+    [90m136| [39m      [35mthrow[39m [35mnew[39m [33mHttpsError[39m(
+    [90m   | [39m            [31m^[39m
+    [90m137| [39m        [32m'internal'[39m[33m,[39m
+    [90m138| [39m        [32m'An unexpected error occurred during token creation.'[39m[33m,[39m
+[90m [2m❯[22m test/token-management.test.ts:[2m156:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould revoke token successfully when user owns it
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m264:26[22m[39m
+    [90m262| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m263| [39m
+    [90m264| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m265| [39m      expect(res.json).toHaveBeenCalledWith({ data: { revoked: true } …
+    [90m266| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould return 404 when token does not exist
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 404 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m286:26[22m[39m
+    [90m284| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m285| [39m
+    [90m286| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m404[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m287| [39m      expect(res.json).toHaveBeenCalledWith({ error: 'Token not found.…
+    [90m288| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould return 403 when user does not own the token
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 403 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m308:26[22m[39m
+    [90m306| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m307| [39m
+    [90m308| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m403[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m309| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m310| [39m        error[33m:[39m [32m'You do not have permission to revoke this token.'[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould return 401 when apiToken is missing
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { error: 'Unauthorized' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m354:24[22m[39m
+    [90m352| [39m
+    [90m353| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m401[39m)[33m;[39m
+    [90m354| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({ error[33m:[39m [32m'Unauthorized'[39m })[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m355| [39m    })[33m;[39m
+    [90m356| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould return 401 when apiToken.token is missing
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { error: 'Unauthorized' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m364:24[22m[39m
+    [90m362| [39m
+    [90m363| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m401[39m)[33m;[39m
+    [90m364| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({ error[33m:[39m [32m'Unauthorized'[39m })[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m365| [39m    })[33m;[39m
+    [90m366| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould handle tokens with empty permissions
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   200,[90m
+[31m+   401,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m373:26[22m[39m
+    [90m371| [39m      [35mawait[39m tokenHandler[33m.[39m[34mgetTokenInfo[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m372| [39m
+    [90m373| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m374| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m375| [39m        permissions[33m:[39m [][33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete user account successfully with valid confirmation
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m65:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle team cleanup when user is not in a team
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m138:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle team member removal when user is not owner
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m194:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould transfer team ownership when user is owner and has other members
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m275:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete team when user is owner and has no other members
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m331:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete all user tokens
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m376:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle Firebase Auth user not found error
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m424:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mdeleteUserAccountHandler[2m > [22mshould handle successful user deletion
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   200,[90m
+[31m+   500,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m487:26[22m[39m
+    [90m485| [39m      [35mawait[39m [34mdeleteUserAccountHandler[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m486| [39m
+    [90m487| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m488| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m489| [39m        success[33m:[39m [35mtrue[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mdeleteUserAccountHandler[2m > [22mshould handle API errors from service
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 400 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   400,[90m
+[31m+   500,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m519:26[22m[39m
+    [90m517| [39m      [35mawait[39m [34mdeleteUserAccountHandler[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m518| [39m
+    [90m519| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m400[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m520| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m521| [39m        success[33m:[39m [35mfalse[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfull cascade deletion[2m > [22mshould delete user and all associated Firestore documents
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m632:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfull cascade deletion[2m > [22mshould handle team member removal when user is not owner
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m692:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle Firestore write failures and ensure no partial deletions
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Firestore write failed' but got 'Failed to delete user account. Please…'[39m
+
+Expected: [32m"F[7mirestore write failed[27m"[39m
+Received: [31m"F[7mailed to delete user account. Please try again later.[27m"[39m
+
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m739:9[22m[39m
+    [90m737| [39m        [35mconst[39m userDeletionService [33m=[39m [35mnew[39m [33mUserDeletionService[39m()[33m;[39m
+    [90m738| [39m        
+    [90m739| [39m        [35mawait[39m [34mexpect[39m(
+    [90m   | [39m        [31m^[39m
+    [90m740| [39m          userDeletionService[33m.[39m[34mdeleteUserAccount[39m(userId[33m,[39m request)
+    [90m741| [39m        )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m'Firestore write failed'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle Firebase Auth deletion failure and maintain data integrity
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m783:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle transaction rollback semantics during team ownership transfer
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Transaction failed' but got 'Failed to delete user account. Please…'[39m
+
+Expected: [32m"Transaction failed"[39m
+Received: [31m"Failed to delete user account. Please try again later."[39m
+
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m836:9[22m[39m
+    [90m834| [39m        [35mconst[39m userDeletionService [33m=[39m [35mnew[39m [33mUserDeletionService[39m()[33m;[39m
+    [90m835| [39m        
+    [90m836| [39m        [35mawait[39m [34mexpect[39m(
+    [90m   | [39m        [31m^[39m
+    [90m837| [39m          userDeletionService[33m.[39m[34mdeleteUserAccount[39m(userId[33m,[39m request)
+    [90m838| [39m        )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m'Transaction failed'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/39]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/middleware/auth.test.ts[2m > [22mverifyBearer middleware[2m > [22mintegration tests with emulator-backed auth flows[2m > [22mhandles non-Error objects in authentication failure
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { success: false, …(1) } ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[2m    {[22m
+[32m-     "error": "String error message",[90m
+[31m+     "error": "Authentication failed",[90m
+[2m      "success": false,[22m
+[2m    },[22m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/middleware/auth.test.ts:[2m213:24[22m[39m
+    [90m211| [39m      [34mexpect[39m(next)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m212| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m401[39m)[33m;[39m
+    [90m213| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m   | [39m                       [31m^[39m
+    [90m214| [39m        success[33m:[39m [35mfalse[39m[33m,[39m
+    [90m215| [39m        error[33m:[39m [32m'String error message'[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/39]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m14 passed[39m[22m[90m (18)[39m
+[2m      Tests [22m [1m[31m39 failed[39m[22m[2m | [22m[1m[32m178 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (219)[39m
+[2m   Start at [22m 16:41:39
+[2m   Duration [22m 1.96s[2m (transform 2.63s, setup 722ms, collect 2.50s, tests 2.98s, environment 2ms, prepare 156ms)[22m
+
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /home/lab/Github/TarkovTracker/functions
+npm error workspace functions@3.0.0
+npm error location /home/lab/Github/TarkovTracker/functions
+npm error command failed
+npm error command sh -c vitest run

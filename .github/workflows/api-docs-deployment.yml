@@ -1,6 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
 name: Update API Documentation
-
 on:
   # Runs on pushes targeting the default branch
   push:
@@ -16,22 +15,18 @@ on:
       - 'functions/src/controllers/**/*.ts'
       - 'functions/src/schemas/**/*.ts'
       - 'functions/src/types/**/*.ts'
-
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: 'pages'
   cancel-in-progress: false
-
 jobs:
   # Single deploy job since we're just deploying
   deploy:
@@ -42,8 +37,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - name: Setup Node.js and install dependencies
         uses: ./.github/actions/setup-node-and-install
         with:

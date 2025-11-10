@@ -8,7 +8,8 @@
     "outDir": "lib",
     "rootDir": "src",
     "removeComments": false,
-    "composite": true
+    "composite": true,
+    "esModuleInterop": true
   },
   "compileOnSave": true,
   "include": ["src/**/*.ts"],

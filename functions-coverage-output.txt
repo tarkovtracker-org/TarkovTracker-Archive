@@ -1,0 +1,1150 @@
+
+> functions@3.0.0 test
+> vitest run --coverage
+
+
+[1m[46m RUN [49m[22m [36mv4.0.8 [39m[90m/home/lab/Github/TarkovTracker/functions[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m test/updateTarkovdata-consolidated.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 87[2mms[22m[39m
+ [32m✓[39m test/middleware/abuseGuard.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m test/team-consolidated.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 113[2mms[22m[39m
+ [32m✓[39m test/token/create.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m test/token-consolidated.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 218[2mms[22m[39m
+ [32m✓[39m test/progress/progressUtils.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m test/apiv2.test.js [2m([22m[2m21 tests[22m[2m)[22m[32m 248[2mms[22m[39m
+ [32m✓[39m test/token-integration.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 246[2mms[22m[39m
+[90mstderr[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mthrows when essential game data is missing
+[22m[39m{"userId":"user-2","hideoutLoaded":false,"tasksLoaded":false,"severity":"ERROR","message":"Error: Failed to load essential Tarkov data\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at ProgressService.getUserProgress (/home/lab/Github/TarkovTracker/functions/src/services/ProgressService.ts:42:16)\n    at /home/lab/Github/TarkovTracker/functions/test/services/ProgressService.test.ts:65:5\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mupdates a single task and handles dependency updates
+[22m[39m{"userId":"user-3","taskId":"task-alpha","state":"completed","updateTime":1762760171187,"severity":"INFO","message":"Single task update applied in transaction"}
+
+[90mstdout[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mupdates a single task and handles dependency updates
+[22m[39m{"userId":"user-3","taskId":"task-alpha","state":"completed","severity":"INFO","message":"Task updated successfully"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete user account successfully with valid confirmation
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mswallows dependency errors after updating a task
+[22m[39m{"userId":"user-4","taskId":"task-beta","state":"failed","updateTime":1762760171189,"severity":"INFO","message":"Single task update applied in transaction"}
+
+[90mstderr[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mswallows dependency errors after updating a task
+[22m[39m{"error":"dependency failure","userId":"user-4","taskId":"task-beta","state":"failed","severity":"ERROR","message":"Error: Error updating task dependencies:\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at ProgressService.updateSingleTask (/home/lab/Github/TarkovTracker/functions/src/services/ProgressService.ts:136:16)\n    at /home/lab/Github/TarkovTracker/functions/test/services/ProgressService.test.ts:110:5\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/services/ProgressService.test.ts[2m > [22m[2mProgressService[2m > [22m[2mswallows dependency errors after updating a task
+[22m[39m{"userId":"user-4","taskId":"task-beta","state":"failed","severity":"INFO","message":"Task updated successfully"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete user account successfully with valid confirmation
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:75:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould create token successfully
+[22m[39m{"owner":"test-user-123","permissions":["GP","WP"],"gameMode":"pvp","note":"Test API token","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould throw error for invalid confirmation text
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould generate unique secure tokens
+[22m[39m{"owner":"user1","permissions":["GP"],"gameMode":"pvp","note":"Token 1","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould generate unique secure tokens
+[22m[39m{"owner":"user2","permissions":["WP"],"gameMode":"pve","note":"Token 2","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould trim note whitespace
+[22m[39m{"owner":"test-user","permissions":["GP"],"gameMode":"pvp","note":"  Test Token  ","severity":"INFO","message":"API token created successfully"}
+
+[90mstderr[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould handle transaction failures
+[22m[39m{"error":"Transaction failed","owner":"test-user","permissions":["GP"],"gameMode":"pvp","severity":"ERROR","message":"Error: Error creating token:\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at TokenService.createToken (/home/lab/Github/TarkovTracker/functions/src/services/TokenService.ts:137:14)"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould throw error for invalid confirmation text
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mcreateToken[2m > [22m[2mshould default to pvp game mode when not specified
+[22m[39m{"owner":"test-user","permissions":["GP"],"gameMode":"pvp","note":"Test token","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould throw error for missing confirmation text
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle team cleanup when user is not in a team
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle team cleanup when user is not in a team
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:148:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle team member removal when user is not owner
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle team member removal when user is not owner
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:204:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould transfer team ownership when user is owner and has other members
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould transfer team ownership when user is owner and has other members
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:285:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete team when user is owner and has no other members
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete team when user is owner and has no other members
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:341:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete all user tokens
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould delete all user tokens
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:386:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle Firebase Auth user not found error
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle Firebase Auth user not found error
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:434:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle Firestore errors during data deletion
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle Firestore errors during data deletion
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:448:9\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle errors during team ownership transfer
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mUserDeletionService[2m > [22m[2mdeleteUserAccount[2m > [22m[2mshould handle errors during team ownership transfer
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:462:9\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle successful user deletion
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject unauthenticated requests
+[22m[39m{"data":{"note":"Test API token","permissions":["GP","WP"],"gameMode":"pvp"},"severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject unauthenticated requests
+[22m[39m{"severity":"ERROR","message":"Error: Authentication context missing.\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Module._createTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/create.ts:30:12)\n    at /home/lab/Github/TarkovTracker/functions/test/token-management.test.ts:68:20\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1309:12)"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle successful user deletion
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:274:20)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:492:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle successful user deletion
+[22m[39m{"error":{"statusCode":500,"code":"INTERNAL_ERROR","name":"ApiError"},"severity":"ERROR","message":"Error: User deletion handler error\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:278:12)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:492:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with missing note
+[22m[39m{"data":{"permissions":["GP"]},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with missing note
+[22m[39m{"data":{"permissions":["GP"]},"severity":"WARNING","message":"Invalid token parameters received."}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with missing permissions
+[22m[39m{"data":{"note":"Test token"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with missing permissions
+[22m[39m{"data":{"note":"Test token"},"severity":"WARNING","message":"Invalid token parameters received."}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with empty permissions array
+[22m[39m{"data":{"note":"Test token","permissions":[]},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject requests with empty permissions array
+[22m[39m{"data":{"note":"Test token","permissions":[]},"severity":"WARNING","message":"Invalid token parameters received."}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mgenerateSecureToken[2m > [22m[2mshould generate cryptographically secure tokens
+[22m[39m{"owner":"user1","permissions":["GP"],"gameMode":"pvp","note":"Token 1","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject invalid gameMode
+[22m[39m{"data":{"note":"Test token","permissions":["GP"],"gameMode":"invalid"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject invalid gameMode
+[22m[39m{"gameMode":"invalid","severity":"WARNING","message":"Invalid gameMode received."}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mgenerateSecureToken[2m > [22m[2mshould generate unique tokens across multiple calls
+[22m[39m{"owner":"user1","permissions":["GP"],"gameMode":"pvp","note":"Token 1","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mgenerateSecureToken[2m > [22m[2mshould generate unique tokens across multiple calls
+[22m[39m{"owner":"user2","permissions":["WP"],"gameMode":"pve","note":"Token 2","severity":"INFO","message":"API token created successfully"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould return 401 when user is not authenticated
+[22m[39m{"error":{"statusCode":401,"code":"UNAUTHORIZED","name":"ApiError"},"severity":"ERROR","message":"Error: User deletion handler error\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:278:12)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:506:13\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1309:12)"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject when user has maximum tokens (5)
+[22m[39m{"data":{"note":"Test API token","permissions":["GP","WP"],"gameMode":"pvp"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould reject when user has maximum tokens (5)
+[22m[39m{"owner":"test-user-123","error":"You have the maximum number of tokens (5).","code":"resource-exhausted","originalError":{"message":"You have the maximum number of tokens (5).","status":"RESOURCE_EXHAUSTED"},"severity":"ERROR","message":"Error: Failed to create token transaction (v2)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Module._createTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/create.ts:126:12)\n    at /home/lab/Github/TarkovTracker/functions/test/token-management.test.ts:123:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mintegration tests with emulator-backed Firestore operations[2m > [22m[2mtoken creation with specific scopes[2m > [22m[2mshould create token with specific scopes and persist to Firestore
+[22m[39m{"error":"transaction.set is not a function","owner":"test-user-123","permissions":["GP","WP","TEAM"],"gameMode":"pve","severity":"ERROR","message":"Error: Error creating token:\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at TokenService.createToken (/home/lab/Github/TarkovTracker/functions/src/services/TokenService.ts:137:14)\n    at /home/lab/Github/TarkovTracker/functions/test/TokenService.test.ts:604:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle API errors from service
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould create token successfully with valid data
+[22m[39m{"data":{"note":"Test API token","permissions":["GP","WP"],"gameMode":"pvp"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould create token successfully with valid data
+[22m[39m{"owner":"test-user-123","severity":"ERROR","message":"Error: Failed to generate a unique token after multiple attempts.\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at /home/lab/Github/TarkovTracker/functions/src/token/create.ts:82:16"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle API errors from service
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:274:20)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:525:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould create token successfully with valid data
+[22m[39m{"owner":"test-user-123","error":"Failed to generate a unique token.","code":"internal","originalError":{"message":"Failed to generate a unique token.","status":"INTERNAL"},"severity":"ERROR","message":"Error: Failed to create token transaction (v2)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Module._createTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/create.ts:126:12)\n    at /home/lab/Github/TarkovTracker/functions/test/token-management.test.ts:143:22\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle API errors from service
+[22m[39m{"error":{"statusCode":500,"code":"INTERNAL_ERROR","name":"ApiError"},"severity":"ERROR","message":"Error: User deletion handler error\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:278:12)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:525:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mintegration tests with emulator-backed Firestore operations[2m > [22m[2mtoken creation with specific scopes[2m > [22m[2mshould validate and reject invalid scope requests
+[22m[39m{"owner":"test-user-123","permissions":["INVALID_SCOPE","GP"],"gameMode":"pvp","note":"Test token","severity":"INFO","message":"API token created successfully"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould create system document if it does not exist
+[22m[39m{"data":{"note":"Test API token","permissions":["GP","WP"],"gameMode":"pvp"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould create system document if it does not exist
+[22m[39m{"owner":"test-user-123","token":"mock-unique-token-123","severity":"INFO","message":"Created token successfully (v2)"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle unexpected errors
+[22m[39m{"userId":"test-user-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle unexpected errors
+[22m[39m{"userId":"test-user-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:274:20)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:545:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle unexpected errors
+[22m[39m{"error":{"statusCode":500,"code":"INTERNAL_ERROR","name":"ApiError"},"severity":"ERROR","message":"Error: User deletion handler error\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:278:12)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:545:7\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould handle transaction errors gracefully
+[22m[39m{"data":{"note":"Test API token","permissions":["GP","WP"],"gameMode":"pvp"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould handle transaction errors gracefully
+[22m[39m{"owner":"test-user-123","error":"Transaction failed","code":"internal","originalError":{},"severity":"ERROR","message":"Error: Failed to create token transaction (v2)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Module._createTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/create.ts:126:12)"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould accept valid game modes
+[22m[39m{"data":{"note":"Test token","permissions":["GP"],"gameMode":"pvp"},"owner":"test-user-123","severity":"INFO","message":"Starting create token logic (v2)"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mdeleteUserAccountHandler[2m > [22m[2mshould handle missing user ID
+[22m[39m{"error":{"statusCode":401,"code":"UNAUTHORIZED","name":"ApiError"},"severity":"ERROR","message":"Error: User deletion handler error\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at deleteUserAccountHandler (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:278:12)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:560:13\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:157:11\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:26\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1636:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1602:10)\n    at runTest (file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:1309:12)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould accept valid game modes
+[22m[39m{"owner":"test-user-123","severity":"ERROR","message":"Error: Failed to generate a unique token after multiple attempts.\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at /home/lab/Github/TarkovTracker/functions/src/token/create.ts:82:16"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Creation (_createTokenLogic)[2m > [22m[2mshould accept valid game modes
+[22m[39m{"owner":"test-user-123","error":"Failed to generate a unique token.","code":"internal","originalError":{"message":"Failed to generate a unique token.","status":"INTERNAL"},"severity":"ERROR","message":"Error: Failed to create token transaction (v2)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Proxy.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at Module._createTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/create.ts:126:12)\n    at /home/lab/Github/TarkovTracker/functions/test/token-management.test.ts:200:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+ [32m✓[39m test/ValidationService.test.ts [2m([22m[2m60 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+[90mstderr[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mintegration tests with emulator-backed Firestore operations[2m > [22m[2merror handling and atomicity[2m > [22m[2mshould handle Firestore transaction failures gracefully
+[22m[39m{"error":"Transaction failed","owner":"test-user-123","permissions":["GP"],"gameMode":"pvp","severity":"ERROR","message":"Error: Error creating token:\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at TokenService.createToken (/home/lab/Github/TarkovTracker/functions/src/services/TokenService.ts:137:14)"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould delete user and all associated Firestore documents
+[22m[39m{"userId":"test-user-cascade-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould delete user and all associated Firestore documents
+[22m[39m{"memberIds":["member-2","member-3"],"error":{},"severity":"WARNING","message":"Error finding oldest member, using first member"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould delete user and all associated Firestore documents
+[22m[39m{"oldOwner":"test-user-cascade-123","newOwner":"member-2","remainingMembers":2,"severity":"INFO","message":"Transferred team ownership"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould delete user and all associated Firestore documents
+[22m[39m{"userId":"test-user-cascade-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:642:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould handle missing token in request body
+[22m[39m{"data":{},"owner":"test-user-123","severity":"INFO","message":"Starting revoke token logic (onRequest)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould handle missing token in request body
+[22m[39m{"data":{},"severity":"WARNING","message":"Invalid revoke parameters: token is required."}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould handle missing token in request body
+[22m[39m{"uid":"test-user-123","originalError":{"message":"Invalid token parameters: token is required.","status":"INVALID_ARGUMENT"},"errorCode":"invalid-argument","errorMessage":"Invalid token parameters: token is required.","clientMessageSent":"Invalid request parameters.","httpStatusSet":400,"severity":"ERROR","message":"Error: Error from _revokeTokenLogic in revokeToken handler\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at /home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:196:16"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould handle team member removal when user is not owner
+[22m[39m{"userId":"test-user-member-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould handle team member removal when user is not owner
+[22m[39m{"userId":"test-user-member-123","teamId":"test-team-456","severity":"INFO","message":"Removed user from team members"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfull cascade deletion[2m > [22m[2mshould handle team member removal when user is not owner
+[22m[39m{"userId":"test-user-member-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:702:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+ [32m✓[39m test/services/ProgressService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstderr[2m | test/TokenService.test.ts[2m > [22m[2mTokenService[2m > [22m[2mintegration tests with emulator-backed Firestore operations[2m > [22m[2merror handling and atomicity[2m > [22m[2mshould ensure atomic token creation operations
+[22m[39m{"error":"transaction.set is not a function","owner":"test-user-123","permissions":["GP"],"gameMode":"pvp","severity":"ERROR","message":"Error: Error creating token:\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at TokenService.createToken (/home/lab/Github/TarkovTracker/functions/src/services/TokenService.ts:137:14)\n    at /home/lab/Github/TarkovTracker/functions/test/TokenService.test.ts:720:9\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould revoke token successfully when user owns it
+[22m[39m{"data":{"token":"test-token-123"},"owner":"test-user-123","severity":"INFO","message":"Starting revoke token logic (onRequest)"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould revoke token successfully when user owns it
+[22m[39m{"owner":"test-user-123","token":"test-token-123","severity":"INFO","message":"Revoked token successfully (onRequest)"}
+
+ [32m✓[39m test/middleware/auth.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 404 when token does not exist
+[22m[39m{"data":{"token":"test-token-123"},"owner":"test-user-123","severity":"INFO","message":"Starting revoke token logic (onRequest)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 404 when token does not exist
+[22m[39m{"owner":"test-user-123","token":"test-token-123","severity":"WARNING","message":"Attempted to revoke non-existent token."}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firestore write failures and ensure no partial deletions
+[22m[39m{"userId":"test-user-failure-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firestore write failures and ensure no partial deletions
+[22m[39m{"userId":"test-user-failure-123","severity":"INFO","message":"No system document found for user"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 404 when token does not exist
+[22m[39m{"owner":"test-user-123","token":"test-token-123","error":"Token not found.","code":"not-found","originalError":{"message":"Token not found.","status":"NOT_FOUND"},"severity":"ERROR","message":"Error: Failed to revoke token transaction (onRequest)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at _revokeTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:128:12)\n    at /home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:163:24"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firestore write failures and ensure no partial deletions
+[22m[39m{"userId":"test-user-failure-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:749:9\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 404 when token does not exist
+[22m[39m{"uid":"test-user-123","originalError":{"message":"Token not found.","status":"NOT_FOUND"},"errorCode":"not-found","errorMessage":"Token not found.","clientMessageSent":"Token not found.","httpStatusSet":404,"severity":"ERROR","message":"Error: Error from _revokeTokenLogic in revokeToken handler\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at /home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:196:16"}
+
+[90mstdout[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 403 when user does not own the token
+[22m[39m{"data":{"token":"test-token-123"},"owner":"test-user-123","severity":"INFO","message":"Starting revoke token logic (onRequest)"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 403 when user does not own the token
+[22m[39m{"owner":"test-user-123","tokenOwner":"different-user","token":"test-token-123","severity":"WARNING","message":"Permission denied to revoke token."}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 403 when user does not own the token
+[22m[39m{"owner":"test-user-123","token":"test-token-123","error":"You do not have permission to revoke this token.","code":"permission-denied","originalError":{"message":"You do not have permission to revoke this token.","status":"PERMISSION_DENIED"},"severity":"ERROR","message":"Error: Failed to revoke token transaction (onRequest)\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at _revokeTokenLogic (/home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:128:12)\n    at /home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:163:24"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Revocation (revokeToken)[2m > [22m[2mshould return 403 when user does not own the token
+[22m[39m{"uid":"test-user-123","originalError":{"message":"You do not have permission to revoke this token.","status":"PERMISSION_DENIED"},"errorCode":"permission-denied","errorMessage":"You do not have permission to revoke this token.","clientMessageSent":"You do not have permission to revoke this token.","httpStatusSet":403,"severity":"ERROR","message":"Error: Error from _revokeTokenLogic in revokeToken handler\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at /home/lab/Github/TarkovTracker/functions/src/token/revoke.ts:196:16"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firebase Auth deletion failure and maintain data integrity
+[22m[39m{"userId":"test-user-auth-fail-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firebase Auth deletion failure and maintain data integrity
+[22m[39m{"userId":"test-user-auth-fail-123","severity":"INFO","message":"No system document found for user"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle Firebase Auth deletion failure and maintain data integrity
+[22m[39m{"userId":"test-user-auth-fail-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:793:24\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+ [32m✓[39m test/token-api.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle transaction rollback semantics during team ownership transfer
+[22m[39m{"userId":"test-user-rollback-123","severity":"INFO","message":"Starting user deletion process"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Handler (getTokenInfo)[2m > [22m[2mshould return 401 when apiToken is missing
+[22m[39m{"severity":"WARNING","message":"getTokenInfo called without valid req.apiToken"}
+
+[90mstdout[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle transaction rollback semantics during team ownership transfer
+[22m[39m{"teamId":"test-team-rollback","oldOwner":"test-user-rollback-123","newOwner":"member-2","remainingMembers":1,"severity":"INFO","message":"Transferred team ownership"}
+
+[90mstderr[2m | test/userDeletionHandler.test.ts[2m > [22m[2mUser Deletion Handler[2m > [22m[2mintegration tests with emulator-backed cascade deletion[2m > [22m[2mfailure path with atomicity[2m > [22m[2mshould handle transaction rollback semantics during team ownership transfer
+[22m[39m{"userId":"test-user-rollback-123","error":{},"severity":"ERROR","message":"Error: Error during user deletion\n    at entryFromArgs (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:144:19)\n    at Object.error (/home/lab/Github/TarkovTracker/node_modules/firebase-functions/lib/logger/index.js:131:11)\n    at UserDeletionService.deleteUserAccount (/home/lab/Github/TarkovTracker/functions/src/handlers/userDeletionHandler.ts:74:14)\n    at /home/lab/Github/TarkovTracker/functions/test/userDeletionHandler.test.ts:846:9\n    at file:///home/lab/Github/TarkovTracker/node_modules/@vitest/runner/dist/index.js:753:20"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Handler (getTokenInfo)[2m > [22m[2mshould return 401 when apiToken.token is missing
+[22m[39m{"severity":"WARNING","message":"getTokenInfo called without valid req.apiToken"}
+
+[90mstderr[2m | test/token-management.test.ts[2m > [22m[2mToken Management[2m > [22m[2mToken Handler (getTokenInfo)[2m > [22m[2mshould handle tokens with empty permissions
+[22m[39m{"severity":"WARNING","message":"getTokenInfo called without valid req.apiToken"}
+
+ [32m✓[39m test/direct-coverage.test.js [2m([22m[2m5 tests[22m[2m)[22m[33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m token handler returns token info from request [33m 323[2mms[22m[39m
+ [31m❯[39m test/token-management.test.ts [2m([22m[2m19 tests[22m[2m | [22m[31m8 failed[39m[2m)[22m[32m 35[2mms[22m[39m
+       [32m✓[39m should reject unauthenticated requests[32m 7[2mms[22m[39m
+       [32m✓[39m should reject requests with missing note[32m 1[2mms[22m[39m
+       [32m✓[39m should reject requests with missing permissions[32m 1[2mms[22m[39m
+       [32m✓[39m should reject requests with empty permissions array[32m 1[2mms[22m[39m
+       [32m✓[39m should reject invalid gameMode[32m 1[2mms[22m[39m
+       [32m✓[39m should reject when user has maximum tokens (5)[32m 1[2mms[22m[39m
+[31m       [31m×[31m should create token successfully with valid data[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should create system document if it does not exist[32m 1[2mms[22m[39m
+       [32m✓[39m should handle transaction errors gracefully[32m 1[2mms[22m[39m
+[31m       [31m×[31m should accept valid game modes[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should handle missing token in request body[32m 3[2mms[22m[39m
+       [32m✓[39m should reject non-POST requests[32m 1[2mms[22m[39m
+[31m       [31m×[31m should revoke token successfully when user owns it[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return 404 when token does not exist[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should return 403 when user does not own the token[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should return token info when apiToken is present[32m 1[2mms[22m[39m
+[31m       [31m×[31m should return 401 when apiToken is missing[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should return 401 when apiToken.token is missing[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle tokens with empty permissions[39m[32m 3[2mms[22m[39m
+ [31m❯[39m test/TokenService.test.ts [2m([22m[2m38 tests[22m[2m | [22m[31m17 failed[39m[2m)[22m[32m 60[2mms[22m[39m
+[31m       [31m×[31m should retrieve token information successfully[39m[32m 5[2mms[22m[39m
+       [32m✓[39m should throw unauthorized error for non-existent token[32m 3[2mms[22m[39m
+[31m       [31m×[31m should throw internal error when token data is undefined[39m[32m 4[2mms[22m[39m
+[31m       [31m×[31m should increment token calls asynchronously[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should default gameMode to pvp for legacy tokens[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should handle Firestore errors gracefully[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m should validate token from Authorization header[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should throw error when Authorization header is missing[32m 1[2mms[22m[39m
+       [32m✓[39m should throw error for invalid Authorization header format[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for missing token in Bearer format[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for non-Bearer token[32m 0[2mms[22m[39m
+       [32m✓[39m should create token successfully[32m 4[2mms[22m[39m
+       [32m✓[39m should generate unique secure tokens[32m 2[2mms[22m[39m
+       [32m✓[39m should trim note whitespace[32m 2[2mms[22m[39m
+       [32m✓[39m should handle transaction failures[32m 1[2mms[22m[39m
+       [32m✓[39m should default to pvp game mode when not specified[32m 1[2mms[22m[39m
+[31m       [31m×[31m should revoke token successfully[39m[32m 1[2mms[22m[39m
+       [32m✓[39m should throw not found error for non-existent token[32m 1[2mms[22m[39m
+[31m       [31m×[31m should throw forbidden error when user does not own token[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle Firestore errors gracefully[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should list all tokens for a user[39m[32m 6[2mms[22m[39m
+       [32m✓[39m should return empty array when user has no tokens[32m 1[2mms[22m[39m
+[31m       [31m×[31m should default gameMode to pvp for legacy tokens[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle Firestore errors gracefully[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should validate valid permissions[32m 1[2mms[22m[39m
+       [32m✓[39m should throw error for empty permissions array[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for non-array permissions[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for invalid permissions[32m 0[2mms[22m[39m
+       [32m✓[39m should throw error for mixed valid and invalid permissions[32m 1[2mms[22m[39m
+       [32m✓[39m should generate cryptographically secure tokens[32m 1[2mms[22m[39m
+       [32m✓[39m should generate unique tokens across multiple calls[32m 1[2mms[22m[39m
+[31m         [31m×[31m should create token with specific scopes and persist to Firestore[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should validate and reject invalid scope requests[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should reject revoked token with proper error code[39m[32m 1[2mms[22m[39m
+         [32m✓[39m should handle token validation errors without side effects[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle Firestore transaction failures gracefully[39m[32m 3[2mms[22m[39m
+[31m         [31m×[31m should ensure atomic token creation operations[39m[32m 2[2mms[22m[39m
+       [32m✓[39m rejects revoked token validation[32m 1[2mms[22m[39m
+ [31m❯[39m test/userDeletionHandler.test.ts [2m([22m[2m23 tests[22m[2m | [22m[31m16 failed[39m[2m)[22m[32m 56[2mms[22m[39m
+[31m         [31m×[31m should delete user account successfully with valid confirmation[39m[32m 9[2mms[22m[39m
+         [32m✓[39m should throw error for invalid confirmation text[32m 9[2mms[22m[39m
+         [32m✓[39m should throw error for missing confirmation text[32m 0[2mms[22m[39m
+[31m         [31m×[31m should handle team cleanup when user is not in a team[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle team member removal when user is not owner[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should transfer team ownership when user is owner and has other members[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should delete team when user is owner and has no other members[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should delete all user tokens[39m[32m 1[2mms[22m[39m
+[31m         [31m×[31m should handle Firebase Auth user not found error[39m[32m 1[2mms[22m[39m
+         [32m✓[39m should handle Firestore errors during data deletion[32m 1[2mms[22m[39m
+         [32m✓[39m should handle errors during team ownership transfer[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle successful user deletion[39m[32m 7[2mms[22m[39m
+       [32m✓[39m should return 401 when user is not authenticated[32m 1[2mms[22m[39m
+[31m       [31m×[31m should handle API errors from service[39m[32m 2[2mms[22m[39m
+       [32m✓[39m should handle unexpected errors[32m 2[2mms[22m[39m
+       [32m✓[39m should handle missing user ID[32m 1[2mms[22m[39m
+[31m         [31m×[31m should delete user and all associated Firestore documents[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should handle team member removal when user is not owner[39m[32m 5[2mms[22m[39m
+[31m         [31m×[31m should handle Firestore write failures and ensure no partial deletions[39m[32m 4[2mms[22m[39m
+[31m         [31m×[31m should handle Firebase Auth deletion failure and maintain data integrity[39m[32m 2[2mms[22m[39m
+[31m         [31m×[31m should handle transaction rollback semantics during team ownership transfer[39m[32m 2[2mms[22m[39m
+[31m       [31m×[31m deletes user and cascades cleanup atomically[39m[32m 1[2mms[22m[39m
+[31m       [31m×[31m rolls back on failure with no partial deletions[39m[32m 1[2mms[22m[39m
+ [32m✓[39m test/apiv2-integration.test.js [2m([22m[2m5 tests[22m[2m)[22m[33m 374[2mms[22m[39m
+ [32m✓[39m test/scheduled/index.test.js [2m([22m[2m3 tests[22m[2m)[22m[33m 1590[2mms[22m[39m
+       [33m[2m✓[22m[39m should handle item fetch failure gracefully [33m 1503[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 41 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould retrieve token information successfully
+[31m[1mApiError[22m: Invalid or expired token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.unauthorized src/middleware/errorHandler.ts:[2m116:55[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m35:22[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m55:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould throw internal error when token data is undefined
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /invalid token data/i but got 'Invalid or expired token'[39m
+
+[32m- Expected:[39m 
+/invalid token data/i
+
+[31m+ Received:[39m 
+"Invalid or expired token"
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m103:7[22m[39m
+    [90m101| [39m
+    [90m102| [39m      [35mconst[39m tokenService [33m=[39m [35mnew[39m [33mTokenService[39m()[33m;[39m
+    [90m103| [39m      await expect(tokenService.getTokenInfo('test-token')).rejects.to…
+    [90m   | [39m      [31m^[39m
+    [90m104| [39m    })[33m;[39m
+    [90m105| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould increment token calls asynchronously
+[31m[1mApiError[22m: Invalid or expired token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.unauthorized src/middleware/errorHandler.ts:[2m116:55[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m35:22[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m129:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould default gameMode to pvp for legacy tokens
+[31m[1mApiError[22m: Invalid or expired token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.unauthorized src/middleware/errorHandler.ts:[2m116:55[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m35:22[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m161:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mgetTokenInfo[2m > [22mshould handle Firestore errors gracefully
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /failed to retrieve token information/i but got 'Invalid or expired token'[39m
+
+[32m- Expected:[39m 
+/failed to retrieve token information/i
+
+[31m+ Received:[39m 
+"Invalid or expired token"
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m177:7[22m[39m
+    [90m175| [39m
+    [90m176| [39m      [35mconst[39m tokenService [33m=[39m [35mnew[39m [33mTokenService[39m()[33m;[39m
+    [90m177| [39m      await expect(tokenService.getTokenInfo('test-token')).rejects.to…
+    [90m   | [39m      [31m^[39m
+    [90m178| [39m        [36m/failed to retrieve token information/i[39m
+    [90m179| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mvalidateToken[2m > [22mshould validate token from Authorization header
+[31m[1mApiError[22m: Invalid or expired token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.unauthorized src/middleware/errorHandler.ts:[2m116:55[22m[39m
+[90m [2m❯[22m TokenService.getTokenInfo src/services/TokenService.ts:[2m35:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mrevokeToken[2m > [22mshould revoke token successfully
+[31m[1mApiError[22m: Token not found[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.notFound src/middleware/errorHandler.ts:[2m118:48[22m[39m
+[90m [2m❯[22m TokenService.revokeToken src/services/TokenService.ts:[2m159:22[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m350:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mrevokeToken[2m > [22mshould throw forbidden error when user does not own token
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /you can only revoke your own tokens/i but got 'Token not found'[39m
+
+[32m- Expected:[39m 
+/you can only revoke your own tokens/i
+
+[31m+ Received:[39m 
+"Token not found"
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m394:7[22m[39m
+    [90m392| [39m
+    [90m393| [39m      [35mconst[39m tokenService [33m=[39m [35mnew[39m [33mTokenService[39m()[33m;[39m
+    [90m394| [39m      await expect(tokenService.revokeToken('test-token', 'test-user-1…
+    [90m   | [39m      [31m^[39m
+    [90m395| [39m        [36m/you can only revoke your own tokens/i[39m
+    [90m396| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mrevokeToken[2m > [22mshould handle Firestore errors gracefully
+[31m[1mAssertionError[22m: expected [Function] to throw error matching /failed to revoke token/i but got 'Token not found'[39m
+
+[32m- Expected:[39m 
+/failed to revoke token/i
+
+[31m+ Received:[39m 
+"Token not found"
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m410:7[22m[39m
+    [90m408| [39m
+    [90m409| [39m      [35mconst[39m tokenService [33m=[39m [35mnew[39m [33mTokenService[39m()[33m;[39m
+    [90m410| [39m      await expect(tokenService.revokeToken('test-token', 'test-user')…
+    [90m   | [39m      [31m^[39m
+    [90m411| [39m        [36m/failed to revoke token/i[39m
+    [90m412| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mlistUserTokens[2m > [22mshould list all tokens for a user
+[31m[1mAssertionError[22m: expected [] to have a length of 2 but got +0[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 2[39m
+[31m+ 0[39m
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m449:22[22m[39m
+    [90m447| [39m      [35mconst[39m result [33m=[39m [35mawait[39m tokenService[33m.[39m[34mlistUserTokens[39m([32m'user-123'[39m)[33m;[39m
+    [90m448| [39m
+    [90m449| [39m      [34mexpect[39m(result)[33m.[39m[34mtoHaveLength[39m([34m2[39m)[33m;[39m
+    [90m   | [39m                     [31m^[39m
+    [90m450| [39m      [34mexpect[39m(result[[34m0[39m][33m.[39mnote)[33m.[39m[34mtoBe[39m([32m'Token 1'[39m)[33m;[39m
+    [90m451| [39m      [34mexpect[39m(result[[34m1[39m][33m.[39mgameMode)[33m.[39m[34mtoBe[39m([32m'pve'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mlistUserTokens[2m > [22mshould default gameMode to pvp for legacy tokens
+[31m[1mTypeError[22m: Cannot read properties of undefined (reading 'gameMode')[39m
+[36m [2m❯[22m test/TokenService.test.ts:[2m490:24[22m[39m
+    [90m488| [39m      [35mconst[39m result [33m=[39m [35mawait[39m tokenService[33m.[39m[34mlistUserTokens[39m([32m'user-123'[39m)[33m;[39m
+    [90m489| [39m
+    [90m490| [39m      [34mexpect[39m(result[[34m0[39m][33m.[39mgameMode)[33m.[39m[34mtoBe[39m([32m'pvp'[39m)[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m491| [39m    })[33m;[39m
+    [90m492| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mlistUserTokens[2m > [22mshould handle Firestore errors gracefully
+[31m[1mAssertionError[22m: promise resolved "[]" instead of rejecting[39m
+
+[32m- Expected:[39m 
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m 
+[]
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m499:59[22m[39m
+    [90m497| [39m
+    [90m498| [39m      [35mconst[39m tokenService [33m=[39m [35mnew[39m [33mTokenService[39m()[33m;[39m
+    [90m499| [39m      await expect(tokenService.listUserTokens('user-123')).rejects.to…
+    [90m   | [39m                                                          [31m^[39m
+    [90m500| [39m        [36m/failed to list tokens/i[39m
+    [90m501| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mtoken creation with specific scopes[2m > [22mshould create token with specific scopes and persist to Firestore
+[31m[1mApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m604:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mtoken creation with specific scopes[2m > [22mshould validate and reject invalid scope requests
+[31m[1mAssertionError[22m: promise resolved "{ …(2) }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "created": true,[39m
+[31m+   "token": "A34Nsoy2WQLcpjeYbFd8lx590nTZAFPEAaLVSMFELcGj41nqkNGlfoaWT9MgGsZz",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m625:9[22m[39m
+    [90m623| [39m            [32m'pvp'[39m
+    [90m624| [39m          )
+    [90m625| [39m        )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m'Invalid permissions'[39m)[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m626| [39m
+    [90m627| [39m        [90m// Ensure no transaction was attempted for invalid scopes[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22mvalidation of revoked tokens[2m > [22mshould reject revoked token with proper error code
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 'revoked-token-123' ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/TokenService.test.ts:[2m663:36[22m[39m
+    [90m661| [39m
+    [90m662| [39m        [90m// Ensure no Firestore mutations occurred for revoked tokens[39m
+    [90m663| [39m        expect(collectionMock.doc).toHaveBeenCalledWith('revoked-token…
+    [90m   | [39m                                   [31m^[39m
+    [90m664| [39m      })[33m;[39m
+    [90m665| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22merror handling and atomicity[2m > [22mshould handle Firestore transaction failures gracefully
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Transaction failed' but got 'Failed to create token'[39m
+
+Expected: [32m"Transaction failed"[39m
+Received: [31m"Failed to create token"[39m
+
+[36m [2m❯[22m test/TokenService.test.ts:[2m692:9[22m[39m
+    [90m690| [39m        )[33m;[39m
+    [90m691| [39m
+    [90m692| [39m        [35mawait[39m [34mexpect[39m(
+    [90m   | [39m        [31m^[39m
+    [90m693| [39m          tokenService[33m.[39m[34mcreateToken[39m(
+    [90m694| [39m            [32m'test-user-123'[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/TokenService.test.ts[2m > [22mTokenService[2m > [22mintegration tests with emulator-backed Firestore operations[2m > [22merror handling and atomicity[2m > [22mshould ensure atomic token creation operations
+[31m[1mAssertionError[22m: promise rejected "ApiError: Failed to create token { …(2) }" instead of resolving[39m
+[36m [2m❯[22m test/TokenService.test.ts:[2m722:9[22m[39m
+    [90m720| [39m        [35mawait[39m [34mexpect[39m(
+    [90m721| [39m          tokenService.createToken('test-user-123', 'Test token', ['GP…
+    [90m722| [39m        )[33m.[39mresolves[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m   | [39m        [31m^[39m
+    [90m723| [39m      })[33m;[39m
+    [90m724| [39m    })[33m;[39m
+
+[31m[1mCaused by: ApiError[22m: Failed to create token[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m TokenService.createToken src/services/TokenService.ts:[2m143:20[22m[39m
+[90m [2m❯[22m test/TokenService.test.ts:[2m720:9[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22m[39m
+[31m[1mSerialized Error:[22m[39m [90m{ statusCode: 500, code: 'INTERNAL_ERROR' }[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Creation (_createTokenLogic)[2m > [22mshould create token successfully with valid data
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Creation (_createTokenLogic)[2m > [22mshould accept valid game modes
+[31m[1mError[22m: Failed to generate a unique token.[39m
+[36m [2m❯[22m src/token/create.ts:[2m85:15[22m[39m
+    [90m 83| [39m          owner[33m:[39m ownerUid[33m,[39m
+    [90m 84| [39m        })[33m;[39m
+    [90m 85| [39m        throw new HttpsError('internal', 'Failed to generate a unique …
+    [90m   | [39m              [31m^[39m
+    [90m 86| [39m      }
+    [90m 87| [39m      generatedToken [33m=[39m potentialToken[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould revoke token successfully when user owns it
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m268:26[22m[39m
+    [90m266| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m267| [39m
+    [90m268| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m269| [39m      [35mconst[39m [body] [33m=[39m res[33m.[39mjson[33m.[39mmock[33m.[39mcalls[33m.[39m[34mat[39m([33m-[39m[34m1[39m) [33m||[39m [][33m;[39m
+    [90m270| [39m      [34mexpect[39m(body)[33m.[39m[34mtoEqual[39m(expect[33m.[39m[34mobjectContaining[39m({ revoked[33m:[39m [35mtrue[39m }))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould return 404 when token does not exist
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 404 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m291:26[22m[39m
+    [90m289| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m290| [39m
+    [90m291| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m404[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m292| [39m      [35mconst[39m [body] [33m=[39m res[33m.[39mjson[33m.[39mmock[33m.[39mcalls[33m.[39m[34mat[39m([33m-[39m[34m1[39m) [33m||[39m [][33m;[39m
+    [90m293| [39m      expect(body).toEqual(expect.objectContaining({ error: expect.any…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Revocation (revokeToken)[2m > [22mshould return 403 when user does not own the token
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 403 ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m314:26[22m[39m
+    [90m312| [39m      [35mawait[39m [34mrevokeToken[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m313| [39m
+    [90m314| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m403[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m315| [39m      [35mconst[39m [body] [33m=[39m res[33m.[39mjson[33m.[39mmock[33m.[39mcalls[33m.[39m[34mat[39m([33m-[39m[34m1[39m) [33m||[39m [][33m;[39m
+    [90m316| [39m      expect(body).toEqual(expect.objectContaining({ error: expect.any…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould return 401 when apiToken is missing
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { error: 'Unauthorized' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m355:24[22m[39m
+    [90m353| [39m
+    [90m354| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m401[39m)[33m;[39m
+    [90m355| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({ error[33m:[39m [32m'Unauthorized'[39m })[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m356| [39m    })[33m;[39m
+    [90m357| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould return 401 when apiToken.token is missing
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ { error: 'Unauthorized' } ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m365:24[22m[39m
+    [90m363| [39m
+    [90m364| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m401[39m)[33m;[39m
+    [90m365| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({ error[33m:[39m [32m'Unauthorized'[39m })[33m;[39m
+    [90m   | [39m                       [31m^[39m
+    [90m366| [39m    })[33m;[39m
+    [90m367| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/token-management.test.ts[2m > [22mToken Management[2m > [22mToken Handler (getTokenInfo)[2m > [22mshould handle tokens with empty permissions
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   200,[90m
+[31m+   401,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/token-management.test.ts:[2m374:26[22m[39m
+    [90m372| [39m      [35mawait[39m tokenHandler[33m.[39m[34mgetTokenInfo[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m373| [39m
+    [90m374| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m375| [39m      [34mexpect[39m(res[33m.[39mjson)[33m.[39m[34mtoHaveBeenCalledWith[39m({
+    [90m376| [39m        permissions[33m:[39m [][33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete user account successfully with valid confirmation
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m75:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle team cleanup when user is not in a team
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m148:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle team member removal when user is not owner
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m204:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould transfer team ownership when user is owner and has other members
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m285:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete team when user is owner and has no other members
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m341:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould delete all user tokens
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m386:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mUserDeletionService[2m > [22mdeleteUserAccount[2m > [22mshould handle Firebase Auth user not found error
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m434:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mdeleteUserAccountHandler[2m > [22mshould handle successful user deletion
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 200 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   200,[90m
+[31m+   500,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m494:26[22m[39m
+    [90m492| [39m      [35mawait[39m [34mdeleteUserAccountHandler[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m493| [39m
+    [90m494| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m495| [39m      [35mconst[39m [body] [33m=[39m res[33m.[39mjson[33m.[39mmock[33m.[39mcalls[33m.[39m[34mat[39m([33m-[39m[34m1[39m) [33m||[39m [][33m;[39m
+    [90m496| [39m      [34mexpect[39m(body)[33m.[39m[34mtoEqual[39m(expect[33m.[39m[34mobjectContaining[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mdeleteUserAccountHandler[2m > [22mshould handle API errors from service
+[31m[1mAssertionError[22m: expected "vi.fn()" to be called with arguments: [ 400 ][90m
+
+Received: 
+
+[1m  1st vi.fn() call:
+
+[22m[2m  [[22m
+[32m-   400,[90m
+[31m+   500,[90m
+[2m  ][22m
+[31m[90m
+
+Number of calls: [1m1[22m
+[31m[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m527:26[22m[39m
+    [90m525| [39m      [35mawait[39m [34mdeleteUserAccountHandler[39m(req [35mas[39m any[33m,[39m res [35mas[39m any)[33m;[39m
+    [90m526| [39m
+    [90m527| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m400[39m)[33m;[39m
+    [90m   | [39m                         [31m^[39m
+    [90m528| [39m      [35mconst[39m [body] [33m=[39m res[33m.[39mjson[33m.[39mmock[33m.[39mcalls[33m.[39m[34mat[39m([33m-[39m[34m1[39m) [33m||[39m [][33m;[39m
+    [90m529| [39m      [34mexpect[39m(body)[33m.[39m[34mtoEqual[39m(expect[33m.[39m[34mobjectContaining[39m({
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfull cascade deletion[2m > [22mshould delete user and all associated Firestore documents
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m642:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfull cascade deletion[2m > [22mshould handle team member removal when user is not owner
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m702:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle Firestore write failures and ensure no partial deletions
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Firestore write failed' but got 'Failed to delete user account. Please…'[39m
+
+Expected: [32m"F[7mirestore write failed[27m"[39m
+Received: [31m"F[7mailed to delete user account. Please try again later.[27m"[39m
+
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m749:9[22m[39m
+    [90m747| [39m        [35mconst[39m userDeletionService [33m=[39m [35mnew[39m [33mUserDeletionService[39m()[33m;[39m
+    [90m748| [39m        
+    [90m749| [39m        [35mawait[39m [34mexpect[39m(
+    [90m   | [39m        [31m^[39m
+    [90m750| [39m          userDeletionService[33m.[39m[34mdeleteUserAccount[39m(userId[33m,[39m request)
+    [90m751| [39m        )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m'Firestore write failed'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle Firebase Auth deletion failure and maintain data integrity
+[31m[1mApiError[22m: Failed to delete user account. Please try again later.[39m
+[36m [2m❯[22m createError src/middleware/errorHandler.ts:[2m110:10[22m[39m
+    [90m108| [39m */[39m
+    [90m109| [39mexport const createError = (statusCode: number, message: string, code?…
+    [90m110| [39m  [35mreturn[39m [35mnew[39m [33mApiError[39m(statusCode[33m,[39m message[33m,[39m code)[33m;[39m
+    [90m   | [39m         [31m^[39m
+    [90m111| [39m}[33m;[39m
+    [90m112| [39m
+[90m [2m❯[22m Object.internal src/middleware/errorHandler.ts:[2m123:5[22m[39m
+[90m [2m❯[22m UserDeletionService.deleteUserAccount src/handlers/userDeletionHandler.ts:[2m80:20[22m[39m
+[90m [2m❯[22m test/userDeletionHandler.test.ts:[2m793:24[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22mintegration tests with emulator-backed cascade deletion[2m > [22mfailure path with atomicity[2m > [22mshould handle transaction rollback semantics during team ownership transfer
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'Transaction failed' but got 'Failed to delete user account. Please…'[39m
+
+Expected: [32m"Transaction failed"[39m
+Received: [31m"Failed to delete user account. Please try again later."[39m
+
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m846:9[22m[39m
+    [90m844| [39m        [35mconst[39m userDeletionService [33m=[39m [35mnew[39m [33mUserDeletionService[39m()[33m;[39m
+    [90m845| [39m        
+    [90m846| [39m        [35mawait[39m [34mexpect[39m(
+    [90m   | [39m        [31m^[39m
+    [90m847| [39m          userDeletionService[33m.[39m[34mdeleteUserAccount[39m(userId[33m,[39m request)
+    [90m848| [39m        )[33m.[39mrejects[33m.[39m[34mtoThrow[39m([32m'Transaction failed'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22muserDeletionHandler[2m > [22mdeletes user and cascades cleanup atomically
+[31m[1mReferenceError[22m: userDeletionHandler is not defined[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m861:7[22m[39m
+    [90m859| [39m      [35mconst[39m res [33m=[39m [34mmakeRes[39m()[33m;[39m
+    [90m860| [39m      [35mconst[39m req [33m=[39m { params[33m:[39m { uid[33m:[39m [32m'uid1'[39m } } [35mas[39m any[33m;[39m
+    [90m861| [39m      [35mawait[39m [34muserDeletionHandler[39m(req[33m,[39m res)[33m;[39m
+    [90m   | [39m      [31m^[39m
+    [90m862| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m200[39m)[33m;[39m
+    [90m863| [39m      [90m// Verify cascade cleanup via collection.get() snapshots[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/41]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/userDeletionHandler.test.ts[2m > [22mUser Deletion Handler[2m > [22muserDeletionHandler[2m > [22mrolls back on failure with no partial deletions
+[31m[1mReferenceError[22m: userDeletionHandler is not defined[39m
+[36m [2m❯[22m test/userDeletionHandler.test.ts:[2m877:7[22m[39m
+    [90m875| [39m      [35mconst[39m res [33m=[39m [34mmakeRes[39m()[33m;[39m
+    [90m876| [39m      [35mconst[39m req [33m=[39m { params[33m:[39m { uid[33m:[39m [32m'missing'[39m } } [35mas[39m any[33m;[39m
+    [90m877| [39m      [35mawait[39m [34muserDeletionHandler[39m(req[33m,[39m res)[33m;[39m
+    [90m   | [39m      [31m^[39m
+    [90m878| [39m      [34mexpect[39m(res[33m.[39mstatus)[33m.[39m[34mtoHaveBeenCalledWith[39m([34m500[39m)[33m;[39m
+    [90m879| [39m    })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/41]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (18)[39m
+[2m      Tests [22m [1m[31m41 failed[39m[22m[2m | [22m[1m[32m181 passed[39m[22m[90m (222)[39m
+[2m   Start at [22m 02:36:10
+[2m   Duration [22m 2.03s[2m (transform 2.42s, setup 841ms, collect 3.48s, tests 3.48s, environment 2ms, prepare 468ms)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   39.81 |    36.74 |   46.11 |    39.9 |                   
+ src               |       0 |        0 |       0 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 | 14-53             
+ src/app           |       0 |        0 |       0 |       0 |                   
+  app.ts           |       0 |        0 |       0 |       0 | 25-137            
+ src/auth          |       0 |        0 |       0 |       0 |                   
+  verifyBearer.ts  |       0 |        0 |       0 |       0 | 23-75             
+ src/config        |       0 |        0 |       0 |       0 |                   
+  corsConfig.ts    |       0 |        0 |       0 |       0 | 15-148            
+  features.ts      |       0 |      100 |     100 |       0 | 48                
+ src/handlers      |   36.64 |    20.54 |   44.44 |   35.67 |                   
+  ...essHandler.ts |       0 |        0 |       0 |       0 | 9-425             
+  teamHandler.ts   |       0 |        0 |       0 |       0 | 9-290             
+  tokenHandler.ts  |      25 |        0 |       0 |      25 | 63-75             
+  ...ionHandler.ts |      69 |    53.57 |   85.71 |    67.7 | ...31-251,276,287 
+ src/middleware    |   41.01 |    35.26 |   63.63 |   40.93 |                   
+  abuseGuard.ts    |   73.03 |    50.87 |   85.71 |   73.56 | ...21,226,234-235 
+  auth.ts          |     100 |      100 |     100 |     100 |                   
+  errorHandler.ts  |   40.62 |    27.77 |   61.53 |   40.62 | ...03,119-121,125 
+  onRequestAuth.ts |       0 |        0 |       0 |       0 | 29-86             
+  permissions.ts   |       0 |        0 |       0 |       0 | 9-27              
+  reauth.ts        |       0 |        0 |       0 |       0 | 19-168            
+ src/openapi       |       0 |        0 |       0 |       0 |                   
+  components.ts    |       0 |        0 |       0 |       0 |                   
+  openapi.ts       |       0 |        0 |       0 |       0 | 5-108             
+ src/progress      |   46.26 |    32.96 |   48.83 |   46.46 |                   
+  progressUtils.ts |   46.26 |    32.96 |   48.83 |   46.46 | ...91-521,540-598 
+ src/scheduled     |   39.22 |    44.44 |    40.9 |   39.88 |                   
+  index.ts         |   39.22 |    44.44 |    40.9 |   39.88 | ...41-361,384-437 
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ src/services      |   43.53 |    47.23 |   52.94 |   43.46 |                   
+  ...essService.ts |      35 |    27.45 |   41.66 |      35 | ...46-263,293-348 
+  TeamService.ts   |       0 |        0 |       0 |       0 | 28-358            
+  TokenService.ts  |   67.46 |       52 |   76.92 |    67.5 | ...50-253,271-274 
+  ...ionService.ts |   98.66 |    98.87 |     100 |   98.66 | 90                
+ src/token         |   80.62 |    60.91 |     100 |   80.62 |                   
+  create.ts        |      95 |    83.87 |     100 |      95 | 97,123-124        
+  revoke.ts        |   70.21 |    46.15 |     100 |   70.21 | ...58-159,188-193 
+  tokenHandler.ts  |     100 |       75 |     100 |     100 | 62                
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ src/types         |     100 |      100 |     100 |     100 |                   
+  api.ts           |     100 |      100 |     100 |     100 |                   
+ src/utils         |    6.34 |     8.33 |   11.76 |    6.66 |                   
+  dataLoaders.ts   |       0 |        0 |       0 |       0 | 13-50             
+  factory.ts       |   30.76 |    33.33 |   33.33 |   33.33 | 47-59             
+  helpers.ts       |       0 |        0 |       0 |       0 | 9-89              
+-------------------|---------|----------|---------|---------|-------------------
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /home/lab/Github/TarkovTracker/functions
+npm error workspace functions@3.0.0
+npm error location /home/lab/Github/TarkovTracker/functions
+npm error command failed
+npm error command sh -c vitest run --coverage

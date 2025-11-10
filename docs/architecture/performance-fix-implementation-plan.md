@@ -1,160 +1,52 @@
 # Performance Fix Implementation Plan
 
-**Date:** 2025-10-21
-**Priority:** #1 (from brainstorming session)
-**Estimated Time:** 2-4 weeks
+The long-term goal is to avoid direct calls to `https://api.tarkov.dev/graphql` from
+the client and instead reuse the daily Firestore cache that the backend sync job builds.
+This keeps page loads sub-second and lets Firebase CDN cache the data.
 
-## Problem Summary
+## Current state
 
-Every user on every page load waits for Tarkov.dev API to respond, causing major performance issues and slow load times.
+- **Backend:** `functions/src/scheduled/index.ts` already fetches tasks, hideout data,
+  and items every six hours, writes `tarkovData/{tasks,hideout}` documents, and
+  sharded item caches under `/tarkovData/items/shards`.
+- **Items cache:** `useFirestoreTarkovItems()` aggregates the shards via VueFire
+  and exposes an in-memory singleton (`frontend/src/composables/api/useFirestoreTarkovData.ts`).
+- **Remaining GraphQL surface:** `useTarkovApi.ts` still calls `executeGraphQL()` for
+  tasks, hideout modules, traders, player levels, and language metadata on every load.
 
-## Root Cause Discovery
+## Next steps
 
-### Backend (WORKING ✅)
+1. **Phase 1 – Firestore read helpers for remaining datasets**
+   - Write helpers that read `/tarkovData/tasks`, `/hideout`, `/traders`, `/playerLevels`
+     and normalize the response shape.
+   - Mirror the caching + hydration patterns used by `useFirestoreTarkovItems()` so
+     data is cached in memory and refreshed once per reload.
+   - Keep the existing GraphQL implementation as a fallback until Firestore reads are stable.
 
-- **Location:** `functions/src/index.ts:828-839`
-- **Function:** `scheduledTarkovDataFetch`
-- **Schedule:** Runs daily at midnight UTC
-- **Action:** Fetches all items from Tarkov.dev GraphQL API
-- **Storage:** Saves to Firestore collection `items`
-- **Status:** ✅ **ALREADY RUNNING** - Infrastructure 90% complete!
+2. **Phase 2 – Migrate UI data flows**
+   - Replace `useTarkovApi()` usages with the Firestore-backed helpers so components
+     and composables stop initiating GraphQL requests.
+   - Remove unused GraphQL query files once the frontend no longer imports them.
+   - Ensure language and metadata queries still run (or migrate them into Firestore).
 
-### Frontend (BROKEN ❌)
+3. **Phase 3 – Cleanup + metrics**
+   - Delete `executeGraphQL()` (and related query helpers) once zero callers remain.
+   - Remove any GraphQL-specific dependencies and update documentation.
+   - Add timing/telemetry to compare Firestore reads versus the old GraphQL path
+     (e.g., log load time in `useFirestoreTarkovItems()` or `useFirestore*` helpers).
 
-- **Location:** `frontend/src/plugins/apollo.ts:6`
-- **Configuration:** Points directly at `https://api.tarkov.dev/graphql`
-- **Problem:** Every user hits Tarkov.dev API directly on every load
-- **Impact:** **Entirely bypasses the Firebase cache**
+## Success metrics
 
-## Solution: Replace Apollo with Firestore Reads
+- Page load (data-ready) time stays under 1 second for the landing screens.
+- No frontend requests reach `https://api.tarkov.dev/graphql` in production builds.
+- Firestore read counts stay within budget (watch `Analytics → Firestore Usage`).
+- Bundle size shrinks because GraphQL helpers and `fetch` logic are removed.
 
-### Implementation Created ✅
+## Risks
 
-**New File:** `frontend/src/composables/api/useFirestoreTarkovData.ts`
-
-This composable:
-
-- Reads from Firestore `items` collection
-- Uses VueFire for reactive data binding
-- Provides same interface as Apollo queries
-- Singleton pattern prevents duplicate loads
-
-## Next Steps
-
-### Phase 1: Items Migration (Week 1-2)
-
-1. **Test the new composable** ✅ DONE
-   - Created `useFirestoreTarkovItems()`
-   - Uses VueFire `useCollection()`
-   - Singleton caching pattern
-
-2. **Find all Apollo usage**
-   - Primary file: `frontend/src/composables/api/useTarkovApi.ts`
-   - Lines 77-104: `useTarkovDataQuery()`
-   - Lines 108-135: `useTarkovHideoutQuery()`
-
-3. **Create parallel implementation**
-   - Add Firestore path alongside Apollo
-   - Feature flag or gradual rollout
-   - A/B test performance
-
-4. **Measure performance**
-   - Add timing metrics
-   - Compare Apollo vs Firestore load times
-   - Validate data consistency
-
-### Phase 2: Tasks/Maps/Traders Migration (Week 3-4)
-
-Currently these still use GraphQL:
-
-- Tasks data
-- Maps data
-- Traders data
-- Player levels data
-- Hideout data
-
-**Options:**
-
-1. Extend backend scheduled function to cache these too
-2. Keep as GraphQL (less frequently changing data)
-3. Evaluate on a case-by-case basis
-
-### Phase 3: Cleanup (Week 4)
-
-1. Remove Apollo client entirely
-2. Delete unused GraphQL query files
-3. Remove `@apollo/client` dependency
-4. Document the new architecture
-
-## Files Modified So Far
-
-### Created
-
-- ✅ `frontend/src/composables/api/useFirestoreTarkovData.ts`
-
-### To Modify
-
-- `frontend/src/composables/api/useTarkovApi.ts` - Replace Apollo calls
-- `frontend/src/plugins/apollo.ts` - Eventually delete
-- `frontend/src/utils/tarkovdataquery.ts` - Eventually delete
-- `frontend/src/utils/tarkovhideoutquery.ts` - Eventually delete
-- `frontend/src/main.ts` - Remove Apollo plugin registration
-
-## Expected Performance Gains
-
-**Before:**
-
-- User loads page → Frontend calls Tarkov.dev API → Wait 2-5 seconds → Data loads
-
-**After:**
-
-- User loads page → Frontend reads Firestore → **Instant load** (< 500ms)
-
-**Calculation:**
-
-- Firestore read latency: ~100-200ms (CDN cached)
-- Tarkov.dev API latency: 2000-5000ms
-- **Performance improvement: 10-25x faster** 🚀
-
-## Risks & Mitigation
-
-### Risk 1: Data staleness
-
-- **Issue:** Firestore cache updated daily, could be up to 24 hours old
-- **Mitigation:** Acceptable for game data that changes infrequently
-- **Fallback:** Add manual refresh button if needed
-
-### Risk 2: Firestore read costs
-
-- **Issue:** Every user reads from Firestore
-- **Mitigation:** Firebase free tier = 50k reads/day (plenty for current users)
-- **Monitoring:** Add usage tracking in Firebase console
-
-### Risk 3: Breaking changes
-
-- **Issue:** Switching data sources could break components
-- **Mitigation:**
-  - Gradual rollout
-  - Feature flags
-  - Comprehensive testing
-  - Keep Apollo as fallback initially
-
-## Success Metrics
-
-- ✅ Page load time < 1 second
-- ✅ No direct Tarkov.dev API calls from frontend
-- ✅ Bundle size reduced (remove Apollo)
-- ✅ User-reported performance improvements
-- ✅ Firestore costs stay within free tier
-
-## Timeline
-
-**Week 1:** Test Firestore composable, create parallel implementation
-**Week 2:** Gradual rollout, measure performance, iterate
-**Week 3:** Extend to tasks/maps/traders (if needed)
-**Week 4:** Cleanup, documentation, celebrate! 🎉
-
----
-
-**Status:** Ready to implement
-**Next Action:** Test the new `useFirestoreTarkovItems()` composable in a component
+- **Data staleness:** The scheduled job runs every six hours. Add a manual refresh
+  control or timestamp indicator where freshness matters.
+- **Firestore read cost:** Monitor read counts per day; cache results locally and batch
+  Firestore listens to avoid repeated work.
+- **Backward compatibility:** Use feature flags when switching routes from GraphQL to
+  Firestore so you can roll back quickly if a dataset is malformed.

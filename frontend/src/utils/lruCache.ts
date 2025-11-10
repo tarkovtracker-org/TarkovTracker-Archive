@@ -32,13 +32,14 @@ export class LRUCache<K, V> {
    * @returns The cached value, or undefined if not found
    */
   get(key: K): V | undefined {
-    const value = this.cache.get(key);
-    if (value !== undefined) {
+    if (this.cache.has(key)) {
+      const value = this.cache.get(key)!;
       // Move to end (most recently used) by deleting and re-inserting
       this.cache.delete(key);
       this.cache.set(key, value);
+      return value;
     }
-    return value;
+    return undefined;
   }
 
   /**
@@ -86,8 +87,8 @@ export class LRUCache<K, V> {
   delete(key: K): boolean {
     const value = this.cache.get(key);
     const existed = this.cache.delete(key);
-    if (existed && value !== undefined) {
-      this.onEvict?.(key, value);
+    if (existed) {
+      this.onEvict?.(key, value as V);
     }
     return existed;
   }

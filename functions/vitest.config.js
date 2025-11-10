@@ -20,7 +20,9 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**'], // Explicitly exclude node_modules and dist
     coverage: {
       provider: 'v8',
-      reporters: ['text', 'lcov'],
+      reporter: ['text', 'lcov', 'html'],
+      reportOnFailure: true,
+      reportsDirectory: 'coverage',
       include: ['src/**/*'],
       exclude: ['node_modules/**', 'test/**', 'coverage/**', '**/*.config'],
       global: {

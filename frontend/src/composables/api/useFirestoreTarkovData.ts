@@ -5,25 +5,21 @@
  * Data is cached in Firestore by the scheduled Cloud Function (runs daily at midnight UTC)
  * See: functions/src/index.ts:828-839 (scheduledTarkovDataFetch)
  */
-
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
 import { useCollection } from 'vuefire';
 import { collection } from 'firebase/firestore';
 import { firestore } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
-import type { TarkovDataQueryResult, TarkovItem } from '@/types/tarkov';
-
+import type { TarkovDataQueryResult, TarkovItem } from '@/types/models/tarkov';
 // Singleton state for caching
 const isInitialized = ref(false);
 const tarkovItemsCache: Ref<TarkovItem[] | null> = ref(null);
 const loading = ref(false);
 const error: Ref<Error | null> = ref(null);
-
 function processShardData(shardDocs: unknown) {
   const shardsArray = Array.isArray(shardDocs) ? shardDocs : null;
   const aggregatedItems =
     shardsArray?.flatMap((shard) => (Array.isArray(shard?.data) ? shard.data : [])) ?? [];
-
   if (shardsArray && aggregatedItems.length > 0) {
     tarkovItemsCache.value = aggregatedItems;
     logger.info(`Loaded ${aggregatedItems.length} Tarkov items from Firestore shard cache`);
@@ -56,8 +52,7 @@ export function useFirestoreTarkovItems() {
         ssrKey: 'tarkov-item-shards',
       });
       // Watch for data load
-      let stopWatch: (() => void) | null = null;
-      stopWatch = watch(
+      watch(
         [firestoreShards.data, firestoreShards.error, firestoreShards.pending],
         ([shardDocs, shardError, pending]) => {
           const isPending = pending ?? true;
@@ -70,9 +65,6 @@ export function useFirestoreTarkovItems() {
             } else {
               processShardData(shardDocs);
             }
-            if (stopWatch) {
-              stopWatch();
-            }
           }
         },
         { immediate: true }
@@ -83,14 +75,12 @@ export function useFirestoreTarkovItems() {
       loading.value = false;
     }
   }
-
   return {
     items: computed(() => tarkovItemsCache.value || []),
     loading: computed(() => loading.value),
     error: computed(() => error.value),
   };
 }
-
 /**
  * Composable for main Tarkov data queries (tasks, maps, traders, player levels)
  *
@@ -107,22 +97,18 @@ export function useFirestoreTarkovData(
   // TODO: Phase 2 - Migrate tasks/maps/traders to Firestore
   // For now, this is a placeholder that maintains the same interface
   // as useTarkovDataQuery for easy drop-in replacement
-
   const result = ref<TarkovDataQueryResult | null>(null);
   const queryLoading = ref(false);
   const queryError: Ref<Error | null> = ref(null);
-
   // Future implementation will load from Firestore collections:
   // - collection('tasks')
   // - collection('maps')
   // - collection('traders')
   // - collection('playerLevels')
-
   const refetch = async (variables?: { lang: string; gameMode: string }) => {
     logger.info('Refetch called with variables:', variables);
     // TODO: Implement Firestore refetch logic
   };
-
   return {
     result: computed(() => result.value),
     loading: computed(() => queryLoading.value),

@@ -330,7 +330,7 @@ describe('Cloud Functions: apiv2', () => {
     it('should have working token endpoint', async () => {
       try {
         const module = await import('../lib/index.js');
-        apiv2 = module.default;
+        apiv2 = module.api;
         // Create a mock request with appropriate path and method
         const req = {
           path: '/api/v2/token',
@@ -367,7 +367,7 @@ describe('Cloud Functions: apiv2', () => {
     it('should have working progress endpoint', async () => {
       try {
         const module = await import('../lib/index.js');
-        apiv2 = module.default;
+        apiv2 = module.api;
         // Create a mock request with appropriate path and method
         const req = {
           path: '/api/v2/progress',
@@ -398,7 +398,7 @@ describe('Cloud Functions: apiv2', () => {
     it('should have working progress/level endpoint', async () => {
       try {
         const module = await import('../lib/index.js');
-        apiv2 = module.default;
+        apiv2 = module.api;
         // Create a mock request
         const req = {
           path: '/api/v2/progress/level/15',

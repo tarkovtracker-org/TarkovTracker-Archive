@@ -136,7 +136,9 @@ process.on('SIGTERM', () => {
 // Handle process exit
 emulatorProcess.on('close', async (code) => {
   emulatorProcess = undefined;
-  if (shuttingDown) {
+  const alreadyShuttingDown = shuttingDown;
+  shuttingDown = true;
+  if (alreadyShuttingDown) {
     return;
   }
   console.log(`\n🔚 Emulators exited with code ${code}`);
@@ -146,6 +148,11 @@ emulatorProcess.on('close', async (code) => {
 
 emulatorProcess.on('error', async (error) => {
   emulatorProcess = undefined;
+  const alreadyShuttingDown = shuttingDown;
+  shuttingDown = true;
+  if (alreadyShuttingDown) {
+    return;
+  }
   console.error('❌ Failed to start emulators:', error);
   await cleanup();
   process.exit(1);

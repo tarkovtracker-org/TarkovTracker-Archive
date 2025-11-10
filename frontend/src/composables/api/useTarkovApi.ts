@@ -16,7 +16,7 @@ import type {
   StaticMapData,
   TarkovDataQueryResult,
   TarkovHideoutQueryResult,
-} from '@/types/tarkov';
+} from '@/types/models/tarkov';
 
 const TARKOV_DATA_CACHE_PREFIX = 'tt:tarkov-data:';
 const DEFAULT_TARKOV_DATA_CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours

@@ -12,6 +12,18 @@ interface FirebasePluginMock {
   };
 }
 
+interface MockTeammateStore {
+  $state: {
+    pvp: {
+      level: number;
+      displayName?: string;
+      pmcFaction: string;
+      taskCompletions: Record<string, unknown>;
+      hideoutModules: Record<string, unknown>;
+    };
+  };
+}
+
 // Mock Firebase plugin at top-level to avoid Firestore access
 vi.mock(
   '@/plugins/firebase',
@@ -54,7 +66,7 @@ vi.mock('@/stores/user', () => ({
   }),
 }));
 
-const mockTeammateStoresRef = ref({
+const createDefaultTeammateStores = (): Record<string, MockTeammateStore> => ({
   teammate1: {
     $state: {
       pvp: {
@@ -67,6 +79,8 @@ const mockTeammateStoresRef = ref({
     },
   },
 });
+
+const mockTeammateStoresRef = ref<Record<string, MockTeammateStore>>(createDefaultTeammateStores());
 
 vi.mock('@/stores/useTeamStore', () => ({
   useTeammateStores: () => ({
@@ -120,6 +134,7 @@ describe('progress store', () => {
     vi.clearAllMocks();
     // Reset mock state
     mockTeamHide = {};
+    mockTeammateStoresRef.value = createDefaultTeammateStores();
   });
 
   describe('initial state and getters', () => {
@@ -230,10 +245,28 @@ describe('progress store', () => {
       const teammateStore = store.getTeammateStore('teammate1');
       expect(teammateStore).toBeTruthy();
       // Access teammate display name by the correct path using defensive access
-      expect(teammateStore?.$state.pvp?.displayName ?? 'Teammate1').toBe('Teammate1');
+      expect(teammateStore?.$state.pvp?.displayName).toBe('Teammate1');
 
       const nonexistentStore = store.getTeammateStore('nonexistent');
       expect(nonexistentStore).toBeNull();
+    });
+
+    it('falls back to truncated team id when teammate display name is missing', () => {
+      mockTeammateStoresRef.value = {
+        teammate2: {
+          $state: {
+            pvp: {
+              level: 10,
+              pmcFaction: 'USEC',
+              taskCompletions: {},
+              hideoutModules: {},
+            },
+          },
+        },
+      };
+
+      const store = useProgressStore();
+      expect(store.getDisplayName('teammate2')).toBe('teamm');
     });
   });
 

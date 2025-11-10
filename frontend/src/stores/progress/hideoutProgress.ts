@@ -2,7 +2,7 @@ import { computed, type ComputedRef } from 'vue';
 import { hideoutStations } from '@/composables/tarkovdata';
 import { getCurrentGameModeData } from '../utils/gameModeHelpers';
 import { GAME_EDITIONS, HIDEOUT_STATION_IDS } from '@/config/gameConstants';
-import type { HideoutStation } from '@/types/tarkov';
+import type { HideoutStation } from '@/types/models/tarkov';
 import type { TeamStoresMap, HideoutLevelMap, CompletionsMap } from './types';
 import type { Store } from 'pinia';
 import type { UserProgressData, UserState } from '@/shared_state';

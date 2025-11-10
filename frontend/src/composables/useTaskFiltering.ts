@@ -1,7 +1,7 @@
 import { ref, shallowRef } from 'vue';
 import { useTarkovData } from '@/composables/tarkovdata';
 import { getMapIdGroup } from '@/utils/mapNormalization';
-import type { Task, TaskObjective } from '@/types/tarkov';
+import type { Task, TaskObjective } from '@/types/models/tarkov';
 import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
 import { useProgressQueries } from '@/composables/useProgressQueries';
 import { logger } from '@/utils/logger';

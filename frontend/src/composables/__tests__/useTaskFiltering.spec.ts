@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ref } from 'vue';
 import { useTaskFiltering } from '../useTaskFiltering';
-import type { Task } from '@/types/tarkov';
+import type { Task } from '@/types/models/tarkov';
 
 // Mock dependencies
 vi.mock('../useProgressQueries', () => ({

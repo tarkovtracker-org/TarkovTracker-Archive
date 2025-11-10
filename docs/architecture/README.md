@@ -1,44 +1,23 @@
 # Architecture Documentation
 
-Technical architecture and system design documentation for TarkovTracker.
+High-level architecture guidance for TarkovTracker. This directory
+captures the system boundaries, security posture, and performance
+expectations that developers and reviewers need to understand the
+current platform state.
 
-## 🏗️ Available Documentation
+## Key references
 
-### System Architecture
+- `ARCHITECTURE_INDEX.md` — entry point to each architecture topic.
+- `CORS_SECURITY.md` — origin validation policy for the Firebase API.
+- `FIRESTORE_ITEMS_SCHEMA_V2.md` — how the Tarkov data cache is sharded.
+- `performance-fix-implementation-plan.md` — current roadmap for caching the
+  Tarkov.dev data in Firestore.
+- `SECURITY_QUICK_REFERENCE.md`, `SECURITY_SUMMARY.txt`, `SECURITY_ARCHITECTURE.md`
+  — layered security docs with increasing fidelity.
 
-- [Architecture Index](./ARCHITECTURE_INDEX.md) -
-  Complete architecture documentation index
-- [CORS Security](./CORS_SECURITY.md) - Cross-origin security configuration
-- [Performance Implementation](./performance-fix-implementation-plan.md) -
-  Performance optimization details
+## How to use this section
 
-### Documentation Structure
-
-```bash
-architecture/
-├── README.md                          # This file
-├── ARCHITECTURE_INDEX.md              # Main architecture index
-├── CORS_SECURITY.md                   # Security configuration
-├── performance-fix-implementation-plan.md  # Performance details
-└── [Additional architecture docs to be created]
-```
-
-## 🎯 Purpose
-
-This section contains documentation focused on **technical architecture**:
-
-- System design and patterns
-- Technology stack details
-- Security and performance architecture
-- Integration specifications
-
-## 🔗 Related Documentation
-
-- **For users:** [User Guides](../user-guides/README.md)
-- **For developers:** [Development Documentation](../development/README.md)
-- **For operations:** [Reports and Guides](../REPORTS/README.md)
-
----
-
-*This documentation is architect-focused. For implementation details, see
-[development documentation](../development/README.md).*
+- Update these files when the architecture, tooling, or deployed pattern changes.
+- Keep prose focused on decisions and references rather than tutorials.
+- Link to code locations (`functions/`, `frontend/`, `firestore.rules`) whenever you
+  describe a behavior so readers can verify what keeps the system safe or fast.

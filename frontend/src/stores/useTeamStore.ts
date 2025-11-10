@@ -10,7 +10,7 @@ import {
 import { fireuser, firestore } from '@/plugins/firebase';
 import { useFirebaseListener } from '@/composables/firebase/useFirebaseListener';
 import { useSystemStoreWithFirebase } from './useSystemStore';
-import type { TeamState, TeamGetters } from '@/types/tarkov';
+import type { TeamState, TeamGetters } from '@/types/models/tarkov';
 import type { Store } from 'pinia';
 import type { UserState } from '@/shared_state';
 import { logger } from '@/utils/logger';

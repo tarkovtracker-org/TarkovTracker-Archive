@@ -8,7 +8,7 @@ export { useTaskData } from '@/composables/data/useTaskData';
 export { useHideoutData } from '@/composables/data/useHideoutData';
 export { useMapData, useTraderData, usePlayerLevelData } from '@/composables/data/useMapData';
 // Re-export types for backward compatibility
-export type { Task } from '@/types/tarkov';
+export type { Task } from '@/types/models/tarkov';
 import { computed, ref, watch } from 'vue';
 import { DISABLED_TASK_IDS } from '@/config/gameConstants';
 import { useTarkovApi } from '@/composables/api/useTarkovApi';
@@ -29,7 +29,7 @@ import type {
   NeededItemHideoutModule,
   ObjectiveMapInfo,
   ObjectiveGPSInfo,
-} from '@/types/tarkov';
+} from '@/types/models/tarkov';
 import type Graph from 'graphology';
 
 type SyncSource<T> = { readonly value: T };

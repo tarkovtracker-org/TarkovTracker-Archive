@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { doc, collection } from 'firebase/firestore';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { useFirebaseListener } from '@/composables/firebase/useFirebaseListener';
-import type { SystemState, SystemGetters } from '@/types/tarkov';
+import type { SystemState, SystemGetters } from '@/types/models/tarkov';
 
 /**
  * System store definition with getters for user tokens and team info

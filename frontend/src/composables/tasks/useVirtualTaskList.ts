@@ -1,6 +1,6 @@
 import { computed, ref, watch } from 'vue';
 import type { Ref } from 'vue';
-import type { Task } from '@/types/tarkov';
+import type { Task } from '@/types/models/tarkov';
 import { VIRTUAL_LIST_INITIAL_BATCH, VIRTUAL_LIST_BATCH_INCREMENT } from '@/utils/constants';
 
 export function useVirtualTaskList(tasks: Ref<Task[]>) {

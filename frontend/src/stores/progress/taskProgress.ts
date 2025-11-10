@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from 'vue';
 import { tasks, objectives } from '@/composables/tarkovdata';
-import type { Task, TaskObjective } from '@/types/tarkov';
+import type { Task, TaskObjective } from '@/types/models/tarkov';
 import { getCurrentGameModeData } from '../utils/gameModeHelpers';
 import type {
   TeamStoresMap,

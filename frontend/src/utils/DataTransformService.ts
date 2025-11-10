@@ -3,7 +3,7 @@ import type {
   TransformedObjectives,
   TransformedHideoutParts,
   TransformedTraderStandings,
-} from '@/utils/DataMigrationTypes';
+} from '@/utils/migration/DataMigrationTypes';
 
 export const transformTaskObjectives = (
   taskObjectives: ProgressData['taskObjectives']

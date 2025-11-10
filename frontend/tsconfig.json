@@ -2,6 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     // Frontend-specific settings
+    // Target is intentionally pinned to ES2020 to match our browser/runtime compatibility needs while the `lib`
+    // entry still includes ESNext so newer APIs stay type-safe and Vite handles any necessary polyfills.
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",

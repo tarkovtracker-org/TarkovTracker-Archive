@@ -25,9 +25,20 @@ export function safeRequestIdleCallback(
   options?: IdleRequestOptions
 ): number | null {
   if (isIdleCallbackSupported()) {
-    return window.requestIdleCallback(callback, options);
+    return window.requestIdleCallback!(callback, options);
   }
-  return null;
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const timeoutMs = options?.timeout ?? 1;
+  const handle = window.setTimeout(() => {
+    const fallbackDeadline: IdleDeadline = {
+      didTimeout: false,
+      timeRemaining: () => 1,
+    };
+    callback(fallbackDeadline);
+  }, timeoutMs);
+  return handle;
 }
 
 /**
@@ -35,7 +46,16 @@ export function safeRequestIdleCallback(
  * @param handle - The handle returned by requestIdleCallback
  */
 export function safeCancelIdleCallback(handle: number | null): void {
-  if (handle !== null && isIdleCallbackSupported()) {
-    window.cancelIdleCallback(handle);
+  if (handle === null) {
+    return;
+  }
+  if (isIdleCallbackSupported()) {
+    window.cancelIdleCallback!(handle);
+    return;
+  }
+  if (typeof window !== 'undefined') {
+    window.clearTimeout(handle);
+  } else {
+    clearTimeout(handle);
   }
 }

@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
 import { Firestore, DocumentReference } from 'firebase-admin/firestore';
 import { ApiToken } from '../types/api.js';
@@ -94,6 +94,9 @@ export class TokenService {
     permissions: string[],
     gameMode: string = 'pvp'
   ): Promise<{ token: string; created: boolean }> {
+    // Validate permissions before creating token
+    this.validatePermissions(permissions);
+    
     const tokenString = this.generateSecureToken();
     const tokenRef = this.db
       .collection('token')
@@ -112,6 +115,12 @@ export class TokenService {
 
       // Use transaction to ensure both operations succeed or fail together
       await this.db.runTransaction(async (transaction) => {
+        // Check if token already exists
+        const existingToken = await transaction.get(tokenRef);
+        if (existingToken.exists) {
+          throw new Error('Token already exists');
+        }
+        
         // Create the token document
         transaction.set(tokenRef, tokenData);
 

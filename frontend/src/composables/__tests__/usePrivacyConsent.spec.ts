@@ -6,6 +6,11 @@ vi.mock('@/plugins/firebase', () => ({
   disableAnalyticsCollection: vi.fn(),
 }));
 
+// Use fake timers to stabilize debounce/timeouts in analytics paths
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
 describe('usePrivacyConsent', () => {
   let localStorageMock: Record<string, string>;
   const storageKey = 'tt-analytics-consent';
@@ -380,9 +385,12 @@ describe('usePrivacyConsent', () => {
       const consent = usePrivacyConsent();
       consent.accept();
 
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
+      // Assert: advance timers deterministically instead of relying on real time
+      vi.runAllTimers();
+      // flush any pending microtasks
+      await Promise.resolve();
+      await Promise.resolve();
+      // Then perform assertions (unchanged)
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Unable to enable analytics collection:',
         expect.any(Error)

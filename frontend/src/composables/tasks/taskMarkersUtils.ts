@@ -1,4 +1,4 @@
-import type { TaskObjective, Task } from '@/types/tarkov';
+import type { TaskObjective, Task } from '@/types/models/tarkov';
 
 export interface ObjectiveWithUsers extends TaskObjective {
   users: string[];

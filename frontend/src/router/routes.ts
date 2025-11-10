@@ -4,7 +4,7 @@ const routes: RouteRecordRaw[] = [
   {
     // Standard Layout
     path: '/',
-    component: () => import('@/features/layout/StandardLayout.vue'),
+    component: () => import('@/components/layout/StandardLayout.vue'),
     children: [
       {
         // Default route
@@ -12,72 +12,72 @@ const routes: RouteRecordRaw[] = [
         path: '/',
         alias: ['/', '/dashboard'],
         meta: { background: 'sunset' },
-        component: () => import('@/pages/TrackerDashboard.vue'),
+        component: () => import('@/views/dashboard/DashboardView.vue'),
       },
       {
         name: 'neededitems',
         path: '/items',
         meta: {},
-        component: () => import('@/pages/NeededItems.vue'),
+        component: () => import('@/views/items/ItemsView.vue'),
       },
       {
         name: 'tasks',
         path: '/tasks',
         meta: {},
-        component: () => import('@/pages/TaskList.vue'),
+        component: () => import('@/views/tasks/TaskListView.vue'),
       },
       {
         name: 'hideout',
         path: '/hideout',
         meta: { background: 'hideout' },
-        component: () => import('@/pages/HideoutList.vue'),
+        component: () => import('@/views/hideout/HideoutView.vue'),
       },
       {
         name: 'settings',
         path: '/settings',
         meta: { background: 'checkpoint' },
-        component: () => import('@/pages/UserSettings.vue'),
+        component: () => import('@/views/settings/UserSettingsView.vue'),
       },
       {
         name: 'api',
         path: '/api',
         meta: { background: 'gas' },
-        component: () => import('@/pages/TrackerSettings.vue'),
+        component: () => import('@/views/settings/ApiSettingsView.vue'),
       },
       {
         name: 'api-docs',
         path: '/api-docs',
         meta: { background: 'customs' },
-        component: () => import('@/pages/ApiDocs.vue'),
+        component: () => import('@/views/docs/ApiDocsView.vue'),
       },
       {
         name: 'privacy',
         path: '/privacy',
         meta: { background: 'sunset' },
-        component: () => import('@/pages/PrivacyPolicy.vue'),
+        component: () => import('@/views/legal/PrivacyPolicyView.vue'),
       },
       {
         name: 'terms',
         path: '/terms',
         meta: { background: 'sunset' },
-        component: () => import('@/pages/TermsOfService.vue'),
+        component: () => import('@/views/legal/TermsOfServiceView.vue'),
       },
       {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
-        component: () => import('@/pages/NotFound.vue'),
+        component: () => import('@/views/NotFoundView.vue'),
       },
       {
         name: 'login',
         path: '/login',
         meta: { background: 'checkpoint' },
-        component: () => import('@/pages/LoginInterface.vue'),
+        component: () => import('@/views/auth/LoginView.vue'),
       },
       {
         name: 'team',
         path: '/team',
         meta: { background: 'busstation' },
-        component: () => import('@/pages/TeamManagement.vue'),
+        component: () => import('@/views/team/TeamView.vue'),
       },
     ],
   },

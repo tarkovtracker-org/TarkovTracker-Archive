@@ -1,53 +1,36 @@
 # CORS Security
 
-## Why This Configuration is Secure
+We still validate `Origin` even though the API uses bearer tokens (browsers do not
+automatically send them), because it stops malicious iframes and curious scripts from
+reaching our Express layer before authentication kicks in.
 
-**Bearer tokens in Authorization headers are not vulnerable to traditional CSRF attacks** because browsers don't automatically include them with cross-site requests (unlike cookies). However, bearer tokens can still be exposed through other vectors such as XSS attacks or token leakage. Origin validation provides defense-in-depth by blocking dangerous patterns while allowing legitimate third-party integrations.
+## Origin validation
 
-## Configuration
+- `validateOrigin()` (see `functions/src/config/corsConfig.ts`) blocks:
+  - `null` or `file:` origins, embedded credentials (`user:pass@host`), and protocols
+    other than `http(s)`
+  - Localhost/loopback/private IP ranges in production (e.g. `localhost`, `127.0.0.1`, `192.168.*`)
+  - Hostnames containing `..`, or origins with username/password fragments
+  - Invalid URLs (fails gracefully and logs the bad origin)
+- If the whitelist (returned by `getAllowedOrigins`) is non-empty, the whitelist is
+  enforced; otherwise we fall back to the same pattern checks above, so an empty array
+  does not mean “allow everything”.
 
-**Production**: Empty whitelist = allow all origins after pattern validation
+## Environment behavior
 
-- No maintenance required
-- Works for all third-party integrations (Postman, scripts, mobile apps)
-- Blocks dangerous patterns: `null`, `file://`, private IPs
+- **Production:** `getAllowedOrigins()` returns `[]` so only pattern-based validation runs.
+- **Development:** localhost variants (`localhost:5173`, `127.0.0.1:5000`, etc.) are added
+  to the whitelist so browser tooling works without modifying the production guard.
 
-**Development**: Localhost origins whitelisted for browser tools
+## Express integration
 
-## Blocked Patterns
+- `setCorsHeaders()` sets `Access-Control-Allow-Origin`, `Vary`, headers, and methods;
+  it returns `false` (403) when an origin is denied.
+- `getExpressCorsOptions()` feeds the same validation into the `cors` middleware used by
+  the Express app for all `/api/**` endpoints.
 
-- `null` origins (sandboxed iframes)
-- `file://` protocol
-- Private IP ranges (192.168.x.x, 10.x.x.x, etc.)
-- Invalid URL formats
+## Why it matters
 
-## Security Layers
-
-1. Bearer token validation (primary security)
-1. Origin pattern validation (defense-in-depth)
-1. Rate-limiting (abuseGuard)
-1. Permission system (GP, WP, TP)
-1. Token expiration and revocation
-
-## Security Scanner Response
-
-**"origin: true is overly permissive"**  
-Changed to dynamic validation with pattern blocking and logging.
-
-**"Potential CSRF vulnerability"**  
-Not applicable - browsers don't auto-send bearer tokens.
-
-**"User-controlled origin without validation"**  
-All origins validated via `validateOrigin()` with URL parsing and pattern matching.
-
-## Optional: Strict Whitelist
-
-To restrict to specific origins, populate `getAllowedOrigins()`:
-
-```typescript
-export function getAllowedOrigins(): string[] {
-  return ['https://tarkovtracker.io'];
-}
-```
-
-**Trade-off**: Breaks API clients without Origin headers.
+- Even if an upstream token leaks, the origin validation adds a second hard-to-bypass
+  fence before the request reaches the middleware chain. Whenever the policy changes,
+  update `functions/src/config/corsConfig.ts` and document the change here.

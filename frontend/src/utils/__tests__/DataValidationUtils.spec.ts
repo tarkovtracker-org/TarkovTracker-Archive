@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { DataValidationUtils, type ProgressData } from '../DataValidationUtils';
+import { DataValidationUtils, type ProgressData } from '@/utils/validation/DataValidationUtils';
 
 describe('DataValidationUtils', () => {
   describe('hasSignificantProgress', () => {

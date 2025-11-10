@@ -1,6 +1,10 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
-import { isIdleCallbackSupported, safeRequestIdleCallback, safeCancelIdleCallback } from '@/utils/idleCallback';
+import {
+  isIdleCallbackSupported,
+  safeRequestIdleCallback,
+  safeCancelIdleCallback,
+} from '@/utils/idleCallback';
 import { useTarkovStore } from '@/stores/tarkov';
 import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
 import {
@@ -22,7 +26,7 @@ import type {
   TarkovItem,
   RequiredKey,
   Key,
-} from '@/types/tarkov';
+} from '@/types/models/tarkov';
 import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
 
@@ -342,6 +346,7 @@ export function useTaskData() {
       let cancelled = false;
       cancelDeferredProcessing = () => {
         cancelled = true;
+        isDerivingTaskData.value = false;
       };
       const invoke = () => {
         if (cancelled) {
@@ -363,6 +368,7 @@ export function useTaskData() {
       { timeout: IDLE_CALLBACK_TIMEOUT_MS }
     );
     cancelDeferredProcessing = () => {
+      isDerivingTaskData.value = false;
       safeCancelIdleCallback(handle);
     };
   };

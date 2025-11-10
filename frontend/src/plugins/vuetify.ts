@@ -72,6 +72,13 @@ const vuetifyOptions: VuetifyOptions = {
     global: {
       ripple: false,
     },
+    VNavigationDrawer: {
+      railWidth: 64,
+    },
+    VListItem: {
+      // Remove all default padding
+      style: 'padding: 0;',
+    },
   },
   icons: {
     defaultSet: 'mdi',

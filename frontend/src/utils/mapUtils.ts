@@ -10,18 +10,16 @@ export const parseMapFileName = (baseFile: string, selectedFloor: string): strin
   }
   return baseFile;
 };
-
 export const getMapSvgUrl = (fileName: string, mapName?: string): string => {
   const isLab = mapName?.toLowerCase() === 'the lab';
   return isLab
     ? `https://raw.githubusercontent.com/TarkovTracker/tarkovdata/master/maps/${fileName}`
     : `https://assets.tarkov.dev/maps/svg/${fileName}`;
 };
-
 export const formatFloorLabel = (floor: string): string => {
   const formatted = floor
     .replace(/_/g, ' ')
-    .replace(/Floor|Level/g, '')
+    .replace(/\b(?:Floor|Level)\b/gi, '')
     .trim();
   return formatted || floor;
 };

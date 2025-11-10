@@ -1,280 +1,51 @@
 ================================================================================
-                   TARKOVTRACKER SECURITY ARCHITECTURE SUMMARY
+                   TARKOVTRACKER SECURITY SUMMARY
 ================================================================================
 
-AUTHENTICATION & AUTHORIZATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AUTHENTICATION
 
-Two-Tier Authentication System:
+- API requests must present `Authorization: Bearer <token>`.
+- Tokens are stored in `token/{tokenId}` and validated by
+  `functions/src/middleware/auth.ts`.
+- Sensitive ops (account deletion) also verify Firebase ID tokens via
+  `functions/src/middleware/reauth.ts`.
 
-1. BEARER TOKEN AUTHENTICATION (API Access)
-   Location: functions/src/middleware/auth.ts
-   Process:
-     Authorization: Bearer <token>
-          ↓
-     Extract & validate format
-          ↓
-     Query Firestore 'token' collection
-          ↓
-     Verify owner matches
-          ↓
-     Attach to request (req.apiToken)
+PERMISSIONS
 
-2. FIREBASE ID TOKEN VERIFICATION (Sensitive Operations)
-   Location: functions/src/middleware/reauth.ts
-   Used for: Account deletion
-   Checks:
-     - Token validity
-     - Revocation status
-     - Authentication recency (< 5 minutes)
+- `requirePermission('GP'|'TP'|'WP')` gatekeeps every handler.
+- Tokens list their granted scopes; missing scopes return 403 before business logic.
 
-AUTHORIZATION LEVELS:
-   'GP' - Get Progress (read-only)
-   'TP' - Team Progress (read team data)
-   'WP' - Write Progress (modify own data)
+RATE LIMITING (see `functions/src/middleware/abuseGuard.ts`)
 
-================================================================================
-MIDDLEWARE CHAIN
-================================================================================
+- Applies to POST/PUT/PATCH/DELETE by default.
+- Environment overrides: `ABUSE_GUARD_WINDOW_MS`, `_THRESHOLD`, `_WARN_RATIO`, `_BREACH_LIMIT`, `_PATH_PREFIXES`.
+- Counts per hashed token or IP; warns at 80% and blocks after the configured breach limit.
+- Events logged to `rateLimitEvents` for monitoring.
 
-Request Flow Through Security Layers:
+VALIDATION
 
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 1. CORS Validation (validateOrigin)                             │
-  │    • Blocks: null, file://, localhost (prod), private IPs       │
-  │    • Allows: Production-safe origins or whitelisted             │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 2. Body Parser (express)                                        │
-  │    • Max size: 1MB                                              │
-  │    • Format: JSON, URL-encoded                                  │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 3. Bearer Token Verification (verifyBearer)                     │
-  │    • Validates format: "Bearer <token>"                         │
-  │    • Looks up in Firestore                                      │
-  │    • Returns: 401 Unauthorized if invalid                       │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 4. Rate Limiting (abuseGuard)                                   │
-  │    • Tracks: Per token (hashed) OR per IP                       │
-  │    • Window: 10s default (configurable)                         │
-  │    • Threshold: 150 requests (configurable)                     │
-  │    • Enforcement:                                               │
-  │      80% threshold  → Log warning                               │
-  │      2nd breach     → Block for 10s + return 429                │
-  │    • Returns: 429 Too Many Requests                             │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 5. Permission Check (requirePermission)                         │
-  │    • Validates: token.permissions includes required             │
-  │    • Returns: 403 Forbidden if missing                          │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 6. Input Validation (ValidationService)                         │
-  │    • Type checking                                              │
-  │    • Range validation (level 1-79, edition 1-6)                │
-  │    • Enum checking (task status, PMC faction)                  │
-  │    • String sanitization (remove <>"'&)                        │
-  │    • Returns: 400 Bad Request if invalid                        │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 7. Service Layer (with Firestore Rules)                         │
-  │    • ProgressService.ts, TeamService.ts, etc.                   │
-  │    • Firestore enforces ownership/team access                   │
-  │    • Database validates data structure                          │
-  └─────────────────────────────────────────────────────────────────┘
-                              ↓
-  ┌─────────────────────────────────────────────────────────────────┐
-  │ 8. Error Handler (errorHandler)                                 │
-  │    • Catches all async errors                                   │
-  │    • Consistent response format                                 │
-  │    • Proper HTTP status codes                                   │
-  │    • Redacted error messages                                    │
-  └─────────────────────────────────────────────────────────────────┘
+- `ValidationService.ts` enforces numeric ranges (levels 1-79, editions 1-6), enums
+  (`WP`, `TP`, `GP`, `USEC`, `BEAR`, task states), and sanitized strings (no `<>"'&`).
+- Frontend helpers in `frontend/src/utils/DataValidationService.ts` mirror the same checks.
+- Error responses are normalized via `middleware/errorHandler.ts` with `success: false`.
 
-================================================================================
-FIRESTORE SECURITY RULES
-================================================================================
+FIRESTORE RULES (see `firestore.rules`)
 
-Collection          Access Control                         Validation
-─────────────────────────────────────────────────────────────────────────────
-system/{userId}     User only (read/write)                 None
+- `progress/{userId}`: owner or same team read; structured payload with valid game mode bits.
+- `token/{tokenId}`: owner-only read/update/delete; only `calls` and `note` are mutable.
+- `team/{teamId}`: owner controls members/max members (≤50); members can self-remove.
+- Helpers like `memberOfSameTeam()` and `validUserData()` make the rules readable.
 
-progress/{userId}   User OR team members (read)            • currentGameMode in [pvp,pve]
-                    User only (create/update/delete)       • gameEdition 1-6
-                    Validates: validUserData()             • pvp/pve structure required
+CORS AND INFRASTRUCTURE
 
-user/{userId}       User only (read/write)                 None
+- `functions/src/config/corsConfig.ts` blocks `null`, `file://`, private IPs in prod,
+  embedded credentials, and invalid formats before middleware runs.
+- Allowed origins in development are limited to `localhost` and `127.0.0.1` variants.
+- Credentials are never reflected; headers/methods are static lists (`ALLOW_HEADERS`, `ALLOW_METHODS`).
 
-token/{tokenId}     Owner only (all operations)            • Required fields on create
-                    Can only update: calls, note           • owner, permissions immutable
+MONITORING
 
-team/{teamId}       Members can read                       • maximumMembers <= 50
-                    Owner can update members               • memberOfTeam() validation
-                    Members can self-remove                • memberOfSameTeam() check
-
-================================================================================
-RATE LIMITING CONFIGURATION (Environment Variables)
-================================================================================
-
-Variable                        Default     Range           Purpose
-─────────────────────────────────────────────────────────────────────────────
-ABUSE_GUARD_WINDOW_MS          10,000ms    1-60s           Request counting window
-
-ABUSE_GUARD_THRESHOLD          150         20-2000         Requests per window
-
-ABUSE_GUARD_WARN_RATIO         0.8         0.1-1.0         Warn at 80% threshold
-
-ABUSE_GUARD_BREACH_LIMIT       2           1-5             Consecutive breaches before block
-
-ABUSE_GUARD_HISTORY_RESET_MS   60,000ms    >= WINDOW_MS    Clear breach history after
-
-ABUSE_GUARD_METHODS            POST,PUT,   CSV             Which methods to guard
-                               PATCH,DELETE
-
-ABUSE_GUARD_PATH_PREFIXES      /api/progress,  CSV         Which paths to guard
-                               /api/team
-
-ABUSE_GUARD_COLLECTION         rateLimitEvents  String      Firestore collection for events
-
-================================================================================
-INPUT VALIDATION EXAMPLES
-================================================================================
-
-Validator                   Input                   Validation Rule
-─────────────────────────────────────────────────────────────────────────────
-validateLevel()            "50"                    Integer 1-79
-
-validateGameEdition()      3                       Integer 1-6
-
-validatePmcFaction()       "USEC"                  Enum: USEC or BEAR
-
-validateTaskStatus()       "completed"             Enum: completed|failed|uncompleted
-
-validateDisplayName()      "Player One  "          Trimmed, 1-50 chars, sanitized
-
-validateTaskId()           "  5a4cb50d4a4cf7  "    Non-empty, trimmed string
-
-validatePermissions()      ['GP', 'WP']            Array of valid permission codes
-
-validateTaskUpdate()       {state: "failed"}       Required structure
-
-validateMultipleTaskUpdate() [{id: "x", ...}, ...] Array with min 1 item, each validated
-
-================================================================================
-CORS ORIGIN VALIDATION
-================================================================================
-
-BLOCKED PATTERNS (Always):
-  • 'null' origin (sandboxed iframes)
-  • file:// protocol
-  • Embedded credentials (user:pass@host)
-  • Double dots in hostname (..)
-  • Non-http/https protocols
-
-BLOCKED IN PRODUCTION:
-  • localhost / 127.0.0.1
-  • Private IP ranges: 192.168.*, 10.*, 172.16-31.*
-
-ALLOWED:
-  • Whitelisted origins (empty list in prod = none except validated patterns)
-  • Development: http://localhost:5173, :5000, :3000, 127.0.0.1 variants
-
-CORS HEADERS SENT:
-  • Access-Control-Allow-Origin: <validated origin or *>
-  • Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
-  • Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With
-  • Vary: Origin (for caching awareness)
-
-================================================================================
-ERROR RESPONSE FORMAT
-================================================================================
-
-HTTP Status Code    Meaning
-─────────────────────────────────────────────────────────────────────────────
-400                 Bad Request (validation failed)
-
-401                 Unauthorized (auth failed, missing token)
-
-403                 Forbidden (CORS blocked, permission denied)
-
-404                 Not Found (resource missing)
-
-422                 Unprocessable Entity
-
-429                 Too Many Requests (rate limited)
-
-500                 Internal Server Error
-
-JSON Response Format:
-{
-  "success": false,
-  "error": "Human-readable message",
-  "meta": {
-    "code": "ERROR_CODE",
-    "timestamp": "2024-11-02T12:34:56.789Z",
-    "stack": "development only",
-    "context": "development only"
-  }
-}
-
-================================================================================
-SECURITY BEST PRACTICES IMPLEMENTED
-================================================================================
-
-✅ Multi-Layer Defense           Frontend validation → API validation → DB rules
-✅ Least Privilege               Users access own/team data only
-✅ Fail-Closed                   Invalid input rejected immediately
-✅ Bearer Token Security         Not vulnerable to CSRF, secure generation
-✅ Rate Limiting                 Configurable, progressive enforcement
-✅ Input Sanitization            HTML chars removed, strings trimmed
-✅ Type Safety                   TypeScript enums prevent invalid values
-✅ Error Handling                Consistent format, redacted messages
-✅ Secure Token Generation       crypto.getRandomValues/randomBytes
-✅ Audit Logging                 User context, redacted sensitive data
-✅ Permission-Based Access       Scoped permissions per token
-✅ Database Rules                Owner & team-based access control
-✅ Recent Auth Checks            5-minute reauth for account deletion
-✅ Token Revocation              Checked on every request
-✅ Transactional Operations      Atomic token creation with db.runTransaction
-
-================================================================================
-KEY FILES & LOCATIONS
-================================================================================
-
-Authentication & Authorization:
-  • /functions/src/middleware/auth.ts              Bearer token validation
-  • /functions/src/middleware/reauth.ts            Recent auth verification
-  • /functions/src/middleware/permissions.ts       Permission checking
-  • /functions/src/services/TokenService.ts        Token management
-
-Input Validation:
-  • /functions/src/services/ValidationService.ts   Backend validation
-  • /functions/src/middleware/errorHandler.ts      Error handling
-  • /frontend/src/utils/DataValidationService.ts   Frontend validation
-
-Rate Limiting & Abuse Protection:
-  • /functions/src/middleware/abuseGuard.ts        Rate limiting logic
-
-CORS & Origin Validation:
-  • /functions/src/config/corsConfig.ts           CORS config & validation
-
-Database Security:
-  • /firestore.rules                               Firestore security rules
-
-Firebase Configuration:
-  • /frontend/src/plugins/firebase.ts              Frontend auth setup
-  • /firebase.json                                 Firebase project config
-
-Testing:
-  • /functions/test/middleware/                    Middleware tests
-  • /functions/test/                               Integration tests
-
-================================================================================
+- All security events log owner, path, and status to Firebase Functions logger.
+- Rate limit breaches, CORS denials, and validation failures surface in the logs.
+- Use Firebase console alerting on spikes in 401/403/429 responses or
+  `rateLimitEvents` writes.

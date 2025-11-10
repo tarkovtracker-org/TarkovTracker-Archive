@@ -1,56 +1,29 @@
-# TarkovTracker Architecture Documentation
+# TarkovTracker Architecture Reference
 
-This section contains technical architecture documentation for
-understanding and contributing to TarkovTracker.
+Links to the documents that describe the current architecture decisions.
 
-## 🏗️ System Overview
+## Security
 
-### Core Architecture
+- `SECURITY_ARCHITECTURE.md` — deep dive into authentication, authorization,
+  validation, rate limiting, and Firestore rules.
+- `SECURITY_QUICK_REFERENCE.md` — checklist-style summary for adding secure
+  endpoints.
+- `SECURITY_SUMMARY.txt` — text-based overview of the middleware chain and key
+  controls.
+- `CORS_SECURITY.md` — origin validation strategy used by the Firebase API.
 
+## Data & Performance
 
-### Technical Specifications
+- `FIRESTORE_ITEMS_SCHEMA_V2.md` — how the Tarkov item cache is sharded and kept
+  lean in Firestore.
+- `performance-fix-implementation-plan.md` — the current workplan for serving
+  Tarkov.dev data from Firestore instead of hitting the upstream API on every
+  page load.
 
-- [Security Architecture](./CORS_SECURITY.md) - Security model and CORS
-- [Performance Optimization](./performance-fix-implementation-plan.md) - Performance
+## Pointers
 
-## 🔄 Development Patterns
-
-### Code Organization
-
-- [Development Setup](../development/DEV_MODES_README.md) - Local development
-- [API rate-limiting](../development/rate-limits.md) - API rate-limiting
-
-### Development Workflows
-
-- [Development Process](../../CONTRIBUTING.md) - How to contribute
-- [Branch Strategy](../development/BRANCH_STRATEGY.md) - Git workflow
-- [Staging Workflow](../development/STAGING_WORKFLOW.md) - Deployment process
-
-## 📊 Monitoring & Analytics
-
-### Performance Monitoring
-
-- [Performance Optimization](./performance-fix-implementation-plan.md) - Performance
-- [Rate Limits](../development/rate-limits.md) - API performance
-
-### Development Analytics
-
-- [Development Plan](../development/PLAN.md) - Project development roadmap
-- [Epic Management](../development/PLAN.md) - Feature planning and tracking
-- [Progress Reset](../development/PROGRESS_RESET_IMPLEMENTATION.md) - Progress tracking
-
-## 🔧 Technical Reference
-
-### Configuration
-
-- [Development Setup](../development/DEV_MODES_README.md) - Local development environment
-- [Branch Strategy](../development/BRANCH_STRATEGY.md) - Git workflow configuration
-- [Staging Workflow](../development/STAGING_WORKFLOW.md) - Staging environment setup
-
-### Tools & Services
-
-
----
-
-*For user-facing documentation, see our [User Guides](../user-guides/README.md). For
-development guides, see [Development Documentation](../development/README.md).*
+- Use this index as the canonical reference when the architecture changes (new
+  middleware, new caching layers, etc.).
+- Keep documentation short, focused on decisions, and linked to live code. If
+  the implementation moves, update these references rather than adding new
+  copies elsewhere.

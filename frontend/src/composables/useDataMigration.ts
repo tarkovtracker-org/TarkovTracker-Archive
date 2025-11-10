@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import { fireuser } from '@/plugins/firebase';
 import { markDataMigrated } from '@/plugins/store-initializer';
-import DataMigrationService, { type ProgressData } from '@/utils/DataMigrationService';
+import DataMigrationService, { type ProgressData } from '@/utils/migration/DataMigrationService';
 import { useTarkovStore } from '@/stores/tarkov';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
 import { logger } from '@/utils/logger';

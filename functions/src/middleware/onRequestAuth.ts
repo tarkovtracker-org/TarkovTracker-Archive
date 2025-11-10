@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions/v2';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 import { setCorsHeaders } from '../config/corsConfig.js';
 import { Request as FirebaseRequest } from 'firebase-functions/v2/https';
 

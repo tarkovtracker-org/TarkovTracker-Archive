@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { collectTaskLocationIds } from '../../tasks/locationUtils';
-import type { Task } from '@/types/tarkov';
+import { collectTaskLocationIds } from '../taskCore';
+import type { Task } from '@/types/models/tarkov';
 
-describe('locationUtils - collectTaskLocationIds', () => {
+describe('taskCore - collectTaskLocationIds', () => {
   it('returns Set<string> and contains map ids from objective.maps', () => {
     const task = {
       id: 'task1',

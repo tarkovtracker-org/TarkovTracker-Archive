@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 import { encryptData, decryptData, isEncrypted } from '@/utils/encryption';
-import type { ProgressData } from './DataMigrationTypes';
+import type { ProgressData } from '@/utils/migration/DataMigrationTypes';
 
 export const LOCAL_PROGRESS_KEY = 'progress';
 export const LOCAL_USER_STATE_KEY = 'user_state';

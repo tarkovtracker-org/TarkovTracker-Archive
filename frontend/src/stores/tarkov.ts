@@ -315,24 +315,31 @@ export const useTarkovStore = defineStore('swapTarkov', {
           });
           return;
         }
-        setFireswapLock(primarySetting, true);
-        // Clear all localStorage to ensure no stale data remains
-        localStorage.clear();
-        // Restore preserved user settings
-        restoreLocalStorageKeys(preservedData);
-        // Save the new complete state directly to localStorage
-        saveToLocalStorage(
-          'progress',
-          newCompleteState,
-          'Error saving state to localStorage after reset:'
-        );
-        // Cancel any pending debounced saves before updating state
-        cancelPendingUpload(primarySetting);
-        // Use $patch to update state while preserving reactivity
-        this.$patch(newCompleteState as UserState);
-        // Ensure Vue has processed the state change before releasing the lock
-        scheduleLockRelease(primarySetting);
-        logger.info(`${mode.toUpperCase()} game mode data reset successfully`);
+        let lockAcquired = false;
+        try {
+          setFireswapLock(primarySetting, true);
+          lockAcquired = true;
+          // Clear all localStorage to ensure no stale data remains
+          localStorage.clear();
+          // Restore preserved user settings
+          restoreLocalStorageKeys(preservedData);
+          // Save the new complete state directly to localStorage
+          saveToLocalStorage(
+            'progress',
+            newCompleteState,
+            'Error saving state to localStorage after reset:'
+          );
+          // Cancel any pending debounced saves before updating state
+          cancelPendingUpload(primarySetting);
+          // Use $patch to update state while preserving reactivity
+          this.$patch(newCompleteState as UserState);
+          logger.info(`${mode.toUpperCase()} game mode data reset successfully`);
+        } finally {
+          if (lockAcquired) {
+            // Ensure Vue has processed the state change before releasing the lock
+            scheduleLockRelease(primarySetting);
+          }
+        }
       } catch (error) {
         logger.error(`Error resetting ${mode} game mode data:`, error);
       }

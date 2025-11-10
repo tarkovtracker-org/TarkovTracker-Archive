@@ -5,7 +5,7 @@
  * to our internal format while preserving critical coordinate system data.
  */
 
-import type { StaticMapData, StaticMapDefinition } from '@/types/tarkov';
+import type { StaticMapData, StaticMapDefinition } from '@/types/models/tarkov';
 import { logger } from './logger';
 
 // Tarkov.dev raw data types

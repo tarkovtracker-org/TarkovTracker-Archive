@@ -2,7 +2,7 @@ import { computed } from 'vue';
 import { useTarkovDataQuery, useTarkovApi } from '@/composables/api/useTarkovApi';
 import { useTarkovStore } from '@/stores/tarkov';
 import { isMapVariant } from '@/utils/mapNormalization';
-import type { TarkovMap, Trader, PlayerLevel } from '@/types/tarkov';
+import type { TarkovMap, Trader, PlayerLevel } from '@/types/models/tarkov';
 import { logger } from '@/utils/logger';
 
 // Mapping from GraphQL map names to static data keys

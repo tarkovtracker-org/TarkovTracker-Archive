@@ -1,6 +1,5 @@
 import { onBeforeUnmount, readonly, ref, watch } from 'vue';
 import { SKELETON_CONFIG } from '@/config/gameConstants';
-
 /**
  * Composable for managing skeleton loading state with CLS optimization
  * Handles timer management, dynamic skeleton count calculation, and state transitions
@@ -8,9 +7,7 @@ import { SKELETON_CONFIG } from '@/config/gameConstants';
 export function useSkeletonLoader() {
   // CLS optimization: Show skeleton loaders during initial load
   const isInitialLoading = ref(false);
-
   const MIN_SKELETON_DURATION = SKELETON_CONFIG.MIN_SKELETON_DURATION;
-
   // Calculate dynamic skeleton count based on viewport height
   const calculateSkeletonCount = () => {
     if (typeof window === 'undefined') return SKELETON_CONFIG.MIN_SKELETONS;
@@ -20,13 +17,21 @@ export function useSkeletonLoader() {
     );
     return Math.max(SKELETON_CONFIG.MIN_SKELETONS, Math.min(SKELETON_CONFIG.MAX_SKELETONS, count));
   };
-
   const skeletonCount = ref(calculateSkeletonCount());
   let skeletonTimerId: ReturnType<typeof setTimeout> | null = null;
   let cleanupTimerId: ReturnType<typeof setTimeout> | null = null;
   let skeletonStartTime = 0;
   let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
-
+  const clearSkeletonTimer = () => {
+    if (skeletonTimerId !== null) {
+      clearTimeout(skeletonTimerId);
+      skeletonTimerId = null;
+    }
+    if (cleanupTimerId !== null) {
+      clearTimeout(cleanupTimerId);
+      cleanupTimerId = null;
+    }
+  };
   /**
    * Watcher to manage loading state transitions with minimum duration to avoid flicker
    * Only shows skeletons during the very first load (when we have no tasks yet)
@@ -39,11 +44,7 @@ export function useSkeletonLoader() {
         if (newLoading && tasksLengthProp() === 0 && !isInitialLoading.value) {
           isInitialLoading.value = true;
           skeletonStartTime = Date.now();
-          // Clear existing skeleton timer if any
-          if (skeletonTimerId) {
-            clearTimeout(skeletonTimerId);
-            skeletonTimerId = null;
-          }
+          clearSkeletonTimer();
           // Start minimum duration timer
           skeletonTimerId = setTimeout(() => {
             skeletonTimerId = null;
@@ -51,15 +52,10 @@ export function useSkeletonLoader() {
         } else if (!newLoading && isInitialLoading.value) {
           // Clear skeleton when loading completes, regardless of oldLoading state
           // This ensures skeletons clear even if watcher missed intermediate states
-          // Clear existing cleanup timer if any
-          if (cleanupTimerId) {
-            clearTimeout(cleanupTimerId);
-            cleanupTimerId = null;
-          }
+          clearSkeletonTimer();
           // Calculate remaining time to show skeleton
           const elapsed = Date.now() - skeletonStartTime;
           const remaining = Math.max(0, MIN_SKELETON_DURATION - elapsed);
-
           if (remaining > 0) {
             cleanupTimerId = setTimeout(() => {
               cleanupTimerId = null;
@@ -73,7 +69,6 @@ export function useSkeletonLoader() {
       { immediate: true }
     );
   };
-
   /**
    * Debounced resize handler to update skeleton count dynamically
    */
@@ -83,7 +78,6 @@ export function useSkeletonLoader() {
       skeletonCount.value = calculateSkeletonCount();
     }, 150);
   };
-
   /**
    * Setup resize listener to update skeleton count dynamically
    */
@@ -92,7 +86,6 @@ export function useSkeletonLoader() {
       window.addEventListener('resize', handleResize);
     }
   };
-
   /**
    * Remove resize listener
    */
@@ -101,7 +94,6 @@ export function useSkeletonLoader() {
       window.removeEventListener('resize', handleResize);
     }
   };
-
   /**
    * Clean up all timers and listeners
    */
@@ -120,29 +112,23 @@ export function useSkeletonLoader() {
     }
     removeResizeListener();
   };
-
   // Clean up timers on unmount
   onBeforeUnmount(() => {
     cleanup();
   });
-
   return {
     // State
     isInitialLoading: readonly(isInitialLoading),
     skeletonCount: readonly(skeletonCount),
-
     // Setup methods
     setupLoadingWatcher,
     setupResizeListener,
-
     // Cleanup method
     cleanup,
-
     // Configuration (exposed for external access if needed)
     MIN_SKELETON_DURATION,
   };
 }
-
 // Re-export types and constants for easy importing
 export type { Ref } from 'vue';
 export { SKELETON_CONFIG } from '@/config/gameConstants';

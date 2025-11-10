@@ -31,6 +31,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporters: ['text', 'lcov'],
+      reportOnFailure: true,
       include: ['src/**/*'],
       exclude: ['src/test/**', 'e2e/**', '**/*.config.*', '**/node_modules/**', '**/dist/**'],
       global: {

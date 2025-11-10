@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { taskMatchesRequirementFilters, type RequirementFilterOptions } from '../taskFilters';
-import type { Task } from '@/types/tarkov';
+import type { Task } from '@/types/models/tarkov';
 
 describe('taskFilters', () => {
   describe('taskMatchesRequirementFilters', () => {
@@ -457,6 +457,226 @@ describe('taskFilters', () => {
         // Should be visible because Kappa is enabled
         expect(taskMatchesRequirementFilters(task, options)).toBe(true);
       });
+    });
+  });
+
+  describe('edge cases and robustness', () => {
+    it('should handle empty tasks array', () => {
+      const emptyTasks: Task[] = [];
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      // Should not throw and handle gracefully
+      expect(() => {
+        emptyTasks.forEach(task => {
+          taskMatchesRequirementFilters(task, options);
+        });
+      }).not.toThrow();
+    });
+
+    it('should handle null task gracefully', () => {
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      // previously expected throws on bad inputs; product now returns false for safety
+      expect(taskMatchesRequirementFilters(null as any, options)).toBe(false);
+    });
+
+    it('should handle undefined task gracefully', () => {
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      expect(taskMatchesRequirementFilters(undefined as any, options)).toBe(false);
+    });
+
+    it('should handle null options gracefully', () => {
+      const task: Task = {
+        id: 'task1',
+        name: 'Regular Task',
+        kappaRequired: false,
+        lightkeeperRequired: false,
+        eodOnly: false,
+      } as Task;
+
+      expect(taskMatchesRequirementFilters(task, null as any)).toBe(false);
+    });
+
+    it('should handle undefined options gracefully', () => {
+      const task: Task = {
+        id: 'task1',
+        name: 'Regular Task',
+        kappaRequired: false,
+        lightkeeperRequired: false,
+        eodOnly: false,
+      } as Task;
+
+      expect(taskMatchesRequirementFilters(task, undefined as any)).toBe(false);
+    });
+
+    it('should handle task with missing requirement flags', () => {
+      const task: Task = {
+        id: 'task1',
+        name: 'Task with missing flags',
+        // kappaRequired, lightkeeperRequired, eodOnly are undefined
+      } as Task;
+
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      // Should not throw and treat missing flags as false
+      expect(() => {
+        const result = taskMatchesRequirementFilters(task, options);
+        expect(result).toBe(true); // Should show since no special requirements
+      }).not.toThrow();
+    });
+
+    it('should handle extreme filter combinations', () => {
+      const regularTask: Task = {
+        id: 'regular-task',
+        name: 'Regular Task',
+        kappaRequired: false,
+        lightkeeperRequired: false,
+        eodOnly: false,
+      } as Task;
+
+      const kappaTask: Task = {
+        id: 'kappa-task',
+        name: 'Kappa Task',
+        kappaRequired: true,
+        lightkeeperRequired: false,
+        eodOnly: false,
+      } as Task;
+
+      const lightkeeperTask: Task = {
+        id: 'lightkeeper-task',
+        name: 'Lightkeeper Task',
+        kappaRequired: false,
+        lightkeeperRequired: true,
+        eodOnly: false,
+      } as Task;
+
+      const eodTask: Task = {
+        id: 'eod-task',
+        name: 'EOD Task',
+        kappaRequired: false,
+        lightkeeperRequired: false,
+        eodOnly: true,
+      } as Task;
+
+      // Test all filters disabled
+      const allDisabled: RequirementFilterOptions = {
+        showKappa: false,
+        showLightkeeper: false,
+        showEod: false,
+        hideNonEndgame: true,
+        treatEodAsEndgame: false,
+      };
+
+      expect(taskMatchesRequirementFilters(regularTask, allDisabled)).toBe(false);
+      expect(taskMatchesRequirementFilters(kappaTask, allDisabled)).toBe(false);
+      expect(taskMatchesRequirementFilters(lightkeeperTask, allDisabled)).toBe(false);
+      expect(taskMatchesRequirementFilters(eodTask, allDisabled)).toBe(false);
+
+      // Test all filters enabled
+      const allEnabled: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: true,
+      };
+
+      expect(taskMatchesRequirementFilters(regularTask, allEnabled)).toBe(true);
+      expect(taskMatchesRequirementFilters(kappaTask, allEnabled)).toBe(true);
+      expect(taskMatchesRequirementFilters(lightkeeperTask, allEnabled)).toBe(true);
+      expect(taskMatchesRequirementFilters(eodTask, allEnabled)).toBe(true);
+    });
+
+    it('should be deterministic with same inputs', () => {
+      const task: Task = {
+        id: 'deterministic-task',
+        name: 'Deterministic Task',
+        kappaRequired: true,
+        lightkeeperRequired: false,
+        eodOnly: true,
+      } as Task;
+
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: false,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      // Multiple calls should return same result
+      const result1 = taskMatchesRequirementFilters(task, options);
+      const result2 = taskMatchesRequirementFilters(task, options);
+      const result3 = taskMatchesRequirementFilters(task, options);
+
+      expect(result1).toBe(result2);
+      expect(result2).toBe(result3);
+      expect(result1).toBe(true);
+    });
+
+    it('should handle task with all requirements enabled', () => {
+      const allRequirementsTask: Task = {
+        id: 'all-requirements-task',
+        name: 'All Requirements Task',
+        kappaRequired: true,
+        lightkeeperRequired: true,
+        eodOnly: true,
+      } as Task;
+
+      const options: RequirementFilterOptions = {
+        showKappa: true,
+        showLightkeeper: true,
+        showEod: true,
+        hideNonEndgame: false,
+        treatEodAsEndgame: false,
+      };
+
+      expect(taskMatchesRequirementFilters(allRequirementsTask, options)).toBe(true);
+    });
+
+    it('should handle task with all requirements disabled', () => {
+      const noRequirementsTask: Task = {
+        id: 'no-requirements-task',
+        name: 'No Requirements Task',
+        kappaRequired: false,
+        lightkeeperRequired: false,
+        eodOnly: false,
+      } as Task;
+
+      const options: RequirementFilterOptions = {
+        showKappa: false,
+        showLightkeeper: false,
+        showEod: false,
+        hideNonEndgame: true,
+        treatEodAsEndgame: false,
+      };
+
+      expect(taskMatchesRequirementFilters(noRequirementsTask, options)).toBe(false);
     });
   });
 });

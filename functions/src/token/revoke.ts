@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions/v2';
 import { onRequest, Request as FirebaseRequest } from 'firebase-functions/v2/https';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 import {
   Firestore,
   DocumentReference,
@@ -9,17 +9,8 @@ import {
 } from 'firebase-admin/firestore';
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
 import { withCorsAndAuth } from '../middleware/onRequestAuth.js';
-// Define interfaces for data structures
-interface RevokeTokenData {
-  token: string;
-}
-interface SystemDocData {
-  tokens?: string[];
-}
-interface TokenDocData {
-  owner: string;
-}
-// Helper function to map HttpsError codes to HTTP status codes (similar to functions/src/index.ts)
+import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types.js';
+// Map HttpsError codes to HTTP status codes
 function getStatusFromHttpsErrorCode(code: FunctionsErrorCode): number {
   switch (code) {
     case 'ok':
@@ -59,11 +50,10 @@ function getStatusFromHttpsErrorCode(code: FunctionsErrorCode): number {
       return 500;
   }
 }
-// Core logic adjusted to accept uid and data directly
 async function _revokeTokenLogic(
   ownerUid: string,
   data: RevokeTokenData
-): Promise<{ revoked: boolean }> {
+): Promise<RevokeTokenResult> {
   const db: Firestore = admin.firestore();
   logger.log('Starting revoke token logic (onRequest)', {
     data: data,
@@ -151,14 +141,14 @@ async function _revokeTokenLogic(
     }
   }
 }
-
 export const revokeToken = onRequest(
   {
     memory: '256MiB',
     timeoutSeconds: 20,
   },
   async (req: FirebaseRequest, res) => {
-    if (req.method !== 'POST') {
+    // Validate HTTP method BEFORE authentication (REST best practice)
+    if (req.method !== 'POST' && req.method !== 'OPTIONS') {
       res.status(405).json({ error: 'Method Not Allowed' });
       return;
     }
@@ -178,13 +168,11 @@ export const revokeToken = onRequest(
         let errorCode: FunctionsErrorCode | string | undefined = 'internal';
         let errorDetails: unknown | undefined = undefined;
         let fullErrorMessage = 'Unknown error';
-
         if (e instanceof HttpsError) {
           httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
           errorCode = e.code;
           errorDetails = e.details;
           fullErrorMessage = e.message;
-
           // Map HttpsError codes to safe client messages
           switch (e.code) {
             case 'not-found':
@@ -204,7 +192,6 @@ export const revokeToken = onRequest(
         } else if (typeof e === 'string') {
           fullErrorMessage = e;
         }
-
         // Log full error details server-side for debugging
         logger.error('Error from _revokeTokenLogic in revokeToken handler', {
           uid: uid,
@@ -215,7 +202,6 @@ export const revokeToken = onRequest(
           clientMessageSent: messageToSend,
           httpStatusSet: httpStatus,
         });
-
         res.status(httpStatus).json({ error: messageToSend });
       }
     });

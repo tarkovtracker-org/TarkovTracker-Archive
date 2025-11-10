@@ -11,7 +11,7 @@ import {
   safeAddNode,
   safeAddEdge,
 } from '@/composables/utils/graphHelpers';
-import type { HideoutStation, HideoutModule, NeededItemHideoutModule } from '@/types/tarkov';
+import type { HideoutStation, HideoutModule, NeededItemHideoutModule } from '@/types/models/tarkov';
 import { logger } from '@/utils/logger';
 /**
  * Composable for managing hideout data, station relationships, and requirements

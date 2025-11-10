@@ -1,80 +1,14 @@
 import { vi, describe, it, expect, beforeEach, afterAll } from 'vitest';
-import { createFirebaseAdminMock, createFirebaseFunctionsMock } from './mocks';
+import { tokenCreateHandler, tokenRevokeHandler } from '../src/handlers/tokenHandler';
+const { seedDb, makeRes, functionsMock, resetDb } = require('./setup');
 
-// Set up mocks before imports
-const { adminMock } = createFirebaseAdminMock(); // We only need adminMock for vi.mock
-const functionsMock = createFirebaseFunctionsMock();
-
-// We don't use these in our tests, so they're commented out
-// const mockResponse = () => {
-//   const res = {};
-//   res.status = vi.fn().mockReturnValue(res);
-//   res.json = vi.fn().mockReturnValue(res);
-//   res.send = vi.fn().mockReturnValue(res);
-//   return res;
-// };
-
-// const mockRequest = (headers = {}, params = {}, body = {}) => ({
-//   get: vi.fn((name) => headers[name]),
-//   params,
-//   body,
-//   headers,
-// });
-
-// Mock Firebase modules
-vi.mock('firebase-admin', () => ({
-  default: adminMock,
-}));
-
-vi.mock('firebase-functions', () => ({
-  default: functionsMock,
-}));
-
-// Create mock implementations for token functions to avoid DB errors
-const mockCreateTokenLogic = async (data, context) => {
-  // Validate input
-  if (!context?.auth) {
-    throw new functionsMock.https.HttpsError('unauthenticated', 'Authentication required.');
-  }
-  if (!data.note) {
-    throw new functionsMock.https.HttpsError(
-      'invalid-argument',
-      'A note describing the token purpose is required.'
-    );
-  }
-  if (!data.permissions || !Array.isArray(data.permissions) || data.permissions.length === 0) {
-    throw new functionsMock.https.HttpsError(
-      'invalid-argument',
-      'At least one permission must be specified.'
-    );
-  }
-
-  // Return mock result
-  return {
-    token: 'mock-token-123',
-    permissions: data.permissions,
-    note: data.note,
-    createdAt: 'mock-timestamp',
-  };
-};
-
-const mockRevokeTokenLogic = async (data, context) => {
-  // Validate input
-  if (!context?.auth) {
-    throw new functionsMock.https.HttpsError('unauthenticated', 'Authentication required.');
-  }
-  if (!data.token) {
-    throw new functionsMock.https.HttpsError('invalid-argument', 'Token ID must be provided.');
-  }
-
-  // Check if token exists
-  if (data.token === 'non-existent-token') {
-    throw new functionsMock.https.HttpsError('not-found', 'Token not found');
-  }
-
-  // Return mock result
-  return { success: true };
-};
+beforeEach(() => {
+  resetDb();
+  seedDb({
+    users: { userA: { uid: 'userA', email: 'u@example.com', active: true } },
+    apiTokens: {}
+  });
+});
 
 describe('Token API', () => {
   beforeEach(() => {
@@ -154,7 +88,7 @@ describe('Token API', () => {
         };
 
         const context = {
-          auth: { uid: 'test-user' },
+          auth: { uid: 'userA' },
         };
 
         const result = await mockRevokeTokenLogic(data, context);
@@ -193,7 +127,7 @@ describe('Token API', () => {
         };
 
         const context = {
-          auth: { uid: 'test-user' },
+          auth: { uid: 'userA' },
         };
 
         await expect(mockRevokeTokenLogic(data, context)).rejects.toThrow(/Token not found/);

@@ -9,13 +9,14 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { debounce, set, get } from '@/utils/debounce';
+import { isDevAuthEnabled } from '@/utils/devAuth';
 import type { PiniaPluginContext, Store, StateTree, SubscriptionCallbackMutation } from 'pinia';
 import type { StateTree as PiniaStateTree } from 'pinia';
 
 const db: Firestore = firestore;
 
-// Check if dev auth is enabled - if so, skip Firestore connections
-const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
+// Check if dev auth bypass is enabled - if so, skip Firestore connections
+const devAuthEnabled = isDevAuthEnabled();
 
 export interface FireswapSettingInternal {
   document: string;
@@ -117,7 +118,7 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
         if (!storeExt.firebind) storeExt.firebind = {};
         storeExt.firebind[fsIndex] = () => {
           // Skip Firestore binding when dev auth is enabled
-          if (isDevAuthEnabled) {
+          if (devAuthEnabled) {
             return;
           }
           storeExt.fireunbind?.[fsIndex]?.();
@@ -190,7 +191,7 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
             /* Intentionally ignored */
           }
           // Skip Firestore writes when dev auth is enabled
-          if (fireuser.loggedIn && fireuser.uid && !isDevAuthEnabled) {
+          if (fireuser.loggedIn && fireuser.uid && !devAuthEnabled) {
             try {
               const docRef = parseDoc(fireswapSetting.document);
               setDoc(docRef, stateToSave as Record<string, unknown>, { merge: true })

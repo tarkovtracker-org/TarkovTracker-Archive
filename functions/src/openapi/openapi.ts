@@ -29,11 +29,11 @@ if (!projectRoot) {
     currentDir = parentDir;
   }
   throw new Error(
-    `Failed to find project root: 'LICENSE.md' not found in any parent directory.\n` +
-      `Searched directories (from ${__dirname} upwards):\n` +
-      searchedDirs.map((dir) => `  - ${dir}`).join('\n') +
-      '\n' +
-      `Ensure LICENSE.md exists at the project root.`
+    `Failed to find project root: 'LICENSE.md' not found in any parent directory.
+Searched directories (from ${__dirname} upwards):
+${searchedDirs.map((dir) => `  - ${dir}`).join('\n')}
+
+Ensure LICENSE.md exists at the project root.`
   );
 }
 const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
@@ -94,7 +94,6 @@ const openapiSpecification = openapiJSDoc(openapiOptions);
 // Define the output paths relative to the dynamically found project root
 // We generate into functions/openapi to align with CI and Scalar UI ingestion
 const outputPath = path.join(projectRoot, 'functions/openapi/openapi.json');
-const jsOutputPath = path.join(projectRoot, 'functions/openapi/openapi.js');
 const outputDir = path.dirname(outputPath);
 // Ensure the output directory exists
 if (!fs.existsSync(outputDir)) {
@@ -107,14 +106,5 @@ fs.writeFile(outputPath, JSON.stringify(openapiSpecification, null, 2), (err) =>
     process.exit(1);
   } else {
     console.log(`OpenAPI specification created successfully at ${outputPath}`);
-    const jsContent = `window.openapi = ${JSON.stringify(openapiSpecification, null, 2)};`;
-    fs.writeFile(jsOutputPath, jsContent, (err) => {
-      if (err) {
-        console.error('Error writing OpenAPI JS file:', err);
-        process.exit(1);
-      } else {
-        console.log(`OpenAPI JS file created successfully at ${jsOutputPath}`);
-      }
-    });
   }
 });
