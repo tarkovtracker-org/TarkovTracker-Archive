@@ -107,21 +107,29 @@ describe('TokenService', () => {
     });
 
     it('should throw internal error when token data is undefined', async () => {
+      // Use existing token from seeded data and override its get method
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-
+        
         collection.doc = vi.fn().mockImplementation((docId) => {
-          const docRef = originalDoc(docId);
-          docRef.get = vi.fn().mockResolvedValueOnce({
-            exists: true,
-            data: () => undefined,
-          });
-          return docRef;
+          if (docId === 'tokenA') {
+            return {
+              id: docId,
+              path: `token/${docId}`,
+              get: vi.fn().mockResolvedValueOnce({
+                exists: true,
+                data: () => undefined,
+              }),
+            };
+          }
+          
+          // Use original for all other tokens
+          return originalDoc(docId);
         });
       });
 
       const tokenService = new TokenService();
-      await expect(tokenService.getTokenInfo('test-token')).rejects.toThrow('Invalid token data');
+      await expect(tokenService.getTokenInfo('tokenA')).rejects.toThrow('Invalid token data');
       restore();
     });
 
