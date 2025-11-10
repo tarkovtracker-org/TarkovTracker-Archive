@@ -605,9 +605,14 @@ describe('TokenService', () => {
       const mockRandomBytes = vi.mocked(crypto.randomBytes);
       
       // Mock to return same buffer first time (collision), then different buffer
+      // Note: actual randomBytes takes a size and callback
       mockRandomBytes
-        .mockReturnValueOnce(Buffer.from('a'.repeat(64), 'utf8'))
-        .mockReturnValueOnce(Buffer.from('b'.repeat(64), 'utf8'));
+        .mockImplementationOnce((size, callback) => {
+          callback(null, Buffer.from('a'.repeat(size), 'utf8'));
+        })
+        .mockImplementationOnce((size, callback) => {
+          callback(null, Buffer.from('b'.repeat(size), 'utf8'));
+        });
 
       // Seed existing token with collision token
       seedDb({

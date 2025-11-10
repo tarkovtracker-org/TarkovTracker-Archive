@@ -1,6 +1,24 @@
 import { vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { firestoreMock, collectionOverrides } from '../setup.js';
-import type { TokenCollection } from '../setup.js';
+
+type FirestoreDocRef = {
+  id: string;
+  path: string;
+  get: Mock;
+  set: Mock;
+  update: Mock;
+  delete: Mock;
+};
+
+type TokenCollection = {
+  doc: Mock<[string], FirestoreDocRef>;
+  add: Mock;
+  where: Mock;
+  orderBy: Mock;
+  limit: Mock;
+  get: Mock;
+};
 
 /**
  * Helper to create token collection mocks with override capabilities
