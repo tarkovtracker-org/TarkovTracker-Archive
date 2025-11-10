@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ProgressService } from '../../src/services/ProgressService.js';
-import { firestoreMock } from '../setup.js';
+import { firestoreMock, seedDb } from '../setup.js';
 
 import { getHideoutData, getTaskData } from '../../src/utils/dataLoaders.js';
 import { formatProgress, updateTaskState } from '../../src/progress/progressUtils.js';
@@ -22,20 +22,15 @@ describe('ProgressService', () => {
     vi.resetAllMocks();
   });
 
-  const mockDoc = (data?: Record<string, unknown>) => ({
-    path: 'progress/user-test',
-    get: vi.fn().mockResolvedValue({
-      exists: !!data,
-      data: () => data,
-    }),
-    set: vi.fn(),
-    update: vi.fn(),
-  });
-
   it('returns formatted progress data', async () => {
-    const firestoreDoc = mockDoc({ currentGameMode: 'pvp', legacy: true });
-    const collection = { doc: vi.fn().mockReturnValue(firestoreDoc) };
-    firestoreMock.collection.mockReturnValue(collection as any);
+    seedDb({
+      progress: {
+        'user-1': {
+          currentGameMode: 'pvp',
+          legacy: true,
+        },
+      },
+    });
 
     const formatted = { displayName: 'Player', tasksProgress: [] } as any;
     vi.mocked(getHideoutData).mockResolvedValue({ hideoutStations: [] });
@@ -44,7 +39,12 @@ describe('ProgressService', () => {
 
     const result = await service.getUserProgress('user-1', 'pvp');
 
-    expect(collection.doc).toHaveBeenCalledWith('user-1');
+    const progressCollectionIndex = firestoreMock.collection.mock.calls.findIndex(
+      ([name]) => name === 'progress'
+    );
+    const progressCollection =
+      firestoreMock.collection.mock.results[progressCollectionIndex]?.value;
+    expect(progressCollection?.doc).toHaveBeenCalledWith('user-1');
     expect(formatProgress).toHaveBeenCalledWith(
       { currentGameMode: 'pvp', legacy: true },
       'user-1',
@@ -75,9 +75,11 @@ describe('ProgressService', () => {
       await callback(transaction);
     });
 
-    firestoreMock.collection.mockReturnValue({
-      doc: vi.fn().mockReturnValue({ path: 'progress/user-3' }),
-    } as any);
+    seedDb({
+      progress: {
+        'user-3': { taskCompletions: {} },
+      },
+    });
 
     vi.mocked(getTaskData).mockResolvedValue({ tasks: [] });
     vi.mocked(updateTaskState).mockResolvedValue(undefined);
@@ -100,9 +102,11 @@ describe('ProgressService', () => {
       await callback(transaction);
     });
 
-    firestoreMock.collection.mockReturnValue({
-      doc: vi.fn().mockReturnValue({ path: 'progress/user-4' }),
-    } as any);
+    seedDb({
+      progress: {
+        'user-4': { taskCompletions: {} },
+      },
+    });
 
     vi.mocked(getTaskData).mockResolvedValue({ tasks: [] });
     vi.mocked(updateTaskState).mockRejectedValue(new Error('dependency failure'));

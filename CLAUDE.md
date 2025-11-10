@@ -19,6 +19,13 @@ Shared playbook for any AI coding assistant collaborating on TarkovTracker.
 ## Repository Layout
 
 - `frontend/` – Vue 3 + Vite SPA using Pinia, Vuetify, Vue Router, Vue I18n, and Firebase/VueFire integrations.
+  - `frontend/src/components/` – All Vue components organized by type (ui, layout, domain)
+  - `frontend/src/views/` – Page-level components organized by domain
+  - `frontend/src/composables/` – Vue composition functions
+  - `frontend/src/stores/` – Pinia state management
+  - `frontend/src/services/` – External service integrations
+  - `frontend/src/utils/` – Utility functions (organized into migration, validation, api, helpers)
+  - `frontend/src/types/` – TypeScript type definitions
 - `functions/` – Firebase Cloud Functions written in TypeScript (Express, Firestore, scheduled jobs, Tarkov.dev integrations).
 - `frontend/dist/`, `functions/lib/`, `firebase-export-*` – Generated output; do not commit.
 - `functions/openapi/` – Generated OpenAPI spec consumed by the Scalar UI page.
@@ -103,12 +110,17 @@ resulting diff under `functions/openapi/`.
 
 - 2-space indentation, Prettier formatting, shared flat ESLint config.
 - Max line length: 100 in `frontend/`, 120 in `functions/`; split literals instead of disabling lint rules.
-- Vue components follow Composition API, typed Pinia stores, and live in `kebab-case.vue` files under feature folders.
+- Vue components follow Composition API, typed Pinia stores:
+  - UI components: `components/ui/` (pure, reusable)
+  - Layout components: `components/layout/` (navigation, structure)
+  - Domain components: `components/domain/{feature}/` (business logic)
+  - Views: `views/{feature}/` (page-level components with `*View.vue` naming)
 - Functions export named handlers from `functions/src/**` that mirror their trigger purpose; prefer pure services under `src/services/` with thin handler wrappers.
 - Avoid `any`; justify unavoidable cases with targeted ESLint suppressions.
 - Organise imports using the `@/` alias for local modules; remove unused imports promptly.
 - Keep Vue components <300 lines and Firebase handlers focused (<200 lines); refactor shared logic into composables/services.
 - Vitest setup helpers live under `frontend/src/test/`; create fixtures/mocks alongside features when needed.
+- Use barrel exports (`index.ts`) for cleaner component imports from feature directories.
 
 ## Git & PR Expectations
 

@@ -6,6 +6,30 @@ import { TokenService } from '../src/services/TokenService';
 import { errors } from '../src/middleware/errorHandler';
 import { seedDb, resetDb } from './setup';
 
+type TokenCollection = ReturnType<typeof firestoreMock.collection>;
+
+const withTokenCollectionMock = (mutate: (collection: TokenCollection) => void) => {
+  const originalImpl = firestoreMock.collection.getMockImplementation() as (
+    name: string
+  ) => TokenCollection;
+
+  if (!originalImpl) {
+    throw new Error('Firestore collection mock implementation is missing');
+  }
+
+  const collectionMock = originalImpl('token');
+  mutate(collectionMock);
+
+  firestoreMock.collectionOverrides.set('token', collectionMock);
+
+  return {
+    collectionMock,
+    restore: () => {
+      firestoreMock.collectionOverrides.delete('token');
+    },
+  };
+};
+
 // Seed deterministic Firestore state before each test
 beforeEach(() => {
   resetDb();
@@ -81,16 +105,17 @@ describe('TokenService', () => {
     });
 
     it('should throw unauthorized error for non-existent token', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
+      const { collectionMock, restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
 
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        docRef.get.mockResolvedValue({
-          exists: false,
-          data: () => undefined,
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get.mockResolvedValue({
+            exists: false,
+            data: () => undefined,
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
@@ -101,26 +126,31 @@ describe('TokenService', () => {
         name: 'ApiError',
         statusCode: 401,
       });
+      restore();
     });
 
     it('should throw internal error when token data is undefined', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
 
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        docRef.get.mockResolvedValueOnce({
-          exists: true,
-          data: () => undefined,
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get.mockResolvedValueOnce({
+            exists: true,
+            data: () => undefined,
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
       await expect(tokenService.getTokenInfo('test-token')).rejects.toThrow('Invalid token data');
+      restore();
     });
 
     it('should increment token calls asynchronously', async () => {
+      const { collectionMock, restore } = withTokenCollectionMock(() => {});
+
       // Use the existing tokenA from the seeded data
       const tokenService = new TokenService();
       await tokenService.getTokenInfo('tokenA');
@@ -129,22 +159,22 @@ describe('TokenService', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // The update method should have been called on the token document
-      const collectionMock = firestoreMock.collection('token');
       // Check that doc was called with tokenA (for the increment call)
       const docCalls = collectionMock.doc.mock.calls;
-      const incrementCall = docCalls.find(call => call[0] === 'tokenA');
+      const incrementCall = docCalls.find((call) => call[0] === 'tokenA');
       expect(incrementCall).toBeDefined();
-      
+
       // Find the doc reference that was used for the update
-      const docRef = collectionMock.doc.mock.results.find((result, index) => 
+      const docRef = collectionMock.doc.mock.results.find((result, index) =>
         collectionMock.doc.mock.calls[index][0] === 'tokenA'
       )?.value;
-      
+
       if (docRef && docRef.update) {
         expect(docRef.update).toHaveBeenCalledWith({
           calls: expect.objectContaining({ _increment: 1 }),
         });
       }
+      restore();
     });
 
     it('should default gameMode to pvp for legacy tokens', async () => {
@@ -157,40 +187,42 @@ describe('TokenService', () => {
         createdAt: { toDate: () => new Date(0) },
       };
 
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        // Create a new mock function for get to avoid conflicts
-        docRef.get = vi.fn().mockResolvedValue({
-          exists: true,
-          data: () => mockTokenData,
+      const { collectionMock, restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get = vi.fn().mockResolvedValue({
+            exists: true,
+            data: () => mockTokenData,
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
       const result = await tokenService.getTokenInfo('tokenA');
 
       expect(result.gameMode).toBe('pvp');
+      expect(collectionMock.doc).toHaveBeenCalled();
+      restore();
     });
 
     it('should handle Firestore errors gracefully', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        // Mock get to throw an error
-        docRef.get.mockRejectedValueOnce(new Error('Firestore connection failed'));
-        return docRef;
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          // Mock get to throw an error
+          docRef.get.mockRejectedValueOnce(new Error('Firestore connection failed'));
+          return docRef;
+        });
       });
 
       const tokenService = new TokenService();
       await expect(tokenService.getTokenInfo('tokenA')).rejects.toThrow(
         'Failed to retrieve token information'
       );
+      restore();
     });
   });
 
@@ -205,17 +237,16 @@ describe('TokenService', () => {
         createdAt: { toDate: () => new Date(0) },
       };
 
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        // Create a new mock function for get to avoid conflicts
-        docRef.get = vi.fn().mockResolvedValue({
-          exists: true,
-          data: () => mockTokenData,
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get = vi.fn().mockResolvedValue({
+            exists: true,
+            data: () => mockTokenData,
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
@@ -223,6 +254,7 @@ describe('TokenService', () => {
 
       expect(result.token).toBe('tokenA');
       expect(result.permissions).toEqual(['GP']);
+      restore();
     });
 
     it('should throw error when Authorization header is missing', async () => {
@@ -341,75 +373,80 @@ describe('TokenService', () => {
 
   describe('revokeToken', () => {
     it('should revoke token successfully', async () => {
+      const { collectionMock, restore } = withTokenCollectionMock(() => {});
+
       // Use the existing tokenA from the seeded data (owned by userA)
       const tokenService = new TokenService();
       const result = await tokenService.revokeToken('tokenA', 'userA');
 
       expect(result).toEqual({ revoked: true });
       // The delete method should have been called on the token document
-      const collectionMock = firestoreMock.collection('token');
       expect(collectionMock.doc).toHaveBeenCalledWith('tokenA');
       const usedDocRef = collectionMock.doc.mock.results[0].value;
       expect(usedDocRef.delete).toHaveBeenCalled();
+      restore();
     });
 
     it('should throw not found error for non-existent token', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        docRef.get.mockResolvedValue({
-          exists: false,
-          data: () => undefined,
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get.mockResolvedValue({
+            exists: false,
+            data: () => undefined,
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
       await expect(tokenService.revokeToken('invalid-token', 'userA')).rejects.toThrow(
         'Token not found'
       );
+      restore();
     });
 
     it('should throw forbidden error when user does not own token', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        docRef.get.mockResolvedValue({
-          exists: true,
-          data: () => ({
-            owner: 'userB',
-            note: 'Test token',
-            permissions: ['GP'],
-          }),
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          docRef.get.mockResolvedValue({
+            exists: true,
+            data: () => ({
+              owner: 'userB',
+              note: 'Test token',
+              permissions: ['GP'],
+            }),
+          });
+          return docRef;
         });
-        return docRef;
       });
 
       const tokenService = new TokenService();
       await expect(tokenService.revokeToken('tokenC', 'userA')).rejects.toThrow(
         /you can only revoke your own tokens/i
       );
+      restore();
     });
 
     it('should handle Firestore errors gracefully', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      const originalDoc = collectionMock.doc;
-
-      collectionMock.doc = vi.fn().mockImplementation((docId) => {
-        const docRef = originalDoc(docId);
-        // Create a new mock function for get to avoid conflicts
-        docRef.get = vi.fn().mockRejectedValue(new Error('Firestore connection failed'));
-        return docRef;
+      const { restore } = withTokenCollectionMock((collection) => {
+        const originalDoc = collection.doc;
+        collection.doc = vi.fn().mockImplementation((docId) => {
+          const docRef = originalDoc(docId);
+          // Create a new mock function for get to avoid conflicts
+          docRef.get = vi.fn().mockRejectedValue(new Error('Firestore connection failed'));
+          return docRef;
+        });
       });
 
       const tokenService = new TokenService();
       await expect(tokenService.revokeToken('tokenA', 'userA')).rejects.toThrow(
         'Failed to revoke token'
       );
+      restore();
     });
   });
 
@@ -437,10 +474,11 @@ describe('TokenService', () => {
         },
       ];
 
-      const collectionMock = firestoreMock.collection('token');
-      collectionMock.where.mockReturnThis();
-      collectionMock.get.mockResolvedValue({
-        docs: mockTokens,
+      const { restore } = withTokenCollectionMock((collection) => {
+        collection.where.mockReturnThis();
+        collection.get.mockResolvedValue({
+          docs: mockTokens,
+        });
       });
 
       const tokenService = new TokenService();
@@ -453,19 +491,22 @@ describe('TokenService', () => {
       expect(tokenB).toBeDefined();
       expect(tokenA?.gameMode).toBe('pvp');
       expect(tokenB?.gameMode).toBe('pvp');
+      restore();
     });
 
     it('should return empty array when user has no tokens', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      collectionMock.where.mockReturnThis();
-      collectionMock.get.mockResolvedValue({
-        docs: [],
+      const { restore } = withTokenCollectionMock((collection) => {
+        collection.where.mockReturnThis();
+        collection.get.mockResolvedValue({
+          docs: [],
+        });
       });
 
       const tokenService = new TokenService();
       const result = await tokenService.listUserTokens('user-with-no-tokens');
 
       expect(result).toEqual([]);
+      restore();
     });
 
     it('should default gameMode to pvp for legacy tokens', async () => {
@@ -482,25 +523,29 @@ describe('TokenService', () => {
         },
       ];
 
-      const collectionMock = firestoreMock.collection('token');
-      collectionMock.where.mockReturnThis();
-      collectionMock.get.mockResolvedValue({
-        docs: mockTokens,
+      const { restore } = withTokenCollectionMock((collection) => {
+        collection.where.mockReturnThis();
+        collection.get.mockResolvedValue({
+          docs: mockTokens,
+        });
       });
 
       const tokenService = new TokenService();
       const result = await tokenService.listUserTokens('userA');
 
       expect(result[0].gameMode).toBe('pvp');
+      restore();
     });
 
     it('should handle Firestore errors gracefully', async () => {
-      const collectionMock = firestoreMock.collection('token');
-      collectionMock.where.mockReturnThis();
-      collectionMock.get.mockRejectedValue(new Error('Firestore connection failed'));
+      const { restore } = withTokenCollectionMock((collection) => {
+        collection.where.mockReturnThis();
+        collection.get.mockRejectedValue(new Error('Firestore connection failed'));
+      });
 
       const tokenService = new TokenService();
       await expect(tokenService.listUserTokens('userA')).rejects.toThrow('Failed to list tokens');
+      restore();
     });
   });
 
@@ -702,16 +747,17 @@ describe('TokenService', () => {
         };
 
         // Mock Firestore to return revoked token
-        const collectionMock = firestoreMock.collection('token');
-        collectionMock.doc = vi.fn().mockImplementation((docId) => {
-          const docRef = {
-            id: docId,
-            get: vi.fn().mockResolvedValue({
-              exists: true,
-              data: () => revokedTokenData,
-            }),
-          };
-          return docRef;
+        const { restore } = withTokenCollectionMock((collection) => {
+          collection.doc = vi.fn().mockImplementation((docId) => {
+            const docRef = {
+              id: docId,
+              get: vi.fn().mockResolvedValue({
+                exists: true,
+                data: () => revokedTokenData,
+              }),
+            };
+            return docRef;
+          });
         });
 
         await expect(tokenService.getTokenInfo('revoked-token-123')).rejects.toThrow(
@@ -722,6 +768,7 @@ describe('TokenService', () => {
         // Note: The validateToken method calls getTokenInfo which does access the token
         // but doesn't modify it, so we just check that it was accessed
         expect(firestoreMock.collection).toHaveBeenCalledWith('token');
+        restore();
       });
 
       it('should handle token validation errors without side effects', async () => {

@@ -92,6 +92,7 @@ vi.mock('firebase-admin/firestore', () => {
       now: vi.fn(() => ({ toDate: () => new Date() })),
       fromDate: vi.fn((date) => ({ toDate: () => date })),
     },
+    collectionOverrides,
   };
 });
 
@@ -403,6 +404,7 @@ const resetDb = () => {
   dbState.teams.clear();
   dbState.progress.clear();
   dbState.system.clear();
+  collectionOverrides.clear();
 };
 
 // Helper to seed database with test data
@@ -458,8 +460,14 @@ const makeRes = () => {
 };
 
 // Firestore-like mocks with simple query support
+const collectionOverrides = new Map();
+
 const firestoreMock = {
   collection: vi.fn((name) => {
+    const override = collectionOverrides.get(name);
+    if (override) {
+      return override;
+    }
     // simple query accumulator for this collection reference
     const stateMap = () => dbState[name] || new Map();
     const query = {

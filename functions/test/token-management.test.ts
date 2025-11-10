@@ -188,15 +188,23 @@ describe('Token Management', () => {
   });
 
   describe('Token Revocation (revokeToken)', () => {
-    const mockRequest = (overrides = {}) => ({
-      method: 'POST',
-      body: {
-        data: {
-          token: 'tokenA',
+    const mockRequest = (overrides = {}) => {
+      const { headers, ...rest } = overrides as { headers?: Record<string, string> };
+      return {
+        method: 'POST',
+        body: {
+          data: {
+            token: 'tokenA',
+          },
         },
-      },
-      ...overrides,
-    });
+        headers: {
+          origin: 'http://localhost:5173',
+          authorization: 'Bearer test-id-token',
+          ...headers,
+        },
+        ...rest,
+      };
+    };
 
     const mockResponse = () => {
       return makeRes();
