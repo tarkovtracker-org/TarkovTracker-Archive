@@ -1,23 +1,24 @@
 import { vi } from 'vitest';
-import type { Mock } from 'vitest';
 import { firestoreMock, collectionOverrides } from '../setup.js';
+
+type MockFn = ReturnType<typeof vi.fn>;
 
 type FirestoreDocRef = {
   id: string;
   path: string;
-  get: Mock;
-  set: Mock;
-  update: Mock;
-  delete: Mock;
+  get: MockFn;
+  set: MockFn;
+  update: MockFn;
+  delete: MockFn;
 };
 
 type TokenCollection = {
-  doc: Mock<[string], FirestoreDocRef>;
-  add: Mock;
-  where: Mock;
-  orderBy: Mock;
-  limit: Mock;
-  get: Mock;
+  doc: MockFn;
+  add: MockFn;
+  where: MockFn;
+  orderBy: MockFn;
+  limit: MockFn;
+  get: MockFn;
 };
 
 /**

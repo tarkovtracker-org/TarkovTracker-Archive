@@ -85,7 +85,7 @@ describe('TokenService', () => {
       const { collectionMock, restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
 
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           docRef.get.mockResolvedValue({
             exists: false,
@@ -111,7 +111,7 @@ describe('TokenService', () => {
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
         
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           if (docId === 'tokenA') {
             return {
               id: docId,
@@ -174,7 +174,7 @@ describe('TokenService', () => {
 
       const { collectionMock, restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           docRef.get = vi.fn().mockResolvedValue({
             exists: true,
@@ -195,7 +195,7 @@ describe('TokenService', () => {
     it('should handle Firestore errors gracefully', async () => {
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           // Mock get to throw an error
           docRef.get.mockRejectedValueOnce(new Error('Firestore connection failed'));
@@ -224,7 +224,7 @@ describe('TokenService', () => {
 
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           docRef.get = vi.fn().mockResolvedValue({
             exists: true,
@@ -375,7 +375,7 @@ describe('TokenService', () => {
     it('should throw not found error for non-existent token', async () => {
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           docRef.get.mockResolvedValue({
             exists: false,
@@ -395,7 +395,7 @@ describe('TokenService', () => {
     it('should throw forbidden error when user does not own token', async () => {
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           docRef.get.mockResolvedValue({
             exists: true,
@@ -419,7 +419,7 @@ describe('TokenService', () => {
     it('should handle Firestore errors gracefully', async () => {
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
-        collection.doc = vi.fn().mockImplementation((docId) => {
+        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
           // Create a new mock function for get to avoid conflicts
           docRef.get = vi.fn().mockRejectedValue(new Error('Firestore connection failed'));
