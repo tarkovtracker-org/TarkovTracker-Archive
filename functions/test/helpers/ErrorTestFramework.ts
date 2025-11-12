@@ -5,7 +5,7 @@
  * Eliminates inconsistent error assertion patterns and adds comprehensive error coverage.
  */
 
-import { expect, type MatcherFunction } from 'vitest';
+import { expect } from 'vitest';
 
 export interface ErrorExpectation {
   message?: string | RegExp;
@@ -64,7 +64,7 @@ export class ErrorTestUtils {
   private static async checkErrorProperties(
     fn: () => Promise<any> | any,
     expectation: ErrorExpectation
-  ): Promise<void> => {
+  ): Promise<void> {
     try {
       await fn();
     } catch (error) {
@@ -135,8 +135,9 @@ export class ErrorTestUtils {
     for (let i = 1; i < results.length; i++) {
       const current = results[i];
       const previous = results[i - 1];
+      const operation = operations[i];
 
-      if (current.shouldSucceedDespitePriorFailures) {
+      if (operation.shouldSucceedDespitePriorFailures) {
         expect(current.success).toBe(true);
       } else if (!previous.success) {
         // Should fail if previous operation failed and not marked to succeed
@@ -373,10 +374,10 @@ export class ErrorPerformanceTestHelper {
 /**
  * Custom matcher for common error assertions
  */
-export const toThrowWithError: MatcherFunction = (
-  received,
+export const toThrowWithError = (
+  received: any,
   expected: ErrorExpectation
-) => {
+): { message: () => string; pass: boolean } => {
   if (typeof received !== 'function') {
     return {
       message: () => `Expected ${received} to be a function`,
@@ -390,7 +391,8 @@ export const toThrowWithError: MatcherFunction = (
       message: () => `Expected function to throw, but it returned ${result}`,
       pass: false
     };
-  } catch (error) {
+  } catch (err) {
+    const error = err as { message: string };
     let pass = true;
     let message = '';
 
@@ -404,7 +406,7 @@ export const toThrowWithError: MatcherFunction = (
         pass = expected.message.test(error.message);
         message = pass ?
           `Expected error not to match ${expected.message}` :
-          `Expected error to match ${expected.message}, but got "${error.message}"`;
+          `Expected error to match ${expected.message}", but got "${error.message}"`;
       }
     }
 

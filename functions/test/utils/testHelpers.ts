@@ -5,7 +5,7 @@
  * and reduce code duplication across test files.
  */
 
-import { vi, beforeEach, afterEach } from 'vitest';
+import { vi, beforeEach, afterEach, expect, describe, it } from 'vitest';
 import { adminMock, firestoreMock, resetDb, seedDb } from '../setup';
 
 /**

@@ -1,5 +1,7 @@
 import { logger } from 'firebase-functions/v2';
-import type { Firestore, DocumentReference, Timestamp, FieldValue } from 'firebase-admin/firestore';
+import type { Firestore, DocumentReference } from 'firebase-admin/firestore';
+import { Timestamp, FieldValue } from 'firebase-admin/firestore';
+import { randomBytes } from 'crypto';
 import type { ApiToken } from '../types/api';
 import { errors } from '../middleware/errorHandler';
 import { createLazyFirestore } from '../utils/factory';
@@ -53,7 +55,6 @@ export class TokenService {
         });
         throw errors.unauthorized('Invalid or expired token');
       }
-
       // Check for token expiration (for tokens with expiration fields)
       if (
         tokenData.isActive === false ||
@@ -215,23 +216,8 @@ export class TokenService {
     }
   }
   private generateSecureToken(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const array = new Uint8Array(64);
-    if (typeof crypto !== 'undefined' && 'getRandomValues' in crypto) {
-      crypto.getRandomValues(array);
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const nodeCrypto = require('crypto');
-      const buffer = nodeCrypto.randomBytes(64);
-      for (let i = 0; i < 64; i++) {
-        array[i] = buffer[i];
-      }
-    }
-    for (let i = 0; i < array.length; i++) {
-      result += chars[array[i] % chars.length];
-    }
-    return result;
+    // Generate 48 random bytes (will become 64 base64url characters)
+    return randomBytes(48).toString('base64url');
   }
   private incrementTokenCalls(
     tokenRef: DocumentReference<TokenDocument>,

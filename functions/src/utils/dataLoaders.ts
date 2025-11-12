@@ -29,12 +29,12 @@ async function loadAndCache<T>(
   
   // If we have cached data, return it
   if (cached !== undefined && cached.inFlight === undefined) {
-    return cached.data;
+    return cached.data as T | null;
   }
-  
+
   // If there's an in-flight promise, wait for it
   if (cached?.inFlight) {
-    return cached.inFlight;
+    return cached.inFlight as Promise<T | null>;
   }
   
   // Create a new in-flight promise

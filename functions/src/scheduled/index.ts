@@ -344,7 +344,7 @@ async function updateTarkovDataImplInternal(
         }
       };
       try {
-        await db.runTransaction((transaction: Transaction) => {
+        await db.runTransaction(async (transaction: Transaction) => {
           transaction.set(itemsMetadataRef, {
             sharded: true,
             shardCount: shards.length,
@@ -396,7 +396,7 @@ const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
     const getDb = createLazyFirestore();
     const db = getDb();
     logger.info('Starting inactive token expiration');
-    const now = db.Timestamp.now();
+    const now = admin.firestore.Timestamp.now();
     const thirtyDaysAgo = new Date(now.toDate().getTime() - 30 * 24 * 60 * 60 * 1000);
     // Query for candidate token IDs (without data) to avoid TOCTOU race condition
     const candidateTokenRefs = await db

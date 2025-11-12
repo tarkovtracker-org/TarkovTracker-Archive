@@ -11,6 +11,11 @@ import {
   expectValidToken,
   expectTokenStructure,
   seedDb,
+  TokenDataBuilder,
+  createBasicToken,
+  createExpiredToken,
+  createRevokedToken,
+  createLegacyToken,
 } from './helpers/index';
 
 // Use centralized test suite management
@@ -19,33 +24,28 @@ describe('TokenService', () => {
 
   beforeEach(() => {
     suite.beforeEach();
-    // Seed default test data
+    // Seed default test data using TokenDataBuilder
     suite.withDatabase({
       token: {
-        tokenA: {
-          owner: 'userA',
-          note: 'Test token A',
-          permissions: ['GP'],
-          gameMode: 'pvp',
-          calls: 5,
-          createdAt: { toDate: () => new Date() },
-        },
-        tokenB: {
-          owner: 'userA',
-          note: 'Test token B',
-          permissions: ['GP', 'WP'],
-          gameMode: 'pvp',
-          calls: 10,
-          createdAt: { toDate: () => new Date() },
-        },
-        tokenC: {
-          owner: 'userB',
-          note: 'Test token C',
-          permissions: ['TP'],
-          gameMode: 'pve',
-          calls: 3,
-          createdAt: { toDate: () => new Date() },
-        },
+        tokenA: new TokenDataBuilder()
+          .withOwner('userA')
+          .withNote('Test token A')
+          .withPermissions(['GP'])
+          .withCalls(5)
+          .build(),
+        tokenB: new TokenDataBuilder()
+          .withOwner('userA')
+          .withNote('Test token B')
+          .withPermissions(['GP', 'WP'])
+          .withCalls(10)
+          .build(),
+        tokenC: new TokenDataBuilder()
+          .withOwner('userB')
+          .withNote('Test token C')
+          .withPermissions(['TP'])
+          .pve()
+          .withCalls(3)
+          .build(),
       },
       users: {
         userA: { uid: 'userA' },
@@ -57,17 +57,15 @@ describe('TokenService', () => {
   afterEach(suite.afterEach);
   describe('getTokenInfo', () => {
     it('should retrieve token information successfully', async () => {
-      // Seed the database with the test token using suite helper
+      // Seed the database with the test token using TokenDataBuilder
       suite.withDatabase({
         token: {
-          'test-token-123': {
-            owner: 'test-user-123',
-            note: 'Test token',
-            permissions: ['GP', 'WP'],
-            gameMode: 'pvp',
-            calls: 5,
-            createdAt: { toDate: () => new Date() },
-          },
+          'test-token-123': new TokenDataBuilder()
+            .withOwner('test-user-123')
+            .withNote('Test token')
+            .withPermissions(['GP', 'WP'])
+            .withCalls(5)
+            .build(),
         },
       });
 
@@ -83,24 +81,10 @@ describe('TokenService', () => {
       expect(result.calls).toBe(5);
     });
     it('should throw unauthorized error for non-existent token', async () => {
-      const { collectionMock, restore } = withTokenCollectionMock((collection) => {
-        const originalDoc = collection.doc;
-        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
-          const docRef = originalDoc(docId);
-          docRef.get.mockResolvedValue({
-            exists: false,
-            data: () => undefined,
-          });
-          return docRef;
-        });
-      });
-
-      // Register cleanup with suite
-      suite.addCleanup(restore);
-
+      // No need to seed the token - the default mock returns exists: false for missing tokens
       const tokenService = new TokenService();
 
-      // Test that unauthorized error is thrown
+      // Test that unauthorized error is thrown for non-existent token
       await expect(tokenService.getTokenInfo('invalid-token')).rejects.toMatchObject({
         name: 'ApiError',
         statusCode: 401,
@@ -108,7 +92,8 @@ describe('TokenService', () => {
       });
     });
     it('should throw internal error when token data is undefined', async () => {
-      // Use existing token from seeded data and override its get method
+      // Edge case: token exists but data() returns undefined
+      // This requires overriding mock behavior for this specific scenario
       const { restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
 
@@ -128,58 +113,73 @@ describe('TokenService', () => {
           return originalDoc(docId);
         });
       });
+
+      // Register cleanup with suite
+      suite.addCleanup(restore);
+
       const tokenService = new TokenService();
       await expect(tokenService.getTokenInfo('tokenA')).rejects.toThrow('Invalid token data');
-      restore();
     });
     it('should increment token calls asynchronously', async () => {
-      const { collectionMock, restore } = withTokenCollectionMock(() => {});
-      // Use the existing tokenA from the seeded data
-      const tokenService = new TokenService();
-      await tokenService.getTokenInfo('tokenA');
-      // Give the async call a moment to execute
-      await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT));
-      // The update method should have been called on the token document
-      // Check that doc was called with tokenA (for the increment call)
-      const docCalls = collectionMock.doc.mock.calls;
-      const incrementCall = docCalls.find((call) => call[0] === 'tokenA');
-      expect(incrementCall).toBeDefined();
-      // Find the doc reference that was used for the update
-      const docRef = collectionMock.doc.mock.results.find(
-        (result, index) => collectionMock.doc.mock.calls[index][0] === 'tokenA'
-      )?.value;
-      if (docRef && docRef.update) {
-        expect(docRef.update).toHaveBeenCalledWith({
-          calls: expect.objectContaining({ _increment: 1 }),
-        });
-      }
-      restore();
-    });
-    it('should default gameMode to pvp for legacy tokens', async () => {
-      const mockTokenData = {
-        owner: 'userA',
-        note: 'Test token',
-        permissions: ['GP'],
-        // No gameMode field
-        calls: 0,
-        createdAt: { toDate: () => new Date(0) },
-      };
+      // Create a promise to track when update is called (deterministic waiting)
+      let updateCalled: () => void;
+      const updatePromise = new Promise<void>((resolve) => {
+        updateCalled = resolve;
+      });
+
       const { collectionMock, restore } = withTokenCollectionMock((collection) => {
         const originalDoc = collection.doc;
         (collection.doc as any) = vi.fn().mockImplementation((docId) => {
           const docRef = originalDoc(docId);
-          docRef.get = vi.fn().mockResolvedValue({
-            exists: true,
-            data: () => mockTokenData,
-          });
+          // Override update to resolve our promise when called
+          if (docId === 'tokenA') {
+            const originalUpdate = docRef.update;
+            docRef.update = vi.fn().mockImplementation((...args: any[]) => {
+              updateCalled(); // Signal that update was called
+              return originalUpdate(...args);
+            });
+          }
           return docRef;
         });
       });
+
+      // Register cleanup with suite
+      suite.addCleanup(restore);
+
       const tokenService = new TokenService();
-      const result = await tokenService.getTokenInfo('tokenA');
+      await tokenService.getTokenInfo('tokenA');
+
+      // Deterministically wait for the async update to be called
+      await updatePromise;
+
+      // The update method should have been called with FieldValue.increment(1)
+      const docRef = collectionMock.doc.mock.results.find(
+        (result, index) => collectionMock.doc.mock.calls[index][0] === 'tokenA'
+      )?.value;
+
+      expect(docRef).toBeDefined();
+      expect(docRef.update).toHaveBeenCalledWith({
+        calls: expect.objectContaining({ _increment: 1 }),
+      });
+    });
+    it('should default gameMode to pvp for legacy tokens', async () => {
+      // Use TokenDataBuilder to create a legacy token (without gameMode)
+      suite.withDatabase({
+        token: {
+          'legacy-token': new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Test token')
+            .withPermissions(['GP'])
+            .legacy() // Removes modern fields including explicit gameMode
+            .build(),
+        },
+      });
+
+      const tokenService = new TokenService();
+      const result = await tokenService.getTokenInfo('legacy-token');
+
+      // Should default to 'pvp' when gameMode is missing
       expect(result.gameMode).toBe('pvp');
-      expect(collectionMock.doc).toHaveBeenCalled();
-      restore();
     });
     it('should handle Firestore errors gracefully', async () => {
       const { restore } = withTokenCollectionMock((collection) => {
@@ -191,41 +191,26 @@ describe('TokenService', () => {
           return docRef;
         });
       });
+
+      // Register cleanup with suite
+      suite.addCleanup(restore);
+
       const tokenService = new TokenService();
       await expect(tokenService.getTokenInfo('tokenA')).rejects.toThrow(
         'Failed to retrieve token information'
       );
-      restore();
     });
   });
   describe('validateToken', () => {
     it('should validate token from Authorization header', async () => {
-      const mockTokenData = {
-        owner: 'userA',
-        note: 'Test token',
-        permissions: ['GP'],
-        gameMode: 'pvp',
-        calls: 0,
-        createdAt: { toDate: () => new Date(0) },
-      };
-      const { restore } = withTokenCollectionMock((collection) => {
-        const originalDoc = collection.doc;
-        (collection.doc as any) = vi.fn().mockImplementation((docId) => {
-          const docRef = originalDoc(docId);
-          docRef.get = vi.fn().mockResolvedValue({
-            exists: true,
-            data: () => mockTokenData,
-          });
-          return docRef;
-        });
-      });
+      // tokenA is already seeded in beforeEach, so we can use it directly
       const tokenService = new TokenService();
       const result = await tokenService.validateToken('Bearer tokenA');
+
       expect(result.token).toBe('tokenA');
       expect(result.token).toMatch(TOKEN_FORMAT);
       expect(result.token.length).toBe(19);
-      expect(result.permissions).toEqual(['GP']);
-      restore();
+      expect(result.permissions).toEqual(['GP']); // tokenA has GP permission
     });
     it('should throw error when Authorization header is missing', async () => {
       const tokenService = new TokenService();
@@ -335,40 +320,23 @@ describe('TokenService', () => {
   });
   describe('token expiration', () => {
     it('should reject expired tokens and accept valid tokens', async () => {
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
-      // Create tokens with different expiration statuses
-      const expiredTokenData = {
-        owner: 'userA',
-        note: 'Expired token',
-        permissions: ['GP'],
-        gameMode: 'pvp',
-        calls: 5,
-        createdAt: { toDate: () => thirtyDaysAgo },
-        lastUsed: { toDate: () => thirtyDaysAgo },
-        isActive: false,
-        status: 'expired' as const,
-        expiredAt: { toDate: () => new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000) }, // Expired 15 days ago
-      };
-
-      const validTokenData = {
-        owner: 'userA',
-        note: 'Valid token',
-        permissions: ['GP', 'WP'],
-        gameMode: 'pvp',
-        calls: 10,
-        createdAt: { toDate: () => new Date() },
-        lastUsed: { toDate: () => new Date() },
-        isActive: true,
-        status: 'active' as const,
-      };
-
-      // Seed the database with test tokens using suite helper
+      // Use TokenDataBuilder for clear test intent
       suite.withDatabase({
         token: {
-          'expired-token': expiredTokenData,
-          'valid-token': validTokenData,
+          'expired-token': new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Expired token')
+            .withPermissions(['GP'])
+            .withCalls(5)
+            .expired(15) // Expired 15 days ago
+            .build(),
+          'valid-token': new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Valid token')
+            .withPermissions(['GP', 'WP'])
+            .withCalls(10)
+            .active()
+            .build(),
         },
         users: {
           userA: { uid: 'userA' },
@@ -390,22 +358,16 @@ describe('TokenService', () => {
     });
 
     it('should reject tokens with inactive status', async () => {
-      const inactiveTokenData = {
-        owner: 'userA',
-        note: 'Inactive token',
-        permissions: ['GP'],
-        gameMode: 'pvp',
-        calls: 3,
-        createdAt: { toDate: () => new Date() },
-        lastUsed: { toDate: () => new Date() },
-        isActive: false,
-        status: 'revoked' as const,
-      };
-
-      // Seed the database with test token using suite helper
+      // Use TokenDataBuilder with revoked() for clear intent
       suite.withDatabase({
         token: {
-          'inactive-token': inactiveTokenData,
+          'inactive-token': new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Inactive token')
+            .withPermissions(['GP'])
+            .withCalls(3)
+            .revoked()
+            .build(),
         },
         users: {
           userA: { uid: 'userA' },
@@ -421,20 +383,16 @@ describe('TokenService', () => {
     });
 
     it('should handle tokens without expiration fields (legacy tokens)', async () => {
-      const legacyTokenData = {
-        owner: 'userA',
-        note: 'Legacy token',
-        permissions: ['GP'],
-        gameMode: 'pvp',
-        calls: 2,
-        createdAt: { toDate: () => new Date() },
-        // No isActive, status, or lastUsed fields - legacy token
-      };
-
-      // Seed the database with test token using suite helper
+      // Use TokenDataBuilder with legacy() for clear intent
       suite.withDatabase({
         token: {
-          'legacy-token': legacyTokenData,
+          'legacy-token': new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Legacy token')
+            .withPermissions(['GP'])
+            .withCalls(2)
+            .legacy() // Removes modern expiration fields
+            .build(),
         },
         users: {
           userA: { uid: 'userA' },
@@ -452,17 +410,42 @@ describe('TokenService', () => {
   });
 });
 describe('revokeToken', () => {
+  // Note: These tests exist outside the main describe block, so they don't have access to `suite`
+  // We'll need to create a local suite or use the global beforeEach/afterEach
+  const suite = createTestSuite('revokeToken');
+
+  beforeEach(() => {
+    suite.beforeEach();
+    // Seed tokens for revoke tests
+    suite.withDatabase({
+      token: {
+        tokenA: new TokenDataBuilder().withOwner('userA').withNote('Test token A').build(),
+        tokenB: new TokenDataBuilder().withOwner('userB').withNote('Test token B').build(),
+      },
+      users: {
+        userA: { uid: 'userA' },
+        userB: { uid: 'userB' },
+      },
+    });
+  });
+
+  afterEach(suite.afterEach);
+
   it('should revoke token successfully', async () => {
     const { collectionMock, restore } = withTokenCollectionMock(() => {});
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     // Use the existing tokenA from the seeded data (owned by userA)
     const tokenService = new TokenService();
     const result = await tokenService.revokeToken('tokenA', 'userA');
+
     expect(result).toEqual({ revoked: true });
     // The delete method should have been called on the token document
     expect(collectionMock.doc).toHaveBeenCalledWith('tokenA');
     const usedDocRef = collectionMock.doc.mock.results[0].value;
     expect(usedDocRef.delete).toHaveBeenCalled();
-    restore();
   });
   it('should throw not found error for non-existent token', async () => {
     const { restore } = withTokenCollectionMock((collection) => {
@@ -476,11 +459,14 @@ describe('revokeToken', () => {
         return docRef;
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     await expect(tokenService.revokeToken('invalid-token', 'userA')).rejects.toThrow(
       'Token not found'
     );
-    restore();
   });
   it('should throw forbidden error when user does not own token', async () => {
     const { restore } = withTokenCollectionMock((collection) => {
@@ -498,12 +484,16 @@ describe('revokeToken', () => {
         return docRef;
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     await expect(tokenService.revokeToken('tokenC', 'userA')).rejects.toThrow(
       /you can only revoke your own tokens/i
     );
-    restore();
   });
+
   it('should handle Firestore errors gracefully', async () => {
     const { restore } = withTokenCollectionMock((collection) => {
       const originalDoc = collection.doc;
@@ -514,45 +504,56 @@ describe('revokeToken', () => {
         return docRef;
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     await expect(tokenService.revokeToken('tokenA', 'userA')).rejects.toThrow(
       'Failed to revoke token'
     );
-    restore();
   });
 });
 describe('listUserTokens', () => {
+  const suite = createTestSuite('listUserTokens');
+
+  beforeEach(suite.beforeEach);
+  afterEach(suite.afterEach);
+
   it('should list all tokens for a user', async () => {
+    // Use TokenDataBuilder for mock token data
     const mockTokens = [
       {
         id: 'tokenA',
-        data: () => ({
-          owner: 'userA',
-          note: 'Test token A',
-          permissions: ['GP'],
-          gameMode: 'pvp',
-          createdAt: { toDate: () => new Date(0) },
-        }),
+        data: () => new TokenDataBuilder()
+          .withOwner('userA')
+          .withNote('Test token A')
+          .withPermissions(['GP'])
+          .build(),
       },
       {
         id: 'tokenB',
-        data: () => ({
-          owner: 'userA',
-          note: 'Test token B',
-          permissions: ['WP'],
-          gameMode: 'pvp',
-          createdAt: { toDate: () => new Date(0) },
-        }),
+        data: () => new TokenDataBuilder()
+          .withOwner('userA')
+          .withNote('Test token B')
+          .withPermissions(['WP'])
+          .build(),
       },
     ];
+
     const { restore } = withTokenCollectionMock((collection) => {
       collection.where.mockReturnThis();
       collection.get.mockResolvedValue({
         docs: mockTokens,
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     const result = await tokenService.listUserTokens('userA');
+
     expect(result).toHaveLength(2);
     const tokenA = result.find((t) => t.note === 'Test token A');
     const tokenB = result.find((t) => t.note === 'Test token B');
@@ -560,7 +561,6 @@ describe('listUserTokens', () => {
     expect(tokenB).toBeDefined();
     expect(tokenA?.gameMode).toBe('pvp');
     expect(tokenB?.gameMode).toBe('pvp');
-    restore();
   });
   it('should return empty array when user has no tokens', async () => {
     const { restore } = withTokenCollectionMock((collection) => {
@@ -569,43 +569,55 @@ describe('listUserTokens', () => {
         docs: [],
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     const result = await tokenService.listUserTokens('user-with-no-tokens');
     expect(result).toEqual([]);
-    restore();
   });
+
   it('should default gameMode to pvp for legacy tokens', async () => {
+    // Use TokenDataBuilder with legacy() for clear intent
     const mockTokens = [
       {
         id: 'tokenA',
-        data: () => ({
-          owner: 'userA',
-          note: 'Legacy Token',
-          permissions: ['GP'],
-          // No gameMode
-          createdAt: { toDate: () => new Date(0) },
-        }),
+        data: () => new TokenDataBuilder()
+          .withOwner('userA')
+          .withNote('Legacy Token')
+          .withPermissions(['GP'])
+          .legacy() // No gameMode field
+          .build(),
       },
     ];
+
     const { restore } = withTokenCollectionMock((collection) => {
       collection.where.mockReturnThis();
       collection.get.mockResolvedValue({
         docs: mockTokens,
       });
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     const result = await tokenService.listUserTokens('userA');
     expect(result[0].gameMode).toBe('pvp');
-    restore();
   });
+
   it('should handle Firestore errors gracefully', async () => {
     const { restore } = withTokenCollectionMock((collection) => {
       collection.where.mockReturnThis();
       collection.get.mockRejectedValue(new Error('Firestore connection failed'));
     });
+
+    // Register cleanup with suite
+    suite.addCleanup(restore);
+
     const tokenService = new TokenService();
     await expect(tokenService.listUserTokens('userA')).rejects.toThrow('Failed to list tokens');
-    restore();
   });
   describe('validatePermissions', () => {
     it('should validate valid permissions', () => {
@@ -682,17 +694,14 @@ describe('listUserTokens', () => {
         .mockImplementationOnce((size, callback) => {
           callback(null, Buffer.from('b'.repeat(size), 'utf8'));
         });
-      // Seed existing token with collision token (using seedDb for this test-specific scenario)
+      // Seed existing token with collision token (using TokenDataBuilder)
       seedDb({
         token: {
-          aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: {
-            owner: 'userA',
-            note: 'Duplicate token',
-            permissions: ['GP'],
-            gameMode: 'pvp',
-            calls: 0,
-            createdAt: { toDate: () => new Date() },
-          },
+          aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: new TokenDataBuilder()
+            .withOwner('userA')
+            .withNote('Duplicate token')
+            .withPermissions(['GP'])
+            .build(),
         },
         users: { userA: { uid: 'userA' } },
       });

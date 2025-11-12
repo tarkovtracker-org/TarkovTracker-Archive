@@ -56,5 +56,15 @@ export {
   expectErrorWithStatus,
 } from './assertionHelpers';
 
-// Re-export from setup for convenience
-export { seedDb, resetDb, firestoreMock } from '../setup';
+// Token Data Builder
+export {
+  TokenDataBuilder,
+  createBasicToken,
+  createExpiredToken,
+  createRevokedToken,
+  createLegacyToken,
+  type TokenData,
+} from './tokenDataBuilder';
+
+// Re-export from emulator setup for convenience
+export { seedDb, resetDb, firestore, auth, admin } from './emulatorSetup';

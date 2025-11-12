@@ -10,8 +10,6 @@ import {
   FieldValue,
   Query,
   CollectionReference,
-  DocumentReference,
-  DocumentSnapshot,
 } from 'firebase-admin/firestore';
 
 // ============================================================================
@@ -60,20 +58,31 @@ export function auth() {
  * Uses HTTP DELETE to the emulator's clear endpoint
  */
 export async function resetDb(): Promise<void> {
-  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080';
+  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:5002';
   const projectId = 'test-project';
   const url = `http://${emulatorHost}/emulator/v1/projects/${projectId}/databases/(default)/documents`;
 
   try {
-    const response = await fetch(url, {
-      method: 'DELETE',
-    });
+    // Use AbortController to timeout after 5 seconds to prevent hanging connections
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    if (!response.ok && response.status !== 404) {
-      console.warn(`Warning: Failed to clear Firestore emulator: ${response.statusText}`);
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok && response.status !== 404) {
+        console.warn(`Warning: Failed to clear Firestore emulator: ${response.statusText}`);
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
   } catch (err) {
-    // Silently fail if emulator is not running
+    // Silently fail if emulator is not running or times out
     // (tests might be using mocks or emulator might be started elsewhere)
   }
 }

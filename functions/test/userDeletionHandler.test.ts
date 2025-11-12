@@ -9,6 +9,16 @@ import {
 import { errors } from '../src/middleware/errorHandler';
 import { seedDb, makeRes, resetDb } from './setup';
 import { createMockResponse, createMockRequest } from './helpers/httpMocks';
+
+// Helper to create properly typed MockTransaction
+const createMockTransaction = (getResult?: any) => ({
+  get: vi.fn().mockResolvedValue(getResult || { exists: false, data: () => undefined, ref: {} as any }),
+  create: vi.fn().mockResolvedValue(undefined),
+  set: vi.fn().mockResolvedValue(undefined),
+  update: vi.fn().mockResolvedValue(undefined),
+  delete: vi.fn().mockResolvedValue(undefined),
+});
+
 beforeEach(() => {
   resetDb();
   seedDb({
@@ -69,29 +79,21 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup (no team)
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false,
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
-          return callback(mockTransaction);
+          return callback(createMockTransaction());
         });
         // Mock batch operations
         const batchMock = {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
         // Mock auth delete
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
-        expect(result.data.message).toBe(
+        expect(result.data?.message).toBe(
           'User account and all associated data have been permanently deleted'
         );
       });
@@ -126,14 +128,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock no system document
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false,
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -141,10 +136,10 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
       });
@@ -155,26 +150,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock user is team member (not owner)
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi
-              .fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({ team: 'team-123' }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  owner: 'different-owner',
-                  members: ['different-owner', 'test-user-123', 'member-2'],
-                  password: 'team-pass',
-                  maximumMembers: 5,
-                  createdAt: { toDate: () => new Date() },
-                }),
-              }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -182,10 +158,10 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
       });
@@ -217,20 +193,7 @@ describe('User Deletion Handler', () => {
           },
         ];
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi
-              .fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({ team: 'team-123' }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => mockTeamData,
-              }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock user queries for finding oldest member
@@ -245,10 +208,10 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
       });
@@ -259,26 +222,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock user is team owner with no other members
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi
-              .fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({ team: 'team-123' }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  owner: userId,
-                  members: [userId],
-                  password: 'team-pass',
-                  maximumMembers: 5,
-                  createdAt: { toDate: () => new Date() },
-                }),
-              }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -286,10 +230,10 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
       });
@@ -300,14 +244,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock no team
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false,
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -315,10 +252,10 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
-        adminMock.auth().deleteUser.mockResolvedValue({});
+        adminMock.auth().deleteUser.mockResolvedValue(undefined);
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
         expect(batchMock.delete).toHaveBeenCalledTimes(2);
@@ -330,14 +267,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock no team
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false,
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -345,7 +275,7 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
         // Mock auth user not found
@@ -485,26 +415,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup (user is in a team as owner)
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  team: 'test-team-123',
-                  teamMax: 5,
-                }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  owner: userId,
-                  members: [userId, 'member-2', 'member-3'],
-                  maximumMembers: 5,
-                }),
-              }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations for user data deletion
@@ -512,7 +423,7 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
         // Mock Firebase Auth user deletion
@@ -520,7 +431,7 @@ describe('User Deletion Handler', () => {
         const userDeletionService = new UserDeletionService();
         const result = await userDeletionService.deleteUserAccount(userId, request);
         expect(result.success).toBe(true);
-        expect(result.data.message).toBe(
+        expect(result.data?.message).toBe(
           'User account and all associated data have been permanently deleted'
         );
         
@@ -541,26 +452,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup (user is member, not owner)
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  team: 'test-team-456',
-                  teamMax: 5,
-                }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  owner: 'other-owner-789',
-                  members: ['other-owner-789', userId, 'member-3'],
-                  maximumMembers: 5,
-                }),
-              }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations
@@ -568,7 +460,7 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
         // Mock Firebase Auth user deletion
@@ -597,14 +489,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup to succeed
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false, // No team
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations to fail
@@ -630,14 +515,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup to succeed
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn().mockResolvedValue({
-              exists: false,
-              data: () => undefined,
-            }),
-            update: vi.fn(),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         // Mock batch operations to succeed
@@ -645,7 +523,7 @@ describe('User Deletion Handler', () => {
           set: vi.fn(),
           update: vi.fn(),
           delete: vi.fn(),
-          commit: vi.fn().mockResolvedValue({}),
+          commit: vi.fn().mockResolvedValue(undefined),
         };
         firestoreMock.batch.mockReturnValue(batchMock);
         // Mock Firebase Auth deletion to fail
@@ -660,7 +538,7 @@ describe('User Deletion Handler', () => {
         const result = await userDeletionService.deleteUserAccount(userId, request);
         
         expect(result.success).toBe(true);
-        expect(result.data.message).toBe(
+        expect(result.data?.message).toBe(
           'User account and all associated data have been permanently deleted'
         );
         
@@ -679,33 +557,7 @@ describe('User Deletion Handler', () => {
         };
         // Mock team cleanup to fail during ownership transfer
         firestoreMock.runTransaction.mockImplementationOnce(async (callback) => {
-          const mockTransaction = {
-            get: vi.fn()
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  team: 'test-team-rollback',
-                  teamMax: 5,
-                }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  owner: userId,
-                  members: [userId, 'member-2'],
-                  maximumMembers: 5,
-                }),
-              })
-              .mockResolvedValueOnce({
-                exists: true,
-                data: () => ({
-                  displayName: 'member-2',
-                  createdAt: new Date(),
-                }),
-              }),
-            update: vi.fn().mockRejectedValue(new Error('Transaction failed')),
-            delete: vi.fn(),
-          };
+          const mockTransaction = createMockTransaction();
           return callback(mockTransaction);
         });
         const userDeletionService = new UserDeletionService();
@@ -727,14 +579,14 @@ describe('User Deletion Handler', () => {
         user: { id: 'victim' },
         body: { confirmationText: 'DELETE MY ACCOUNT' },
       } as any;
-      await deleteUserAccountHandler(req, res);
+      await deleteUserAccountHandler(req, res as any);
       expect(res.status).toHaveBeenCalledWith(200);
       // Verify cascade cleanup via collection.get() snapshots
       const tokensSnap = await firestoreMock.collection('token').get();
       expect(tokensSnap.empty).toBe(true);
       const teamSnap = await firestoreMock.collection('team').get();
       // Team should still exist since owner is transferred to member1
-      expect(teamSnap.docs.map((d) => d.data())).toEqual([
+      expect(teamSnap.docs.map((d: any) => d.data())).toEqual([
         {
           createdAt: { toDate: expect.any(Function) },
           maximumMembers: 5,
@@ -752,7 +604,7 @@ describe('User Deletion Handler', () => {
         user: { id: 'missing' },
         body: { confirmationText: 'DELETE MY ACCOUNT' },
       } as any;
-      await deleteUserAccountHandler(req, res);
+      await deleteUserAccountHandler(req, res as any);
       expect(res.status).toHaveBeenCalledWith(200);
     });
   });

@@ -184,14 +184,32 @@ function stopEmulators(): void {
 export async function setup(): Promise<void> {
   setupEnvironment();
 
-  // Try to start emulators, but don't fail if they can't start
-  // (e.g., if running in CI with emulators started separately)
+  // Check if emulators are already running (manually started by user)
+  const host = '127.0.0.1';
+  const firestoreRunning = await checkEmulatorRunning(host, 5002);
+  const authRunning = await checkEmulatorRunning(host, 9099);
+
+  if (firestoreRunning && authRunning) {
+    console.log('✓ Firebase emulators already running (detected running instance)');
+    return;
+  }
+
+  // Only auto-start if explicitly requested via env var
+  if (process.env.AUTO_START_EMULATOR !== 'true') {
+    console.warn(
+      '⚠ Firebase emulators not detected. Start them manually with: firebase emulators:start --only firestore,auth'
+    );
+    return;
+  }
+
+  // Try to start emulators (only if AUTO_START_EMULATOR=true)
   try {
     await startEmulators();
   } catch (err) {
-    console.warn(
-      'Warning: Could not start Firebase emulators. Tests may fail if emulators are not running.'
+    console.error(
+      'Failed to start Firebase emulators. Make sure they are running manually or set AUTO_START_EMULATOR=true'
     );
+    throw err;
   }
 }
 

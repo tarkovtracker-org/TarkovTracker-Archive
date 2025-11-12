@@ -102,7 +102,7 @@ export const createLazyFirestore = () => {
 export const createLazyAuth = () => {
   return createLazy(() => {
     if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
-      if (admin.auth._isMockFunction) {
+      if (typeof (admin.auth as any)._isMockFunction !== 'undefined') {
         return admin.auth();
       }
       return admin.auth();

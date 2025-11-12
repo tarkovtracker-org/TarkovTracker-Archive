@@ -5,6 +5,7 @@
  * Use these as templates when writing new tests.
  */
 
+import { expect } from 'vitest';
 import { resetDb, seedDb, SeedData, admin, firestore } from './emulatorSetup';
 
 // ============================================================================
@@ -348,21 +349,23 @@ export function createBatch() {
   const db = firestore();
   const batch = db.batch();
 
-  return {
+  const batchWrapper = {
     set: (collection: string, docId: string, data: any) => {
       batch.set(db.collection(collection).doc(docId), data);
-      return this;
+      return batchWrapper;
     },
     update: (collection: string, docId: string, data: any) => {
       batch.update(db.collection(collection).doc(docId), data);
-      return this;
+      return batchWrapper;
     },
     delete: (collection: string, docId: string) => {
       batch.delete(db.collection(collection).doc(docId));
-      return this;
+      return batchWrapper;
     },
     commit: () => batch.commit(),
   };
+
+  return batchWrapper;
 }
 
 // ============================================================================

@@ -105,6 +105,7 @@ interface AdminMock {
   initializeApp: Mock<(config: any) => AdminMock>;
   firestore: Mock<() => typeof firestoreMock>;
   auth: Mock<() => AuthInstance>;
+  app: Mock<() => AdminMock>;
   credential: { cert: Mock };
   FieldValue: typeof firestoreMock.FieldValue;
   Timestamp: typeof firestoreMock.Timestamp;
@@ -242,6 +243,9 @@ const makeRes = (): MockResponse => {
 };
 // Firestore-like mocks with simple query support
 const collectionOverrides = new Map<string, any>();
+// Make available globally for vi.mock() factory functions
+(globalThis as any).__collectionOverrides = collectionOverrides;
+
 const ensureCollection = (name: string): Map<string, any> => {
   if (!dbState[name as keyof DatabaseState]) {
     (dbState as any)[name] = new Map();
@@ -590,11 +594,15 @@ const adminMock: AdminMock = {
   }),
   firestore: firestoreFactory,
   auth: vi.fn(defaultAuthImpl),
+  app: vi.fn(() => adminMock), // Returns the admin instance (self-reference)
   credential: { cert: vi.fn() },
   FieldValue: firestoreMock.FieldValue,
   Timestamp: firestoreMock.Timestamp,
   apps: [], // Add apps array to track initialized apps
 };
+// Make available globally for vi.mock() factory functions
+(globalThis as any).__adminMock = adminMock;
+
 const restoreAdminImplementations = (): void => {
   firestoreFactory.mockImplementation(defaultFirestoreFactoryImpl);
   authInstance = createAuthInstance();
@@ -655,19 +663,76 @@ const functionsMock: FunctionsMock = {
   },
 };
 
-// firebase-admin mocks (reuse shared test doubles)
-vi.mock('firebase-admin/firestore', () => ({
-  Firestore: class {},
-  DocumentReference: class {},
-  FieldValue: firestoreMock.FieldValue,
-  Timestamp: firestoreMock.Timestamp,
-  collectionOverrides,
-}));
+// firebase-admin mocks
+// NOTE: These vi.mock() calls are hoisted to the top of the file
+// We must inline the mock definitions here without referencing variables defined later
+// to avoid "Cannot access before initialization" errors
 
-vi.mock('firebase-admin', () => ({
-  default: adminMock,
-  ...adminMock,
-}));
+vi.mock('firebase-admin/firestore', () => {
+  // Create FieldValue mock inline
+  const FieldValueMock = {
+    serverTimestamp: vi.fn(() => ({ _serverTimestamp: true })),
+    arrayRemove: vi.fn((...items: any[]) => ({ _arrayRemove: items })),
+    arrayUnion: vi.fn((...items: any[]) => ({ _arrayUnion: items })),
+    increment: vi.fn((n: number) => ({ _increment: n })),
+    delete: vi.fn(() => ({ _delete: true })),
+  };
+
+  // Create Timestamp mock inline
+  const TimestampMock = {
+    now: vi.fn(() => ({ toDate: () => new Date(0) })),
+    fromDate: vi.fn((date: Date) => ({ toDate: () => date })),
+  };
+
+  return {
+    Firestore: class {},
+    DocumentReference: class {},
+    FieldValue: FieldValueMock,
+    Timestamp: TimestampMock,
+    // Export empty Map for collectionOverrides - will be populated by actual collectionOverrides
+    get collectionOverrides() {
+      // Lazy getter that accesses the real collectionOverrides after initialization
+      return globalThis.__collectionOverrides || new Map();
+    },
+  };
+});
+
+vi.mock('firebase-admin', () => {
+  // Getter functions to lazily access the real adminMock after initialization
+  const getMock = () => (globalThis as any).__adminMock;
+
+  return {
+    // default export
+    get default() {
+      return getMock();
+    },
+    // Named exports that forward to the real mock
+    get initializeApp() {
+      return getMock()?.initializeApp;
+    },
+    get firestore() {
+      return getMock()?.firestore;
+    },
+    get auth() {
+      return getMock()?.auth;
+    },
+    get app() {
+      return getMock()?.app;
+    },
+    get credential() {
+      return getMock()?.credential;
+    },
+    get FieldValue() {
+      return getMock()?.FieldValue;
+    },
+    get Timestamp() {
+      return getMock()?.Timestamp;
+    },
+    get apps() {
+      return getMock()?.apps || [];
+    },
+  };
+});
 
 // --- Global Hooks ---
 beforeEach(() => {

@@ -27,7 +27,7 @@
  */
 
 import { vi } from 'vitest';
-import { seedDb, resetDb } from '../setup';
+import { seedDb, resetDb } from './emulatorSetup';
 import type { Mock } from 'vitest';
 
 /**
