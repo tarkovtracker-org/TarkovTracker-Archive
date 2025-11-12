@@ -10,7 +10,6 @@
     {{ teammateNames[user] ?? user }}
   </span>
 </template>
-
 <script setup lang="ts">
   defineProps<{
     userIds: string[];

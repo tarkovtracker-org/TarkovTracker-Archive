@@ -7,7 +7,6 @@
             <task-link :task="task" />
           </v-col>
         </v-row>
-
         <v-tooltip v-if="task.minPlayerLevel > 0" location="top">
           <template #activator="activator">
             <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
@@ -20,7 +19,6 @@
           </template>
           {{ t('page.tasks.questcard.level_tooltip') }}
         </v-tooltip>
-
         <v-tooltip v-if="task?.predecessors?.length" location="top">
           <template #activator="activator">
             <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
@@ -32,7 +30,6 @@
           </template>
           {{ t('page.tasks.questcard.lockedbefore_tooltip') }}
         </v-tooltip>
-
         <v-tooltip v-if="task?.successors?.length" location="top">
           <template #activator="activator">
             <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
@@ -44,14 +41,12 @@
           </template>
           {{ t('page.tasks.questcard.lockedbehind_tooltip') }}
         </v-tooltip>
-
         <InfoRow v-if="task?.factionName != 'Any'" class="mb-1">
           <template #icon>
             <img :src="factionImage" class="faction-icon mx-1" />
           </template>
           {{ task.factionName }}
         </InfoRow>
-
         <v-row
           v-if="showKappaStatus || showLightkeeperStatus || showEodChip"
           no-gutters
@@ -95,7 +90,6 @@
             </v-chip>
           </v-col>
         </v-row>
-
         <InfoRow
           v-if="showNextTasks && nextTasks?.length"
           icon="mdi-arrow-right-bold"
@@ -122,7 +116,6 @@
             </span>
           </span>
         </InfoRow>
-
         <InfoRow
           v-if="showPreviousTasks && previousTasks?.length"
           icon="mdi-arrow-left-bold"
@@ -149,7 +142,6 @@
             </span>
           </span>
         </InfoRow>
-
         <InfoRow
           v-if="activeUserView === 'all' && neededBy.length > 0"
           icon="mdi-account-multiple-outline"
@@ -159,7 +151,6 @@
             <template #names>{{ neededBy.join(', ') }}</template>
           </i18n-t>
         </InfoRow>
-
         <InfoRow v-if="showTaskIds" icon="mdi-identifier" class="mb-1 task-id-row">
           {{ task.id }}
         </InfoRow>
@@ -173,13 +164,11 @@
     </template>
   </div>
 </template>
-
 <script setup>
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import TaskLink from '@/components/domain/tasks/TaskLink.vue';
   import InfoRow from '@/components/domain/tasks/InfoRow.vue';
-
   const props = defineProps({
     task: { type: Object, required: true },
     xs: { type: Boolean, required: true },
@@ -199,54 +188,44 @@
     showTaskIds: { type: Boolean, default: false },
     showEodStatus: { type: Boolean, default: false },
   });
-
   const { t } = useI18n({ useScope: 'global' });
-
   const showEodChip = computed(() => {
     return props.showEodStatus && props.task?.eodOnly === true;
   });
 </script>
-
 <style lang="scss" scoped>
   .faction-icon {
     filter: invert(1);
     max-width: 24px;
     max-height: 24px;
   }
-
   .lock-indicator {
     align-items: center;
     display: inline-flex;
     width: auto;
     max-width: 100%;
   }
-
   .lock-indicator :deep(.info-row__content) {
     flex: 0 0 auto;
     gap: 4px;
     width: auto;
   }
-
   .tooltip-activator {
     display: block;
     width: fit-content;
     max-width: 100%;
   }
-
   .lock-label {
     font-weight: 500;
     font-size: 0.95em;
   }
-
   .lock-count {
     font-weight: 500;
     font-variant-numeric: tabular-nums;
   }
-
   .requirement-chips {
     gap: 4px;
   }
-
   .status-chip {
     font-weight: 600;
     letter-spacing: 0.5px;
@@ -258,9 +237,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     margin-right: 6px;
   }
-
   /* Chip colors now use Vuetify theme colors via color prop */
-
   .task-id-row {
     font-size: 0.85rem;
     color: rgba(var(--v-theme-on-surface), 0.7);
@@ -268,33 +245,27 @@
     align-items: center;
     gap: 6px;
   }
-
   .next-tasks-row {
     align-items: center;
     flex-wrap: wrap;
   }
-
   .next-tasks__label {
     font-weight: 600;
     margin-right: 6px;
   }
-
   .next-tasks__list {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 6px;
   }
-
   .next-task__link {
     color: rgba(var(--v-theme-tasklink), 1) !important;
     text-decoration: none;
     font-weight: 600;
   }
-
   .next-task__link--plain {
     color: rgba(var(--v-theme-on-surface), 0.8) !important;
   }
-
   .next-task__separator {
     color: rgba(var(--v-theme-on-surface), 0.5);
   }

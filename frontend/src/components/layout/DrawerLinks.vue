@@ -56,13 +56,8 @@
 </template>
 <script setup lang="ts">
   import { fireuser } from '@/plugins/firebase';
-  import DrawerItem from '@/features/drawer/DrawerItem.vue';
-
-  const props = defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
+  import DrawerItem from '@/components/layout/DrawerItem.vue';
+  import type { CollapsibleComponentProps } from './types';
+  const props = defineProps<CollapsibleComponentProps>();
 </script>
 <style lang="scss" scoped></style>

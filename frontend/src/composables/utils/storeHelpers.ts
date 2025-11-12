@@ -1,7 +1,6 @@
 import type { Store } from 'pinia';
 import type { DocumentData } from 'firebase/firestore';
 import { logger } from '@/utils/logger';
-
 /**
  * Clears store properties that are not present in the new state
  * This ensures the store doesn't retain stale data when Firebase documents are updated
@@ -35,7 +34,6 @@ export function clearStaleState(
     logger.error('Error clearing stale state:', error);
   }
 }
-
 /**
  * Safely patches a store with new data
  */
@@ -52,7 +50,6 @@ export function safePatchStore(store: Store, data: DocumentData | Record<string,
     logger.error('Error patching store:', error);
   }
 }
-
 /**
  * Resets a store to empty state by clearing all properties
  */
@@ -63,14 +60,12 @@ export function resetStore(store: Store): void {
     logger.error('Error resetting store:', error);
   }
 }
-
 /**
  * Development-only logging utility
  */
 export function devLog(_message: string, ..._args: unknown[]): void {
   // Development logging disabled
 }
-
 /**
  * Development-only warning utility
  */
@@ -79,7 +74,6 @@ export function devWarn(message: string, ...args: unknown[]): void {
     logger.warn(`[DEV] ${message}`, ...args);
   }
 }
-
 /**
  * Development-only error logging utility
  */
@@ -88,7 +82,6 @@ export function devError(message: string, ...args: unknown[]): void {
     logger.error(`[DEV] ${message}`, ...args);
   }
 }
-
 /**
  * Creates a deep copy of an object using JSON methods
  * Note: This method has limitations (no functions, dates become strings, etc.)
@@ -102,14 +95,12 @@ export function safeJsonCopy<T>(obj: T): T {
     return obj;
   }
 }
-
 /**
  * Checks if a value is a non-empty object
  */
 export function isValidObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
-
 /**
  * Safely gets a nested property from an object
  */

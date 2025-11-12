@@ -76,20 +76,16 @@
     let mapHeight =
       Math.max(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]) -
       Math.min(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]);
-
     // Apply coordinate rotation to the outline points
     const coordinateRotation = props.map?.svg?.coordinateRotation || 0;
-
     let outlinePercents = [];
     props.zoneLocation.outline.forEach((outline) => {
       // Get original coordinates
       let originalX = outline.x;
       let originalZ = outline.z;
-
       // Apply coordinate rotation if specified
       let x = originalX;
       let z = originalZ;
-
       if (coordinateRotation === 90) {
         // Rotate 90 degrees: (x, z) -> (-z, x)
         x = -originalZ;
@@ -103,7 +99,6 @@
         x = originalZ;
         z = -originalX;
       }
-
       // Calculate relative values using the coordinate system of the map
       let relativeLeft = Math.abs(x - mapLeft);
       let relativeTop = Math.abs(z - mapTop);

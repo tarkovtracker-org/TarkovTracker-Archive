@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { ApiToken } from '../types/api.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
-
+import { ApiToken } from '../types/api';
+import { asyncHandler } from '../middleware/errorHandler';
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
   user?: {
@@ -9,7 +8,6 @@ interface AuthenticatedRequest extends Request {
     username?: string;
   };
 }
-
 /**
  * @openapi
  * /token:
@@ -61,7 +59,6 @@ export const getTokenInfo = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     // Token is already validated by middleware and attached to req.apiToken
     const token = req.apiToken!;
-
     const response = {
       success: true,
       permissions: token.permissions,
@@ -71,11 +68,9 @@ export const getTokenInfo = asyncHandler(
       calls: token.calls || 0,
       gameMode: token.gameMode || 'pvp',
     };
-
     res.status(200).json(response);
   }
 );
-
 export default {
   getTokenInfo,
 };

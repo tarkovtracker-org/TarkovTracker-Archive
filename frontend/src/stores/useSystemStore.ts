@@ -4,7 +4,6 @@ import { doc, collection } from 'firebase/firestore';
 import { fireuser, firestore } from '@/plugins/firebase';
 import { useFirebaseListener } from '@/composables/firebase/useFirebaseListener';
 import type { SystemState, SystemGetters } from '@/types/models/tarkov';
-
 /**
  * System store definition with getters for user tokens and team info
  */
@@ -25,14 +24,12 @@ export const useSystemStore = defineStore<string, SystemState, SystemGetters>('s
     },
   },
 });
-
 /**
  * Composable that manages the system store with Firebase synchronization
  */
 export function useSystemStoreWithFirebase() {
   const systemStore = useSystemStore();
   const systemUnsubscribe = ref(null);
-
   // Computed reference to the system document
   const systemRef = computed(() => {
     if (fireuser.loggedIn) {
@@ -40,7 +37,6 @@ export function useSystemStoreWithFirebase() {
     }
     return null;
   });
-
   // Setup Firebase listener
   const { cleanup, isSubscribed } = useFirebaseListener({
     store: systemStore,
@@ -48,7 +44,6 @@ export function useSystemStoreWithFirebase() {
     unsubscribe: systemUnsubscribe,
     storeId: 'system',
   });
-
   return {
     systemStore,
     systemRef,

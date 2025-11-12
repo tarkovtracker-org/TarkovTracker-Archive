@@ -30,7 +30,7 @@ interface CorsRequest {
 interface CorsResponse {
   set(field: string, value: string | readonly string[]): unknown;
 }
-interface OriginValidationOptions {
+export interface OriginValidationOptions {
   trustNoOrigin?: boolean;
   allowedOrigins?: string[];
 }

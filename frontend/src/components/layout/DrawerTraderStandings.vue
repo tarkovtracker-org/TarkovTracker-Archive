@@ -96,25 +96,17 @@
     </v-list-group>
   </v-list>
 </template>
-
 <script setup lang="ts">
   import { computed, reactive, watchEffect } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useTarkovData } from '@/composables/tarkovdata';
   import type { Trader } from '@/types/models/tarkov';
-
-  defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
-
+  import type { CollapsibleComponentProps } from './types';
+  defineProps<CollapsibleComponentProps>();
   const { t } = useI18n({ useScope: 'global' });
   const tarkovStore = useTarkovStore();
   const { traders } = useTarkovData();
-
   const TRADER_ORDER = [
     'Prapor',
     'Therapist',
@@ -128,9 +120,7 @@
     'Lightkeeper',
     'BTR Driver',
   ];
-
   const orderLookup = new Map(TRADER_ORDER.map((name, index) => [name.toLowerCase(), index]));
-
   const orderedTraders = computed(() => {
     return [...(traders.value || [])].sort((a, b) => {
       const aName = a?.name ?? '';
@@ -143,21 +133,17 @@
       return aName.localeCompare(bName);
     });
   });
-
   const currentProgress = computed(() => {
     if (typeof tarkovStore.getCurrentProgressData === 'function') {
       return tarkovStore.getCurrentProgressData();
     }
     return null;
   });
-
   const FENCE_ID = '579dc571d53a0658a154fbec';
   const FENCE_LEVEL_MAX = 4;
   const FENCE_LEVEL_MIN = 1;
   const FENCE_LEVEL_THRESHOLD = 6;
-
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
-
   interface TraderCard {
     trader: Trader;
     items: { value: number; title: string }[];
@@ -168,7 +154,6 @@
     loyaltyEditable: boolean;
     allowedLevels: number[];
   }
-
   const traderCards = computed<TraderCard[]>(() => {
     const standings = currentProgress.value?.traderStandings || {};
     return orderedTraders.value.map((trader) => {
@@ -225,7 +210,6 @@
       };
     });
   });
-
   watchEffect(() => {
     traderCards.value.forEach((card) => {
       const currentLevel = tarkovStore.getTraderLoyaltyLevel(card.trader.id);
@@ -251,16 +235,13 @@
       }
     });
   });
-
   const standingValues = reactive<Record<string, string>>({});
   const editingStanding = reactive<Record<string, boolean>>({});
-
   const formatStanding = (value: number) => {
     if (!Number.isFinite(value)) return '0';
     const fixed = value.toFixed(2);
     return fixed.replace(/\.00$/, '');
   };
-
   watchEffect(() => {
     traderCards.value.forEach((card) => {
       if (editingStanding[card.trader.id]) return;
@@ -268,7 +249,6 @@
       standingValues[card.trader.id] = formatStanding(stored);
     });
   });
-
   const snapToAllowedLevel = (allowedLevels: number[], target: number) => {
     if (!allowedLevels.length) return target;
     return allowedLevels.reduce(
@@ -276,7 +256,6 @@
       allowedLevels[0]!
     );
   };
-
   const handleLoyaltyChange = (card: TraderCard, value: unknown) => {
     const numeric = Number(value);
     if (Number.isNaN(numeric)) return;
@@ -303,15 +282,12 @@
     const clamped = clamp(snapped, card.minLevel, card.maxLevel);
     tarkovStore.setTraderLoyaltyLevel(card.trader.id, clamped);
   };
-
   const onStandingFocus = (traderId: string) => {
     editingStanding[traderId] = true;
   };
-
   const onStandingInput = (traderId: string, value: string) => {
     standingValues[traderId] = value;
   };
-
   const commitStanding = (card: TraderCard) => {
     const traderId = card.trader.id;
     const raw = standingValues[traderId];
@@ -335,74 +311,62 @@
     editingStanding[traderId] = false;
     standingValues[traderId] = formatStanding(tarkovStore.getTraderStanding(traderId));
   };
-
   const currentGameModeLabel = computed(() =>
     tarkovStore.getCurrentGameMode() === 'pve'
       ? t('drawer.trader_settings.mode_pve')
       : t('drawer.trader_settings.mode_pvp')
   );
 </script>
-
 <style scoped>
   .trader-settings {
     max-height: 420px;
     overflow-y: auto;
   }
-
   .trader-mode-alert {
     background: rgba(var(--v-theme-primary), 0.12) !important;
     border: 1px solid rgba(var(--v-theme-primary), 0.25);
     color: rgba(var(--v-theme-primary), 0.92);
   }
-
   .trader-card {
     padding: 14px;
     background: rgba(var(--v-theme-surface), 0.88) !important;
     border: 1px solid rgba(var(--v-theme-on-surface), 0.06);
     backdrop-filter: blur(6px);
   }
-
   .trader-card__header {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 12px;
   }
-
   .trader-card__avatar {
     border: 1px solid rgba(var(--v-theme-on-surface), 0.12);
   }
-
   .trader-card__title {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-width: 0;
   }
-
   .trader-card__name {
     font-weight: 600;
     font-size: 0.95rem;
     line-height: 1.1rem;
   }
-
   .trader-card__meta {
     font-size: 0.7rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     opacity: 0.65;
   }
-
   .trader-card__current {
     font-weight: 600;
     letter-spacing: 0.05em;
   }
-
   .trader-card__body {
     display: grid;
     gap: 10px;
   }
-
   .trader-card__loyalty-chip {
     display: flex;
     justify-content: flex-start;

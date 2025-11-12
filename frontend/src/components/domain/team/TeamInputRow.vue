@@ -19,7 +19,6 @@
     </v-col>
   </v-row>
 </template>
-
 <script setup>
   defineProps({
     modelValue: { type: String, default: '' },
@@ -29,6 +28,5 @@
     counter: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
   });
-
   defineEmits(['update:modelValue', 'action']);
 </script>

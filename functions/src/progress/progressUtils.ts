@@ -1,6 +1,6 @@
-import functions from 'firebase-functions';
-import admin from 'firebase-admin';
+import { logger } from 'firebase-functions/v2';
 import { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
+import { createLazyFirestore } from '../utils/factory';
 const STASH_STATION_ID = '5d484fc0654e76006657e0ab'; // Stash ID
 const CULTIST_CIRCLE_STATION_ID = '667298e75ea6b4493c08f266'; // Cultist Circle ID
 // Interfaces for Data Structures
@@ -90,40 +90,32 @@ const formatObjective = (
 ): ObjectiveItem[] => {
   const processedObjectives: ObjectiveItem[] = [];
   if (!objectiveData) return processedObjectives;
-
   for (const [objectiveKey, objectiveValue] of Object.entries(objectiveData)) {
     let isComplete = false;
     const isFailed = objectiveValue?.failed ?? false; // Default based on an explicit 'failed' field
-
     // Use the 'complete' boolean field (legacy format)
     if (typeof objectiveValue?.complete === 'boolean') {
       isComplete = objectiveValue.complete;
     }
-
     const newObjective: ObjectiveItem = {
       id: objectiveKey,
       complete: isComplete,
     };
-
     if (showCount && typeof objectiveValue?.count === 'number') {
       newObjective.count = objectiveValue.count;
     }
-
     // Apply invalid status if requested and present
     if (showInvalid && typeof objectiveValue?.invalid === 'boolean') {
       newObjective.invalid = objectiveValue.invalid;
     }
-
     // Set the failed status
     if (isFailed) {
       newObjective.failed = true;
     }
-
     // Ensure 'invalid' items are not marked 'complete'
     if (newObjective.invalid) {
       newObjective.complete = false;
     }
-
     processedObjectives.push(newObjective);
   }
   return processedObjectives;
@@ -187,23 +179,18 @@ const getGameEditionFromData = (rawProgressData: unknown): number | undefined =>
   if (!rawProgressData || typeof rawProgressData !== 'object') {
     return undefined;
   }
-
   const candidate = (rawProgressData as { gameEdition?: unknown }).gameEdition;
-
   if (typeof candidate === 'number' && Number.isFinite(candidate)) {
     return candidate;
   }
-
   if (typeof candidate === 'string') {
     const parsed = Number(candidate);
     if (!Number.isNaN(parsed)) {
       return parsed;
     }
   }
-
   return undefined;
 };
-
 const _initializeBaseProgress = (
   progressData: UserProgressData | undefined | null,
   userId: string,
@@ -217,7 +204,6 @@ const _initializeBaseProgress = (
     typeof progressData?.gameEdition === 'number' && Number.isFinite(progressData.gameEdition)
       ? progressData.gameEdition
       : (rootGameEdition ?? 1);
-
   return {
     displayName: progressData?.displayName ?? userId.substring(0, 6),
     userId: userId,
@@ -282,7 +268,7 @@ const _processHideoutStations = (
       });
     }
   } catch (error: unknown) {
-    functions.logger.error('Error processing hideout station data within helper', {
+    logger.error('Error processing hideout station data within helper', {
       error: error instanceof Error ? error.message : String(error),
       userId, // Pass userId for better logging
     });
@@ -353,7 +339,7 @@ const _invalidateTasks = (
       }
     });
   } catch (error: unknown) {
-    functions.logger.error('Error processing task invalidation rules within helper', {
+    logger.error('Error processing task invalidation rules within helper', {
       error: error instanceof Error ? error.message : String(error),
       userId, // Pass userId for better logging
     });
@@ -388,7 +374,6 @@ const extractGameModeData = (
   // Legacy format - return the data as-is (this handles imported data that hasn't been migrated yet)
   return progressData as UserProgressData;
 };
-
 const formatProgress = (
   progressData: unknown,
   userId: string,
@@ -412,7 +397,6 @@ const formatProgress = (
   _invalidateTasks(progress, taskData, progress.pmcFaction, userId);
   return progress;
 };
-
 // Helper function to update tasks that REQUIRE the changed task
 const _updateDependentTasks = async (
   changedTaskId: string,
@@ -456,7 +440,6 @@ const _updateDependentTasks = async (
     }
   }
 };
-
 // Helper function to update ALTERNATIVE tasks OF the changed task
 const _updateAlternativeTasks = (
   changedTask: Task, // Assuming changedTask is non-null
@@ -481,7 +464,6 @@ const _updateAlternativeTasks = (
     // If newState === 'failed', the current logic intentionally does nothing to its alternatives.
   });
 };
-
 const updateTaskState = async (
   taskId: string,
   newState: string,
@@ -489,7 +471,8 @@ const updateTaskState = async (
   taskData: TaskData | null | undefined
 ): Promise<void> => {
   if (!taskData?.tasks) return;
-  const db: Firestore = admin.firestore();
+  const getDb = createLazyFirestore();
+  const db: Firestore = getDb();
   const progressRef: DocumentReference = db.collection('progress').doc(userId);
   const updateTime = Date.now();
   const progressUpdate: ProgressUpdate = {};
@@ -511,14 +494,14 @@ const updateTaskState = async (
   if (Object.keys(progressUpdate).length > 0) {
     try {
       await progressRef.update(progressUpdate);
-      functions.logger.log('Updated dependent task states', {
+      logger.log('Updated dependent task states', {
         userId,
         changedTaskId: taskId,
         newState,
         updates: progressUpdate,
       });
     } catch (error: unknown) {
-      functions.logger.error('Error updating dependent task states', {
+      logger.error('Error updating dependent task states', {
         userId,
         changedTaskId: taskId,
         newState,
@@ -580,7 +563,7 @@ const checkAllRequirementsMet = async (
       return false; // Requirement not met
     });
     if (allRequirementsMet) {
-      functions.logger.log('All requirements met for task unlocking', {
+      logger.log('All requirements met for task unlocking', {
         userId,
         taskId: dependentTask.id,
         changedTaskId,
@@ -589,7 +572,7 @@ const checkAllRequirementsMet = async (
     }
     return false;
   } catch (error) {
-    functions.logger.error('Error checking task requirements:', {
+    logger.error('Error checking task requirements:', {
       error: error instanceof Error ? error.message : String(error),
       userId,
       taskId: dependentTask.id,

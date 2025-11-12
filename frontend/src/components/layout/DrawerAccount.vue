@@ -39,25 +39,18 @@
   import { computed } from 'vue';
   import { useUserStore } from '@/stores/user';
   import { signOut } from '@/plugins/firebase';
-  import DrawerItem from '@/features/drawer/DrawerItem.vue';
-
-  defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
+  import DrawerItem from '@/components/layout/DrawerItem.vue';
+  import type { CollapsibleComponentProps } from './types';
+  defineProps<CollapsibleComponentProps>();
   const userStore = useUserStore();
   const avatarSrc = computed(() => {
     return userStore.getStreamerMode || !fireuser.photoURL
       ? '/img/default-avatar.svg'
       : fireuser.photoURL;
   });
-
   const userDisplayName = computed(() => {
     return userStore.getStreamerMode ? 'User' : fireuser.displayName || 'User';
   });
-
   function logout() {
     signOut(auth);
   }

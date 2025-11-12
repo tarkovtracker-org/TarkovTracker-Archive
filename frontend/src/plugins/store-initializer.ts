@@ -1,18 +1,14 @@
 import { logger } from '@/utils/logger';
-
 /**
  * Simplified store initialization and data migration utilities
  */
 let isStoreInitialized = false;
-
 export function markInitialized(): void {
   isStoreInitialized = true;
 }
-
 export function isInitialized(): boolean {
   return isStoreInitialized;
 }
-
 export function forceInitialize(): void {
   markInitialized();
 }
@@ -26,7 +22,6 @@ export function wasDataMigrated(): boolean {
   }
   return false;
 }
-
 export function markDataMigrated(): void {
   if (typeof window !== 'undefined') {
     window.__TARKOV_DATA_MIGRATED = true;

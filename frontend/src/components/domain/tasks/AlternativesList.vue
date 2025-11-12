@@ -8,20 +8,16 @@
     </div>
   </div>
 </template>
-
 <script setup>
   import { useI18n } from 'vue-i18n';
   import TaskLink from '@/components/domain/tasks/TaskLink.vue';
-
   defineProps({
     alternatives: { type: Array, required: true },
     tasks: { type: Object, required: true },
     xs: { type: Boolean, default: false },
     label: { type: String, default: '' },
   });
-
   const { t } = useI18n({ useScope: 'global' });
-
   // Use default label if not provided
   const defaultLabel = t('page.tasks.questcard.alternatives');
 </script>

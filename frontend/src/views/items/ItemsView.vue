@@ -150,7 +150,6 @@
         :item-style="neededItemsStyle"
       />
     </v-row>
-
     <!-- Load more indicator -->
     <v-row v-if="hasMoreItems && !loading && !hideoutLoading" justify="center" class="mt-4">
       <v-col cols="12" align="center">
@@ -159,7 +158,6 @@
         </v-btn>
       </v-col>
     </v-row>
-
     <!-- Bottom loading indicator for auto-scroll -->
     <v-row v-if="hasMoreItems && (loading || hideoutLoading)" justify="center" class="mt-4">
       <v-col cols="12" align="center">
@@ -212,7 +210,6 @@
     set: (value) => userStore.setNeededItemsStyle(value),
   });
   const settingsDialog = ref(false);
-
   const itemsPerPage = 50;
   const currentPage = ref(0);
   const neededViews = [
@@ -237,7 +234,6 @@
     set: (value) => userStore.setNeededTypeView(value),
   });
   const normalizedFilter = computed(() => itemFilterName.value.trim().toLowerCase());
-
   const taskMap = computed(() => {
     const taskList = tasks?.value;
     if (!Array.isArray(taskList) || taskList.length === 0) {
@@ -251,7 +247,6 @@
     });
     return map;
   });
-
   const taskPrerequisiteCounts = computed(() => {
     const counts = new Map();
     const completions = tasksCompletions.value || {};
@@ -267,7 +262,6 @@
     });
     return counts;
   });
-
   const matchesItemFilter = (need) => {
     if (!normalizedFilter.value) {
       return true;
@@ -284,7 +278,6 @@
     }
     return candidates.some((value) => value.toLowerCase().includes(query));
   };
-
   const allNeededTaskItems = computed(() => {
     const objectives = neededItemTaskObjectives?.value;
     if (!Array.isArray(objectives) || objectives.length === 0) {
@@ -303,7 +296,6 @@
       });
     return sorted;
   });
-
   const visibleTaskItems = computed(() => {
     return allNeededTaskItems.value.filter((need) => {
       if (!need || need.needType !== 'taskObjective') {
@@ -313,12 +305,10 @@
       return isTaskNeedVisible(need, relatedTask);
     });
   });
-
   const neededTaskItems = computed(() => {
     const endIndex = (currentPage.value + 1) * itemsPerPage;
     return visibleTaskItems.value.slice(0, endIndex);
   });
-
   const hideoutModuleMap = computed(() => {
     const moduleList = hideoutModules?.value;
     if (!Array.isArray(moduleList) || moduleList.length === 0) {
@@ -332,7 +322,6 @@
     });
     return map;
   });
-
   const hideoutPrerequisiteCounts = computed(() => {
     const counts = new Map();
     const completions = moduleCompletions.value || {};
@@ -348,7 +337,6 @@
     });
     return counts;
   });
-
   const shouldIncludeHideoutNeed = (need) => {
     const moduleInstanceId = need?.hideoutModule?.id;
     const moduleStationId = need?.hideoutModule?.stationId;
@@ -356,7 +344,6 @@
     if (!moduleInstanceId || !moduleStationId || typeof moduleTargetLevel !== 'number') {
       return true;
     }
-
     if (moduleStationId === STASH_STATION_ID) {
       const currentEffectiveStashLevel = getHideoutLevelFor(STASH_STATION_ID, 'self');
       if (typeof currentEffectiveStashLevel === 'number') {
@@ -365,11 +352,9 @@
       const moduleCompletion = getModuleCompletionMap(moduleInstanceId);
       return moduleCompletion?.self !== true;
     }
-
     const moduleCompletion = getModuleCompletionMap(moduleInstanceId);
     return moduleCompletion?.self !== true;
   };
-
   const allNeededHideoutItems = computed(() => {
     const modules = neededItemHideoutModules?.value;
     if (!Array.isArray(modules) || modules.length === 0) {
@@ -390,7 +375,6 @@
       });
     return filtered;
   });
-
   const visibleHideoutItems = computed(() => {
     return allNeededHideoutItems.value.filter((need) => {
       if (!need || need.needType !== 'hideoutModule') {
@@ -399,7 +383,6 @@
       return isHideoutNeedVisible(need);
     });
   });
-
   const neededHideoutItems = computed(() => {
     const endIndex = (currentPage.value + 1) * itemsPerPage;
     return visibleHideoutItems.value.slice(0, endIndex);
@@ -448,7 +431,6 @@
   const itemsHideHideoutColor = computed(() =>
     userStore.itemsTeamHideoutHidden ? 'error' : 'success'
   );
-
   // Infinite scroll logic
   const hasMoreItems = computed(() => {
     if (activeNeededView.value === 'tasks') {
@@ -462,23 +444,19 @@
       neededHideoutItems.value.length < visibleHideoutItems.value.length
     );
   });
-
   const loadMoreItems = () => {
     if (hasMoreItems.value) {
       currentPage.value++;
     }
   };
-
   // Reset pagination on view change or filter update
   watch([activeNeededView, itemFilterName], () => {
     currentPage.value = 0;
   });
-
   // Reset pagination when source collections change substantially
   watch([visibleTaskItems, visibleHideoutItems], () => {
     currentPage.value = 0;
   });
-
   // Scroll handler for infinite scroll
   const handleScroll = debounce(() => {
     const { scrollY } = window;
@@ -488,16 +466,13 @@
       loadMoreItems();
     }
   }, 100);
-
   // Add and remove scroll listener
   onMounted(() => {
     window.addEventListener('scroll', handleScroll);
   });
-
   onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
   });
-
   /*
    * Legacy components rely on the provide/inject filter. Even though we now
    * pre-filter for performance, continue providing the live value for

@@ -41,16 +41,13 @@
   import { computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
-
   const { bannerVisible, accept, reject, initializeConsent } = usePrivacyConsent();
   const { t, tm } = useI18n({ useScope: 'global' });
-
   const buildBodyText = (baseKey: 'beforeLink' | 'afterLink') =>
     computed(() => {
       const body = (tm('consent.body') ?? {}) as Record<string, unknown>;
       const parts: string[] = [];
       let index = 1;
-
       while (true) {
         const partKey = `${baseKey}_part${index}`;
         const value = body[partKey];
@@ -60,30 +57,24 @@
         parts.push(value);
         index += 1;
       }
-
       if (parts.length > 0) {
         return parts.join('');
       }
-
       const fallback = body[baseKey];
       return typeof fallback === 'string' ? fallback : '';
     });
-
   const title = computed(() => t('consent.title'));
   const beforeLink = buildBodyText('beforeLink');
   const afterLink = buildBodyText('afterLink');
   const privacyLabel = computed(() => t('consent.privacyLink'));
   const acceptLabel = computed(() => t('consent.actions.accept'));
   const declineLabel = computed(() => t('consent.actions.decline'));
-
   const handleAccept = () => {
     accept();
   };
-
   const handleReject = () => {
     reject();
   };
-
   onMounted(() => {
     initializeConsent();
   });
@@ -98,7 +89,6 @@
     z-index: 1000;
     pointer-events: none;
   }
-
   .consent-banner__card {
     max-width: 820px;
     width: 100%;
@@ -110,83 +100,70 @@
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(14px);
   }
-
   .consent-banner__content {
     display: flex;
     flex-direction: column;
     gap: 20px;
     padding: 24px 28px;
   }
-
   .consent-banner__title {
     font-size: 1.05rem;
     letter-spacing: 0.02em;
     margin-bottom: 8px;
     color: rgba(255, 255, 255, 0.95);
   }
-
   .consent-banner__body {
     margin: 0;
     color: rgba(255, 255, 255, 0.88);
     line-height: 1.5;
   }
-
   .consent-banner__link {
     color: rgba(var(--v-theme-secondary));
     font-weight: 500;
     text-decoration: underline;
   }
-
   .consent-banner__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     justify-content: flex-end;
   }
-
   .consent-banner__primary {
     min-width: 120px;
     color: rgba(0, 0, 0, 0.85);
     font-weight: 600;
     box-shadow: 0 0 12px rgba(var(--v-theme-secondary), 0.35);
   }
-
   .consent-banner__secondary {
     min-width: 120px;
     border-color: rgba(var(--v-theme-secondary), 0.6);
     color: rgba(255, 255, 255, 0.85);
   }
-
   @media (max-width: 959px) {
     .consent-banner__text {
       text-align: center;
     }
-
     .consent-banner__actions {
       justify-content: center;
     }
   }
-
   @media (min-width: 960px) {
     .consent-banner__content {
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
     }
-
     .consent-banner__actions {
       flex-shrink: 0;
       margin-left: 24px;
     }
   }
-
   .consent-fade-enter-active,
   .consent-fade-leave-active {
     transition:
       opacity 0.2s ease,
       transform 0.2s ease;
   }
-
   .consent-fade-enter-from,
   .consent-fade-leave-to {
     opacity: 0;

@@ -5,7 +5,6 @@ import type { _GettersTree } from 'pinia';
 import type { UserState } from '@/shared_state';
 import type { Unsubscribe, DocumentReference, DocumentData } from 'firebase/firestore';
 import type { MapLocation, MapZone } from './maps';
-
 // Core Tarkov Data Types
 export interface TarkovItem {
   id: string;
@@ -24,7 +23,6 @@ export interface TarkovItem {
     [key: string]: unknown;
   };
 }
-
 export interface ItemRequirement {
   id: string;
   item: TarkovItem;
@@ -32,38 +30,32 @@ export interface ItemRequirement {
   quantity: number;
   foundInRaid?: boolean;
 }
-
 export interface StationLevelRequirement {
   id: string;
   station: { id: string; name: string };
   level: number;
 }
-
 export interface SkillRequirement {
   id: string;
   name: string;
   level: number;
 }
-
 export interface TraderRequirement {
   id?: string;
   trader: { id: string; name: string };
   value: number;
 }
-
 export interface TaskTraderLevelRequirement {
   id: string;
   trader: { id: string; name: string };
   level: number;
 }
-
 export interface Craft {
   id: string;
   duration: number;
   requiredItems: ItemRequirement[];
   rewardItems: ItemRequirement[];
 }
-
 export interface HideoutLevel {
   id: string;
   level: number;
@@ -75,14 +67,12 @@ export interface HideoutLevel {
   traderRequirements: TraderRequirement[];
   crafts: Craft[];
 }
-
 export interface HideoutStation {
   id: string;
   name: string;
   normalizedName?: string;
   levels: HideoutLevel[];
 }
-
 export interface HideoutModule extends HideoutLevel {
   stationId: string;
   predecessors: string[];
@@ -90,7 +80,6 @@ export interface HideoutModule extends HideoutLevel {
   parents: string[];
   children: string[];
 }
-
 export interface TaskObjective {
   id: string;
   description?: string;
@@ -115,25 +104,20 @@ export interface TaskObjective {
   value?: number;
   compareMethod?: string;
 }
-
 export type Key = TarkovItem;
-
 export interface RequiredKey {
   keys: Key[];
   map: { id: string; name?: string } | null;
 }
-
 export interface TaskRequirement {
   task: { id: string; name?: string };
   status?: string[];
 }
-
 export interface FinishReward {
   __typename?: string;
   status?: string;
   quest?: { id: string };
 }
-
 export interface Task {
   id: string;
   tarkovDataId?: number;
@@ -175,7 +159,6 @@ export interface Task {
   alternatives?: string[];
   neededBy?: string[];
 }
-
 export interface TarkovMap {
   id: string;
   name: string;
@@ -193,7 +176,6 @@ export interface TarkovMap {
       };
   unavailableMessage?: string;
 }
-
 export interface Trader {
   id: string;
   name: string;
@@ -210,29 +192,24 @@ export interface Trader {
     repairCostMultiplier?: number;
   }[];
 }
-
 export interface PlayerLevel {
   level: number;
   exp: number;
   levelBadgeImageLink: string;
 }
-
 // Query Result Types
 export interface LanguageQueryResult {
   __type?: { enumValues: { name: string }[] };
 }
-
 export interface TarkovDataQueryResult {
   tasks: Task[];
   maps: TarkovMap[];
   traders: Trader[];
   playerLevels: PlayerLevel[];
 }
-
 export interface TarkovHideoutQueryResult {
   hideoutStations: HideoutStation[];
 }
-
 // Needed Items Types
 export interface NeededItemBase {
   id: string;
@@ -240,7 +217,6 @@ export interface NeededItemBase {
   count: number;
   foundInRaid?: boolean;
 }
-
 export interface NeededItemTaskObjective extends NeededItemBase {
   needType: 'taskObjective';
   taskId: string;
@@ -248,24 +224,20 @@ export interface NeededItemTaskObjective extends NeededItemBase {
   markerItem?: TarkovItem;
   alternativeItems?: TarkovItem[];
 }
-
 export interface NeededItemHideoutModule extends NeededItemBase {
   needType: 'hideoutModule';
   hideoutModule: HideoutModule;
 }
-
 // Lookup Types
 export interface ObjectiveMapInfo {
   objectiveID: string;
   mapID: string;
 }
-
 export interface ObjectiveGPSInfo {
   objectiveID: string;
   x?: number;
   y?: number;
 }
-
 export interface StaticMapDefinition {
   svg?: {
     file: string;
@@ -278,30 +250,25 @@ export interface StaticMapDefinition {
   };
   unavailableMessage?: string;
 }
-
 export interface StaticMapData {
   [key: string]: StaticMapDefinition;
 }
-
 // Store Types
 export interface SystemState extends StateTree {
   tokens?: string[];
   team?: string | null;
 }
-
 export interface SystemGetters extends _GettersTree<SystemState> {
   userTokens: (state: SystemState) => string[];
   userTokenCount: (state: SystemState) => number;
   userTeam: (state: SystemState) => string | null;
   userTeamIsOwn: (state: SystemState) => boolean;
 }
-
 export interface TeamState extends StateTree {
   owner?: string | null;
   password?: string | null;
   members?: string[];
 }
-
 export interface TeamGetters extends _GettersTree<TeamState> {
   teamOwner: (state: TeamState) => string | null;
   isOwner: (state: TeamState) => boolean;
@@ -309,7 +276,6 @@ export interface TeamGetters extends _GettersTree<TeamState> {
   teamMembers: (state: TeamState) => string[];
   teammates: (state: TeamState) => string[];
 }
-
 // Firebase Types
 export interface FirebaseListenerConfig {
   refToWatch: ComputedRef<DocumentReference<DocumentData> | null>;
@@ -317,7 +283,6 @@ export interface FirebaseListenerConfig {
   store: Store;
   storeId?: string;
 }
-
 // Composable Return Types
 export interface TarkovDataComposable {
   availableLanguages: Ref<string[] | null>;
@@ -350,7 +315,6 @@ export interface TarkovDataComposable {
   minPlayerLevel: ComputedRef<number>;
   maxPlayerLevel: ComputedRef<number>;
 }
-
 export interface LiveDataComposable {
   useTeamStore: () => Store<string, TeamState, TeamGetters>;
   useSystemStore: () => Store<string, SystemState, SystemGetters>;

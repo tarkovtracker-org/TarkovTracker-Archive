@@ -29,11 +29,9 @@ import type {
 } from '@/types/models/tarkov';
 import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
-
 // Timeout for idle callback processing
 const IDLE_CALLBACK_TIMEOUT_MS = 2000;
 const TASK_IDLE_DEFER_THRESHOLD = 400;
-
 /**
  * Composable for managing task data, relationships, and derived information
  */

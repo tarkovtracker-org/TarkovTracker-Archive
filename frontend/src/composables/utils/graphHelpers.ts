@@ -1,12 +1,10 @@
 import Graph from 'graphology';
 import { logger } from '@/utils/logger';
-
 /**
  * Recursively gets all predecessors (ancestors) of a node in the graph
  */
 export function getPredecessors(graph: Graph, nodeId: string, visited: string[] = []): string[] {
   let predecessors: string[] = [];
-
   try {
     predecessors = graph.inNeighbors(nodeId);
     visited.push(nodeId);
@@ -14,7 +12,6 @@ export function getPredecessors(graph: Graph, nodeId: string, visited: string[] 
     logger.error(`Error getting predecessors for node ${nodeId}:`, error);
     return [];
   }
-
   if (predecessors.length > 0) {
     for (const predecessor of predecessors) {
       if (visited.includes(predecessor)) {
@@ -23,16 +20,13 @@ export function getPredecessors(graph: Graph, nodeId: string, visited: string[] 
       predecessors = predecessors.concat(getPredecessors(graph, predecessor, [...visited]));
     }
   }
-
   return [...new Set(predecessors)];
 }
-
 /**
  * Recursively gets all successors (descendants) of a node in the graph
  */
 export function getSuccessors(graph: Graph, nodeId: string, visited: string[] = []): string[] {
   let successors: string[] = [];
-
   try {
     successors = graph.outNeighbors(nodeId);
     visited.push(nodeId);
@@ -40,7 +34,6 @@ export function getSuccessors(graph: Graph, nodeId: string, visited: string[] = 
     logger.error(`Error getting successors for node ${nodeId}:`, error);
     return [];
   }
-
   if (successors.length > 0) {
     for (const successor of successors) {
       if (visited.includes(successor)) {
@@ -49,10 +42,8 @@ export function getSuccessors(graph: Graph, nodeId: string, visited: string[] = 
       successors = successors.concat(getSuccessors(graph, successor, [...visited]));
     }
   }
-
   return [...new Set(successors)];
 }
-
 /**
  * Gets immediate parent nodes (direct predecessors)
  */
@@ -64,7 +55,6 @@ export function getParents(graph: Graph, nodeId: string): string[] {
     return [];
   }
 }
-
 /**
  * Gets immediate child nodes (direct successors)
  */
@@ -76,7 +66,6 @@ export function getChildren(graph: Graph, nodeId: string): string[] {
     return [];
   }
 }
-
 /**
  * Safely adds a node to the graph if it doesn't exist
  */
@@ -87,7 +76,6 @@ export function safeAddNode(graph: Graph, nodeId: string): void {
     logger.error(`Error adding node ${nodeId} to graph:`, error);
   }
 }
-
 /**
  * Safely adds an edge to the graph if both nodes exist
  */
@@ -102,14 +90,12 @@ export function safeAddEdge(graph: Graph, sourceId: string, targetId: string): v
     logger.error(`Error adding edge from ${sourceId} to ${targetId}:`, error);
   }
 }
-
 /**
  * Creates a new empty graph instance
  */
 export function createGraph(): Graph {
   return new Graph();
 }
-
 /**
  * Checks if a node exists in the graph
  */
@@ -121,7 +107,6 @@ export function hasNode(graph: Graph, nodeId: string): boolean {
     return false;
   }
 }
-
 /**
  * Gets all nodes in the graph
  */
@@ -133,7 +118,6 @@ export function getAllNodes(graph: Graph): string[] {
     return [];
   }
 }
-
 /**
  * Clears all nodes and edges from the graph
  */

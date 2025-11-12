@@ -11,7 +11,6 @@
     </template>
   </v-snackbar>
 </template>
-
 <script setup>
   const props = defineProps({
     modelValue: {
@@ -19,9 +18,7 @@
       default: () => ({ show: false, message: '', color: 'accent' }),
     },
   });
-
   const emit = defineEmits(['update:modelValue']);
-
   const updateShow = (show) => {
     emit('update:modelValue', { ...props.modelValue, show });
   };

@@ -9,7 +9,6 @@ export class LRUCache<K, V> {
   private readonly maxSize: number;
   private readonly cache: Map<K, V>;
   private readonly onEvict?: (key: K, value: V) => void;
-
   /**
    * Creates a new LRU cache with the specified maximum size.
    *
@@ -24,7 +23,6 @@ export class LRUCache<K, V> {
     this.cache = new Map();
     this.onEvict = onEvict;
   }
-
   /**
    * Retrieves a value from the cache and marks it as most recently used.
    *
@@ -41,7 +39,6 @@ export class LRUCache<K, V> {
     }
     return undefined;
   }
-
   /**
    * Inserts or updates a value in the cache and marks it as most recently used.
    * If the cache exceeds maxSize, evicts the least recently used entry.
@@ -54,10 +51,8 @@ export class LRUCache<K, V> {
     if (this.cache.has(key)) {
       this.cache.delete(key);
     }
-
     // Add new entry
     this.cache.set(key, value);
-
     // Evict least recently used if over capacity
     if (this.cache.size > this.maxSize) {
       // First entry in Map is the least recently used
@@ -67,7 +62,6 @@ export class LRUCache<K, V> {
       this.onEvict?.(oldestKey, oldestValue);
     }
   }
-
   /**
    * Checks if a key exists in the cache without updating recency.
    *
@@ -77,7 +71,6 @@ export class LRUCache<K, V> {
   has(key: K): boolean {
     return this.cache.has(key);
   }
-
   /**
    * Deletes a key from the cache and invokes the eviction callback.
    *
@@ -92,14 +85,12 @@ export class LRUCache<K, V> {
     }
     return existed;
   }
-
   /**
    * Returns the current number of items in the cache.
    */
   get size(): number {
     return this.cache.size;
   }
-
   /**
    * Clears all items from the cache, invoking the eviction callback for each.
    */

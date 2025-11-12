@@ -1,5 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
@@ -19,33 +18,27 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: 'http://localhost:3000',
-
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-
     /* Take screenshot only when failing */
     screenshot: 'only-on-failure',
   },
-
   /* Configure projects for major browsers */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-
     /* Additional browsers disabled by default to speed up CI.
        Uncomment for local cross-browser testing or production releases. */
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },
     // },
-
     // {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'] },
     // },
-
     // /* Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',
@@ -55,7 +48,6 @@ export default defineConfig({
     //   name: 'Mobile Safari',
     //   use: { ...devices['iPhone 12'] },
     // },
-
     /* Test against branded browsers. */
     // {
     //   name: 'Microsoft Edge',
@@ -66,7 +58,6 @@ export default defineConfig({
     //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
   ],
-
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',

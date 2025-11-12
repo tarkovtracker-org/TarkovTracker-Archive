@@ -1,7 +1,7 @@
 import * as logger from 'firebase-functions/logger';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
-import UIDGenerator from 'uid-generator';
+import admin from 'firebase-admin';
+import UIDGenerator from './UIDGenerator';
 import {
   Firestore,
   DocumentReference,
@@ -9,8 +9,9 @@ import {
   Transaction,
   CollectionReference,
 } from 'firebase-admin/firestore';
-import { TokenGameMode } from '../types/api.js';
-import type { SystemDocData, TokenDocData } from './types.js';
+import { TokenGameMode } from '../types/api';
+import type { SystemDocData, TokenDocData } from './types';
+import { createLazyFirestore } from '../utils/factory';
 interface CreateTokenData {
   note: string;
   permissions: string[];
@@ -20,7 +21,8 @@ interface CreateTokenData {
 export async function _createTokenLogic(
   request: CallableRequest<CreateTokenData>
 ): Promise<{ token: string }> {
-  const db: Firestore = admin.firestore();
+  const getDb = createLazyFirestore();
+  const db: Firestore = getDb();
   const ownerUid = request.auth?.uid;
   logger.log('Starting create token logic (v2)', {
     data: request.data,
@@ -41,7 +43,6 @@ export async function _createTokenLogic(
       'Invalid token parameters: note and permissions array are required.'
     );
   }
-
   // Validate gameMode if provided
   const validGameModes: TokenGameMode[] = ['pvp', 'pve', 'dual'];
   if (request.data.gameMode && !validGameModes.includes(request.data.gameMode as TokenGameMode)) {

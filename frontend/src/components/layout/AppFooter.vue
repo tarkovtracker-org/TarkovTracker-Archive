@@ -100,7 +100,6 @@
             <div class="support-text">Help keep TarkovTracker free and updated</div>
           </div>
         </v-col>
-
         <!-- Legal Links Section -->
         <v-col cols="12" sm="4" class="footer-section">
           <div class="footer-links d-flex flex-column align-center">
@@ -142,14 +141,11 @@
   import { onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
-
   const { t } = useI18n({ useScope: 'global' });
   const { openPreferences, choiceRecorded, initializeConsent } = usePrivacyConsent();
-
   const openPrivacyPreferences = () => {
     openPreferences();
   };
-
   onMounted(() => {
     initializeConsent();
   });

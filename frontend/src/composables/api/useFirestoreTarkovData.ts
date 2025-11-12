@@ -28,7 +28,6 @@ function processShardData(shardDocs: unknown) {
     tarkovItemsCache.value = [];
   }
 }
-
 /**
  * Composable for loading Tarkov items from Firestore cache
  * This replaces the direct Apollo GraphQL calls to tarkov.dev API

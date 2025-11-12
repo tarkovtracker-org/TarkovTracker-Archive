@@ -41,59 +41,29 @@
 </template>
 <script setup lang="ts">
   import { computed } from 'vue';
-  import type { PropType } from 'vue';
   import { useI18n } from 'vue-i18n';
   import OptimizedImage from '@/components/ui/OptimizedImage.vue';
+  import type { CollapsibleComponentProps, ImageSources } from './types';
   const { t } = useI18n({ useScope: 'global' });
-  const props = defineProps({
-    icon: {
-      type: String,
-      default: 'mdi-menu-right',
-      required: false,
-    },
-    avatar: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    avatarSources: {
-      type: Object as PropType<{
-        fallback: string;
-        webp?: string | null;
-        avif?: string | null;
-      }> | null,
-      required: false,
-      default: null,
-    },
-    localeKey: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    text: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    to: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    href: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    extLink: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
+  interface DrawerItemProps extends CollapsibleComponentProps {
+    icon?: string;
+    avatar?: string | null;
+    avatarSources?: ImageSources | null;
+    localeKey?: string | null;
+    text?: string | null;
+    to?: string;
+    href?: string | null;
+    extLink?: boolean;
+  }
+  const props = withDefaults(defineProps<DrawerItemProps>(), {
+    icon: 'mdi-menu-right',
+    avatar: null,
+    avatarSources: null,
+    localeKey: null,
+    text: null,
+    to: undefined,
+    href: null,
+    extLink: false,
   });
   const visitHref = () => {
     if (props.href !== null) {
@@ -123,11 +93,9 @@
     text-overflow: ellipsis;
     margin-inline-start: 8px !important;
   }
-
   .v-drawer-item-rail {
     width: 26px;
   }
-
   .drawer-item-collapsed {
     display: flex;
     justify-content: center;

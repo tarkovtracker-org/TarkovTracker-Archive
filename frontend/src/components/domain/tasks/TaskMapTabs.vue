@@ -30,39 +30,31 @@
     </v-col>
   </v-row>
 </template>
-
 <script setup lang="ts">
   import { computed } from 'vue';
-
   interface MapData {
     id: string;
     name: string;
   }
-
   interface Props {
     show: boolean;
     maps: MapData[];
     taskTotals: Record<string, number>;
     activeMapView: string;
   }
-
   interface Emits {
     (e: 'update:activeMapView', value: string): void;
   }
-
   const props = defineProps<Props>();
   const emit = defineEmits<Emits>();
-
   const getTaskTotal = (map: MapData): number => {
     return props.taskTotals[map.id] || 0;
   };
-
   const activeMapViewModel = computed({
     get: () => props.activeMapView,
     set: (value: string) => emit('update:activeMapView', value),
   });
 </script>
-
 <style scoped>
   .compact-row {
     --v-layout-column-gap: 12px;

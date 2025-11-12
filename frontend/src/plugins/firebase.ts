@@ -43,7 +43,6 @@ type RequiredFirebaseEnvVar =
   | 'VITE_FIREBASE_MESSAGING_SENDER_ID'
   | 'VITE_FIREBASE_APP_ID';
 type OptionalFirebaseEnvVar = 'VITE_FIREBASE_DATABASE_URL' | 'VITE_FIREBASE_MEASUREMENT_ID';
-
 const resolveFirebaseEnv = (key: RequiredFirebaseEnvVar) => {
   const value = import.meta.env[key];
   if (!value) {
@@ -51,12 +50,10 @@ const resolveFirebaseEnv = (key: RequiredFirebaseEnvVar) => {
   }
   return value;
 };
-
 const getOptionalFirebaseEnv = (key: OptionalFirebaseEnvVar) => {
   const value = import.meta.env[key];
   return value ?? undefined;
 };
-
 // Firebase configuration sourced directly from environment
 const firebaseConfig: FirebaseOptions = {
   apiKey: resolveFirebaseEnv('VITE_FIREBASE_API_KEY'),
@@ -69,27 +66,22 @@ const firebaseConfig: FirebaseOptions = {
   measurementId: getOptionalFirebaseEnv('VITE_FIREBASE_MEASUREMENT_ID'),
 };
 const measurementId = firebaseConfig.measurementId;
-
 // Only enable Analytics if:
 // 1. We have a measurement ID configured
 // 2. We're in production mode (not dev/staging)
 const shouldEnableAnalytics = Boolean(measurementId) && import.meta.env.PROD;
-
 type WindowWithGaDisable = Window &
   typeof globalThis & {
     [key: `ga-disable-${string}`]: boolean;
   };
-
 const setGaTrackingEnabled = (enabled: boolean) => {
   if (!measurementId || typeof window === 'undefined') {
     return;
   }
   (window as WindowWithGaDisable)[`ga-disable-${measurementId}`] = !enabled;
 };
-
 // Disable tracking by default, will be enabled only if user consents and we're in production
 setGaTrackingEnabled(false);
-
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -108,10 +100,8 @@ const fireuser = reactive<FireUser>({
   lastLoginAt: null,
   createdAt: null,
 });
-
 // Check if dev auth is enabled
 const isDevAuthEnabled = import.meta.env.DEV && import.meta.env.VITE_DEV_AUTH === 'true';
-
 // Handle auth state changes with comprehensive user data
 // Always register listener to handle logout, but skip login property updates when dev auth is enabled
 onAuthStateChanged(auth, (user: User | null) => {
@@ -153,7 +143,6 @@ if (['localhost', '127.0.0.1'].includes(window.location.hostname) && !isDevAuthE
   }
 }
 let analyticsInstance: Analytics | undefined;
-
 const ensureAnalytics = () => {
   // Don't initialize Analytics if:
   // - We don't have a measurement ID configured
@@ -172,7 +161,6 @@ const ensureAnalytics = () => {
   }
   return analyticsInstance;
 };
-
 const enableAnalyticsCollection = async () => {
   if (!shouldEnableAnalytics) {
     logger.debug(
@@ -192,7 +180,6 @@ const enableAnalyticsCollection = async () => {
   }
   return instance;
 };
-
 const disableAnalyticsCollection = () => {
   setGaTrackingEnabled(false);
   if (analyticsInstance) {
@@ -204,7 +191,6 @@ const disableAnalyticsCollection = () => {
     }
   }
 };
-
 export {
   app,
   auth,

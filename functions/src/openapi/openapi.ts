@@ -32,7 +32,6 @@ if (!projectRoot) {
     `Failed to find project root: 'LICENSE.md' not found in any parent directory.
 Searched directories (from ${__dirname} upwards):
 ${searchedDirs.map((dir) => `  - ${dir}`).join('\n')}
-
 Ensure LICENSE.md exists at the project root.`
   );
 }

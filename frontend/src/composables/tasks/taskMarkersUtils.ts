@@ -1,9 +1,7 @@
 import type { TaskObjective, Task } from '@/types/models/tarkov';
-
 export interface ObjectiveWithUsers extends TaskObjective {
   users: string[];
 }
-
 export const collectObjectiveMarkers = (
   task: Task,
   activeUserView: string,
@@ -30,7 +28,6 @@ export const collectObjectiveMarkers = (
     )
     .filter((marker): marker is ObjectiveWithUsers => marker !== null);
 };
-
 export const getUnlockedUsersForTask = (
   taskId: string,
   getUnlockedMap: (taskId: string) => Record<string, boolean>
@@ -38,7 +35,6 @@ export const getUnlockedUsersForTask = (
   Object.entries(getUnlockedMap(taskId))
     .filter(([, unlocked]) => unlocked)
     .map(([teamId]) => teamId);
-
 export const createMarkerForObjective = (
   objective: TaskObjective,
   unlockedUsers: string[],
@@ -54,7 +50,6 @@ export const createMarkerForObjective = (
     ? { ...objective, users: [activeUserView] }
     : null;
 };
-
 export const usersWithIncompleteObjective = (
   objectiveId: string,
   candidateUsers: string[],
@@ -66,7 +61,6 @@ export const usersWithIncompleteObjective = (
   }
   return candidateUsers.filter((userId) => completionMap[userId] !== true);
 };
-
 export const objectiveIncompleteForUser = (
   objectiveId: string,
   userId: string,

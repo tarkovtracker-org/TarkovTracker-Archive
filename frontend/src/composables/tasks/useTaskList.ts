@@ -418,7 +418,6 @@ export function useTaskList() {
   const getTaskFingerprint = () => {
     return tasks.value.map((task) => task.id).join('|');
   };
-
   const getFilterCacheKey = () => {
     const parts = [
       activePrimaryView.value,

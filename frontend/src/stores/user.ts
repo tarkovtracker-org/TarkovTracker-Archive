@@ -180,7 +180,6 @@ type UserActions = {
 // Define the store type including the fireswap property
 // Changed interface to type alias to resolve no-empty-object-type error
 type UserStoreDefinition = StoreDefinition<'swapUser', UserState, UserGetters, UserActions>;
-
 export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
   state: (): UserState => {
     const state = JSON.parse(JSON.stringify(defaultState));
@@ -429,7 +428,6 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
   ],
 }) as UserStoreDefinition;
-
 export type UserStore = ReturnType<typeof useUserStore>;
 // Watch for fireuser state changing and bind/unbind
 watch(

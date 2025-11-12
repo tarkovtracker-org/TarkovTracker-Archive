@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { ApiResponse, ApiToken } from '../types/api.js';
-import { ProgressService } from '../services/ProgressService.js';
-import { ValidationService } from '../services/ValidationService.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { createLazy } from '../utils/factory.js';
-
+import { ApiResponse, ApiToken } from '../types/api';
+import { ProgressService } from '../services/ProgressService';
+import { ValidationService } from '../services/ValidationService';
+import { asyncHandler } from '../middleware/errorHandler';
+import { createLazy } from '../utils/factory';
 // Lazy-initialized service instance to ensure Firebase Admin is initialized first
 const getProgressService = createLazy(() => new ProgressService());
-
 // Enhanced request interface
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
@@ -16,27 +14,22 @@ interface AuthenticatedRequest extends Request {
     username?: string;
   };
 }
-
 const resolveGameMode = (token: ApiToken | undefined, queryGameMode: unknown): 'pvp' | 'pve' => {
   const tokenMode = token?.gameMode ?? 'pvp';
   if (tokenMode !== 'dual') {
     return tokenMode === 'pve' ? 'pve' : 'pvp';
   }
-
   const queryValue = Array.isArray(queryGameMode)
     ? queryGameMode[0]
     : typeof queryGameMode === 'string'
       ? queryGameMode
       : undefined;
-
   if (typeof queryValue === 'string') {
     const normalized = queryValue.toLowerCase();
     return normalized === 'pve' ? 'pve' : 'pvp';
   }
-
   return 'pvp';
 };
-
 /**
  * @openapi
  * /progress:
@@ -83,17 +76,14 @@ export const getPlayerProgress = asyncHandler(
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
     const progressData = await getProgressService().getUserProgress(userId, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: progressData,
       meta: { self: userId, gameMode },
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /progress/level/{levelValue}:
@@ -148,11 +138,8 @@ export const setPlayerLevel = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const level = ValidationService.validateLevel(req.params.levelValue);
-
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
-
     await getProgressService().setPlayerLevel(userId, level, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: {
@@ -160,11 +147,9 @@ export const setPlayerLevel = asyncHandler(
         message: 'Level updated successfully',
       },
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /progress/task/{taskId}:
@@ -235,11 +220,8 @@ export const updateSingleTask = asyncHandler(
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const taskId = ValidationService.validateTaskId(req.params.taskId);
     const { state } = ValidationService.validateTaskUpdate(req.body);
-
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
-
     await getProgressService().updateSingleTask(userId, taskId, state, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: {
@@ -248,11 +230,9 @@ export const updateSingleTask = asyncHandler(
         message: 'Task updated successfully',
       },
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /progress/tasks:
@@ -313,11 +293,8 @@ export const updateMultipleTasks = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const taskUpdates = ValidationService.validateMultipleTaskUpdate(req.body);
-
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
-
     await getProgressService().updateMultipleTasks(userId, taskUpdates, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: {
@@ -325,11 +302,9 @@ export const updateMultipleTasks = asyncHandler(
         message: 'Tasks updated successfully',
       },
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /progress/task/objective/{objectiveId}:
@@ -408,11 +383,8 @@ export const updateTaskObjective = asyncHandler(
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     const objectiveId = ValidationService.validateObjectiveId(req.params.objectiveId);
     const updateData = ValidationService.validateObjectiveUpdate(req.body);
-
     const gameMode = resolveGameMode(req.apiToken, req.query.gameMode);
-
     await getProgressService().updateTaskObjective(userId, objectiveId, updateData, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: {
@@ -421,11 +393,9 @@ export const updateTaskObjective = asyncHandler(
         message: 'Task objective updated successfully',
       },
     };
-
     res.status(200).json(response);
   }
 );
-
 export default {
   getPlayerProgress,
   setPlayerLevel,

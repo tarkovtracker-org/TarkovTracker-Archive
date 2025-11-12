@@ -31,17 +31,13 @@
   </v-list>
 </template>
 <script setup lang="ts">
-  import DrawerItem from '@/features/drawer/DrawerItem.vue';
-  const logoSources = (name: string, fallbackExt = 'png') => ({
+  import DrawerItem from '@/components/layout/DrawerItem.vue';
+  import type { CollapsibleComponentProps, ImageSources } from './types';
+  const logoSources = (name: string, fallbackExt = 'png'): ImageSources => ({
     fallback: `/img/logos/${name}.${fallbackExt}`,
     webp: `/img/logos/${name}.webp`,
     avif: `/img/logos/${name}.avif`,
   });
-  const props = defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
+  const props = defineProps<CollapsibleComponentProps>();
 </script>
 <style lang="scss" scoped></style>

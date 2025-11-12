@@ -56,7 +56,6 @@
   const { useTeamStore: useTeamStoreFunction } = useLiveData();
   const { teamStore } = useTeamStoreFunction();
   const teamMembers = ref([]);
-
   teamStore.$subscribe((mutation, state) => {
     if (state.members) {
       teamMembers.value = state.members;
@@ -64,7 +63,6 @@
       teamMembers.value = [];
     }
   });
-
   const isCurrentUserTeamOwner = computed(() => {
     const currentTeamOwner = teamStore.owner;
     const currentFireUID = fireuser.uid;

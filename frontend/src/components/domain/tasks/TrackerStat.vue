@@ -38,23 +38,19 @@
     min-height: 120px;
     height: auto;
   }
-
   // Ensure compact layout on mobile
   @media (max-width: 600px) {
     .stat-card {
       min-height: 100px;
       height: auto;
     }
-
     :deep(.v-avatar) {
       width: 50px !important;
       height: 50px !important;
-
       .v-icon {
         font-size: 32px !important;
       }
     }
-
     .text-h5 {
       font-size: 1.1rem !important;
     }

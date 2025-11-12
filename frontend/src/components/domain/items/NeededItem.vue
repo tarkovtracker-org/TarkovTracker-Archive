@@ -42,7 +42,9 @@
   const NeededItemSmallCard = defineAsyncComponent(
     () => import('@/components/domain/items/NeededItemSmallCard')
   );
-  const NeededItemRow = defineAsyncComponent(() => import('@/components/domain/items/NeededItemRow'));
+  const NeededItemRow = defineAsyncComponent(
+    () => import('@/components/domain/items/NeededItemRow')
+  );
   const props = defineProps({
     need: {
       type: Object,
@@ -97,7 +99,6 @@
   function isTaskObjectiveNeeded(need) {
     const rt = relatedTask.value;
     if (!rt) return false;
-
     if (userStore.itemsNeededHideNonFIR) {
       if (need.type == 'mark' || need.type == 'buildWeapon' || need.type == 'plantItem') {
         return false;

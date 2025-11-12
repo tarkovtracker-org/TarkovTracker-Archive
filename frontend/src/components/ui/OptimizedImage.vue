@@ -14,12 +14,9 @@
     />
   </picture>
 </template>
-
 <script setup lang="ts">
   import { computed, useAttrs } from 'vue';
-
   const EXTENSION_REGEX = /\.[a-z0-9]+$/i;
-
   const props = withDefaults(
     defineProps<{
       src: string;
@@ -45,13 +42,11 @@
       pictureClass: undefined,
     }
   );
-
   const buildVariant = (override: string | null, targetExt: string) => {
     if (override) return override;
     if (!EXTENSION_REGEX.test(props.src)) return null;
     return props.src.replace(EXTENSION_REGEX, `.${targetExt}`);
   };
-
   const avifSrc = computed(() => buildVariant(props.avif, 'avif'));
   const webpSrc = computed(() => buildVariant(props.webp, 'webp'));
   const fallbackSrc = computed(() => props.src);
@@ -67,7 +62,6 @@
     return forward;
   });
 </script>
-
 <style scoped>
   .optimized-image {
     display: contents;

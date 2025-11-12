@@ -1,7 +1,7 @@
 import { logger } from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
-import { setCorsHeaders } from '../config/corsConfig.js';
-import { Request as FirebaseRequest } from 'firebase-functions/v2/https';
+import { setCorsHeaders } from '../config/corsConfig';
+import { Request } from 'express';
 
 // Use a flexible response type compatible with both Firebase's bundled Express and standalone Express
 // Firebase bundles @types/express v4 while workspace may use v5
@@ -15,13 +15,13 @@ interface ExpressResponse {
 
 // Define the handler type that accepts the authenticated user ID
 type AuthenticatedHandler = (
-  req: FirebaseRequest,
+  req: Request,
   res: ExpressResponse,
   uid: string
 ) => Promise<void> | void;
 
 export async function withCorsAndAuth(
-  req: FirebaseRequest,
+  req: Request,
   res: ExpressResponse,
   handler: AuthenticatedHandler
 ): Promise<void> {
@@ -39,14 +39,12 @@ export async function withCorsAndAuth(
 
   // Step 3: Extract and verify Bearer token
   try {
-    const authHeader = req.headers.authorization || '';
+    const authHeader = req.headers.authorization ?? '';
     const match = authHeader.match(/^Bearer (.+)$/);
-
     if (!match) {
       res.status(401).json({ error: 'Missing or invalid Authorization header' });
       return;
     }
-
     const idToken = match[1];
 
     // Step 4: Verify token with Firebase Admin
@@ -69,7 +67,6 @@ export async function withCorsAndAuth(
         method: req.method,
         path: req.path,
       });
-
       if (!res.headersSent) {
         res.status(401).json({
           error: err.message,
@@ -81,7 +78,6 @@ export async function withCorsAndAuth(
         method: req.method,
         path: req.path,
       });
-
       if (!res.headersSent) {
         res.status(500).json({ error: 'An error occurred while processing your request.' });
       }

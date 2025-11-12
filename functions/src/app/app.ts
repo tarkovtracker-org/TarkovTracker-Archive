@@ -9,23 +9,21 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { logger } from 'firebase-functions/v2';
-import { verifyBearer } from '../middleware/auth.js';
-import { abuseGuard } from '../middleware/abuseGuard.js';
-import { requireRecentAuth } from '../middleware/reauth.js';
-import { requirePermission } from '../middleware/permissions.js';
-import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler.js';
-import { getExpressCorsOptions } from '../config/corsConfig.js';
-import progressHandler from '../handlers/progressHandler.js';
-import teamHandler from '../handlers/teamHandler.js';
-import tokenHandler from '../handlers/tokenHandler.js';
-import { deleteUserAccountHandler } from '../handlers/userDeletionHandler.js';
-import { API_FEATURES } from '../config/features.js';
-
+import { verifyBearer } from '../middleware/auth';
+import { abuseGuard } from '../middleware/abuseGuard';
+import { requireRecentAuth } from '../middleware/reauth';
+import { requirePermission } from '../middleware/permissions';
+import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler';
+import { getExpressCorsOptions } from '../config/corsConfig';
+import progressHandler from '../handlers/progressHandler';
+import teamHandler from '../handlers/teamHandler';
+import tokenHandler from '../handlers/tokenHandler';
+import { deleteUserAccountHandler } from '../handlers/userDeletionHandler';
+import { API_FEATURES } from '../config/features';
 // Read package version at module load
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageJsonPath = join(__dirname, '../../package.json');
-
 let APP_VERSION = '0.0.0';
 try {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
@@ -34,19 +32,15 @@ try {
   logger.error('Failed to read package.json version:', error);
   APP_VERSION = 'unknown';
 }
-
 export async function createApp(): Promise<Express> {
   const expressModule = await import('express');
   const corsModule = await import('cors');
   const bodyParserModule = await import('body-parser');
-
   const app = expressModule.default();
-
   // Middleware setup
   app.use(corsModule.default(getExpressCorsOptions()));
   app.use(bodyParserModule.default.json({ limit: '1mb' }));
   app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
-
   // Request logging in non-production
   if (process.env.NODE_ENV !== 'production') {
     app.use((req: ExpressRequest, _res: ExpressResponse, next: NextFunction) => {
@@ -54,17 +48,13 @@ export async function createApp(): Promise<Express> {
       next();
     });
   }
-
   // Routes
   setupRoutes(app);
-
   // Error handling
   app.use(notFoundHandler);
   app.use(errorHandler);
-
   return app;
 }
-
 function setupRoutes(app: Express) {
   // User management routes
   if (process.env.NODE_ENV !== 'production') {
@@ -78,17 +68,13 @@ function setupRoutes(app: Express) {
   // Auth middleware for all /api routes
   app.use('/api', verifyBearer);
   app.use('/api', abuseGuard);
-
   app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
-
   // Token endpoints
   app.get('/api/token', tokenHandler.getTokenInfo);
   app.get('/api/v2/token', tokenHandler.getTokenInfo);
-
   // Progress endpoints
   app.get('/api/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
   app.get('/api/v2/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
-
   app.post(
     '/api/progress/level/:levelValue',
     requirePermission('WP'),
@@ -99,17 +85,14 @@ function setupRoutes(app: Express) {
     requirePermission('WP'),
     progressHandler.setPlayerLevel
   );
-
   app.post('/api/progress/task/:taskId', requirePermission('WP'), progressHandler.updateSingleTask);
   app.post(
     '/api/v2/progress/task/:taskId',
     requirePermission('WP'),
     progressHandler.updateSingleTask
   );
-
   app.post('/api/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
   app.post('/api/v2/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
-
   app.post(
     '/api/progress/task/objective/:objectiveId',
     requirePermission('WP'),
@@ -120,16 +103,13 @@ function setupRoutes(app: Express) {
     requirePermission('WP'),
     progressHandler.updateTaskObjective
   );
-
   // Team endpoints
   app.get('/api/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
   app.get('/api/v2/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
-
   // Team management
   app.post('/api/team/create', teamHandler.createTeam);
   app.post('/api/team/join', teamHandler.joinTeam);
   app.post('/api/team/leave', teamHandler.leaveTeam);
-
   // Health check endpoint
   app.get(
     '/health',

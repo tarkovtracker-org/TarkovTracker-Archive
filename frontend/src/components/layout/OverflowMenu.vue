@@ -95,7 +95,6 @@
   const userStore = useUserStore();
   const tarkovStore = useTarkovStore();
   const router = useRouter();
-
   const unhideTips = () => {
     userStore.unhideTips();
   };
@@ -103,7 +102,6 @@
     userStore.enableHideAllTips();
   };
   const appStore = useAppStore();
-
   // Game mode options
   const gameModeOptions = [
     {
@@ -117,7 +115,6 @@
       icon: 'mdi-account-group',
     },
   ];
-
   const selectedGameMode = computed({
     get() {
       return tarkovStore.getCurrentGameMode();
@@ -126,17 +123,14 @@
       tarkovStore.switchGameMode(newMode);
     },
   });
-
   // PMC Faction options
   const PMCFactions = [
     { title: 'USEC', value: 'USEC' },
     { title: 'BEAR', value: 'BEAR' },
   ];
-
   const factionImage = (faction: 'USEC' | 'BEAR') => {
     return `img/factions/${faction}.webp`;
   };
-
   const currentPMCFaction = computed({
     get() {
       return tarkovStore.getPMCFaction();
@@ -145,7 +139,6 @@
       tarkovStore.setPMCFaction(newValue);
     },
   });
-
   const { availableLocales, locale } = useI18n({ useScope: 'global' });
   const localeItems = computed(() => {
     return availableLocales.map((localeCode) => {

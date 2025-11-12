@@ -22,7 +22,6 @@
               <li>All personal information</li>
             </ul>
           </v-alert>
-
           <!-- Team Ownership Warning -->
           <v-alert v-if="hasOwnedTeams" type="warning" variant="tonal" class="mb-4">
             <template #prepend>
@@ -35,7 +34,6 @@
               deleted.
             </div>
           </v-alert>
-
           <!-- Account Information -->
           <v-card variant="outlined" class="mb-4">
             <v-card-text>
@@ -73,7 +71,6 @@
               </div>
             </v-card-text>
           </v-card>
-
           <!-- Deletion Button -->
           <div class="text-center">
             <v-btn
@@ -92,7 +89,6 @@
       </template>
     </fitted-card>
   </div>
-
   <!-- Confirmation Dialog -->
   <v-dialog v-model="showConfirmationDialog" max-width="600" persistent>
     <v-card>
@@ -100,14 +96,12 @@
         <v-icon class="mr-2" color="error">mdi-alert-circle</v-icon>
         Confirm Account Deletion
       </v-card-title>
-
       <v-card-text class="pt-4">
         <!-- Final Warning -->
         <v-alert type="error" variant="flat" class="mb-4">
           <div class="font-weight-bold">This action is irreversible!</div>
           <div class="mt-1">All your data will be permanently deleted and cannot be recovered.</div>
         </v-alert>
-
         <!-- Security Notice -->
         <div class="mb-4">
           <div class="text-subtitle-1 mb-2">Security Confirmation</div>
@@ -116,7 +110,6 @@
             permanent and cannot be undone.
           </div>
         </div>
-
         <!-- Confirmation Input -->
         <div class="mb-4">
           <div class="text-subtitle-1 mb-2">Type "DELETE MY ACCOUNT" to confirm:</div>
@@ -129,13 +122,11 @@
             @input="confirmationError = false"
           />
         </div>
-
         <!-- Error Display -->
         <v-alert v-if="deleteError" type="error" variant="tonal" class="mb-4">
           {{ deleteError }}
         </v-alert>
       </v-card-text>
-
       <v-card-actions class="pa-4">
         <v-spacer />
         <v-btn variant="text" :disabled="isDeleting" @click="closeDialog"> Cancel </v-btn>
@@ -151,7 +142,6 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
-
   <!-- Success Dialog - Teleported to body to persist after signout -->
   <teleport to="body">
     <v-dialog v-model="showSuccessDialog" max-width="500" persistent>
@@ -160,7 +150,6 @@
           <v-icon class="mr-2" color="success">mdi-check-circle</v-icon>
           Account Deleted Successfully
         </v-card-title>
-
         <v-card-text class="pt-4">
           <div class="text-body-1 mb-3">
             Your account and all associated data have been permanently deleted.
@@ -169,7 +158,6 @@
             Thank you for using TarkovTracker. You will be redirected to the dashboard.
           </div>
         </v-card-text>
-
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn color="primary" variant="flat" @click="redirectToHome"> Go to Dashboard </v-btn>
@@ -178,10 +166,8 @@
     </v-dialog>
   </teleport>
 </template>
-
 <script setup>
   import { ref, computed } from 'vue';
-
   // Disable automatic attribute inheritance since we handle it manually
   defineOptions({
     inheritAttrs: false,
@@ -191,11 +177,9 @@
   import { useLiveData } from '@/composables/livedata';
   import FittedCard from '@/components/ui/FittedCard.vue';
   import { logger } from '@/utils/logger';
-
   const router = useRouter();
   const { useTeamStore } = useLiveData();
   const { teamStore } = useTeamStore();
-
   // Reactive data
   const showConfirmationDialog = ref(false);
   const showSuccessDialog = ref(false);
@@ -204,20 +188,16 @@
   const deleteError = ref('');
   const isDeleting = ref(false);
   const accountIdCopied = ref(false);
-
   // Computed properties
   const hasOwnedTeams = computed(() => {
     return teamStore.$state.team && teamStore.$state.team.owner === fireuser.uid;
   });
-
   const ownedTeamsCount = computed(() => {
     return hasOwnedTeams.value ? 1 : 0; // Assuming user can only own one team
   });
-
   const canDelete = computed(() => {
     return confirmationText.value === 'DELETE MY ACCOUNT';
   });
-
   const userEmail = computed(() => {
     // Debug logging to understand what's available
     logger.debug('Debug - fireuser:', {
@@ -226,24 +206,20 @@
       displayName: fireuser.displayName,
       loggedIn: fireuser.loggedIn,
     });
-
     logger.debug('Debug - auth.currentUser:', {
       email: auth.currentUser?.email,
       uid: auth.currentUser?.uid,
       displayName: auth.currentUser?.displayName,
       providerData: auth.currentUser?.providerData,
     });
-
     // Try fireuser.email first (standard approach)
     if (fireuser.email) {
       return fireuser.email;
     }
-
     // Fallback to auth.currentUser.email for OAuth providers
     if (auth.currentUser?.email) {
       return auth.currentUser.email;
     }
-
     // Check providerData for OAuth email (GitHub/Google)
     if (auth.currentUser?.providerData) {
       for (const provider of auth.currentUser.providerData) {
@@ -252,16 +228,13 @@
         }
       }
     }
-
     return 'No email available';
   });
-
   // Methods
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
     return new Date(dateString).toLocaleDateString();
   };
-
   const copyAccountId = async () => {
     try {
       await navigator.clipboard.writeText(fireuser.uid);
@@ -288,37 +261,30 @@
       }
     }
   };
-
   const closeDialog = () => {
     showConfirmationDialog.value = false;
     confirmationText.value = '';
     confirmationError.value = false;
     deleteError.value = '';
   };
-
   const deleteAccount = async () => {
     if (!canDelete.value) {
       confirmationError.value = true;
       return;
     }
-
     isDeleting.value = true;
     deleteError.value = '';
-
     try {
       // Use Firebase callable function for account deletion
       const deleteUserAccountFn = httpsCallable(functions, 'deleteUserAccount');
-
       await deleteUserAccountFn({
         confirmationText: confirmationText.value,
       });
-
       // Success - show success dialog first, then sign out in the redirect function
       showConfirmationDialog.value = false;
       showSuccessDialog.value = true;
     } catch (error) {
       logger.error('Account deletion error:', error);
-
       if (error.code === 'functions/unauthenticated') {
         deleteError.value = 'Authentication required. Please refresh the page and try again.';
       } else if (error.code === 'functions/invalid-argument') {
@@ -332,18 +298,14 @@
       isDeleting.value = false;
     }
   };
-
   const redirectToHome = async () => {
     try {
       showSuccessDialog.value = false;
       logger.info('Signing out user and redirecting to dashboard...');
-
       // Clear ALL localStorage data before signing out
       localStorage.clear();
-
       // Sign out the user now that they've seen the success message
       await auth.signOut();
-
       // Navigate to dashboard
       await router.push('/');
       logger.info('Successfully signed out and redirected to dashboard');
@@ -361,20 +323,16 @@
     }
   };
 </script>
-
 <style scoped>
   .account-deletion-card {
     border: 1px solid rgb(var(--v-theme-error));
   }
-
   .account-deletion-card :deep(.v-card) {
     border-color: rgb(var(--v-theme-error));
   }
-
   ul {
     list-style-type: disc;
   }
-
   ul li {
     margin-bottom: 0.25rem;
   }

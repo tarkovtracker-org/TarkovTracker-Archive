@@ -53,7 +53,6 @@
         </fitted-card>
       </v-col>
     </v-row>
-
     <v-row class="justify-center">
       <v-col cols="12" md="10" lg="8">
         <fitted-card
@@ -100,7 +99,6 @@
         </fitted-card>
       </v-col>
     </v-row>
-
     <v-row class="justify-center mb-6">
       <v-col cols="12" md="10" lg="8">
         <fitted-card
@@ -129,13 +127,11 @@
         </fitted-card>
       </v-col>
     </v-row>
-
     <v-row v-if="fireuser.loggedIn" class="justify-center mb-8">
       <v-col cols="12" md="10" lg="8">
         <account-deletion-card class="flex-grow-1" />
       </v-col>
     </v-row>
-
     <v-dialog v-model="resetDialogOpen" max-width="460">
       <v-card :title="$t('page.settings.dialogs.reset_mode.title', { mode: resetModeLabel })">
         <v-card-text>
@@ -156,7 +152,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
     <v-dialog v-model="fullResetDialog" max-width="520">
       <v-card :title="$t('page.settings.dialogs.full_reset.title')">
         <v-card-text>
@@ -194,11 +189,9 @@
   import AccountDeletionCard from '@/components/domain/settings/AccountDeletionCard.vue';
   import type { GameMode } from '@/shared_state';
   import { logger } from '@/utils/logger';
-
   const { t } = useI18n({ useScope: 'global' });
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
-
   const gameEditionOptions = computed(() => [
     { title: t('page.settings.options.edition_standard'), value: 1 },
     { title: t('page.settings.options.edition_left_behind'), value: 2 },
@@ -207,7 +200,6 @@
     { title: t('page.settings.options.edition_unheard'), value: 5 },
     { title: t('page.settings.options.edition_unheard_eod'), value: 6 },
   ]);
-
   const currentGameEdition = computed({
     get() {
       return tarkovStore.getGameEdition();
@@ -216,7 +208,6 @@
       tarkovStore.setGameEdition(newValue);
     },
   });
-
   const streamerMode = computed({
     get() {
       return userStore.getStreamerMode;
@@ -225,7 +216,6 @@
       userStore.setStreamerMode(newValue);
     },
   });
-
   const resetDialogMode = ref<GameMode | null>(null);
   const resetDialogOpen = computed({
     get() {
@@ -240,22 +230,18 @@
   const resetting = ref(false);
   const fullResetDialog = ref(false);
   const fullResetting = ref(false);
-
   const resetModeLabel = computed(() => {
     if (!resetDialogMode.value) {
       return '';
     }
     return resetDialogMode.value.toUpperCase();
   });
-
   const openResetDialog = (mode: GameMode) => {
     resetDialogMode.value = mode;
   };
-
   const closeResetDialog = () => {
     resetDialogMode.value = null;
   };
-
   const confirmReset = async () => {
     if (!resetDialogMode.value) {
       return;
@@ -270,7 +256,6 @@
       resetting.value = false;
     }
   };
-
   const confirmFullReset = async () => {
     fullResetting.value = true;
     try {
@@ -289,7 +274,6 @@
     margin-bottom: 0 !important;
     padding-bottom: 32px !important;
   }
-
   .w-100 {
     width: 100%;
   }

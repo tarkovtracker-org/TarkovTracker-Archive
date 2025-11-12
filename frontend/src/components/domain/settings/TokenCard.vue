@@ -132,13 +132,11 @@
     }
     return tokenDataRef.value.permissions;
   });
-
   // Get game mode from database or default to PvP for legacy tokens
   const tokenGameMode = computed(() => {
     // Use stored gameMode field or default to 'pvp' for backward compatibility
     return tokenDataRef.value?.gameMode || 'pvp';
   });
-
   // Game mode display properties
   const gameModeDisplay = computed(() => {
     switch (tokenGameMode.value) {
@@ -152,7 +150,6 @@
         return 'PvP Only';
     }
   });
-
   const gameModeChipColor = computed(() => {
     switch (tokenGameMode.value) {
       case 'pvp':
@@ -165,7 +162,6 @@
         return 'blue';
     }
   });
-
   const gameModeIcon = computed(() => {
     switch (tokenGameMode.value) {
       case 'pvp':
@@ -231,7 +227,6 @@
   const tokenVisible = ref(false);
   const generateQR = async () => {
     if (loading.value) return;
-
     if (!qrDataUrl.value) {
       loading.value = true;
       const currentToken = props.token; // Capture token at start to detect staleness
@@ -242,7 +237,6 @@
           type: 'image/png',
           width: 256,
         });
-
         // Only apply the result if the token hasn't changed
         if (currentToken === props.token) {
           qrDataUrl.value = dataUrl;
@@ -269,7 +263,6 @@
   const toggleTokenVisibility = () => {
     tokenVisible.value = !tokenVisible.value;
   };
-
   // Watch for token changes and reset cached QR data
   watch(
     () => props.token,
@@ -292,23 +285,18 @@
     border-radius: 4px;
     transition: all 0.2s ease;
     font-family: 'Courier New', monospace;
-
     &:hover {
       background-color: rgba(255, 255, 255, 0.1);
     }
-
     &.token-hidden {
       opacity: 0.7;
-
       &:hover {
         opacity: 1;
       }
     }
-
     &.token-visible {
       background-color: rgba(76, 175, 80, 0.1);
       color: #4caf50;
-
       &:hover {
         background-color: rgba(76, 175, 80, 0.2);
       }

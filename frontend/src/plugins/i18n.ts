@@ -18,18 +18,14 @@ import {
   zhHans as vuetifyZh,
   zhHant as vuetifyZhTw,
 } from 'vuetify/locale';
-
 import messages from '@intlify/unplugin-vue-i18n/messages';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type VuetifyLocaleMessages = { $vuetify: any };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AppMessages = LocaleMessages<any> & {
   [key: string]: VuetifyLocaleMessages;
 };
-
 const languageCode = navigator.language.split(/[-_]/)[0];
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const vuetifyLocales: Record<string, any> = {
   cs: vuetifyCs,
@@ -49,13 +45,10 @@ const vuetifyLocales: Record<string, any> = {
   zh: vuetifyZh,
   'zh-TW': vuetifyZhTw,
 };
-
 const typedMessages = messages as AppMessages;
-
 if (!typedMessages.pt && typedMessages['pt-BR']) {
   typedMessages.pt = typedMessages['pt-BR'];
 }
-
 for (const [locale, vuetifyLocale] of Object.entries(vuetifyLocales)) {
   if (typedMessages[locale]) {
     typedMessages[locale].$vuetify = vuetifyLocale;
@@ -63,7 +56,6 @@ for (const [locale, vuetifyLocale] of Object.entries(vuetifyLocales)) {
     typedMessages[locale] = { $vuetify: vuetifyLocale };
   }
 }
-
 const i18n: I18n<
   AppMessages,
   Record<string, never>,
@@ -83,5 +75,4 @@ const i18n: I18n<
   missingWarn: false,
   fallbackWarn: false,
 });
-
 export default i18n;

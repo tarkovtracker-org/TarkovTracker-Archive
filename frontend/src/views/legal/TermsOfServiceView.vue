@@ -5,7 +5,6 @@
         <v-card class="pa-6 pa-md-10" elevation="2">
           <h1 class="text-h4 font-weight-bold mb-4">{{ t('legal.terms.title') }}</h1>
           <p class="text-body-2 text-medium-emphasis mb-6">{{ lastUpdated }}</p>
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.acceptance.heading') }}
@@ -13,9 +12,7 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.acceptance.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.acceptance.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.accounts.heading') }}
@@ -27,9 +24,7 @@
               </template>
             </i18n-t>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.acceptable_use.heading') }}
@@ -41,9 +36,7 @@
               <li class="mb-0">{{ t('legal.terms.sections.acceptable_use.items.3') }}</li>
             </ul>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.availability.heading') }}
@@ -51,9 +44,7 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.availability.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.availability.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.user_content.heading') }}
@@ -69,9 +60,7 @@
               </template>
             </i18n-t>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.third_party.heading') }}
@@ -79,9 +68,7 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.third_party.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.third_party.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.disclaimers.heading') }}
@@ -89,9 +76,7 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.disclaimers.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.disclaimers.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.liability.heading') }}
@@ -99,27 +84,21 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.liability.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.liability.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.indemnification.heading') }}
             </h2>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.indemnification.body1') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.governing_law.heading') }}
             </h2>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.governing_law.body1') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section class="mb-8">
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.changes.heading') }}
@@ -127,9 +106,7 @@
             <p class="text-body-1 mb-2">{{ t('legal.terms.sections.changes.body1') }}</p>
             <p class="text-body-1 mb-0">{{ t('legal.terms.sections.changes.body2') }}</p>
           </section>
-
           <v-divider class="mb-8" />
-
           <section>
             <h2 class="text-h5 font-weight-bold mb-3">
               {{ t('legal.terms.sections.contact.heading') }}
@@ -145,18 +122,14 @@
     </v-row>
   </v-container>
 </template>
-
 <script setup>
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-
   const { t } = useI18n({ useScope: 'global' });
-
   const lastUpdated = computed(() =>
     t('legal.terms.last_updated', { date: t('legal.terms.last_updated_date') })
   );
 </script>
-
 <style scoped>
   ul {
     list-style: disc;

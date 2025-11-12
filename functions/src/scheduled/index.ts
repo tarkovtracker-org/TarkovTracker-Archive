@@ -1,8 +1,15 @@
 // Firebase scheduled functions for data synchronization
 import { logger } from 'firebase-functions/v2';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import admin from 'firebase-admin';
 import { request, gql } from 'graphql-request';
+import admin from 'firebase-admin';
+import { createLazyFirestore } from '../utils/factory';
+import type {
+  QueryDocumentSnapshot,
+  // Removed unused imports DocumentSnapshot, QuerySnapshot
+  DocumentReference,
+  Transaction,
+} from 'firebase-admin/firestore';
 import type {
   ApiToken,
   BackoffStrategy,
@@ -12,12 +19,15 @@ import type {
   ItemsResponse,
   Shard,
   TasksResponse,
-} from './types.js';
+} from './types';
 const TARKOV_DEV_GRAPHQL_ENDPOINT = 'https://api.tarkov.dev/graphql';
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 const defaultBackoff: BackoffStrategy = (attempt) => BASE_DELAY_MS * Math.pow(2, attempt - 1);
-const defaultDelay: DelayScheduler = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const defaultDelay: DelayScheduler = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 async function fetchWithRetry<T>(
   endpoint: string,
   query: string,
@@ -45,7 +55,7 @@ async function fetchWithRetry<T>(
       }
     }
   }
-  throw lastError || new Error('Fetch failed after retries');
+  throw lastError ?? new Error('Fetch failed after retries');
 }
 function validateTasksResponse(response: unknown): response is TasksResponse {
   return (
@@ -167,8 +177,9 @@ async function updateTarkovDataImplInternal(
   } = {}
 ) {
   try {
+    const getDb = createLazyFirestore();
+    const db = getDb();
     logger.info('Starting scheduled Tarkov data update');
-    const db = admin.firestore();
     const batch = db.batch();
     try {
       const tasksResponse = await fetchWithRetry<TasksResponse>(
@@ -293,7 +304,7 @@ async function updateTarkovDataImplInternal(
         const existingShardsSnapshot = await itemsShardsCollectionRef.get();
         const currentShardIds = shards.map((shard) => shard.index);
         const staleShardRefs: admin.firestore.DocumentReference[] = [];
-        existingShardsSnapshot.forEach((doc) => {
+        existingShardsSnapshot.forEach((doc: QueryDocumentSnapshot) => {
           if (!currentShardIds.includes(doc.id)) {
             staleShardRefs.push(doc.ref);
           }
@@ -333,11 +344,11 @@ async function updateTarkovDataImplInternal(
         }
       };
       try {
-        await db.runTransaction(async (transaction) => {
+        await db.runTransaction((transaction: Transaction) => {
           transaction.set(itemsMetadataRef, {
             sharded: true,
             shardCount: shards.length,
-            shardIds: shardIds,
+            shardIds,
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             schemaVersion: 2,
           });
@@ -382,9 +393,10 @@ async function updateTarkovDataImplInternal(
 }
 const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
   try {
+    const getDb = createLazyFirestore();
+    const db = getDb();
     logger.info('Starting inactive token expiration');
-    const db = admin.firestore();
-    const now = admin.firestore.Timestamp.now();
+    const now = db.Timestamp.now();
     const thirtyDaysAgo = new Date(now.toDate().getTime() - 30 * 24 * 60 * 60 * 1000);
     // Query for candidate token IDs (without data) to avoid TOCTOU race condition
     const candidateTokenRefs = await db
@@ -397,14 +409,16 @@ const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
       logger.info('No inactive tokens found');
       return;
     }
-    const tokenRefs = candidateTokenRefs.docs.map((doc) => doc.ref);
+    const tokenRefs: DocumentReference[] = candidateTokenRefs.docs.map(
+      (doc: QueryDocumentSnapshot) => doc.ref
+    );
     const chunkSize = 500;
     let expiredCount = 0;
     // Process tokens in chunks to avoid transaction size limits
     for (let i = 0; i < tokenRefs.length; i += chunkSize) {
       const chunk = tokenRefs.slice(i, i + chunkSize);
       try {
-        const updatedInChunk = await db.runTransaction(async (transaction) => {
+        const updatedInChunk = await db.runTransaction(async (transaction: Transaction) => {
           let chunkUpdates = 0;
           // Re-read and validate each document inside the transaction
           for (const docRef of chunk) {
@@ -412,7 +426,7 @@ const expireInactiveTokensImpl = onSchedule('every 24 hours', async () => {
             if (!freshSnapshot.exists) continue;
             const tokenData = freshSnapshot.data() as ApiToken;
             // Re-check that token is still active inside the transaction
-            if (tokenData && tokenData.status === 'active' && tokenData.isActive) {
+            if (tokenData.status === 'active' && tokenData.isActive) {
               transaction.update(docRef, {
                 isActive: false,
                 status: 'expired' as const,

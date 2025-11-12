@@ -94,22 +94,18 @@
     get: () => userStore.getTaskPrimaryView,
     set: (value) => userStore.setTaskPrimaryView(value),
   });
-
   const isStoreLoading = computed(() => {
     try {
       // Check if hideout data is still loading
       if (hideoutLoading.value) return true;
-
       // Check if we have hideout stations data
       if (!hideoutStations.value || hideoutStations.value.length === 0) {
         return true;
       }
-
       // Check if progress store team data is ready
       if (!visibleTeamStores.value || Object.keys(visibleTeamStores.value).length === 0) {
         return true;
       }
-
       // Remove the hideoutLevels check as it creates a circular dependency
       // The hideoutLevels computed property needs both hideout stations AND team stores
       // Since we've already verified both are available above, we can proceed
@@ -132,23 +128,19 @@
       return getStationLevel(requiredStationId) >= requirement.level;
     });
   };
-
   const hasNextLevel = (station) => {
     const currentLevel = getStationLevel(station.id);
     return Boolean(station.levels.find((level) => level.level === currentLevel + 1));
   };
-
   const visibleStations = computed(() => {
     try {
       if (isStoreLoading.value) {
         return [];
       }
-
       const stations = hideoutStationList.value;
       if (!Array.isArray(stations) || stations.length === 0) {
         return [];
       }
-
       switch (activePrimaryView.value) {
         case 'available':
           return stations.filter(canUpgradeStation);

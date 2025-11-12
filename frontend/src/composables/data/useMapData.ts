@@ -4,7 +4,6 @@ import { useTarkovStore } from '@/stores/tarkov';
 import { isMapVariant } from '@/utils/mapNormalization';
 import type { TarkovMap, Trader, PlayerLevel } from '@/types/models/tarkov';
 import { logger } from '@/utils/logger';
-
 // Mapping from GraphQL map names to static data keys
 const MAP_NAME_MAPPING: { [key: string]: string } = {
   'night factory': 'factory',
@@ -14,7 +13,6 @@ const MAP_NAME_MAPPING: { [key: string]: string } = {
 };
 const missingStaticDataWarnings = new Set<string>();
 const missingSvgWarnings = new Set<string>();
-
 // Canonical map display order (as they appear in the game)
 const MAP_DISPLAY_ORDER = [
   'Factory',
@@ -29,7 +27,6 @@ const MAP_DISPLAY_ORDER = [
   'Ground Zero',
   'The Labyrinth',
 ];
-
 /**
  * Get the display order index for a map
  */
@@ -43,16 +40,13 @@ function getMapOrderIndex(mapName: string): number {
  */
 export function useMapData() {
   const store = useTarkovStore();
-
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
-
   const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
   const { staticMapData } = useTarkovApi();
-
   // Computed property for maps with merged static data
   // Filters out map variants (Night Factory, Ground Zero 21+) so they don't appear in UI
   const maps = computed<TarkovMap[]>(() => {
@@ -65,7 +59,6 @@ export function useMapData() {
     const mergedMaps = source.map((map) => {
       const mapKey = getStaticMapKey(map.name);
       const staticData = staticMapData.value?.[mapKey];
-
       if (!staticData) {
         if (!missingStaticDataWarnings.has(mapKey)) {
           missingStaticDataWarnings.add(mapKey);
@@ -73,12 +66,10 @@ export function useMapData() {
         }
         return map;
       }
-
       if (!staticData.svg && !missingSvgWarnings.has(mapKey)) {
         missingSvgWarnings.add(mapKey);
         logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
       }
-
       return {
         ...map,
         ...(staticData.svg && { svg: staticData.svg }),
@@ -163,13 +154,11 @@ export function useMapData() {
  */
 export function useTraderData() {
   const store = useTarkovStore();
-
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
-
   const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
   // Computed property for sorted traders
   const traders = computed<Trader[]>(() => {
@@ -211,13 +200,11 @@ export function useTraderData() {
  */
 export function usePlayerLevelData() {
   const store = useTarkovStore();
-
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
-
   const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
   // Computed properties for player levels
   const playerLevels = computed<PlayerLevel[]>(() => queryResult.value?.playerLevels || []);

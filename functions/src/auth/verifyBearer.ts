@@ -2,7 +2,7 @@ import functions from 'firebase-functions';
 import admin from 'firebase-admin';
 import { Request, Response, NextFunction } from 'express';
 import { Firestore, DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
-
+import { createLazyFirestore } from '../utils/factory';
 // Define minimal interface for the token document data expected
 // Duplicated from index.ts for simplicity, consider shared types for larger projects
 interface ApiTokenData {
@@ -25,7 +25,8 @@ const verifyBearer = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const db: Firestore = admin.firestore();
+  const getDb = createLazyFirestore();
+  const db: Firestore = getDb();
   const authHeader = req.get('Authorization');
   if (authHeader == null) {
     res.status(401).json({ error: 'No Authorization header sent' });

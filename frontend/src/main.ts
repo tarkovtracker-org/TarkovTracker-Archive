@@ -4,7 +4,6 @@ import type { ComponentPublicInstance } from 'vue';
 import { VueFire } from 'vuefire';
 import '@fontsource/share-tech-mono';
 import '@mdi/font/css/materialdesignicons.css';
-
 // Local project plugins and setup
 import './styles/fonts.css';
 import './styles/settings.scss';
@@ -19,20 +18,16 @@ import { markInitialized } from './plugins/store-initializer';
 import { markI18nReady } from '@/composables/utils/i18nHelpers';
 import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
 import { logger } from '@/utils/logger';
-
 // Define custom window property
 declare global {
   interface Window {
     __TARKOV_DATA_MIGRATED?: boolean;
   }
 }
-
 // Add a global flag to track data migration status - will help with persistence
 window.__TARKOV_DATA_MIGRATED = false;
-
 // Create app instance
 const app = createApp(App);
-
 const { initializeConsent: initializePrivacyConsent } = usePrivacyConsent();
 if (typeof window !== 'undefined') {
   initializePrivacyConsent();
@@ -43,22 +38,17 @@ app.config.errorHandler = (err: unknown, vm: ComponentPublicInstance | null, inf
   logger.error('Component:', vm);
   logger.error('Info:', info);
 };
-
 // Configure app with plugins in the correct order
 app.use(i18n);
 // Mark i18n as ready for our composables
 markI18nReady();
-
 // Initialize Pinia and other plugins
 app.use(pinia).use(router).use(vuetify).use(VueFire, {
   firebaseApp: fireapp,
   modules: [],
 });
-
 // Initialize dev auth after Pinia and Firebase are registered with the app to ensure stores and services are available
 initDevAuth();
-
 app.mount('#app');
-
 // Mark the store system as initialized
 markInitialized();

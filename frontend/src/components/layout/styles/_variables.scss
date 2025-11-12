@@ -1,0 +1,72 @@
+// Layout component variables and mixins
+
+// Spacing
+$layout-spacing-xs: 2px;
+$layout-spacing-sm: 4px;
+$layout-spacing-md: 8px;
+$layout-spacing-lg: 16px;
+$layout-spacing-xl: 24px;
+
+// Breakpoints (matching Vuetify)
+$layout-mobile: 600px;
+$layout-tablet: 960px;
+$layout-desktop: 1280px;
+
+// Drawer dimensions
+$drawer-width: 300px;
+$drawer-rail-width: 56px;
+
+// Avatar sizes
+$avatar-size-xs: 16px;
+$avatar-size-sm: 24px;
+$avatar-size-md: 32px;
+$avatar-size-lg: 48px;
+
+// Typography
+$font-size-xs: 0.75rem;
+$font-size-sm: 0.875rem;
+$font-size-md: 1rem;
+$font-size-lg: 1.125rem;
+
+// Z-index layers
+$z-drawer: 1000;
+$z-app-bar: 1100;
+$z-modal: 2000;
+$z-tooltip: 3000;
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+
+// Mixins
+@mixin collapsed-visibility {
+  .layout-component--collapsed & {
+    display: none;
+  }
+}
+
+@mixin collapsed-inline {
+  .layout-component--collapsed & {
+    display: inline;
+  }
+}
+
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Dark theme colors (for consistent theming)
+$dark-surface: rgba(45, 45, 35, 0.95);
+$dark-surface-light: rgba(6, 13, 12, 0.95);
+$dark-text-primary: #ffffff;
+$dark-text-secondary: #b0b0b0;
+$dark-border: rgba(255, 255, 255, 0.12);

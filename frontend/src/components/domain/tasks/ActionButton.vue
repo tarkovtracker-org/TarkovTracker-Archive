@@ -10,7 +10,6 @@
     {{ text }}
   </v-btn>
 </template>
-
 <script setup>
   defineProps({
     xs: { type: Boolean, required: true },
@@ -19,6 +18,5 @@
     text: { type: String, required: true },
     size: { type: String, default: 'x-large' },
   });
-
   defineEmits(['click']);
 </script>

@@ -90,5 +90,4 @@ const tarkovHideoutQuery = /* GraphQL */ `
     }
   }
 `;
-
 export default tarkovHideoutQuery;

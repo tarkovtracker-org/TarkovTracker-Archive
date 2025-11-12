@@ -38,20 +38,17 @@
     </button>
   </div>
 </template>
-
 <script setup lang="ts">
   defineProps<{
     count: number;
     requiredCount: number;
   }>();
-
   defineEmits<{
     increment: [];
     decrement: [];
     reset: [];
   }>();
 </script>
-
 <style scoped lang="scss">
   .kill-tracker {
     display: inline-flex;
@@ -67,7 +64,6 @@
     );
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
   }
-
   .kill-tracker__label {
     text-transform: uppercase;
     font-weight: 700;
@@ -78,7 +74,6 @@
     background: rgba(var(--v-theme-warning), 0.35);
     color: rgb(var(--v-theme-on-warning));
   }
-
   .kill-tracker__control {
     display: inline-flex;
     align-items: center;
@@ -98,7 +93,6 @@
     padding: 0;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   }
-
   .kill-tracker__control--reset {
     border-color: rgba(var(--v-theme-error), 0.55);
     background: radial-gradient(
@@ -108,31 +102,26 @@
     );
     color: rgb(var(--v-theme-on-surface));
   }
-
   .kill-tracker__control:focus-visible {
     outline: 2px solid rgba(var(--v-theme-warning), 0.75);
     outline-offset: 2px;
   }
-
   .kill-tracker__control:hover:not(:disabled) {
     will-change: background, color, transform;
     background: rgba(var(--v-theme-warning), 0.55);
     color: rgb(var(--v-theme-on-warning));
     transform: translateY(-1px);
   }
-
   .kill-tracker__control--reset:hover:not(:disabled) {
     background: rgba(var(--v-theme-error), 0.55);
     color: rgb(var(--v-theme-on-error));
   }
-
   .kill-tracker__control:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none;
     color: rgba(var(--v-theme-on-surface), 0.4);
   }
-
   .kill-tracker__control-symbol {
     font-size: 0.9rem;
     font-weight: 800;
@@ -140,7 +129,6 @@
     color: inherit;
     transform: translateY(-1px);
   }
-
   .kill-tracker__counter {
     min-width: 60px;
     text-align: center;
@@ -154,17 +142,14 @@
       background 0.15s ease,
       color 0.15s ease;
   }
-
   .kill-tracker__counter--complete {
     background: rgba(var(--v-theme-success), 0.35);
     color: rgb(var(--v-theme-on-success));
   }
-
   .kill-tracker__separator {
     margin: 0 4px;
     opacity: 0.6;
   }
-
   .kill-tracker__count,
   .kill-tracker__required {
     font-variant-numeric: tabular-nums;

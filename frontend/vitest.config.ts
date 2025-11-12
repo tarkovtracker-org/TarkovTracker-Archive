@@ -4,7 +4,6 @@ import vue from '@vitejs/plugin-vue';
 import vuetify from 'vite-plugin-vuetify';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import path from 'path';
-
 export default defineConfig({
   plugins: [
     vue(),
@@ -18,8 +17,8 @@ export default defineConfig({
   ],
   test: {
     globals: true,
-    environment: 'happy-dom',
-    setupFiles: ['./src/test/setup.ts'],
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setupTests.ts'],
     pool: 'threads',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['node_modules', 'dist', 'e2e'],

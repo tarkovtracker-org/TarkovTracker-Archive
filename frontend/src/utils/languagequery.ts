@@ -7,5 +7,4 @@ const languageQuery = /* GraphQL */ `
     }
   }
 `;
-
 export default languageQuery;

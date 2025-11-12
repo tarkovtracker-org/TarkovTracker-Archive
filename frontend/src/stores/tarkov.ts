@@ -25,10 +25,8 @@ import {
   scheduleLockRelease,
   saveToLocalStorage,
 } from '@/utils/fireswapHelpers';
-
 // LocalStorage keys that should be preserved during profile reset operations
 const PRESERVED_STORAGE_KEYS = ['user', 'DEV_USER_ID'];
-
 // Define the Fireswap configuration type
 interface FireswapConfig {
   path: string;

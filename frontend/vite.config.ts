@@ -106,13 +106,17 @@ export default defineConfig({
     // Vite cannot analyze it statically, so we include it to avoid runtime errors.
     include: ['qrcode'],
   },
+  define: {
+    ...staticDefine,
+    // Help resolve Vite's internal types
+    'import.meta.env.VITE_DEV': JSON.stringify(process.env.NODE_ENV !== 'production'),
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue'],
   },
-  define: staticDefine,
   build: {
     sourcemap: 'hidden', // Generate source maps without linking them in bundle
     chunkSizeWarningLimit: 1000,

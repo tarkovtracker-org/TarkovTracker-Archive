@@ -6,9 +6,7 @@ import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import progressRules from './eslint.progress-rules.cjs';
-
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
-
 export default [
   // Global ignores
   {
@@ -35,7 +33,6 @@ export default [
   ...tseslint.configs.recommended,
   // Vue configuration
   ...pluginVue.configs['flat/recommended'],
-
   // Frontend Vue source files with typed linting
   {
     files: ['frontend/src/**/*.vue'],
@@ -62,6 +59,33 @@ export default [
       'vue/no-v-html': 'error',
       'no-debugger': 'off',
       'max-len': ['warn', { code: 100 }],
+      // Critical TypeScript rules for bug prevention
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/return-await': 'error',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'warn',
+      // General best practices
+      'prefer-const': 'error',
+      'no-var': 'error',
+      eqeqeq: ['error', 'always'],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-wrappers': 'error',
+      'no-promise-executor-return': 'error',
+      'prefer-promise-reject-errors': 'error',
+      'dot-notation': 'error',
+      'object-shorthand': 'error',
+      // Style/quality rules (warnings)
+      'prefer-destructuring': ['warn', { object: true, array: false }],
     },
   },
   // Frontend TypeScript source files with typed linting
@@ -133,6 +157,33 @@ export default [
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
       'max-len': ['warn', { code: 120 }],
+      // Critical TypeScript rules for bug prevention
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/return-await': 'error',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/consistent-type-imports': 'warn',
+      // General best practices
+      'prefer-const': 'error',
+      'no-var': 'error',
+      eqeqeq: ['error', 'always'],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-wrappers': 'error',
+      'no-promise-executor-return': 'error',
+      'prefer-promise-reject-errors': 'error',
+      'dot-notation': 'error',
+      'object-shorthand': 'error',
+      // Style/quality rules (warnings)
+      'prefer-destructuring': ['warn', { object: true, array: false }],
     },
   },
   // Functions test files - TypeScript
@@ -141,13 +192,38 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: null, // Disable project-based linting for test files
+        projectService: true,
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'no-console': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_'
+      }],
+      // Critical TypeScript rules for bug prevention
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/return-await': 'error',
+      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-unnecessary-condition': 'error',
+      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      '@typescript-eslint/prefer-optional-chain': 'error',
+      // General best practices (less strict for tests)
+      'prefer-const': 'warn',
+      'no-var': 'error',
+      eqeqeq: ['error', 'always'],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-wrappers': 'error',
+      'no-promise-executor-return': 'error',
+      'prefer-promise-reject-errors': 'error',
+      'dot-notation': 'error',
+      'object-shorthand': 'error',
     },
   },
   // Functions test files - JavaScript

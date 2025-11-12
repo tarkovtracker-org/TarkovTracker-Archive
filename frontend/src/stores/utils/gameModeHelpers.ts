@@ -6,12 +6,10 @@ type StoreLike =
     }
   | null
   | undefined;
-
 interface GameModeResult<TData = unknown> {
   currentGameMode: string;
   currentData: TData;
 }
-
 export function getCurrentGameModeData<TData = Record<string, unknown>>(
   store: StoreLike,
   fallbackMode: string = 'pvp'
@@ -23,15 +21,12 @@ export function getCurrentGameModeData<TData = Record<string, unknown>>(
       currentData: undefined as unknown as TData,
     };
   }
-
   const currentGameMode =
     typeof state.currentGameMode === 'string' && state.currentGameMode.length > 0
       ? state.currentGameMode
       : fallbackMode;
-
   const stateRecord = state as Record<string, unknown>;
   const currentData = (stateRecord[currentGameMode] ?? state) as TData;
-
   return {
     currentGameMode,
     currentData,

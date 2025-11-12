@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { isDevAuthEnabled } from '../devAuth';
-
 // Ensure env defaults don't leak into boolean/raw tests
 let __envSnapshot: any;
 beforeEach(() => {
@@ -11,7 +10,6 @@ beforeEach(() => {
 afterEach(() => {
   (import.meta as any).env = __envSnapshot;
 });
-
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -32,29 +30,24 @@ const localStorageMock = (() => {
     key: vi.fn((index: number) => Object.keys(store)[index] || null),
   };
 })();
-
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
-
 describe('devAuth utility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorageMock.clear();
     // Note: Environment cleanup is handled by the top-level beforeEach
   });
-
   afterEach(() => {
     vi.restoreAllMocks();
     localStorageMock.clear();
   });
-
   describe('isDevAuthEnabled', () => {
     it('returns false for boolean false', () => {
       // raw boolean false should disable dev auth
       expect(isDevAuthEnabled(false as any)).toBe(false);
     });
-
     it('respects explicit true only', () => {
       // raw string/number enabling true-ish
       expect(isDevAuthEnabled('true')).toBe(true);
@@ -64,49 +57,41 @@ describe('devAuth utility', () => {
       expect(isDevAuthEnabled('0')).toBe(false);
       expect(isDevAuthEnabled('off')).toBe(false);
     });
-
     it('should return true when VITE_DEV_AUTH is string "true"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'true';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "1"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '1';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "yes"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'yes';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "on"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'on';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "TRUE" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'TRUE';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "YES" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'YES';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return true when VITE_DEV_AUTH is string "ON" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'ON';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is string "false"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'false';
       
@@ -114,7 +99,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is string "0"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '0';
       
@@ -122,7 +106,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is string "off"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'off';
       
@@ -130,7 +113,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is string "no"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'no';
       
@@ -138,7 +120,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is undefined', () => {
       (import.meta as any).env.VITE_DEV_AUTH = undefined;
       
@@ -146,7 +127,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is null', () => {
       (import.meta as any).env.VITE_DEV_AUTH = null;
       
@@ -154,7 +134,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false when VITE_DEV_AUTH is empty string', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '';
       
@@ -162,13 +141,11 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should handle whitespace in string values', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '  true  ';
       
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false for invalid string values', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'invalid';
       
@@ -176,7 +153,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should return false for numeric values other than 1', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '2';
       
@@ -185,7 +161,6 @@ describe('devAuth utility', () => {
       expect(isDevAuthEnabled()).toBe(true);
     });
   });
-
   describe('localStorage integration behavior', () => {
     it('should not interact with localStorage when checking dev auth status', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'true';
@@ -197,7 +172,6 @@ describe('devAuth utility', () => {
       expect(localStorageMock.setItem).not.toHaveBeenCalled();
       expect(localStorageMock.removeItem).not.toHaveBeenCalled();
     });
-
     it('should be deterministic across multiple calls', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'yes';
       
@@ -211,7 +185,6 @@ describe('devAuth utility', () => {
       expect(firstCall).toBe(secondCall);
       expect(secondCall).toBe(thirdCall);
     });
-
     it('should handle environment changes between calls', () => {
       // Start with false
       (import.meta as any).env.VITE_DEV_AUTH = 'false';
@@ -230,7 +203,6 @@ describe('devAuth utility', () => {
       expect(isDevAuthEnabled()).toBe(true);
     });
   });
-
   describe('edge cases and error handling', () => {
     it('should handle non-string environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 123; // number
@@ -239,7 +211,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should handle object environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = { enabled: true }; // object
       
@@ -247,7 +218,6 @@ describe('devAuth utility', () => {
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
-
     it('should handle array environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = ['true']; // array
       

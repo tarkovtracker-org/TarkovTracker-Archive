@@ -125,7 +125,6 @@ export function useMapZoom(options: UseMapZoomOptions = {}): UseMapZoomReturn {
     if (!viewport || !vb) return;
     viewport.transition().duration(500).call(vb.transform, zoomIdentity);
   };
-
   const teardownZoom = () => {
     if (!currentMapContainerId) return;
     const viewport = getViewportSelection();
@@ -149,7 +148,6 @@ export function useMapZoom(options: UseMapZoomOptions = {}): UseMapZoomReturn {
     currentZoom.value = 1;
     currentMapContainerId = null;
   };
-
   return {
     currentZoom,
     showScrollHint,

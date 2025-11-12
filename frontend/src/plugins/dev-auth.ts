@@ -16,10 +16,8 @@
  *   - Works without Firebase emulators
  *   - Only active in development mode
  */
-
 import { fireuser } from './firebase';
 import { logger } from '@/utils/logger';
-
 type DevUserState = {
   allTipsHidden: boolean;
   hideTips: Record<string, boolean>;
@@ -27,7 +25,6 @@ type DevUserState = {
   filters: Record<string, unknown>;
   preferences: Record<string, unknown>;
 };
-
 const createDefaultUserState = (): DevUserState => ({
   allTipsHidden: false,
   hideTips: {},
@@ -35,9 +32,7 @@ const createDefaultUserState = (): DevUserState => ({
   filters: {},
   preferences: {},
 });
-
 let inMemoryUserState: DevUserState | null = null;
-
 function generateDevUserId(): string {
   const storageAvailable = typeof window !== 'undefined' && !!window.localStorage;
   if (storageAvailable) {
@@ -57,7 +52,6 @@ function generateDevUserId(): string {
   }
   return 'dev-user-' + Math.random().toString(36).substring(2, 11);
 }
-
 function initializeUserState(): void {
   const storageAvailable = typeof window !== 'undefined' && !!window.localStorage;
   if (storageAvailable) {
@@ -81,23 +75,18 @@ function initializeUserState(): void {
     inMemoryUserState = createDefaultUserState();
   }
 }
-
 export function initDevAuth(): void {
   // Only run in development mode
   if (!import.meta.env.DEV) {
     return;
   }
-
   // Check if dev auth is enabled via environment variable
   const devAuthEnabled = import.meta.env.VITE_DEV_AUTH === 'true';
-
   if (!devAuthEnabled) {
     logger.info('Dev auth disabled. Set VITE_DEV_AUTH=true in .env.local to enable.');
     return;
   }
-
   const devUserId = generateDevUserId();
-
   // Mock user object
   const mockUser = {
     uid: devUserId,
@@ -110,18 +99,14 @@ export function initDevAuth(): void {
     lastLoginAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   };
-
   // Inject mock user into fireuser reactive object
   Object.assign(fireuser, mockUser);
-
   initializeUserState();
-
   logger.info('🔧 Dev auth initialized:', {
     uid: mockUser.uid,
     email: mockUser.email,
     displayName: mockUser.displayName,
   });
-
   logger.warn(
     '⚠️  Using mock authentication. Set VITE_DEV_AUTH=false or remove from .env.local to use real auth.'
   );

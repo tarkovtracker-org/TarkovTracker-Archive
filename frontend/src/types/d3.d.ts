@@ -4,6 +4,5 @@ declare module 'd3' {
     svg: (url: string) => Promise<Document>;
     [key: string]: unknown;
   };
-
   export = d3;
 }

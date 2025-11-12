@@ -1,6 +1,7 @@
 import { logger } from 'firebase-functions/v2';
-import { onRequest, Request as FirebaseRequest } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
+import { onRequest } from 'firebase-functions/v2/https';
+// Removed unused imports Request, Response
+import admin from 'firebase-admin';
 import {
   Firestore,
   DocumentReference,
@@ -8,8 +9,9 @@ import {
   Transaction,
 } from 'firebase-admin/firestore';
 import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
-import { withCorsAndAuth } from '../middleware/onRequestAuth.js';
-import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types.js';
+import { withCorsAndAuth } from '../middleware/onRequestAuth';
+import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types';
+import { createLazyFirestore } from '../utils/factory';
 // Map HttpsError codes to HTTP status codes
 function getStatusFromHttpsErrorCode(code: FunctionsErrorCode): number {
   switch (code) {
@@ -54,7 +56,8 @@ async function _revokeTokenLogic(
   ownerUid: string,
   data: RevokeTokenData
 ): Promise<RevokeTokenResult> {
-  const db: Firestore = admin.firestore();
+  const getDb = createLazyFirestore();
+  const db: Firestore = getDb();
   logger.log('Starting revoke token logic (onRequest)', {
     data: data,
     owner: ownerUid,
@@ -141,69 +144,66 @@ async function _revokeTokenLogic(
     }
   }
 }
+export async function revokeTokenHandler(req: any, res: any): Promise<void> {
+  if (req.method !== 'POST' && req.method !== 'OPTIONS') {
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
+  await withCorsAndAuth(req, res, async (req, res, uid: string) => {
+    if (!req.body || typeof req.body !== 'object' || !('data' in req.body)) {
+      res.status(400).json({ error: 'Invalid request body: "data" field is required.' });
+      return;
+    }
+    const data = req.body.data as RevokeTokenData;
+    try {
+      const result = await _revokeTokenLogic(uid, data);
+      res.status(200).json(result);
+    } catch (e: unknown) {
+      let messageToSend = 'An error occurred while processing your request.';
+      let httpStatus = 500;
+      let errorCode: FunctionsErrorCode | string | undefined = 'internal';
+      let errorDetails: unknown | undefined = undefined;
+      let fullErrorMessage = 'Unknown error';
+      if (e instanceof HttpsError) {
+        httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
+        errorCode = e.code;
+        errorDetails = e.details;
+        fullErrorMessage = e.message;
+        switch (e.code) {
+          case 'not-found':
+            messageToSend = 'Token not found.';
+            break;
+          case 'permission-denied':
+            messageToSend = 'You do not have permission to revoke this token.';
+            break;
+          case 'invalid-argument':
+            messageToSend = 'Invalid request parameters.';
+            break;
+          default:
+            messageToSend = 'An error occurred while processing your request.';
+        }
+      } else if (e instanceof Error) {
+        fullErrorMessage = e.message;
+      } else if (typeof e === 'string') {
+        fullErrorMessage = e;
+      }
+      logger.error('Error from _revokeTokenLogic in revokeToken handler', {
+        uid: uid,
+        originalError: e,
+        errorCode: errorCode,
+        errorMessage: fullErrorMessage,
+        errorDetails: errorDetails,
+        clientMessageSent: messageToSend,
+        httpStatusSet: httpStatus,
+      });
+      res.status(httpStatus).json({ error: messageToSend });
+    }
+  });
+}
 export const revokeToken = onRequest(
   {
     memory: '256MiB',
     timeoutSeconds: 20,
   },
-  async (req: FirebaseRequest, res) => {
-    // Validate HTTP method BEFORE authentication (REST best practice)
-    if (req.method !== 'POST' && req.method !== 'OPTIONS') {
-      res.status(405).json({ error: 'Method Not Allowed' });
-      return;
-    }
-
-    withCorsAndAuth(req, res, async (req, res, uid: string) => {
-      if (!req.body || typeof req.body !== 'object' || !('data' in req.body)) {
-        res.status(400).json({ error: 'Invalid request body: "data" field is required.' });
-        return;
-      }
-      const data = req.body.data as RevokeTokenData;
-      try {
-        const result = await _revokeTokenLogic(uid, data);
-        res.status(200).json({ data: result });
-      } catch (e: unknown) {
-        let messageToSend = 'An error occurred while processing your request.';
-        let httpStatus = 500;
-        let errorCode: FunctionsErrorCode | string | undefined = 'internal';
-        let errorDetails: unknown | undefined = undefined;
-        let fullErrorMessage = 'Unknown error';
-        if (e instanceof HttpsError) {
-          httpStatus = getStatusFromHttpsErrorCode(e.code as FunctionsErrorCode);
-          errorCode = e.code;
-          errorDetails = e.details;
-          fullErrorMessage = e.message;
-          // Map HttpsError codes to safe client messages
-          switch (e.code) {
-            case 'not-found':
-              messageToSend = 'Token not found.';
-              break;
-            case 'permission-denied':
-              messageToSend = 'You do not have permission to revoke this token.';
-              break;
-            case 'invalid-argument':
-              messageToSend = 'Invalid request parameters.';
-              break;
-            default:
-              messageToSend = 'An error occurred while processing your request.';
-          }
-        } else if (e instanceof Error) {
-          fullErrorMessage = e.message;
-        } else if (typeof e === 'string') {
-          fullErrorMessage = e;
-        }
-        // Log full error details server-side for debugging
-        logger.error('Error from _revokeTokenLogic in revokeToken handler', {
-          uid: uid,
-          originalError: e,
-          errorCode: errorCode,
-          errorMessage: fullErrorMessage,
-          errorDetails: errorDetails,
-          clientMessageSent: messageToSend,
-          httpStatusSet: httpStatus,
-        });
-        res.status(httpStatus).json({ error: messageToSend });
-      }
-    });
-  }
+  revokeTokenHandler
 );

@@ -1,18 +1,14 @@
 import { print } from 'graphql';
 import type { DocumentNode } from 'graphql';
-
 const DEFAULT_ENDPOINT = 'https://api.tarkov.dev/graphql';
-
 interface GraphQLRequestBody<V> {
   query: string;
   variables?: V;
 }
-
 interface GraphQLResponse<T> {
   data?: T;
   errors?: Array<{ message?: string }>;
 }
-
 /**
  * Options for GraphQL requests
  * @property signal - Optional AbortSignal for request cancellation
@@ -22,26 +18,21 @@ interface GraphQLRequestOptions {
   signal?: AbortSignal;
   timeout?: number;
 }
-
 const endpoint = import.meta.env.VITE_GRAPHQL_ENDPOINT ?? DEFAULT_ENDPOINT;
-
 function setupAbortSignal(
   controller: AbortController,
   options: GraphQLRequestOptions
 ): (() => void) | undefined {
   if (!options.signal) return undefined;
-
   const { signal } = options;
   if (signal.aborted) {
     controller.abort(signal.reason);
     return undefined;
   }
-
   const onAbort = () => controller.abort(signal.reason);
   signal.addEventListener('abort', onAbort, { once: true });
   return () => signal.removeEventListener('abort', onAbort);
 }
-
 // Helper to convert query to string
 function queryToString(query: string | DocumentNode): string {
   if (typeof query === 'string') {
@@ -54,13 +45,11 @@ function queryToString(query: string | DocumentNode): string {
   }
   return queryString;
 }
-
 function validateResponse(response: Response): void {
   if (!response.ok) {
     throw new Error(`GraphQL request failed with status ${response.status}`);
   }
 }
-
 function validateContentType(response: Response): void {
   const contentType = response.headers.get('content-type');
   if (!contentType || !contentType.includes('application/json')) {
@@ -69,7 +58,6 @@ function validateContentType(response: Response): void {
     );
   }
 }
-
 function validatePayload<T>(payload: GraphQLResponse<T>): T {
   if (payload.errors?.length) {
     const aggregated = payload.errors
@@ -83,7 +71,6 @@ function validatePayload<T>(payload: GraphQLResponse<T>): T {
   }
   return payload.data;
 }
-
 export async function executeGraphQL<T, V = Record<string, unknown>>(
   query: string | DocumentNode,
   variables?: V,
@@ -91,13 +78,11 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
 ): Promise<T> {
   const controller = new AbortController();
   const detachAbortListener = setupAbortSignal(controller, options);
-
   // Setup timeout handler
   const timeout = options.timeout ?? 10000; // Default 10 seconds
   const timeoutId = setTimeout(() => {
     controller.abort(`GraphQL request timed out after ${timeout}ms`);
   }, timeout);
-
   try {
     // Convert query to string
     const queryString = queryToString(query);
@@ -110,10 +95,8 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
       signal: controller.signal,
       mode: 'cors',
     });
-
     validateResponse(response);
     validateContentType(response);
-
     const payload = (await response.json()) as GraphQLResponse<T>;
     return validatePayload(payload);
   } catch (error) {
@@ -133,5 +116,4 @@ export async function executeGraphQL<T, V = Record<string, unknown>>(
     detachAbortListener?.();
   }
 }
-
 export { queryToString };

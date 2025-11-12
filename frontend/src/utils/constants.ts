@@ -1,5 +1,4 @@
 export const DEFAULT_LANGUAGE = 'en';
-
 /**
  * Virtual list rendering configuration
  * Performance optimization: Reduced from 24 → 12 → 8 to improve initial render time

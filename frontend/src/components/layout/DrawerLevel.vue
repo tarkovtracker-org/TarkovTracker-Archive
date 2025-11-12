@@ -5,7 +5,7 @@
         <div style="font-size: 0.7em" class="mb-1">
           {{ t('navigation_drawer.level') }}
         </div>
-        <h1 class="rail-level-number">{{ tarkovStore.playerLevel() }}</h1>
+        <h1 class="rail-level-number">{{ userLevel || tarkovStore.playerLevel() }}</h1>
       </div>
     </template>
     <template v-else>
@@ -25,16 +25,16 @@
         </div>
         <div class="text-center">
           <h1
-            v-if="!editingLevel"
+            v-if="!isEditing"
             style="font-size: 2.5em; line-height: 0.8em; cursor: pointer"
             @click="startEditingLevel"
           >
-            {{ tarkovStore.playerLevel() }}
+            {{ userLevel || tarkovStore.playerLevel() }}
           </h1>
           <input
             v-else
             ref="levelInput"
-            v-model.number="levelInputValue"
+            v-model.number="editValue"
             type="number"
             :min="minPlayerLevel"
             :max="maxPlayerLevelUI"
@@ -71,23 +71,26 @@
     </template>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed, ref, nextTick } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
   import { useI18n } from 'vue-i18n';
   import { useTarkovData } from '@/composables/tarkovdata';
+  import { useUserLevel } from '@/composables/useUserLevel';
+  import type { CollapsibleComponentProps } from './types';
   const { t } = useI18n({ useScope: 'global' });
   const { mobile } = useDisplay();
-  defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
+  defineProps<CollapsibleComponentProps>();
   const tarkovStore = useTarkovStore();
   const { minPlayerLevel, maxPlayerLevel, playerLevels } = useTarkovData();
-
+  const {
+    userLevel,
+    isEditing,
+    editValue,
+    startEditing,
+    confirmLevelChange,
+  } = useUserLevel();
   // Allow setting level to maxPlayerLevel + 1
   const maxPlayerLevelUI = computed(() => maxPlayerLevel.value + 1);
   const pmcFactionIcon = computed(() => {
@@ -98,26 +101,16 @@
     const entry = playerLevels.value.find((pl) => pl.level === level);
     return entry?.levelBadgeImageLink ?? '';
   });
-
-  // Manual level editing logic
-  const editingLevel = ref(false);
-  const levelInputValue = ref(tarkovStore.playerLevel());
-  const levelInput = ref(null);
-
+  // Template refs
+  const levelInput = ref<HTMLInputElement | null>(null);
   function startEditingLevel() {
-    editingLevel.value = true;
-    levelInputValue.value = tarkovStore.playerLevel();
+    startEditing();
     nextTick(() => {
       if (levelInput.value) levelInput.value.focus();
     });
   }
-
   function saveLevel() {
-    let newLevel = parseInt(levelInputValue.value, 10);
-    if (isNaN(newLevel)) newLevel = minPlayerLevel.value;
-    newLevel = Math.max(minPlayerLevel.value, Math.min(maxPlayerLevelUI.value, newLevel));
-    tarkovStore.setLevel(newLevel);
-    editingLevel.value = false;
+    confirmLevelChange();
   }
   function incrementLevel() {
     if (tarkovStore.playerLevel() < maxPlayerLevelUI.value) {
@@ -172,7 +165,6 @@
     line-height: 1.2;
   }
 </style>
-
 <style>
   input[type='number']::-webkit-inner-spin-button,
   input[type='number']::-webkit-outer-spin-button {

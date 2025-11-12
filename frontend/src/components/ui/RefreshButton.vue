@@ -8,14 +8,12 @@
   import { useI18n } from 'vue-i18n';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useRouter } from 'vue-router';
-
   const props = defineProps({
     disabled: {
       type: Boolean,
       default: false,
     },
   });
-
   const { t } = useI18n({ useScope: 'global' });
   const { loading, hideoutLoading } = useTarkovData();
   const router = useRouter();

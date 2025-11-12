@@ -69,7 +69,6 @@
   const { systemStore } = useSystemStore();
   const userStore = useUserStore();
   const tarkovStore = useTarkovStore();
-
   const generateRandomName = (length = 6) =>
     Array.from({ length }, () =>
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(
@@ -82,13 +81,11 @@
   );
   const loading = ref({ createTeam: false, leaveTeam: false });
   const notification = ref({ show: false, message: '', color: 'accent' });
-
   const validateAuth = () => {
     if (!fireuser.loggedIn || !fireuser.uid || !auth.currentUser) {
       throw new Error(t('page.team.card.myteam.user_not_authenticated'));
     }
   };
-
   const callTeamFunction = async (functionName, payload = {}) => {
     try {
       const teamFunction = httpsCallable(functions, functionName);
@@ -99,7 +96,6 @@
       throw error;
     }
   };
-
   const waitForStoreUpdate = (storeFn, condition, timeout = 15000) => {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error('Store update timeout')), timeout);
@@ -116,21 +112,17 @@
       );
     });
   };
-
   const showNotification = (message, color = 'accent') => {
     notification.value = { show: true, message, color };
   };
-
   const handleCreateTeam = async () => {
     loading.value.createTeam = true;
     try {
       validateAuth();
       const result = await callTeamFunction('createTeam');
-
       if (!result?.team) {
         throw new Error(t('page.team.card.myteam.create_team_error_ui_update'));
       }
-
       await waitForStoreUpdate(
         () => systemStore.$state.team,
         (teamId) => teamId != null
@@ -140,7 +132,6 @@
         (state) => state?.owner === fireuser.uid && state?.password
       );
       await nextTick();
-
       if (localUserTeam.value) {
         if (isTeamOwner.value) {
           tarkovStore.setDisplayName(generateRandomName());
@@ -162,11 +153,9 @@
     try {
       validateAuth();
       const result = await callTeamFunction('leaveTeam');
-
       if (!result?.left && systemStore.$state.team) {
         throw new Error(t('page.team.card.myteam.leave_team_error'));
       }
-
       if (tarkovStore.displayName.startsWith('User ')) {
         tarkovStore.setDisplayName(tarkovStore.getDefaultDisplayName());
       }
@@ -184,21 +173,17 @@
       showNotification('URL copied to clipboard');
     }
   };
-
   const teamUrl = computed(() => {
     const { team: teamId } = systemStore.$state;
     const { password } = teamStore.$state;
     if (!teamId || !password) return '';
-
     const baseUrl = window.location.href.split('?')[0];
     const params = new URLSearchParams({ team: teamId, code: password });
     return `${baseUrl}?${params}`;
   });
-
   const visibleUrl = computed(() =>
     userStore.getStreamerMode ? t('page.team.card.myteam.url_hidden') : teamUrl.value
   );
-
   watch(
     () => tarkovStore.getDisplayName,
     (newDisplayName) => {

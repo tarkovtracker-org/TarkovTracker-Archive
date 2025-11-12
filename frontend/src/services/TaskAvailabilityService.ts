@@ -44,7 +44,6 @@ const ACTIVE_STATUSES = new Set(['active', 'accept', 'accepted']);
  */
 export class TaskAvailabilityService {
   private memo = new Map<string, boolean>();
-
   /**
    * @param tasks - Map of task IDs to Task objects
    * @param teamStores - Map of team member IDs to their Pinia store instances

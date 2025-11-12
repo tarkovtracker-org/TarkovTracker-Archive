@@ -15,7 +15,6 @@
         :tasks="tasks"
       />
     </template>
-
     <template v-else-if="isComplete">
       <ActionButton
         :xs="xs"
@@ -31,11 +30,9 @@
         :label="t('page.tasks.questcard.alternativefailed')"
       />
     </template>
-
     <template v-else-if="!isOurFaction">
       {{ t('page.tasks.questcard.differentfaction') }}
     </template>
-
     <template v-else-if="isLocked">
       <div :class="xs ? 'd-flex justify-center' : ''">
         <ActionButton
@@ -60,13 +57,11 @@
     </template>
   </div>
 </template>
-
 <script setup>
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import ActionButton from '@/components/domain/tasks/ActionButton.vue';
   import AlternativesList from '@/components/domain/tasks/AlternativesList.vue';
-
   const props = defineProps({
     task: { type: Object, required: true },
     tasks: { type: Object, required: true },
@@ -77,11 +72,8 @@
     showExperience: { type: Boolean, default: true },
     experience: { type: Number, default: 0 },
   });
-
   defineEmits(['complete', 'uncomplete', 'unlock']);
-
   const { t } = useI18n({ useScope: 'global' });
-
   const experienceDisplay = computed(() => {
     if (!props.showExperience) return '';
     const xp = Number(props.experience || 0);
@@ -89,7 +81,6 @@
     return `+${xp.toLocaleString()}`;
   });
 </script>
-
 <style lang="scss" scoped>
   .task-actions {
     display: flex;
@@ -102,7 +93,6 @@
     min-height: 0;
     align-items: stretch;
   }
-
   .task-experience {
     display: inline-flex;
     align-items: center;

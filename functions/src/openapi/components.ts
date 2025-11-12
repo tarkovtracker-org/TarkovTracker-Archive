@@ -127,6 +127,5 @@
  *           description: UUID correlating to individual hideout station level item requirements' ID
  *             available via the tarkov.dev API
  */
-
 // This file primarily serves to hold the OpenAPI component definitions.
 // Actual TypeScript interfaces/types should be defined alongside the code that uses them or in dedicated type files.

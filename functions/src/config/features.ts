@@ -5,7 +5,6 @@
  * All experimental and new features default to OFF for production safety.
  * Enable specific flags via environment variables in staging/development.
  */
-
 /**
  * API feature flags interface
  *
@@ -31,7 +30,6 @@ export interface ApiFeatures {
   newTeamService: boolean;
   newTokenService: boolean;
 }
-
 /**
  * Current API features enabled in this deployment
  *

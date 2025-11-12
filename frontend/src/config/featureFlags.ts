@@ -37,7 +37,6 @@
  *
  * Don't let feature flags accumulate! Clean them up regularly.
  */
-
 /**
  * Parse environment variable as boolean
  * Accepts: 'true', '1', 'yes' (case-insensitive) as true
@@ -47,7 +46,6 @@ function envBool(value: string | undefined): boolean {
   if (!value) return false;
   return ['true', '1', 'yes'].includes(value.toLowerCase());
 }
-
 export const featureFlags = {
   /**
    * Example: New API Documentation System
@@ -60,7 +58,6 @@ export const featureFlags = {
    */
   // TODO: Remove this flag after next release - API docs are now stable (tracked in #140)
   newApiDocs: envBool(import.meta.env.VITE_FEATURE_NEW_API_DOCS),
-
   /**
    * Example: Experimental Map Renderer
    *
@@ -71,7 +68,6 @@ export const featureFlags = {
    * Status: 🚧 In Development
    */
   webGLMaps: envBool(import.meta.env.VITE_FEATURE_WEBGL_MAPS),
-
   /**
    * Advanced Team Analytics
    *
@@ -83,31 +79,26 @@ export const featureFlags = {
    */
   teamAnalytics: envBool(import.meta.env.VITE_FEATURE_TEAM_ANALYTICS),
 } as const;
-
 /**
  * Type-safe feature flag names
  */
 export type FeatureFlagName = keyof typeof featureFlags;
-
 /**
  * Check if a feature is enabled (alias for better readability)
  */
 export function isFeatureEnabled(flag: FeatureFlagName): boolean {
   return featureFlags[flag];
 }
-
 /**
  * Get all enabled features (useful for debugging/logging)
  */
 export function getEnabledFeatures(): FeatureFlagName[] {
   return (Object.keys(featureFlags) as FeatureFlagName[]).filter((key) => featureFlags[key]);
 }
-
 // Log enabled features in development
 if (import.meta.env.DEV) {
   // Get enabled features once to use in both success and error paths
   const enabled = getEnabledFeatures();
-
   // Dynamic import to avoid bundling logger in production when this block is tree-shaken
   import('@/utils/logger')
     .then(({ logger }) => {

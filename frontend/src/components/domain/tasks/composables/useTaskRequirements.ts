@@ -2,7 +2,6 @@ import { computed, type Ref } from 'vue';
 import { useTarkovStore } from '@/stores/tarkov';
 import type { Task, TaskObjective } from '@/types/models/tarkov';
 import { standingComparator, formatStandingOperator } from '@/utils/traderRequirements';
-
 interface TraderRequirementSummary {
   id: string;
   name: string;
@@ -10,7 +9,6 @@ interface TraderRequirementSummary {
   current: number;
   met: boolean;
 }
-
 interface TraderStandingSummary {
   id: string;
   name: string;
@@ -19,7 +17,6 @@ interface TraderStandingSummary {
   operator: string;
   met: boolean;
 }
-
 export function useTaskRequirements(task: Ref<Task>) {
   const tarkovStore = useTarkovStore();
   const traderLoyaltyRequirements = computed<TraderRequirementSummary[]>(() =>

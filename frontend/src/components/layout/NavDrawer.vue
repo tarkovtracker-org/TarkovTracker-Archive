@@ -25,19 +25,14 @@
   import { computed, watch } from 'vue';
   import { useAppStore } from '@/stores/app';
   import { useDisplay } from 'vuetify';
-  import TrackerLogo from '@/features/drawer/TrackerLogo.vue';
-  import DrawerLinks from '@/features/drawer/DrawerLinks.vue';
-  import DrawerAccount from '@/features/drawer/DrawerAccount.vue';
-  import DrawerLevel from '@/features/drawer/DrawerLevel.vue';
-  import DrawerTraderStandings from '@/features/drawer/DrawerTraderStandings.vue';
-  import DrawerExternalLinks from '@/features/drawer/DrawerExternalLinks.vue';
+  import TrackerLogo from '@/components/layout/TrackerLogo.vue';
+  import DrawerLinks from '@/components/layout/DrawerLinks.vue';
+  import DrawerAccount from '@/components/layout/DrawerAccount.vue';
+  import DrawerLevel from '@/components/layout/DrawerLevel.vue';
+  import DrawerTraderStandings from '@/components/layout/DrawerTraderStandings.vue';
+  import DrawerExternalLinks from '@/components/layout/DrawerExternalLinks.vue';
   const { mobile, lgAndUp } = useDisplay();
   const appStore = useAppStore();
-
-  // Calculate the effective rail state based on viewport size
-  // Mobile (<600px): hidden drawer
-  // Tablet (600px-1280px): rail mode (collapsed)
-  // Desktop (>1280px): expanded mode
   const isRailActive = computed(() => {
     if (mobile.value) {
       return false; // Mobile: hidden drawer
@@ -47,7 +42,6 @@
       return true; // Tablet: collapsed rail
     }
   });
-
   // Ensure drawerShow is always true on tablet and desktop
   // On mobile, drawerShow controls visibility; on tablet+, rail/expanded controls width
   watch(
@@ -67,24 +61,20 @@
     background-size: cover;
     background-position: center;
   }
-
   /* Add left padding to nested list items */
   :deep(.v-list-group__items .v-list-item) {
     padding-left: 8px;
   }
-
   /* Center content in rail mode */
   :deep(.v-navigation-drawer--rail) {
     .v-list-item {
       justify-content: center;
     }
-
     .v-list-item__content {
       display: flex;
       justify-content: center;
       align-items: center;
     }
-
     .v-list-item__prepend {
       margin-inline-end: 0;
     }

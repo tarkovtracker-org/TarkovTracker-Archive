@@ -1,13 +1,11 @@
 import { Request, Response } from 'express';
-import { ApiResponse, ApiToken } from '../types/api.js';
-import { TeamService } from '../services/TeamService.js';
-import { ValidationService } from '../services/ValidationService.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
-import { createLazy } from '../utils/factory.js';
-
+import { ApiResponse, ApiToken } from '../types/api';
+import { TeamService } from '../services/TeamService';
+import { ValidationService } from '../services/ValidationService';
+import { asyncHandler } from '../middleware/errorHandler';
+import { createLazy } from '../utils/factory';
 // Lazy-initialized service instance to ensure Firebase Admin is initialized first
 const getTeamService = createLazy(() => new TeamService());
-
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
   user?: {
@@ -15,7 +13,6 @@ interface AuthenticatedRequest extends Request {
     username?: string;
   };
 }
-
 /**
  * @openapi
  * /team/progress:
@@ -65,25 +62,20 @@ interface AuthenticatedRequest extends Request {
 export const getTeamProgress = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
-
     // Use token's game mode if specified, otherwise allow query parameter override (for dual tokens)
     let gameMode = req.apiToken?.gameMode || 'pvp';
     if (gameMode === 'dual') {
       gameMode = (req.query.gameMode as string) || 'pvp';
     }
-
     const result = await getTeamService().getTeamProgress(userId, gameMode);
-
     const response: ApiResponse = {
       success: true,
       data: result.data,
       meta: result.meta,
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /team/create:
@@ -139,14 +131,12 @@ export const createTeam = asyncHandler(
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
     // Validate request body if provided
     const data: { password?: string; maximumMembers?: number } = {};
-
     if (req.body?.password) {
       if (typeof req.body.password !== 'string' || req.body.password.trim().length < 4) {
         throw new Error('Password must be at least 4 characters long');
       }
       data.password = req.body.password.trim();
     }
-
     if (req.body?.maximumMembers) {
       const maxMembers = parseInt(String(req.body.maximumMembers), 10);
       if (isNaN(maxMembers) || maxMembers < 2 || maxMembers > 50) {
@@ -154,18 +144,14 @@ export const createTeam = asyncHandler(
       }
       data.maximumMembers = maxMembers;
     }
-
     const result = await getTeamService().createTeam(userId, data);
-
     const response: ApiResponse = {
       success: true,
       data: result,
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /team/join:
@@ -222,31 +208,24 @@ export const createTeam = asyncHandler(
 export const joinTeam = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
-
     if (!req.body?.id || !req.body?.password) {
       throw new Error('Team ID and password are required');
     }
-
     const data = {
       id: String(req.body.id).trim(),
       password: String(req.body.password),
     };
-
     if (!data.id || !data.password) {
       throw new Error('Team ID and password cannot be empty');
     }
-
     const result = await getTeamService().joinTeam(userId, data);
-
     const response: ApiResponse = {
       success: true,
       data: result,
     };
-
     res.status(200).json(response);
   }
 );
-
 /**
  * @openapi
  * /team/leave:
@@ -279,18 +258,14 @@ export const joinTeam = asyncHandler(
 export const leaveTeam = asyncHandler(
   async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const userId = ValidationService.validateUserId(req.apiToken?.owner);
-
     const result = await getTeamService().leaveTeam(userId);
-
     const response: ApiResponse = {
       success: true,
       data: result,
     };
-
     res.status(200).json(response);
   }
 );
-
 export default {
   getTeamProgress,
   createTeam,

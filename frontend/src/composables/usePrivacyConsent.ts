@@ -1,22 +1,17 @@
 import { computed, ref } from 'vue';
 import { enableAnalyticsCollection, disableAnalyticsCollection } from '@/plugins/firebase';
 import { logger } from '@/utils/logger';
-
 export type ConsentStatus = 'accepted' | 'rejected' | 'unknown';
-
 const STORAGE_KEY = 'tt-analytics-consent';
 const CLARITY_PROJECT_ID = import.meta.env.VITE_CLARITY_PROJECT_ID;
-
 // Only enable Clarity if:
 // 1. We have a project ID configured
 // 2. We're in production mode (optional but recommended)
 const shouldEnableClarity = Boolean(CLARITY_PROJECT_ID && import.meta.env.PROD);
-
 const consentStatus = ref<ConsentStatus>('unknown');
 const bannerVisible = ref(false);
 const hasInitialized = ref(false);
 let clarityBootstrapped = false;
-
 const getStorage = () => {
   if (typeof window === 'undefined') {
     return undefined;
@@ -28,7 +23,6 @@ const getStorage = () => {
     return undefined;
   }
 };
-
 const bootstrapClarity = () => {
   if (!shouldEnableClarity) {
     logger.debug('Microsoft Clarity not enabled: Missing project ID');
@@ -38,19 +32,15 @@ const bootstrapClarity = () => {
     return;
   }
   clarityBootstrapped = true;
-
   const queueingClarity = ((...args: unknown[]) => {
     (queueingClarity.q = queueingClarity.q || []).push(args);
   }) as typeof window.clarity & { q?: unknown[] };
-
   if (typeof window.clarity !== 'function') {
     window.clarity = queueingClarity;
   }
-
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.clarity.ms/tag/${CLARITY_PROJECT_ID}`;
-
   const firstScript = document.getElementsByTagName('script')[0];
   if (firstScript?.parentNode) {
     firstScript.parentNode.insertBefore(script, firstScript);
@@ -59,7 +49,6 @@ const bootstrapClarity = () => {
   }
   logger.debug('Microsoft Clarity initialized');
 };
-
 const enableClarity = () => {
   if (!shouldEnableClarity) {
     return;
@@ -73,7 +62,6 @@ const enableClarity = () => {
     logger.debug('Microsoft Clarity consent enabled');
   }
 };
-
 const disableClarity = () => {
   if (!shouldEnableClarity) {
     return;
@@ -86,7 +74,6 @@ const disableClarity = () => {
     logger.debug('Microsoft Clarity consent disabled');
   }
 };
-
 const syncAnalyticsWithConsent = (status: ConsentStatus) => {
   if (status === 'accepted') {
     enableAnalyticsCollection().catch((error) => {
@@ -98,7 +85,6 @@ const syncAnalyticsWithConsent = (status: ConsentStatus) => {
     disableClarity();
   }
 };
-
 const readStoredConsent = (storage: Storage | undefined) => {
   if (!storage) {
     return undefined;
@@ -110,7 +96,6 @@ const readStoredConsent = (storage: Storage | undefined) => {
     return undefined;
   }
 };
-
 const persistConsent = (storage: Storage | undefined, status: 'accepted' | 'rejected') => {
   if (!storage) {
     return;
@@ -121,7 +106,6 @@ const persistConsent = (storage: Storage | undefined, status: 'accepted' | 'reje
     logger.warn('Unable to persist analytics consent:', error);
   }
 };
-
 const clearStoredConsent = (storage: Storage | undefined) => {
   if (!storage) {
     return;
@@ -132,7 +116,6 @@ const clearStoredConsent = (storage: Storage | undefined) => {
     logger.warn('Unable to clear analytics consent:', error);
   }
 };
-
 const initializeConsent = () => {
   if (hasInitialized.value) {
     return;
@@ -149,7 +132,6 @@ const initializeConsent = () => {
     bannerVisible.value = true;
   }
 };
-
 const setConsent = (status: 'accepted' | 'rejected') => {
   consentStatus.value = status;
   const storage = getStorage();
@@ -157,11 +139,9 @@ const setConsent = (status: 'accepted' | 'rejected') => {
   bannerVisible.value = false;
   syncAnalyticsWithConsent(status);
 };
-
 const openPreferences = () => {
   bannerVisible.value = true;
 };
-
 const resetConsent = () => {
   consentStatus.value = 'unknown';
   const storage = getStorage();
@@ -170,10 +150,8 @@ const resetConsent = () => {
   disableAnalyticsCollection();
   disableClarity();
 };
-
 const consentGiven = computed(() => consentStatus.value === 'accepted');
 const choiceRecorded = computed(() => consentStatus.value !== 'unknown');
-
 export const usePrivacyConsent = () => {
   return {
     consentStatus,
@@ -187,12 +165,10 @@ export const usePrivacyConsent = () => {
     resetConsent,
   };
 };
-
 export const __privacyConsentInternals = {
   enableClarity,
   disableClarity,
 };
-
 declare global {
   interface Window {
     clarity?: ((

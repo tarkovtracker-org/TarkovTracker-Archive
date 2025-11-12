@@ -1,20 +1,16 @@
 #!/usr/bin/env node
-
 /**
  * Firebase Emulator Wrapper Script
  * 
  * Automatically cleans up Firebase debug logs when emulators shut down
  * Handles SIGINT/SIGTERM signals to ensure cleanup even on forced termination
  */
-
 import { spawn } from 'child_process';
 import { rm } from 'fs/promises';
 import { glob } from 'glob';
-
 // Track the emulator child process so we can forward termination signals
 let emulatorProcess;
 let shuttingDown = false;
-
 // Cleanup function
 async function cleanup() {
   console.log('🧹 Cleaning up Firebase debug logs...');
@@ -26,7 +22,6 @@ async function cleanup() {
     'firestore-debug.log', 
     'pubsub-debug.log'
   ];
-
   try {
     // Expand all glob patterns to actual file paths
     const allMatches = await Promise.all(
@@ -45,34 +40,29 @@ async function cleanup() {
     console.log('⚠️  Some debug logs could not be cleaned:', error.message);
   }
 }
-
 // Run the Firebase emulator command
 const args = process.argv.slice(2);
 emulatorProcess = spawn('firebase', ['emulators:start', ...args], {
   stdio: 'inherit',
   shell: true
 });
-
 async function terminateEmulator(timeoutMs = 5000) {
   const child = emulatorProcess;
   if (!child) {
     return;
   }
-
   if (child.exitCode !== null || child.killed) {
     if (emulatorProcess === child) {
       emulatorProcess = undefined;
     }
     return;
   }
-
   await new Promise((resolve) => {
     const timeout = setTimeout(() => {
       if (child.exitCode === null && !child.killed) {
         child.kill('SIGKILL');
       }
     }, timeoutMs);
-
     const handleExit = () => {
       clearTimeout(timeout);
       if (emulatorProcess === child) {
@@ -80,9 +70,7 @@ async function terminateEmulator(timeoutMs = 5000) {
       }
       resolve();
     };
-
     child.once('exit', handleExit);
-
     const terminated = child.kill('SIGTERM');
     if (!terminated) {
       clearTimeout(timeout);
@@ -94,30 +82,24 @@ async function terminateEmulator(timeoutMs = 5000) {
     }
   });
 }
-
 async function handleSignal(signal) {
   if (shuttingDown) {
     return;
   }
   shuttingDown = true;
-
   console.log(`\n📴 Received ${signal}, shutting down...`);
-
   try {
     await terminateEmulator();
   } catch (error) {
     console.error('⚠️  Failed to terminate emulator process cleanly:', error);
   }
-
   await cleanup();
-
   if (signal === 'SIGINT') {
     process.exit(130);
   } else {
     process.exit(143);
   }
 }
-
 // Setup signal handlers for graceful shutdown
 process.on('SIGINT', () => {
   handleSignal('SIGINT').catch((error) => {
@@ -125,14 +107,12 @@ process.on('SIGINT', () => {
     process.exit(1);
   });
 });
-
 process.on('SIGTERM', () => {
   handleSignal('SIGTERM').catch((error) => {
     console.error('❌ SIGTERM handler failed:', error);
     process.exit(1);
   });
 });
-
 // Handle process exit
 emulatorProcess.on('close', async (code) => {
   emulatorProcess = undefined;
@@ -145,7 +125,6 @@ emulatorProcess.on('close', async (code) => {
   await cleanup();
   process.exit(code);
 });
-
 emulatorProcess.on('error', async (error) => {
   emulatorProcess = undefined;
   const alreadyShuttingDown = shuttingDown;

@@ -6,7 +6,6 @@ export { default as DisplayNameInput } from './DisplayNameInput.vue';
 export { default as ConsentBanner } from './ConsentBanner.vue';
 export { default as AppFooter } from './AppFooter.vue';
 export { default as OverflowMenu } from './OverflowMenu.vue';
-
 // Drawer components (moved from features/drawer)
 export { default as DrawerLevel } from './DrawerLevel.vue';
 export { default as DrawerLinks } from './DrawerLinks.vue';

@@ -17,7 +17,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "vite.config.ts",
@@ -25,6 +27,7 @@
     "src/**/*.tsx",
     "src/**/*.js",
     "src/**/*.d.ts",
-    "src/**/*.vue"
+    "src/**/*.vue",
+    "src/vite-env.d.ts"
   ]
 }

@@ -12,16 +12,13 @@ import {
 } from '@/utils/migration/DataTransformService';
 import { backupLocalProgress, saveLocalUserState } from '@/utils/migration/LocalDataService';
 import { isDevAuthEnabled } from '@/utils/devAuth';
-
 const getProgressRef = (uid: string) => doc(firestore, 'progress', uid);
-
 const hasMeaningfulProgress = (data: ProgressData): boolean =>
   data.level > 1 ||
   Object.keys(data.taskCompletions || {}).length > 0 ||
   Object.keys(data.taskObjectives || {}).length > 0 ||
   Object.keys(data.hideoutModules || {}).length > 0 ||
   Object.keys(data.hideoutParts || {}).length > 0;
-
 interface ImportedProgressMetadata extends UserProgressData {
   lastUpdated: string;
   importedFromExternalSource: boolean;
@@ -30,7 +27,6 @@ interface ImportedProgressMetadata extends UserProgressData {
   sourceUserId?: string;
   sourceDomain?: string;
 }
-
 export const hasUserData = async (uid: string): Promise<boolean> => {
   try {
     const progressRef = getProgressRef(uid);
@@ -43,10 +39,8 @@ export const hasUserData = async (uid: string): Promise<boolean> => {
     return false;
   }
 };
-
 const shouldAbortMigration = (existingData: ProgressData | null): boolean =>
   Boolean(existingData && hasMeaningfulProgress(existingData));
-
 const enrichLocalDataForMigration = (localData: ProgressData): ProgressData => ({
   ...localData,
   lastUpdated: new Date().toISOString(),
@@ -55,7 +49,6 @@ const enrichLocalDataForMigration = (localData: ProgressData): ProgressData => (
   autoMigrated: true,
   imported: localData.displayName ? localData.imported : true,
 });
-
 export const migrateLocalDataToUser = async (
   uid: string,
   localData: ProgressData

@@ -12,12 +12,9 @@ import { debounce, set, get } from '@/utils/debounce';
 import { isDevAuthEnabled } from '@/utils/devAuth';
 import type { PiniaPluginContext, Store, StateTree, SubscriptionCallbackMutation } from 'pinia';
 import type { StateTree as PiniaStateTree } from 'pinia';
-
 const db: Firestore = firestore;
-
 // Check if dev auth bypass is enabled - if so, skip Firestore connections
 const devAuthEnabled = isDevAuthEnabled();
-
 export interface FireswapSettingInternal {
   document: string;
   localKey: string;
@@ -174,7 +171,6 @@ export function PiniaFireswap(context: PiniaPluginContext): void {
           fireswapSetting.lock = true;
           // Ensure the 'saving' property is not part of the state to be saved.
           const stateToSave = path !== '.' ? get(currentStateSnapshot, path) : currentStateSnapshot;
-
           if (!stateToSave || !Object.keys(stateToSave as Record<string, unknown>).length) {
             // Check if stateToSave is empty after destructuring
             fireswapSetting.lock = false;

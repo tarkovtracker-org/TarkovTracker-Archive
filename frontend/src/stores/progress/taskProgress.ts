@@ -13,12 +13,10 @@ import type {
 } from './types';
 import { TaskAvailabilityService } from '@/services/TaskAvailabilityService';
 import type { UserProgressData } from '@/shared_state';
-
 export interface TaskProgressDependencies {
   traderLevels: ComputedRef<TraderLevelsMap>;
   traderStandings: ComputedRef<TraderStandingMap>;
 }
-
 export function createTaskProgressGetters(
   stores: ComputedRef<TeamStoresMap>,
   { traderLevels, traderStandings }: TaskProgressDependencies
@@ -27,20 +25,16 @@ export function createTaskProgressGetters(
     if (!tasks.value || !stores.value) return {};
     return buildTaskCompletionMap(tasks.value as Task[], stores.value);
   });
-
   const playerFaction = computed<FactionMap>(() => {
     if (!stores.value) return {};
     return buildFactionMap(stores.value);
   });
-
   const objectiveCompletions = computed<ObjectiveCompletionsMap>(() => {
     if (!objectives.value || !stores.value) return {};
     return buildObjectiveCompletionMap(objectives.value, stores.value);
   });
-
   const unlockedTasks = computed<TaskAvailabilityMap>(() => {
     if (!tasks.value || !stores.value) return {};
-
     const taskList = tasks.value as Task[];
     const taskMap = new Map<string, Task>(taskList.map((taskItem) => [taskItem.id, taskItem]));
     const service = new TaskAvailabilityService(
@@ -51,10 +45,8 @@ export function createTaskProgressGetters(
       traderStandings.value,
       playerFaction.value
     );
-
     return buildTaskAvailability(taskList, stores.value, service);
   });
-
   return {
     tasksCompletions,
     playerFaction,
@@ -62,14 +54,12 @@ export function createTaskProgressGetters(
     unlockedTasks,
   };
 }
-
 function buildTaskCompletionMap(taskList: Task[], teamStores: TeamStoresMap): CompletionsMap {
   return taskList.reduce<CompletionsMap>((acc, task) => {
     acc[task.id] = completionStatusForTeams(task.id, teamStores);
     return acc;
   }, {});
 }
-
 function completionStatusForTeams(taskId: string, teamStores: TeamStoresMap) {
   return Object.entries(teamStores).reduce<Record<string, boolean>>((acc, [teamId, store]) => {
     const { currentData } = getCurrentGameModeData<UserProgressData | undefined>(store);
@@ -77,7 +67,6 @@ function completionStatusForTeams(taskId: string, teamStores: TeamStoresMap) {
     return acc;
   }, {});
 }
-
 function buildFactionMap(teamStores: TeamStoresMap): FactionMap {
   return Object.entries(teamStores).reduce<FactionMap>((acc, [teamId, store]) => {
     const { currentData } = getCurrentGameModeData<UserProgressData | undefined>(store);
@@ -85,7 +74,6 @@ function buildFactionMap(teamStores: TeamStoresMap): FactionMap {
     return acc;
   }, {});
 }
-
 function buildObjectiveCompletionMap(objectiveList: TaskObjective[], teamStores: TeamStoresMap) {
   return objectiveList.reduce<ObjectiveCompletionsMap>((acc, objective) => {
     acc[objective.id] = Object.entries(teamStores).reduce<Record<string, boolean>>(
@@ -99,7 +87,6 @@ function buildObjectiveCompletionMap(objectiveList: TaskObjective[], teamStores:
     return acc;
   }, {});
 }
-
 function buildTaskAvailability(
   taskList: Task[],
   teamStores: TeamStoresMap,
@@ -110,7 +97,6 @@ function buildTaskAvailability(
     return availability;
   }, {});
 }
-
 function evaluateTaskForTeams(
   taskId: string,
   teamStores: TeamStoresMap,

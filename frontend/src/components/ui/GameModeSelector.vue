@@ -23,12 +23,10 @@
     </v-row>
   </v-container>
 </template>
-
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useTarkovStore } from '@/stores/tarkov';
   import type { GameMode } from '@/shared_state';
-
   const store = useTarkovStore();
   const gameModeOptions = [
     {
@@ -44,7 +42,6 @@
       description: 'Player vs Environment (Co-op)',
     },
   ];
-
   const selectedGameMode = computed({
     get() {
       return store.getCurrentGameMode();
@@ -53,7 +50,6 @@
       store.switchGameMode(newMode);
     },
   });
-
   const currentModeIcon = computed(() => {
     const currentMode = store.getCurrentGameMode();
     return (
@@ -61,7 +57,6 @@
     );
   });
 </script>
-
 <style scoped>
   /* No additional styles needed for settings page version */
 </style>

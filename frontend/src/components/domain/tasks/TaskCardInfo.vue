@@ -19,7 +19,6 @@
     :show-eod-status="showEodStatus"
   />
 </template>
-
 <script setup lang="ts">
   import { computed } from 'vue';
   import { useDisplay } from 'vuetify';
@@ -28,7 +27,6 @@
   import { useTarkovData } from '@/composables/tarkovdata';
   import type { Task } from '@/types/models/tarkov';
   import TaskInfo from '@/components/domain/tasks/TaskInfo.vue';
-
   const props = defineProps<{
     task: Task;
     neededBy: string[];
@@ -36,12 +34,10 @@
     showNextTasks: boolean;
     showPreviousTasks: boolean;
   }>();
-
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
   const { tasks } = useTarkovData();
   const { xs } = useDisplay();
-
   const showOptionalRequirementLabels = computed(
     () => userStore.getShowOptionalTaskRequirementLabels
   );
@@ -49,24 +45,20 @@
     () => userStore.getShowRequiredTaskRequirementLabels
   );
   const showTaskIds = computed(() => userStore.getShowTaskIds);
-
   const resolveTaskId = (value: string | { id?: string } | undefined) =>
     typeof value === 'string' ? value : value?.id;
-
   const lockedBehind = computed(() => {
     const successors = props.task.successors ?? [];
     return successors
       .map(resolveTaskId)
       .filter((id): id is string => Boolean(id && !tarkovStore.isTaskComplete(id))).length;
   });
-
   const lockedBefore = computed(() => {
     const predecessors = props.task.predecessors ?? [];
     return predecessors
       .map(resolveTaskId)
       .filter((id): id is string => Boolean(id && !tarkovStore.isTaskComplete(id))).length;
   });
-
   const showKappaStatus = computed(() => {
     if (props.task.kappaRequired === true) {
       return showRequiredRequirementLabels.value;
@@ -76,9 +68,7 @@
     }
     return false;
   });
-
   const kappaRequired = computed(() => props.task.kappaRequired === true);
-
   const showLightkeeperStatus = computed(() => {
     if (props.task.lightkeeperRequired === true) {
       return showRequiredRequirementLabels.value;
@@ -88,18 +78,13 @@
     }
     return false;
   });
-
   const lightkeeperRequired = computed(() => props.task.lightkeeperRequired === true);
-
   const showEodStatus = computed(
     () => props.task.eodOnly === true && showRequiredRequirementLabels.value
   );
-
   const factionImage = computed(() => `/img/factions/${props.task.factionName}.webp`);
-
   const showNextTasksComputed = computed(() => props.showNextTasks === true);
   const showPreviousTasksComputed = computed(() => props.showPreviousTasks === true);
-
   const nextTasks = computed(() => {
     if (!showNextTasksComputed.value) return [];
     const successors = props.task.children || [];
@@ -113,10 +98,8 @@
         wikiLink: taskItem.wikiLink,
       }));
   });
-
   const previousTasks = computed(() => {
     if (!showPreviousTasksComputed.value) return [];
-
     const requirements = props.task.taskRequirements || [];
     const relevantRequirementIds = requirements
       .filter((requirement) => {
@@ -132,9 +115,7 @@
         });
       })
       .map((requirement) => requirement.task.id);
-
     if (!relevantRequirementIds.length) return [];
-
     return relevantRequirementIds
       .map((id) => (tasks.value || []).find((taskItem) => taskItem.id === id))
       .filter((taskItem): taskItem is Task => Boolean(taskItem && taskItem.name))

@@ -31,10 +31,8 @@ import type {
   ObjectiveGPSInfo,
 } from '@/types/models/tarkov';
 import type Graph from 'graphology';
-
 type SyncSource<T> = { readonly value: T };
 type SyncTarget<T> = { value: T };
-
 // These watchers intentionally live for the app lifetime to keep module-level state in sync.
 // For tests or HMR teardown we expose optional cleanup by returning the watcher stop handle.
 const sync = <T>(source: SyncSource<T>, target: SyncTarget<T>) =>
@@ -65,7 +63,6 @@ function initializeGlobalData() {
     globalTraderData = useTraderData();
     globalPlayerData = usePlayerLevelData();
     globalApiData = useTarkovApi();
-
     // Global composables initialize synchronously; non-null assertions are safe
   }
 }
@@ -96,14 +93,11 @@ export const traders = ref<Trader[]>([]);
 export const playerLevels = ref<PlayerLevel[]>([]);
 const minPlayerLevel = ref<number>(1);
 const maxPlayerLevel = ref<number>(79);
-
 function initializeSyncWatchers() {
   if (syncInitialized) {
     return;
   }
-
   initializeGlobalData();
-
   const localStops: Array<() => void> = [];
   try {
     const taskData = globalTaskData!;
@@ -111,7 +105,6 @@ function initializeSyncWatchers() {
     const mapData = globalMapData!;
     const traderData = globalTraderData!;
     const playerData = globalPlayerData!;
-
     localStops.push(sync(hideoutData.hideoutStations, hideoutStations));
     localStops.push(sync(hideoutData.hideoutModules, hideoutModules));
     localStops.push(sync(hideoutData.hideoutGraph, hideoutGraph));
@@ -131,7 +124,6 @@ function initializeSyncWatchers() {
     localStops.push(sync(playerData.playerLevels, playerLevels));
     localStops.push(sync(playerData.minPlayerLevel, minPlayerLevel));
     localStops.push(sync(playerData.maxPlayerLevel, maxPlayerLevel));
-
     syncStops.push(...localStops);
     syncInitialized = true;
   } catch (error) {
@@ -139,7 +131,6 @@ function initializeSyncWatchers() {
     throw error;
   }
 }
-
 export function stopAllSyncWatchers() {
   while (syncStops.length) syncStops.pop()?.();
   syncInitialized = false;

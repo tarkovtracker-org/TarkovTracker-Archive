@@ -191,7 +191,7 @@
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useI18n } from 'vue-i18n';
-  const TarkovItem = defineAsyncComponent(() => import('@/features/game/TarkovItem'));
+  const TarkovItem = defineAsyncComponent(() => import('@/components/domain/items/TarkovItem.vue'));
   const props = defineProps({
     station: {
       type: Object,

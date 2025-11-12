@@ -16,27 +16,21 @@
     </v-expansion-panels>
   </v-col>
 </template>
-
 <script setup lang="ts">
   import { computed, defineAsyncComponent, ref } from 'vue';
   import type { TarkovMap as TarkovMapData } from '@/types/models/tarkov';
   import type { ObjectiveMarker } from '@/types/models/maps';
   import { useTarkovTime } from '@/composables/useTarkovTime';
-
   const TarkovMap = defineAsyncComponent(() => import('@/components/domain/maps/TarkovMap.vue'));
-
   interface Props {
     show: boolean;
     selectedMap: TarkovMapData | null;
     visibleMarkers: ObjectiveMarker[];
     activeMapView: string;
   }
-
   const props = defineProps<Props>();
-
   const expandMap = ref([0]);
   const { tarkovTime } = useTarkovTime();
-
   const markers = computed(() => props.visibleMarkers);
   const selectedMap = computed(() => props.selectedMap);
 </script>

@@ -1,7 +1,6 @@
 /**
  * Utility functions for idle callback feature detection and usage
  */
-
 /**
  * Checks if the browser supports requestIdleCallback and cancelIdleCallback
  * @returns boolean indicating if idle callbacks are supported
@@ -13,7 +12,6 @@ export function isIdleCallbackSupported(): boolean {
     typeof window.cancelIdleCallback === 'function'
   );
 }
-
 /**
  * Safely requests an idle callback if supported
  * @param callback - The callback to run during idle time
@@ -40,7 +38,6 @@ export function safeRequestIdleCallback(
   }, timeoutMs);
   return handle;
 }
-
 /**
  * Safely cancels an idle callback if supported
  * @param handle - The handle returned by requestIdleCallback

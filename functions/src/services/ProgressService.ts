@@ -1,4 +1,3 @@
-import admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
 import { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
 import {
@@ -9,26 +8,28 @@ import {
   ObjectiveUpdateRequest,
   ServiceOptions,
   TaskCompletion,
-} from '../types/api.js';
-import { errors } from '../middleware/errorHandler.js';
-import { formatProgress, updateTaskState } from '../progress/progressUtils.js';
-import { getTaskData, getHideoutData } from '../utils/dataLoaders.js';
-
+} from '../types/api';
+import { errors } from '../middleware/errorHandler';
+import { formatProgress, updateTaskState } from '../progress/progressUtils';
+import { getTaskData, getHideoutData } from '../utils/dataLoaders';
+import { createLazyFirestore } from '../utils/factory';
 export class ProgressService {
-  private db: Firestore;
-
+  private getDb: () => Firestore;
   constructor() {
-    this.db = admin.firestore();
+    this.getDb = createLazyFirestore();
   }
 
+  private get db(): Firestore {
+    return this.getDb();
+  }
   /**
    * Gets user progress document with proper error handling
    */
   async getUserProgress(userId: string, gameMode: string = 'pvp'): Promise<FormattedProgress> {
-    const progressRef = this.db
+    const db = this.getDb();
+    const progressRef = db
       .collection('progress')
       .doc(userId) as DocumentReference<ProgressDocument>;
-
     try {
       // Fetch data concurrently
       const [progressDoc, hideoutData, taskData] = await Promise.all([
@@ -36,7 +37,6 @@ export class ProgressService {
         getHideoutData(),
         getTaskData(),
       ]);
-
       // Validate essential data loaded
       if (!hideoutData || !taskData) {
         logger.error('Failed to load essential Tarkov data', {
@@ -46,7 +46,6 @@ export class ProgressService {
         });
         throw errors.internal('Failed to load essential game data');
       }
-
       // Format progress (handles missing document)
       const progressData = progressDoc.exists ? progressDoc.data() : undefined;
       return formatProgress(progressData, userId, hideoutData, taskData, gameMode);
@@ -54,7 +53,6 @@ export class ProgressService {
       if (error instanceof Error && error.name === 'ApiError') {
         throw error;
       }
-
       logger.error('Error fetching user progress:', {
         error: error instanceof Error ? error.message : String(error),
         userId,
@@ -62,7 +60,6 @@ export class ProgressService {
       throw errors.internal('Failed to retrieve user progress');
     }
   }
-
   /**
    * Sets player level with validation
    */
@@ -72,10 +69,10 @@ export class ProgressService {
     gameMode: string = 'pvp',
     options?: ServiceOptions
   ): Promise<void> {
-    const progressRef = this.db
+    const db = this.getDb();
+    const progressRef = db
       .collection('progress')
       .doc(userId) as DocumentReference<ProgressDocument>;
-
     try {
       const updateData = { [`${gameMode}.level`]: level };
       if (options?.transaction) {
@@ -83,7 +80,6 @@ export class ProgressService {
       } else {
         await progressRef.set(updateData, { merge: true });
       }
-
       logger.log('Player level updated successfully', { userId, level });
     } catch (error) {
       logger.error('Error setting player level:', {
@@ -94,7 +90,6 @@ export class ProgressService {
       throw errors.internal('Failed to update player level');
     }
   }
-
   /**
    * Updates a single task with proper transaction safety and dependency handling
    */
@@ -106,19 +101,17 @@ export class ProgressService {
   ): Promise<void> {
     try {
       // Run in transaction to ensure consistency
-      await this.db.runTransaction(async (transaction) => {
-        const progressRef = this.db
+      const db = this.getDb();
+      await db.runTransaction(async (transaction) => {
+        const progressRef = db
           .collection('progress')
           .doc(userId) as DocumentReference<ProgressDocument>;
         const updateTime = Date.now();
         const updateData: Record<string, boolean | number | FieldValue> = {};
-
         // Build update data based on state
         this.buildTaskUpdateData(taskId, state, updateTime, updateData, gameMode);
-
         // Apply the update within transaction
         transaction.update(progressRef, updateData);
-
         logger.log('Single task update applied in transaction', {
           userId,
           taskId,
@@ -126,7 +119,6 @@ export class ProgressService {
           updateTime,
         });
       });
-
       // Handle task dependencies outside transaction to avoid conflicts
       try {
         const taskData = await getTaskData();
@@ -140,7 +132,6 @@ export class ProgressService {
           state,
         });
       }
-
       logger.log('Task updated successfully', { userId, taskId, state });
     } catch (error) {
       logger.error('Error updating single task:', {
@@ -152,7 +143,6 @@ export class ProgressService {
       throw errors.internal('Failed to update task');
     }
   }
-
   /**
    * Updates multiple tasks in a single transaction
    */
@@ -163,29 +153,26 @@ export class ProgressService {
   ): Promise<void> {
     try {
       // Run in transaction for consistency
-      await this.db.runTransaction(async (transaction) => {
-        const progressRef = this.db
+      const db = this.getDb();
+      await db.runTransaction(async (transaction) => {
+        const progressRef = db
           .collection('progress')
           .doc(userId) as DocumentReference<ProgressDocument>;
         const updateTime = Date.now();
         const batchUpdateData: Record<string, boolean | number | FieldValue> = {};
-
         // Build update data for all tasks
         for (const task of taskUpdates) {
           const { id, state } = task;
           this.buildTaskUpdateData(id, state, updateTime, batchUpdateData, gameMode);
         }
-
         // Apply all updates in single transaction
         transaction.update(progressRef, batchUpdateData);
-
         logger.log('Multiple tasks updated in transaction', {
           userId,
           taskCount: taskUpdates.length,
           updateTime,
         });
       });
-
       // Handle dependencies for all tasks (outside transaction)
       const dependencyPromises = taskUpdates.map(async ({ id, state }) => {
         try {
@@ -200,7 +187,6 @@ export class ProgressService {
           });
         }
       });
-
       await Promise.allSettled(dependencyPromises);
       logger.log('Multiple tasks updated successfully', { userId, taskCount: taskUpdates.length });
     } catch (error) {
@@ -212,7 +198,6 @@ export class ProgressService {
       throw errors.internal('Failed to update tasks');
     }
   }
-
   /**
    * Updates task objective with validation
    */
@@ -222,14 +207,13 @@ export class ProgressService {
     update: ObjectiveUpdateRequest,
     gameMode: string = 'pvp'
   ): Promise<void> {
-    const progressRef = this.db
+    const db = this.getDb();
+    const progressRef = db
       .collection('progress')
       .doc(userId) as DocumentReference<ProgressDocument>;
-
     try {
       const updateTime = Date.now();
       const updateData: Record<string, boolean | number | FieldValue> = {};
-
       // Handle state update
       if (update.state) {
         if (update.state === 'completed') {
@@ -240,14 +224,11 @@ export class ProgressService {
           updateData[`${gameMode}.taskObjectives.${objectiveId}.timestamp`] = FieldValue.delete();
         }
       }
-
       // Handle count update
       if (update.count != null) {
         updateData[`${gameMode}.taskObjectives.${objectiveId}.count`] = update.count;
       }
-
       await progressRef.update(updateData);
-
       logger.log('Task objective updated successfully', {
         userId,
         objectiveId,
@@ -263,7 +244,6 @@ export class ProgressService {
       throw errors.internal('Failed to update task objective');
     }
   }
-
   /**
    * Helper method to build task update data in gamemode-aware format
    */
@@ -275,20 +255,17 @@ export class ProgressService {
     gameMode: string = 'pvp'
   ): void {
     const baseKey = `${gameMode}.taskCompletions.${taskId}`;
-
     switch (state) {
       case 'completed':
         updateData[`${baseKey}.complete`] = true;
         updateData[`${baseKey}.failed`] = false;
         updateData[`${baseKey}.timestamp`] = updateTime;
         break;
-
       case 'failed':
         updateData[`${baseKey}.complete`] = true;
         updateData[`${baseKey}.failed`] = true;
         updateData[`${baseKey}.timestamp`] = updateTime;
         break;
-
       case 'uncompleted':
         updateData[`${baseKey}.complete`] = false;
         updateData[`${baseKey}.failed`] = false;
@@ -296,18 +273,15 @@ export class ProgressService {
         break;
     }
   }
-
   /**
    * Checks if task exists and user has permission to update it
    */
   async validateTaskAccess(userId: string, _taskId: string): Promise<void> {
     // For now, we trust the task ID exists in the game data
     // In a more complex system, we might validate against task data
-
     // Basic validation that user document exists
     const progressRef = this.db.collection('progress').doc(userId);
     const progressDoc = await progressRef.get();
-
     if (!progressDoc.exists) {
       // Create minimal progress document if it doesn't exist
       await progressRef.set({
@@ -321,7 +295,6 @@ export class ProgressService {
       });
     }
   }
-
   /**
    * Gets task completion status for a user
    */
@@ -329,14 +302,11 @@ export class ProgressService {
     const progressRef = this.db
       .collection('progress')
       .doc(userId) as DocumentReference<ProgressDocument>;
-
     try {
       const progressDoc = await progressRef.get();
-
       if (!progressDoc.exists) {
         return null;
       }
-
       const data = progressDoc.data();
       return data?.taskCompletions?.[taskId] || null;
     } catch (error) {

@@ -71,35 +71,28 @@
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useLiveData } from '@/composables/livedata';
   import TaskObjectiveKillTracker from './TaskObjectiveKillTracker.vue';
-  import TarkovItem from '@/features/game/TarkovItem.vue';
+  import TarkovItem from '@/components/domain/items/TarkovItem.vue';
   import type { TaskObjective as TaskObjectiveModel, TarkovItem as TarkovItemModel } from '@/types/models/tarkov';
-
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
-
   // Define the props for the component
   const props = defineProps<{
     objective: TaskObjectiveModel;
   }>();
-
   const { objectives } = useTarkovData();
   const tarkovStore = useTarkovStore();
   const { progressStore, unlockedTasks, objectiveCompletions } = useProgressQueries();
-
   const isComplete = computed(() => {
     return tarkovStore.isTaskObjectiveComplete(props.objective.id);
   });
-
   const fullObjective = computed<TaskObjectiveModel | undefined>(() => {
     return objectives.value.find((o) => o.id === props.objective.id);
   });
-
   // Kill tracker functionality
   const killRequiredCount = computed(() => {
     const required = fullObjective.value?.count;
     return required && required > 0 ? required : 0;
   });
-
   const showKillTracker = computed(() => {
     const objective = fullObjective.value;
     if (!objective) {
@@ -109,15 +102,12 @@
       objective.type === 'shoot' && objective.shotType === 'kill' && killRequiredCount.value > 0
     );
   });
-
   const rawKillCount = computed(() =>
     showKillTracker.value ? tarkovStore.getObjectiveCount(props.objective.id) : 0
   );
-
   const killCount = computed(() =>
     showKillTracker.value ? Math.min(rawKillCount.value, killRequiredCount.value) : 0
   );
-
   const setKillCount = (count: number) => {
     if (!showKillTracker.value) return;
     const normalized = Math.max(0, Math.min(count, killRequiredCount.value));
@@ -125,13 +115,10 @@
       tarkovStore.setObjectiveCount(props.objective.id, normalized);
     }
   };
-
   const incrementKillCount = () => setKillCount(rawKillCount.value + 1);
   const decrementKillCount = () => setKillCount(rawKillCount.value - 1);
   const resetKillCount = () => setKillCount(0);
-
   const itemObjectiveTypes = ['giveItem', 'mark', 'buildWeapon', 'plantItem'];
-
   const relatedItem = computed<TarkovItemModel | null>(() => {
     const objective = fullObjective.value;
     if (!objective) {
@@ -156,7 +143,6 @@
         return null;
     }
   });
-
   const userNeeds = computed(() => {
     const needingUsers: string[] = [];
     const currentObjective = fullObjective.value;
@@ -171,7 +157,6 @@
     });
     return needingUsers;
   });
-
   const isHovered = ref(false);
   const objectiveMouseEnter = () => {
     isHovered.value = true;
@@ -179,7 +164,6 @@
   const objectiveMouseLeave = () => {
     isHovered.value = false;
   };
-
   const objectiveIcon = computed(() => {
     if (isHovered.value) {
       if (isComplete.value) {
@@ -213,7 +197,6 @@
     const objectiveType = props.objective.type ?? '';
     return iconMap[objectiveType] || 'mdi-help-circle';
   });
-
   const toggleObjectiveCompletion = () => {
     if (showKillTracker.value) {
       // For kill tracker objectives, toggle between complete/incomplete
@@ -227,7 +210,6 @@
     }
     tarkovStore.toggleTaskObjectiveComplete(props.objective.id);
   };
-
   // Watch for kill count changes to auto-complete/uncomplete objectives
   watch(
     () => rawKillCount.value,
@@ -240,7 +222,6 @@
       }
     }
   );
-
   // Watch for completion status changes to sync kill count
   watch(
     () => isComplete.value,

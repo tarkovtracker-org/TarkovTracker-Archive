@@ -2,7 +2,6 @@
 import { defineComponent, h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { VProgressCircular, VAlert } from 'vuetify/components';
-
 const createFallbackComponent = (name: string, renderContent: () => ReturnType<typeof h>) =>
   defineComponent({
     name,
@@ -10,13 +9,11 @@ const createFallbackComponent = (name: string, renderContent: () => ReturnType<t
       return () => renderContent();
     },
   });
-
 export const LoadingComponent = createFallbackComponent('ApiReferenceLoading', () =>
   h('div', { class: 'd-flex justify-center align-center pa-8' }, [
     h(VProgressCircular, { indeterminate: true, color: 'primary' }),
   ])
 );
-
 export const ErrorComponent = defineComponent({
   name: 'ApiReferenceError',
   setup() {

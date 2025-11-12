@@ -30,7 +30,6 @@
         <v-icon color="white" class="mr-2">mdi-key-plus</v-icon>
         <h3 class="text-h6">{{ $t('page.api.tokens.create_new_token') }}</h3>
       </div>
-
       <v-form ref="newTokenForm" v-model="validNewToken">
         <v-text-field
           v-model="tokenName"
@@ -49,7 +48,6 @@
           class="mb-4"
         >
         </v-text-field>
-
         <div class="mb-4">
           <div class="text-subtitle-2 mb-2 d-flex align-center">
             <v-icon class="mr-2" size="20">mdi-gamepad-variant</v-icon>
@@ -58,7 +56,6 @@
           <div class="text-caption text-medium-emphasis mb-3">
             {{ $t('page.api.tokens.form.gamemode_description') }}
           </div>
-
           <v-radio-group v-model="selectedGameMode" density="compact" class="mb-4" column>
             <v-radio value="pvp" color="white">
               <template #label>
@@ -102,7 +99,6 @@
             </v-radio>
           </v-radio-group>
         </div>
-
         <div class="mb-4">
           <div class="text-subtitle-2 mb-2 d-flex align-center">
             <v-icon class="mr-2" size="20">mdi-shield-key</v-icon>
@@ -111,7 +107,6 @@
           <div class="text-caption text-medium-emphasis mb-3">
             {{ $t('page.api.tokens.form.permissions_description') }}
           </div>
-
           <v-alert
             v-if="selectOneError"
             type="error"
@@ -124,7 +119,6 @@
             </template>
             {{ $t('page.api.tokens.form.permissions_error') }}
           </v-alert>
-
           <v-card variant="outlined" class="pa-3">
             <v-row>
               <v-col
@@ -157,7 +151,6 @@
               </v-col>
             </v-row>
           </v-card>
-
           <div v-if="selectedPermissions.length > 0" class="mt-3">
             <div class="text-caption text-white mb-2">
               {{ $t('page.api.tokens.form.selected_permissions') }}:
@@ -176,9 +169,7 @@
             </div>
           </div>
         </div>
-
         <v-divider class="my-4"></v-divider>
-
         <div class="d-flex justify-space-between align-center">
           <div class="text-caption text-medium-emphasis">
             {{ $t('page.api.tokens.form.active_info') }}
@@ -295,7 +286,6 @@
       throw new Error('User not authenticated');
     }
     const token = await user.getIdToken();
-
     const response = await fetch(
       'https://us-central1-tarkovtracker-org.cloudfunctions.net/createTokenHttp',
       {
@@ -307,15 +297,12 @@
         body: JSON.stringify(tokenData),
       }
     );
-
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.error || 'HTTP request failed');
     }
-
     return await response.json();
   };
-
   const createToken = async () => {
     let { valid } = await newTokenForm.value.validate();
     if (!valid) {
@@ -334,13 +321,11 @@
       selectOneError.value = false;
     }
     creatingToken.value = true;
-
     const tokenData = {
       note: tokenName.value,
       permissions: selectedPermissions.value,
       gameMode: selectedGameMode.value,
     };
-
     try {
       let result;
       try {
@@ -353,13 +338,11 @@
         // If callable fails (likely due to CORS), use HTTP endpoint
         result = await createTokenWithHttp(tokenData);
       }
-
       if (!result || !result.token) {
         logger.error('Token not found in response. Expected: result.token');
         logger.error('Available response data:', Object.keys(result || {}));
         throw new Error('Token creation failed: No token returned from server');
       }
-
       cancelTokenCreation();
       snackbarColor.value = 'success';
       snackbarIcon.value = 'mdi-check-circle';
@@ -383,29 +366,23 @@
       opacity: 1;
     }
   }
-
   .selected-permission-chip {
     color: white;
     border-color: white;
   }
-
   .gap-2 {
     gap: 0.5rem;
   }
-
   .gap-3 {
     gap: 0.75rem;
   }
-
   @media (max-width: 600px) {
     .d-flex.justify-space-between {
       flex-direction: column;
       gap: 1rem;
     }
-
     .d-flex.gap-2 {
       justify-content: stretch;
-
       .v-btn {
         flex: 1;
       }

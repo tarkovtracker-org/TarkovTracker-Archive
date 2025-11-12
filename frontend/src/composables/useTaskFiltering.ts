@@ -5,7 +5,6 @@ import type { Task, TaskObjective } from '@/types/models/tarkov';
 import { taskMatchesRequirementFilters } from '@/utils/taskFilters';
 import { useProgressQueries } from '@/composables/useProgressQueries';
 import { logger } from '@/utils/logger';
-
 export function useTaskFiltering() {
   const {
     visibleTeamIds,
@@ -21,7 +20,6 @@ export function useTaskFiltering() {
   const { tasks, disabledTasks, maps } = useTarkovData();
   const reloadingTasks = ref(false);
   const visibleTasks = shallowRef<Task[]>([]);
-
   const mapObjectiveTypes = [
     'mark',
     'zone',
@@ -33,7 +31,6 @@ export function useTaskFiltering() {
     'plantQuestItem',
     'shoot',
   ];
-
   const filterTasksByView = (
     taskList: Task[],
     primaryView: string,
@@ -50,7 +47,6 @@ export function useTaskFiltering() {
     }
     return taskList;
   };
-
   /**
    * Filter tasks by map, handling map variants (Ground Zero 21+, Night Factory)
    * by treating all variant IDs as part of the same map group
@@ -61,12 +57,10 @@ export function useTaskFiltering() {
     }
     // Get all map IDs that should be treated as the same map (canonical + variants)
     const mapIdGroup = getMapIdGroup(mapView, maps.value);
-
     return taskList.filter((task) => {
       // Check locations field
       const taskLocations = Array.isArray(task.locations) ? task.locations : [];
       let hasMap = mapIdGroup.some((id: string) => taskLocations.includes(id));
-
       // Also check objective maps
       if (!hasMap && Array.isArray(task.objectives)) {
         hasMap = task.objectives.some(
@@ -76,7 +70,6 @@ export function useTaskFiltering() {
             mapObjectiveTypes.includes(obj.type || '')
         );
       }
-
       return hasMap;
     });
   };
@@ -127,10 +120,8 @@ export function useTaskFiltering() {
     }
     return tempVisibleTasks;
   };
-
   const filterTasksForUser = (taskList: Task[], secondaryView: string, userView: string) => {
     let filtered = taskList;
-
     if (secondaryView === 'available') {
       filtered = filtered.filter(
         (task) => isTaskUnlockedFor(task.id, userView) && !isTaskCompletedFor(task.id, userView)
@@ -149,7 +140,6 @@ export function useTaskFiltering() {
       (task) => task.factionName === 'Any' || task.factionName === playerFaction.value?.[userView]
     );
   };
-
   /**
    * Calculate available task counts per map for display in UI
    *
@@ -205,30 +195,24 @@ export function useTaskFiltering() {
       hideNonEndgame: hideNonKappaTasks,
       treatEodAsEndgame,
     };
-
     for (const map of displayedMaps) {
       // Get all map IDs in this map's group (including variants)
       const mapIdGroup = getMapIdGroup(map.id, allMaps);
       mapTaskCounts[map.id] = 0;
-
       for (const task of tasks) {
         if (disabledTasks.includes(task.id)) continue;
-
         const taskLocations: string[] = [];
         const appendLocation = (mapId?: string | null) => {
           if (mapId && !taskLocations.includes(mapId)) {
             taskLocations.push(mapId);
           }
         };
-
         appendLocation(task.map?.id);
-
         if (Array.isArray(task.locations)) {
           for (const locationId of task.locations) {
             appendLocation(locationId);
           }
         }
-
         if (Array.isArray(task.objectives)) {
           for (const obj of task.objectives) {
             if (Array.isArray(obj.maps)) {
@@ -236,15 +220,12 @@ export function useTaskFiltering() {
                 appendLocation(objMap?.id);
               }
             }
-
             appendLocation(obj.location?.id);
-
             if (Array.isArray(obj.possibleLocations)) {
               for (const possibleLocation of obj.possibleLocations) {
                 appendLocation(possibleLocation?.map?.id);
               }
             }
-
             if (Array.isArray(obj.zones)) {
               for (const zone of obj.zones) {
                 appendLocation(zone?.map?.id);
@@ -252,10 +233,8 @@ export function useTaskFiltering() {
             }
           }
         }
-
         if (hideGlobalTasks && taskLocations.length === 0) continue;
         if (!taskMatchesRequirementFilters(task, requirementOptions)) continue;
-
         // Check if any of the map group IDs are present in task locations
         if (mapIdGroup.some((id: string) => taskLocations.includes(id))) {
           // Check if task is available for the user
@@ -318,7 +297,6 @@ export function useTaskFiltering() {
     }
     return mapTaskCounts;
   };
-
   /**
    * Main function to update visible tasks based on all active filters
    *

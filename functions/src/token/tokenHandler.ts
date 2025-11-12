@@ -1,7 +1,6 @@
 import functions from 'firebase-functions';
 import { Request, Response } from 'express';
 import admin from 'firebase-admin'; // Although not directly used, keep for consistency or potential future use
-
 // Define minimal interface for the token data attached by middleware
 // Duplicated from auth.ts/index.ts for simplicity, consider shared types
 interface ApiTokenData {
@@ -23,7 +22,6 @@ interface TokenInfoResponse {
   permissions: string[];
   token: string;
 }
-
 /**
  * @openapi
  * /token:
@@ -66,7 +64,7 @@ const getTokenInfo = async (req: AuthenticatedRequest, res: Response): Promise<v
   } else {
     // This case should technically be handled by verifyBearer, but added for safety
     functions.logger.warn('getTokenInfo called without valid req.apiToken');
-    res.status(401).send({ error: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
   }
 };
 export default { getTokenInfo };

@@ -6,7 +6,6 @@ import { createPinia } from 'pinia';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
 import { testI18n } from '@/test/testI18n';
-
 // Mock Firebase - Comprehensive mocks to prevent real Firebase initialization
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({ app: 'mock-app' })),
@@ -14,7 +13,6 @@ vi.mock('firebase/app', () => ({
   getApps: vi.fn(() => [{ app: 'mock-app' }]),
   deleteApp: vi.fn(() => Promise.resolve()),
 }));
-
 vi.mock('firebase/auth', () => ({
   getAuth: vi.fn(() => ({
     currentUser: null,
@@ -28,7 +26,6 @@ vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn(() => ({ providerId: 'google.com' })),
   GithubAuthProvider: vi.fn(() => ({ providerId: 'github.com' })),
 }));
-
 vi.mock('firebase/firestore', () => {
   const mockDoc = {
     get: vi.fn(() => Promise.resolve({ exists: false, data: () => ({}) })),
@@ -68,7 +65,6 @@ vi.mock('firebase/firestore', () => {
     deleteField: vi.fn(() => ({}) as any),
   };
 });
-
 // Mock Firebase Storage to prevent initialization in component tests
 vi.mock('firebase/storage', () => ({
   getStorage: vi.fn(() => ({ app: { name: 'mock-app' } })),
@@ -82,35 +78,28 @@ vi.mock('firebase/storage', () => ({
   getMetadata: vi.fn(async () => ({})),
   // Other exports as needed can be stubbed similarly
 }));
-
 // Prevent Firebase Functions initialization in component tests (e.g., AlternativesList)
 vi.mock('firebase/functions', () => ({
   getFunctions: vi.fn(() => ({ app: { name: 'mock-app' } })),
   httpsCallable: vi.fn(() => vi.fn(async () => ({ data: {} }))),
   connectFunctionsEmulator: vi.fn(() => undefined),
 }));
-
 // (Optional) stabilize timers used by components
 vi.useFakeTimers();
-
 // Create global test plugins
 const vuetify = createVuetify({
   components,
   directives,
 });
-
 const pinia = createPinia();
-
 // Configure Vue Test Utils global plugins
 config.global.plugins = [vuetify, testI18n, pinia];
-
 // Global test helpers
 globalThis.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 };
-
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

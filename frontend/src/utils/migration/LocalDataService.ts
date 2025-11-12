@@ -1,16 +1,13 @@
 import { logger } from '@/utils/logger';
 import { encryptData, decryptData, isEncrypted } from '@/utils/encryption';
 import type { ProgressData } from '@/utils/migration/DataMigrationTypes';
-
 export const LOCAL_PROGRESS_KEY = 'progress';
 export const LOCAL_USER_STATE_KEY = 'user_state';
-
 // Sensitive field names that should be removed from data before localStorage storage
 export const SENSITIVE_FIELDS = [
   'sourceUserId', // External user identifier
   'sourceDomain', // API endpoint URL
 ] as const;
-
 /**
  * Sanitizes progress data before localStorage storage by removing
  * potentially sensitive metadata fields that could identify users
@@ -28,7 +25,6 @@ const sanitizeProgressData = <T extends Record<string, unknown>>(data: T): T => 
   }
   return sanitized;
 };
-
 // eslint-disable-next-line complexity
 export const hasLocalData = async (): Promise<boolean> => {
   try {
@@ -37,7 +33,6 @@ export const hasLocalData = async (): Promise<boolean> => {
     if (!encryptedData || encryptedData === '{}') {
       return false;
     }
-
     let progressData: string;
     // Handle backward compatibility with unencrypted data
     if (isEncrypted(encryptedData)) {
@@ -49,7 +44,6 @@ export const hasLocalData = async (): Promise<boolean> => {
       const parsed = JSON.parse(progressData);
       await saveLocalProgress(parsed);
     }
-
     const parsedData: ProgressData = JSON.parse(progressData);
     const hasKeys = Object.keys(parsedData).length > 0;
     const hasProgress =
@@ -64,7 +58,6 @@ export const hasLocalData = async (): Promise<boolean> => {
     return false;
   }
 };
-
 export const getLocalData = async (): Promise<ProgressData | null> => {
   try {
     const encryptedData =
@@ -72,7 +65,6 @@ export const getLocalData = async (): Promise<ProgressData | null> => {
     if (!encryptedData) {
       return null;
     }
-
     let progressData: string;
     // Handle backward compatibility with unencrypted data
     if (isEncrypted(encryptedData)) {
@@ -84,7 +76,6 @@ export const getLocalData = async (): Promise<ProgressData | null> => {
       const parsed = JSON.parse(progressData);
       await saveLocalProgress(parsed);
     }
-
     const parsedData: ProgressData = JSON.parse(progressData);
     if (Object.keys(parsedData).length > 0) {
       return JSON.parse(JSON.stringify(parsedData)) as ProgressData;
@@ -95,7 +86,6 @@ export const getLocalData = async (): Promise<ProgressData | null> => {
     return null;
   }
 };
-
 export const backupLocalProgress = async (data: ProgressData): Promise<void> => {
   const backupKey = `progress_backup_${new Date().toISOString()}`;
   try {
@@ -107,7 +97,6 @@ export const backupLocalProgress = async (data: ProgressData): Promise<void> => 
     logger.warn('[LocalDataService] Failed to create local backup copy:', error);
   }
 };
-
 export const saveLocalProgress = async (data: unknown): Promise<void> => {
   try {
     const sanitizedData =
@@ -121,7 +110,6 @@ export const saveLocalProgress = async (data: unknown): Promise<void> => {
     logger.warn('[LocalDataService] Failed to persist local progress:', error);
   }
 };
-
 export const saveLocalUserState = async (state: unknown): Promise<void> => {
   try {
     const sanitizedState =

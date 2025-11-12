@@ -21,20 +21,16 @@
     </v-col>
   </v-row>
 </template>
-
 <script setup lang="ts">
   import { defineAsyncComponent } from 'vue';
   import type { TaskObjective as TaskObjectiveModel } from '@/types/models/tarkov';
-
   const TaskObjective = defineAsyncComponent(() => import('./TaskObjective.vue'));
-
   defineProps<{
     objectives: TaskObjectiveModel[];
     irrelevantCount: number;
     uncompletedIrrelevant: number;
   }>();
 </script>
-
 <style lang="scss" scoped>
   .hidden-objectives {
     opacity: 0.5;

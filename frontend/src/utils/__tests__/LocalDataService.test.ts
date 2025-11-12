@@ -9,7 +9,6 @@ import {
   LOCAL_USER_STATE_KEY,
 } from '@/utils/migration/LocalDataService';
 import type { ProgressData } from '@/utils/migration/DataMigrationTypes';
-
 // Mock the encryption module to avoid dealing with Web Crypto API in tests
 vi.mock('@/utils/encryption', () => ({
   encryptData: vi.fn(async (data: string) => btoa(data)), // Simple base64 encoding for tests
@@ -20,7 +19,6 @@ vi.mock('@/utils/encryption', () => ({
     return base64Regex.test(data);
   }),
 }));
-
 describe('LocalDataService', () => {
   let localStorageMock: { [key: string]: string };
   beforeEach(() => {

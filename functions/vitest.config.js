@@ -1,39 +1,32 @@
 import { defineConfig } from 'vitest/config';
+
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['./test/setup'],
-    pool: 'threads',
-    deps: {
-      optimizer: {
-        ssr: {
-          include: ['**/*.ts'],
-        },
-      },
-      interopDefault: true, // Support for default exports in mixed ESM/CJS modules
-    },
-    mockReset: true, // Reset mocks between tests
-    clearMocks: true, // Clear mock calls between tests
-    restoreMocks: true, // Restore original implementation of mocks
-    include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'], // Explicitly include test files
-    exclude: ['**/node_modules/**', '**/dist/**'], // Explicitly exclude node_modules and dist
+    globalSetup: ['./test/globalSetup.ts'],
+    include: ['test/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'test/performance/**'],
+    mockReset: true,
+    clearMocks: true,
+    restoreMocks: true,
+    isolate: false,
+    testTimeout: 30000, // 30 seconds for emulator operations
+    hookTimeout: 60000, // 60 seconds for setup/teardown
+    // Allow skipping global setup for certain tests
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       reportOnFailure: true,
-      reportsDirectory: 'coverage',
       include: ['src/**/*'],
       exclude: ['node_modules/**', 'test/**', 'coverage/**', '**/*.config'],
-      global: {
+      all: true,
+      thresholds: {
         statements: 85,
         branches: 80,
         functions: 80,
         lines: 85,
       },
     },
-    testTimeout: 15000, // Increase test timeout
-    hookTimeout: 15000, // Increase hook timeout
-    isolate: false, // Try disabling isolation
   },
 });

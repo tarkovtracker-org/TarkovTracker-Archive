@@ -1,24 +1,19 @@
 import { computed, type ComputedRef, type WritableComputedRef } from 'vue';
 import type { UserStore } from '@/stores/user';
-
 type ToggleGetter = () => boolean;
 type ToggleSetter = (value: boolean) => void;
-
 type StoreToggle = WritableComputedRef<boolean>;
-
 type ToggleControl = {
   key: string;
   model: StoreToggle;
   labelKey: string;
   tooltipKey?: string;
 };
-
 const createStoreToggle = (getter: ToggleGetter, setter: ToggleSetter): StoreToggle =>
   computed({
     get: getter,
     set: setter,
   });
-
 const createVisibleToggle = (hiddenToggle: StoreToggle): StoreToggle =>
   computed({
     get: () => !hiddenToggle.value,
@@ -26,14 +21,12 @@ const createVisibleToggle = (hiddenToggle: StoreToggle): StoreToggle =>
       hiddenToggle.value = !value;
     },
   });
-
 const filterLabels = {
   globalTasks: 'page.tasks.filters.show_global_tasks',
   kappaRequired: 'page.tasks.filters.show_kappa_required_tasks',
   lightkeeperRequired: 'page.tasks.filters.show_lightkeeper_required_tasks',
   eodOnly: 'page.tasks.filters.show_eod_only_tasks',
 };
-
 const appearanceLabels = {
   requiredRequirement: 'page.tasks.filters.show_required_requirement_labels',
   optionalRequirement: 'page.tasks.filters.show_optional_requirement_labels',
@@ -42,14 +35,12 @@ const appearanceLabels = {
   nextTasks: 'page.tasks.filters.show_next_tasks',
   previousTasks: 'page.tasks.filters.show_previous_tasks',
 };
-
 const filterTooltips = {
   globalTasks: 'page.tasks.filters.tooltips.show_global_tasks',
   kappaRequired: 'page.tasks.filters.tooltips.show_kappa_required_tasks',
   lightkeeperRequired: 'page.tasks.filters.tooltips.show_lightkeeper_required_tasks',
   eodOnly: 'page.tasks.filters.tooltips.show_eod_only_tasks',
 };
-
 const appearanceTooltips = {
   requiredRequirement: 'page.tasks.filters.required_requirement_labels_tooltip',
   optionalRequirement: 'page.tasks.filters.optional_requirement_labels_tooltip',
@@ -58,13 +49,11 @@ const appearanceTooltips = {
   nextTasks: 'page.tasks.filters.next_tasks_tooltip',
   previousTasks: 'page.tasks.filters.previous_tasks_tooltip',
 };
-
 export interface UseTaskSettingsOptions {
   isSelfEod: ComputedRef<boolean>;
   createNonKappaLabel: () => string;
   createNonKappaTooltip: () => string;
 }
-
 export interface UseTaskSettingsResult {
   showGlobalTasks: StoreToggle;
   hideGlobalTasks: StoreToggle;
@@ -85,7 +74,6 @@ export interface UseTaskSettingsResult {
   filterControls: ComputedRef<ToggleControl[]>;
   appearanceControls: ComputedRef<ToggleControl[]>;
 }
-
 type TaskSettingsStore = Pick<
   UserStore,
   | 'getHideGlobalTasks'
@@ -111,7 +99,6 @@ type TaskSettingsStore = Pick<
   | 'getShowPreviousTasks'
   | 'setShowPreviousTasks'
 >;
-
 export const useTaskSettings = (
   userStore: TaskSettingsStore,
   options: UseTaskSettingsOptions
@@ -121,61 +108,50 @@ export const useTaskSettings = (
     (value) => userStore.setHideGlobalTasks(value)
   );
   const showGlobalTasks = createVisibleToggle(hideGlobalTasks);
-
   const hideNonKappaTasks = createStoreToggle(
     () => userStore.getHideNonKappaTasks,
     (value) => userStore.setHideNonKappaTasks(value)
   );
   const showNonEndgameTasks = createVisibleToggle(hideNonKappaTasks);
-
   const hideKappaRequiredTasks = createStoreToggle(
     () => userStore.getHideKappaRequiredTasks,
     (value) => userStore.setHideKappaRequiredTasks(value)
   );
   const showKappaRequiredTasks = createVisibleToggle(hideKappaRequiredTasks);
-
   const hideLightkeeperRequiredTasks = createStoreToggle(
     () => userStore.getHideLightkeeperRequiredTasks,
     (value) => userStore.setHideLightkeeperRequiredTasks(value)
   );
   const showLightkeeperRequiredTasks = createVisibleToggle(hideLightkeeperRequiredTasks);
-
   const hideEodOnlyTasks = createStoreToggle(
     () => Boolean(userStore.getHideEodOnlyTasks),
     (value) => userStore.setHideEodOnlyTasks(value)
   );
   const showEodOnlyTasks = createVisibleToggle(hideEodOnlyTasks);
-
   const showOptionalRequirementLabels = createStoreToggle(
     () => userStore.getShowOptionalTaskRequirementLabels,
     (value) => userStore.setShowOptionalTaskRequirementLabels(value)
   );
-
   const showRequiredRequirementLabels = createStoreToggle(
     () => userStore.getShowRequiredTaskRequirementLabels,
     (value) => userStore.setShowRequiredTaskRequirementLabels(value)
   );
-
   const showExperienceRewards = createStoreToggle(
     () => userStore.getShowExperienceRewards,
     (value) => userStore.setShowExperienceRewards(value)
   );
-
   const showTaskIds = createStoreToggle(
     () => userStore.getShowTaskIds,
     (value) => userStore.setShowTaskIds(value)
   );
-
   const showNextTasks = createStoreToggle(
     () => userStore.getShowNextTasks,
     (value) => userStore.setShowNextTasks(value)
   );
-
   const showPreviousTasks = createStoreToggle(
     () => userStore.getShowPreviousTasks,
     (value) => userStore.setShowPreviousTasks(value)
   );
-
   const filterControls = computed<ToggleControl[]>(() => {
     const baseControls: (ToggleControl & { condition?: boolean })[] = [
       {
@@ -210,10 +186,8 @@ export const useTaskSettings = (
         condition: options.isSelfEod.value,
       },
     ];
-
     return baseControls.filter((control) => control.condition !== false);
   });
-
   const appearanceControls = computed<ToggleControl[]>(() => [
     {
       key: 'required-labels',
@@ -252,7 +226,6 @@ export const useTaskSettings = (
       tooltipKey: appearanceTooltips.previousTasks,
     },
   ]);
-
   return {
     showGlobalTasks,
     hideGlobalTasks,

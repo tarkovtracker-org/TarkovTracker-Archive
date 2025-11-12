@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from 'firebase-functions/v2';
-import { ApiError, ApiResponse } from '../types/api.js';
-
+import { ApiError, ApiResponse } from '../types/api';
 // Enhanced request interface for error context
 interface ErrorRequest extends Request {
   apiToken?: {
@@ -13,7 +12,6 @@ interface ErrorRequest extends Request {
     username?: string;
   };
 }
-
 /**
  * Centralized error handling middleware
  * Converts errors to consistent API response format
@@ -36,16 +34,13 @@ export const errorHandler = (
     body: req.body,
     timestamp: new Date().toISOString(),
   };
-
   let statusCode = 500;
   let errorMessage = 'Internal server error';
   let errorCode = 'INTERNAL_ERROR';
-
   if (error instanceof ApiError) {
     statusCode = error.statusCode;
     errorMessage = error.message;
     errorCode = (error as ApiError & { code?: string }).code || 'API_ERROR';
-
     // Log API errors as warnings unless they're 5xx
     if (statusCode >= 500) {
       logger.error('API Error (5xx):', errorContext);
@@ -56,7 +51,6 @@ export const errorHandler = (
     // Log unexpected errors as errors
     logger.error('Unhandled error in API:', errorContext);
   }
-
   // Send consistent error response
   const response: ApiResponse = {
     success: false,
@@ -71,10 +65,8 @@ export const errorHandler = (
       }),
     },
   };
-
   res.status(statusCode).json(response);
 };
-
 /**
  * Async error wrapper for route handlers
  * Catches async errors and passes them to error middleware
@@ -86,7 +78,6 @@ export const asyncHandler = (
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
-
 /**
  * 404 handler for unmatched routes
  */
@@ -99,17 +90,14 @@ export const notFoundHandler = (req: Request, res: Response): void => {
       timestamp: new Date().toISOString(),
     },
   };
-
   res.status(404).json(response);
 };
-
 /**
  * Helper function to create API errors
  */
 export const createError = (statusCode: number, message: string, code?: string): ApiError => {
   return new ApiError(statusCode, message, code);
 };
-
 // Common error creators
 export const errors = {
   badRequest: (message: string = 'Bad request') => createError(400, message, 'BAD_REQUEST'),

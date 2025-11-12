@@ -2,6 +2,64 @@
 
 This directory contains tests for the Firebase Cloud Functions in the TarkovTracker application.
 
+## 📚 Documentation
+
+For comprehensive testing guidelines, architecture, and best practices, see the **[test documentation](./docs/)**:
+
+- **[Main Documentation](./docs/README.md)** - Overview and getting started
+- **[Best Practices](./docs/BEST_PRACTICES.md)** - Testing guidelines and standards
+- **[Architecture](./docs/ARCHITECTURE.md)** - Test design and patterns
+- **[Maintenance](./docs/MAINTENANCE.md)** - Troubleshooting and upkeep
+- **[Documentation Index](./docs/INDEX.md)** - Complete reference guide
+
+## Test Structure
+
+```
+test/
+├── docs/                    # Test documentation (NEW)
+│   ├── README.md           # Main test documentation
+│   ├── BEST_PRACTICES.md   # Testing best practices
+│   ├── ARCHITECTURE.md     # Test architecture
+│   ├── MAINTENANCE.md      # Maintenance guidelines
+│   └── INDEX.md            # Documentation index
+├── utils/                   # Test utilities and helpers (NEW)
+│   ├── testHelpers.ts      # Common test setup/teardown
+│   └── assertionHelpers.ts # Custom assertion helpers
+├── factories/               # Test data factories (NEW)
+│   ├── index.ts            # Factory exports
+│   ├── TokenFactory.ts     # Token data factory
+│   ├── UserFactory.ts      # User data factory
+│   ├── TeamFactory.ts      # Team data factory
+│   ├── ProgressFactory.ts  # Progress data factory
+│   ├── TaskFactory.ts      # Task data factory
+│   └── TestDataBuilder.ts  # Comprehensive test data builder
+├── examples/                # Best practice examples (NEW)
+│   └── TokenService.bestPractices.test.ts
+├── integration/             # Integration tests
+│   ├── tokenWorkflow.test.ts
+│   └── userLifecycle.test.ts
+├── performance/             # Performance tests
+│   ├── loadTests.test.ts
+│   ├── performanceUtils.ts
+│   ├── progressPerformance.test.ts
+│   ├── teamPerformance.test.ts
+│   ├── tokenPerformance.test.ts
+│   └── README.md
+├── edge-cases/              # Edge case tests
+│   ├── boundaryConditions.test.ts
+│   ├── dataValidation.test.ts
+│   ├── errorRecovery.test.ts
+│   ├── unusualInputs.test.ts
+│   └── README.md
+├── services/                # Service layer tests
+├── handlers/                # HTTP handler tests
+├── middleware/              # Middleware tests
+├── utils/                   # Utility function tests
+├── mocks.js                 # Global mocks
+├── setup.js                 # Test setup
+└── tsconfig.json           # TypeScript config for tests
+```
+
 ## Testing Approach
 
 We use [Vitest](https://vitest.dev/) as our testing framework, which provides a modern, fast testing experience similar to Jest.
@@ -10,160 +68,154 @@ We use [Vitest](https://vitest.dev/) as our testing framework, which provides a 
 
 1. **Unit Tests**: For isolated testing of function logic without external dependencies.
 2. **Integration Tests**: For testing function logic with mocked Firebase services.
+3. **Performance Tests**: For measuring system performance under load.
+4. **Edge Case Tests**: For testing boundary conditions and unusual inputs.
 
-## Test Structure and Organization
+## 🛠️ Test Utilities
 
-The test directory is organized by functionality:
+The test suite includes comprehensive utilities and helpers:
 
-### Core Test Files
+- **[Test Helpers](./utils/testHelpers.ts)** - Common setup, teardown, and execution helpers
+- **[Assertion Helpers](./utils/assertionHelpers.ts)** - Custom matchers and assertion utilities
+- **[Data Factories](./factories/)** - Fluent factories for creating test data
+- **[Test Examples](./examples/)** - Complete examples following best practices
 
-- **apiv2.test.js** - Tests for the v2 REST API
-- **token-consolidated.test.js** - Consolidated token management tests
-- **team-consolidated.test.js** - Consolidated team management tests
-- **updateTarkovdata-consolidated.test.js** - Consolidated tests for the Tarkov data update functionality
-
-### Support Files
-
-- **setup.js** - Global setup for tests including mock configurations
-- **mocks.js** - Common mock implementations
-- ****mocks**/** - Directory for module mocks
-
-## Cleanup Status
-
-**Consolidated Files** (KEEP)
-
-- token-consolidated.test
-- team-consolidated.test
-- updateTarkovdata-consolidated.test.js
-- apiv2.test
-**Files to Remove** (once consolidated tests are fixed)
-- token-unit.test
-- token-simple.test
-- fixed-token.test
-- working-token.test
-- token.mock.test
-- simple-token.test
-- token-fixed.test
-- token-improved.test
-- token.test
-- leaveTeam.test
-- team.test
-- updateTarkovdata.test
-- basic.test
-- minimal.test
-- mock.test
-
-## Current Issues
-
-1. **Token Consolidated Tests**: Failing due to issues with mock implementations for Firestore
-2. **Team and Tarkovdata Imports**: Issues with importing functions that use `functions.schedule`
-3. **API Tests**: Some API endpoints need additional coverage
-
-## Mocking Issues
-
-The current mocks may need updates to handle ESM imports properly. The main issues are:
-
-1. Firestore mocks are not being properly used in token tests (collection not found)
-2. Functions schedule related errors in team and Tarkovdata imports
-
-## Writing Effective Tests
-
-### Unit Testing Functions
-
-For unit testing function logic in isolation, follow this approach:
-
-1. Mock external dependencies (Firebase Admin, Firebase Functions) minimally.
-2. Test the core validation or business logic of the function.
-3. Avoid importing the actual function if it has complex dependencies.
-
-Example:
-
-```javascript
-// 1. Mock dependencies
-vi.mock('firebase-functions', () => ({
-  default: {
-    https: {
-      HttpsError: vi.fn((code, message) => {
-        const error = new Error(message);
-        error.code = code;
-        return error;
-      }),
-      onCall: vi.fn(fn => fn)
-    },
-    logger: { log: vi.fn(), error: vi.fn() }
-  }
-}));
-
-// 2. Define and test a simplified version of the function
-const validationFunction = (data, context) => {
-  if (!context?.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'Auth required');
-  }
-  if (!data.requiredField) {
-    throw new functions.https.HttpsError('invalid-argument', 'Missing field');
-  }
-  return { success: true };
-};
-```
-
-### Integration Testing with Firebase Mocks
-
-For testing functions with Firebase dependencies:
-
-1. Create chainable mock objects for Firestore.
-2. Mock transactions properly to handle promises.
-3. Place mocks before any imports that use them.
-4. Watch for hoisting issues with `vi.mock()`.
-
-Example:
-
-```javascript
-// 1. Define mocks before imports
-vi.mock('firebase-admin', () => {
-  // Create a chainable mock
-  const firestoreMock = {
-    collection: vi.fn().mockReturnThis(),
-    doc: vi.fn().mockReturnThis(),
-    get: vi.fn().mockResolvedValue({
-      exists: false,
-      data: () => ({})
-    }),
-    runTransaction: vi.fn(async cb => {
-      return cb({
-        get: vi.fn().mockResolvedValue({
-          exists: false,
-          data: () => ({})
-        }),
-        set: vi.fn(),
-        update: vi.fn()
-      });
-    })
-  };
-
-  return {
-    default: {
-      firestore: vi.fn().mockReturnValue(firestoreMock)
-    }
-  };
-});
-```
-
-## Running Tests
-
-Run a specific test file:
+## 🏃 Running Tests
 
 ```bash
-npx vitest run test/token-consolidated.test
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test suites
+npm run test:unit
+npm run test:integration
+npm run test:performance
+npm run test:edge-cases
+
+# Run performance tests
+npm run test:performance:all
 ```
 
-Run all tests:
+## 📊 Coverage Requirements
 
-```bash
-npx vitest run
+- **Statements**: 85%
+- **Branches**: 80%
+- **Functions**: 80%
+- **Lines**: 85%
+
+## 🎯 Test Categories
+
+### Unit Tests
+- Test individual functions and methods in isolation
+- Located in `services/`, `handlers/`, `middleware/`, and `utils/` directories
+- Fast execution with comprehensive mocking
+
+### Integration Tests
+- Test complete workflows and component interactions
+- Located in `integration/` directory
+- Use realistic test scenarios with data factories
+
+### Performance Tests
+- Measure system performance under load
+- Located in `performance/` directory
+- Include benchmarks and regression detection
+
+### Edge Case Tests
+- Test boundary conditions and unusual inputs
+- Located in `edge-cases/` directory
+- Focus on error handling and recovery
+
+## 🏗️ Test Architecture
+
+The test suite follows a layered architecture:
+
+1. **Test Data Layer** - Factories and builders for creating test data
+2. **Mock Layer** - Firebase and external service mocks
+3. **Utility Layer** - Common test helpers and assertions
+4. **Test Layer** - Actual test implementations organized by category
+
+For detailed architecture information, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+## 📝 Writing New Tests
+
+When writing new tests, follow these guidelines:
+
+1. **Use the AAA Pattern**: Arrange-Act-Assert
+2. **Leverage Data Factories**: Use factories for consistent test data
+3. **Follow Naming Conventions**: Descriptive test names that explain the scenario
+4. **Include Documentation**: Add JSDoc comments explaining complex scenarios
+5. **Test Error Cases**: Always test error scenarios and edge cases
+6. **Use Assertion Helpers**: Leverage custom assertion helpers for readability
+
+For complete guidelines, see [BEST_PRACTICES.md](./docs/BEST_PRACTICES.md).
+
+## 🔧 Test Data Management
+
+Use the provided factories for creating test data:
+
+```typescript
+// Create individual entities
+const user = UserFactory.create({ level: 25 });
+const token = TokenFactory.createExtended({ owner: user.uid });
+const team = TeamFactory.createWithMembers(5);
+
+// Use presets for common scenarios
+const testData = TestDataPresets.experiencedUser();
+
+// Use builder for complex scenarios
+const scenario = new TestDataBuilder()
+  .withUser(UserFactory.createExperienced())
+  .withTeam(TeamFactory.createFull())
+  .withToken(TokenFactory.createAdmin())
+  .build();
 ```
 
-Run tests in watch mode during development:
+## 🐛 Debugging Tests
 
-```bash
-npx vitest
-```
+For debugging tips and troubleshooting, see [MAINTENANCE.md](./docs/MAINTENANCE.md).
+
+## 📈 Performance Testing
+
+Performance tests are located in the `performance/` directory and include:
+
+- Load testing for API endpoints
+- Database operation benchmarks
+- Memory usage monitoring
+- Regression detection
+
+For performance testing guidelines, see [performance/README.md](./performance/README.md).
+
+## 🔄 CI/CD Integration
+
+The test suite is integrated with CI/CD pipelines:
+
+- All tests must pass (100% success rate)
+- Coverage thresholds must be met
+- Performance regressions are detected
+- Test flakiness is monitored
+
+## 🤝 Contributing
+
+When contributing to the test suite:
+
+1. Follow the established patterns and conventions
+2. Update documentation for new test categories
+3. Ensure coverage thresholds are maintained
+4. Add performance tests for new features
+5. Include edge case testing for new functionality
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines.
+
+## 📚 Additional Resources
+
+- [Vitest Documentation](https://vitest.dev/)
+- [Firebase Testing Guide](https://firebase.google.com/docs/functions/unit-testing)
+- [Test Documentation Index](./docs/INDEX.md) - Complete reference
+
+---
+
+**Last Updated**: 2025-11-11  
+**Maintained by**: TarkovTracker Development Team

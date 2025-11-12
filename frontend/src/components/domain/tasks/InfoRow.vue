@@ -10,14 +10,12 @@
     </div>
   </div>
 </template>
-
 <script setup>
   defineProps({
     icon: { type: String, default: '' },
     inline: { type: Boolean, default: false },
   });
 </script>
-
 <style scoped>
   .info-row {
     display: flex;
@@ -25,17 +23,14 @@
     width: 100%;
     margin-bottom: 4px;
   }
-
   .info-row--inline {
     display: inline-flex;
     width: auto;
   }
-
   .info-row__icon {
     display: inline-flex;
     margin-right: 6px;
   }
-
   .info-row__content {
     display: flex;
     align-items: center;
@@ -44,7 +39,6 @@
     gap: 6px;
     min-width: 0;
   }
-
   .info-row__content--inline {
     flex: 0 1 auto;
   }

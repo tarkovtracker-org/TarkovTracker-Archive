@@ -33,10 +33,8 @@
     </v-col>
   </v-row>
 </template>
-
 <script setup>
-  import TarkovItem from '@/features/game/TarkovItem.vue';
-
+  import TarkovItem from '@/components/domain/items/TarkovItem.vue';
   defineProps({
     neededKeys: { type: Array, required: true },
   });

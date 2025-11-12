@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatProgress } from '../../src/progress/progressUtils.js';
-
+import { formatProgress } from '../../src/progress/progressUtils';
 describe('progressUtils formatProgress', () => {
   it('formats legacy progress data and applies faction/ hideout rules', () => {
     const progressData = {
@@ -19,7 +18,6 @@ describe('progressUtils formatProgress', () => {
         hideoutParts: {},
       },
     };
-
     const hideoutData = {
       hideoutStations: [
         {
@@ -34,7 +32,6 @@ describe('progressUtils formatProgress', () => {
         },
       ],
     };
-
     const taskData = {
       tasks: [
         {
@@ -44,9 +41,7 @@ describe('progressUtils formatProgress', () => {
         },
       ],
     };
-
     const result = formatProgress(progressData, 'user123', hideoutData, taskData, 'pvp');
-
     expect(result.displayName).toBe('PlayerOne');
     expect(result.userId).toBe('user123');
     expect(result.tasksProgress).toEqual(
@@ -68,7 +63,6 @@ describe('progressUtils formatProgress', () => {
       ])
     );
   });
-
   it('handles missing progress data gracefully', () => {
     const result = formatProgress(undefined, 'userABC', null, null, 'pvp');
     expect(result.displayName).toBe('userAB');

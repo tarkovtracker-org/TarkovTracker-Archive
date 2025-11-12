@@ -7,11 +7,9 @@
     </v-col>
   </v-row>
 </template>
-
 <script setup lang="ts">
   import { defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
-
   const RefreshButton = defineAsyncComponent(() => import('@/components/ui/RefreshButton.vue'));
   const { t } = useI18n({ useScope: 'global' });
 </script>

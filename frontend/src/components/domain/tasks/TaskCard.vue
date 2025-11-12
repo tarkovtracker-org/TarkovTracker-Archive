@@ -373,7 +373,6 @@
     updateTaskStatus('page.tasks.questcard.statusavailable');
   };
 </script>
-
 <style lang="scss" scoped>
   .taskContainer {
     position: relative;
@@ -384,7 +383,6 @@
     /* CSS containment to isolate layout calculations and reduce reflow costs */
     contain: layout paint;
   }
-
   .task-card {
     /* TODO: Add transitioning class dynamically for GPU acceleration during transitions */
     /* Temporary will-change for transitions to optimize GPU acceleration */
@@ -392,7 +390,6 @@
       will-change: background;
     }
   }
-
   .taskContainerBackground {
     margin: 3rem;
     position: absolute;
@@ -404,7 +401,6 @@
     color: #c6afaf;
     opacity: 0.2;
   }
-
   .task-complete {
     background: linear-gradient(
       135deg,
@@ -412,7 +408,6 @@
       rgba(var(--v-theme-complete), 0) 75%
     );
   }
-
   .task-locked {
     background: linear-gradient(
       135deg,

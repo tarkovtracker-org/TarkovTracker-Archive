@@ -77,15 +77,12 @@
     // On tablet and desktop: show based on rail state (rail=true means collapsed/narrow)
     return appStore.drawerRail ? 'mdi-menu' : 'mdi-menu-open';
   });
-
   const currentGameMode = computed(() => {
     return tarkovStore.getCurrentGameMode();
   });
-
   const gameModeColor = computed(() => {
     return currentGameMode.value === 'pvp' ? 'red' : 'green';
   });
-
   const OverflowMenu = defineAsyncComponent(() => import('@/components/layout/OverflowMenu'));
   const { loading: dataLoading, error: dataError, hideoutLoading } = useTarkovData();
   function changeNavigationDrawer() {

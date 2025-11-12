@@ -1,29 +1,23 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, beforeEach, afterEach, vi, type Mock } from 'vitest';
+import { resetDb } from '../helpers/emulatorSetup';
 
+// Mock logger from firebase-functions since we don't need to test it
+const mockLogger = {
+  warn: vi.fn(),
+  error: vi.fn(),
+};
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
+  logger: mockLogger,
 }));
-
-vi.mock('firebase-admin', () => ({
-  __esModule: true,
-  default: {
-    apps: [] as unknown[],
-  },
-}));
-
 const loadGuard = async () => {
-  const module = await import('../../src/middleware/abuseGuard.js');
+  const module = await import('../../src/middleware/abuseGuard');
   return {
     abuseGuard: module.abuseGuard,
-    logger: (await import('firebase-functions/v2')).logger,
     internals: module.__abuseGuardInternals,
+    logger: mockLogger,
   };
 };
-
 function createRequest(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     method: 'POST',
@@ -41,7 +35,6 @@ function createRequest(overrides: Partial<Record<string, unknown>> = {}) {
     ...overrides,
   } as any;
 }
-
 function createResponse() {
   const res: any = {
     statusCode: 200,
@@ -57,10 +50,10 @@ function createResponse() {
   });
   return res;
 }
-
 describe('abuseGuard middleware', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetModules();
+    await resetDb();
     process.env.ABUSE_GUARD_WINDOW_MS = '1000';
     process.env.ABUSE_GUARD_THRESHOLD = '3';
     process.env.ABUSE_GUARD_WARN_RATIO = '0.6';
@@ -69,7 +62,6 @@ describe('abuseGuard middleware', () => {
     process.env.ABUSE_GUARD_METHODS = 'POST';
     process.env.ABUSE_GUARD_PATH_PREFIXES = '/api/progress';
   });
-
   afterEach(() => {
     delete process.env.ABUSE_GUARD_WINDOW_MS;
     delete process.env.ABUSE_GUARD_THRESHOLD;
@@ -82,26 +74,19 @@ describe('abuseGuard middleware', () => {
     vi.clearAllTimers();
     vi.resetModules();
   });
-
   it('allows requests below the threshold', async () => {
-    const { abuseGuard, internals } = await loadGuard();
+    const { abuseGuard } = await loadGuard();
     const next = vi.fn();
 
-    const config = internals?.inspectConfig();
-    expect(config).toBeDefined();
-
+    // Make 3 requests - all should pass
     for (let i = 0; i < 3; i++) {
       const req = createRequest();
       const res = createResponse();
       abuseGuard(req, res, next);
       expect(res.status).not.toHaveBeenCalledWith(429);
+      expect(next).toHaveBeenCalledTimes(i + 1);
     }
-    const tokenKey = 'token:' + createHash('sha256').update('test-token').digest('hex');
-    const cacheEntry = internals?.inspectCache(tokenKey);
-    expect(cacheEntry?.count).toBeDefined();
-    expect(next).toHaveBeenCalledTimes(3);
   });
-
   it('logs near-threshold usage without blocking', async () => {
     const { abuseGuard, logger, internals } = await loadGuard();
     const next = vi.fn();
@@ -111,20 +96,17 @@ describe('abuseGuard middleware', () => {
       1,
       Math.floor((config?.THRESHOLD ?? 1) * (config?.WARN_RATIO ?? 1))
     );
-
     for (let i = 0; i < warnThreshold; i++) {
       const req = createRequest();
       const res = createResponse();
       abuseGuard(req, res, next);
     }
-
     const tokenKey = 'token:' + createHash('sha256').update('test-token').digest('hex');
     const cacheEntry = internals?.inspectCache(tokenKey);
     expect(cacheEntry?.warned).toBe(true);
     expect((logger.warn as unknown as Mock).mock.calls.length).toBeGreaterThan(0);
     expect(next).toHaveBeenCalledTimes(warnThreshold);
   });
-
   it('blocks after consecutive breaches across windows', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-01-01T00:00:00Z'));
@@ -133,7 +115,6 @@ describe('abuseGuard middleware', () => {
     const tokenKey = 'token:' + createHash('sha256').update('test-token').digest('hex');
     const config = internals?.inspectConfig();
     const breachingRequests = (config?.THRESHOLD ?? 150) + 1;
-
     // First window: exceed threshold once (should not block yet)
     for (let i = 0; i < breachingRequests; i++) {
       const req = createRequest();
@@ -143,11 +124,9 @@ describe('abuseGuard middleware', () => {
     }
     const historyAfterFirstWindow = internals?.inspectHistory(tokenKey);
     expect(historyAfterFirstWindow?.consecutiveBreaches).toBe(1);
-
     // Advance to next window
     vi.advanceTimersByTime(1100);
     vi.setSystemTime(new Date(Date.now() + 1100));
-
     let blocked = false;
     for (let i = 0; i < breachingRequests; i++) {
       const req = createRequest();
@@ -158,7 +137,6 @@ describe('abuseGuard middleware', () => {
         break;
       }
     }
-
     expect(blocked).toBe(true);
     expect(next).toHaveBeenCalled();
   });

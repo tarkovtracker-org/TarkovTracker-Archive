@@ -18,13 +18,11 @@ import { logger } from '@/utils/logger';
  */
 export function useHideoutData() {
   const store = useTarkovStore();
-
   // Get current gamemode from store and convert to the format expected by API
   const currentGameMode = computed(() => {
     const mode = store.getCurrentGameMode();
     return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
   });
-
   const { result: queryResult, error, loading } = useTarkovHideoutQuery(currentGameMode);
   // Reactive state
   const hideoutStations = ref<HideoutStation[]>([]);
@@ -39,16 +37,13 @@ export function useHideoutData() {
     if (!Array.isArray(stations) || stations.length === 0) {
       return newGraph;
     }
-
     const levelLookup = new Map<string, string>();
-
     stations.forEach((station) => {
       station.levels.forEach((level) => {
         safeAddNode(newGraph, level.id);
         levelLookup.set(`${station.id}:${level.level}`, level.id);
       });
     });
-
     stations.forEach((station) => {
       station.levels.forEach((level) => {
         level.stationLevelRequirements?.forEach((requirement) => {
@@ -56,7 +51,6 @@ export function useHideoutData() {
           if (!requiredStationId) {
             return;
           }
-
           const requiredLevelId = levelLookup.get(`${requiredStationId}:${requirement.level}`);
           if (requiredLevelId) {
             safeAddEdge(newGraph, requiredLevelId, level.id);
@@ -69,7 +63,6 @@ export function useHideoutData() {
         });
       });
     });
-
     return newGraph;
   };
   /**

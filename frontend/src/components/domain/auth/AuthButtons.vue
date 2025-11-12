@@ -106,16 +106,13 @@
   import { fireuser } from '@/plugins/firebase.ts';
   import DataMigrationService from '@/utils/migration/DataMigrationService';
   import { logger } from '@/utils/logger';
-
   const hasLocalData = ref(false);
-
   const router = useRouter();
   const loading = ref({
     google: false,
     github: false,
   });
   const userId = ref(null);
-
   // Prevent automatic navigation after login - we'll handle it manually
   onMounted(async () => {
     try {

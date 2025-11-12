@@ -15,7 +15,6 @@ import type { UserState, UserProgressData } from '@/shared_state';
 export const STASH_STATION_ID = HIDEOUT_STATION_IDS.STASH;
 export const CULTIST_CIRCLE_STATION_ID = HIDEOUT_STATION_IDS.CULTIST_CIRCLE;
 const DISPLAY_NAME_FALLBACK_LENGTH = 5;
-
 const getProgressDataFromStore = (
   store: Store<string, UserState> | null | undefined
 ): UserProgressData | null => {

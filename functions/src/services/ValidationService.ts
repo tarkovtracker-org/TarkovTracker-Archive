@@ -4,9 +4,8 @@ import {
   MultipleTaskUpdateRequest,
   ObjectiveUpdateRequest,
   ApiToken,
-} from '../types/api.js';
-import { errors } from '../middleware/errorHandler.js';
-
+} from '../types/api';
+import { errors } from '../middleware/errorHandler';
 export class ValidationService {
   /**
    * Validates task status values
@@ -14,7 +13,6 @@ export class ValidationService {
   static validateTaskStatus(status: unknown): status is TaskStatus {
     return typeof status === 'string' && ['completed', 'failed', 'uncompleted'].includes(status);
   }
-
   /**
    * Validates and sanitizes task update request
    */
@@ -22,22 +20,17 @@ export class ValidationService {
     if (!body || typeof body !== 'object') {
       throw errors.badRequest('Request body is required');
     }
-
     const { state } = body as { state?: unknown };
-
     if (!state) {
       throw errors.badRequest('State is required');
     }
-
     if (!this.validateTaskStatus(state)) {
       throw errors.badRequest(
         "Invalid state provided. Must be 'completed', 'failed', or 'uncompleted'"
       );
     }
-
     return { state };
   }
-
   /**
    * Validates multiple task updates request
    */
@@ -45,43 +38,32 @@ export class ValidationService {
     if (!body || typeof body !== 'object' || !Array.isArray(body)) {
       throw errors.badRequest('Request body must be an array');
     }
-
     const updates = body as unknown[];
-
     if (updates.length === 0) {
       throw errors.badRequest('At least one task update is required');
     }
-
     // Validate each task update
     const validatedUpdates: MultipleTaskUpdateRequest = [];
-
     for (const task of updates) {
       if (!task || typeof task !== 'object') {
         throw errors.badRequest('Each task must be an object');
       }
-
       if (!('id' in task) || !('state' in task)) {
         throw errors.badRequest('Each task must have id and state fields');
       }
-
       const { id, state } = task;
-
       if (typeof id !== 'string') {
         throw errors.badRequest('Task id must be a string');
       }
-
       if (!this.validateTaskStatus(state)) {
         throw errors.badRequest(
           `Invalid state for task ${id}. Must be 'completed', 'failed', or 'uncompleted'`
         );
       }
-
       validatedUpdates.push({ id, state });
     }
-
     return validatedUpdates;
   }
-
   /**
    * Validates objective update request
    */
@@ -89,32 +71,25 @@ export class ValidationService {
     if (!body || typeof body !== 'object') {
       throw errors.badRequest('Request body is required');
     }
-
     const { state, count } = body as { state?: unknown; count?: unknown };
-
     if (!state && count == null) {
       throw errors.badRequest('Either state or count must be provided');
     }
-
     const update: ObjectiveUpdateRequest = {};
-
     if (state) {
       if (state !== 'completed' && state !== 'uncompleted') {
         throw errors.badRequest('State must be "completed" or "uncompleted"');
       }
       update.state = state;
     }
-
     if (count != null) {
       if (typeof count !== 'number' || count < 0 || !Number.isInteger(count)) {
         throw errors.badRequest('Count must be a non-negative integer');
       }
       update.count = count;
     }
-
     return update;
   }
-
   /**
    * Validates task ID parameter
    */
@@ -124,7 +99,6 @@ export class ValidationService {
     }
     return taskId.trim();
   }
-
   /**
    * Validates objective ID parameter
    */
@@ -134,7 +108,6 @@ export class ValidationService {
     }
     return objectiveId.trim();
   }
-
   /**
    * Validates player level
    */
@@ -145,7 +118,6 @@ export class ValidationService {
     }
     return levelNum;
   }
-
   /**
    * Validates API token permissions
    */
@@ -153,12 +125,10 @@ export class ValidationService {
     if (!token) {
       throw errors.unauthorized('Authentication required');
     }
-
     if (!token.permissions.includes(requiredPermission)) {
       throw errors.forbidden(`Missing required permission: ${requiredPermission}`);
     }
   }
-
   /**
    * Validates user ID
    */
@@ -168,7 +138,6 @@ export class ValidationService {
     }
     return userId.trim();
   }
-
   /**
    * Sanitizes and validates display name
    */
@@ -176,21 +145,21 @@ export class ValidationService {
     if (typeof displayName !== 'string') {
       throw errors.badRequest('Display name must be a string');
     }
-
     const sanitized = displayName.trim();
     if (sanitized.length === 0) {
       throw errors.badRequest('Display name cannot be empty');
     }
-
     if (sanitized.length > 50) {
       throw errors.badRequest('Display name cannot exceed 50 characters');
     }
-
-    // Basic sanitization - remove potentially harmful characters
-    const cleanName = sanitized.replace(/[<>"'&]/g, '');
+    // Basic sanitization - remove potentially harmful characters and patterns
+    let cleanName = sanitized.replace(/[<>"'&]/g, '');
+    // Remove common event handler patterns
+    cleanName = cleanName.replace(/on\w+\s*=/gi, '');
+    // Remove javascript: patterns
+    cleanName = cleanName.replace(/javascript:/gi, '');
     return cleanName;
   }
-
   /**
    * Validates game edition
    */
@@ -201,7 +170,6 @@ export class ValidationService {
     }
     return editionNum;
   }
-
   /**
    * Validates PMC faction
    */

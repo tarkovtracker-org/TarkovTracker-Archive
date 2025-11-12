@@ -659,5 +659,4 @@ const tarkovDataQuery = /* GraphQL */ `
     }
   }
 `;
-
 export default tarkovDataQuery;

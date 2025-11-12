@@ -1,6 +1,5 @@
 import { logger } from '@/utils/logger';
 import type { ProgressData } from '@/utils/migration/DataMigrationTypes';
-
 export const validateImportData = (jsonString: string): ProgressData | null => {
   try {
     const parsedJson = JSON.parse(jsonString) as unknown;

@@ -1,5 +1,12 @@
 {
   "cSpell.words": ["crosshairs", "nums", "teammember"],
   "typescript.tsdk": "node_modules/typescript/lib",
-  "markdown.validate.enabled": true
+  "markdown.validate.enabled": true,
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "typescript.suggest.autoImports": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.tsserver.watchOptions": {
+    "excludeDirectories": ["**/node_modules", "**/dist"]
+  }
 }

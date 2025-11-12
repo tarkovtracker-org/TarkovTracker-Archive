@@ -1,26 +1,23 @@
-import { vi } from 'vitest';
-import { firestoreMock, collectionOverrides } from '../setup.js';
-
-type MockFn = ReturnType<typeof vi.fn>;
-
+import { vi, type Mock } from 'vitest';
+import { firestoreMock, collectionOverrides } from '../setup';
+type ViMock<T extends (...args: any[]) => any = (...args: any[]) => any> = Mock<T>;
+type AnyMock = ViMock;
 type FirestoreDocRef = {
   id: string;
   path: string;
-  get: MockFn;
-  set: MockFn;
-  update: MockFn;
-  delete: MockFn;
+  get: AnyMock;
+  set: AnyMock;
+  update: AnyMock;
+  delete: AnyMock;
 };
-
 type TokenCollection = {
-  doc: MockFn;
-  add: MockFn;
-  where: MockFn;
-  orderBy: MockFn;
-  limit: MockFn;
-  get: MockFn;
+  doc: ViMock<(docId: string) => FirestoreDocRef>;
+  add: AnyMock;
+  where: AnyMock;
+  orderBy: AnyMock;
+  limit: AnyMock;
+  get: AnyMock;
 };
-
 /**
  * Helper to create token collection mocks with override capabilities
  * Returns a restore function to clean up the mock after the test
@@ -29,16 +26,12 @@ export const withTokenCollectionMock = (mutate: (collection: TokenCollection) =>
   const originalImpl = firestoreMock.collection.getMockImplementation() as (
     name: string
   ) => TokenCollection;
-
   if (!originalImpl) {
     throw new Error('Firestore collection mock implementation is missing');
   }
-
   const collectionMock = originalImpl('token');
   mutate(collectionMock);
-
   collectionOverrides.set('token', collectionMock);
-
   return {
     collectionMock,
     restore: () => {
@@ -46,7 +39,6 @@ export const withTokenCollectionMock = (mutate: (collection: TokenCollection) =>
     },
   };
 };
-
 /**
  * Factory to create a mock token with default values
  */
@@ -59,7 +51,6 @@ export const createMockToken = (overrides = {}) => ({
   createdAt: { toDate: () => new Date() },
   ...overrides,
 });
-
 /**
  * Factory to create mock transaction for Firestore operations
  */
@@ -71,10 +62,8 @@ export const createMockTransaction = (overrides = {}) => {
     delete: vi.fn(),
     create: vi.fn(),
   };
-
   return { ...defaultTransaction, ...overrides };
 };
-
 /**
  * Helper to setup deterministic Firestore transaction mock
  */

@@ -41,6 +41,7 @@
     "lint:md:json": "markdownlint --json \"**/*.md\""
   },
   "devDependencies": {
+    "@types/node": "^24.10.0",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",

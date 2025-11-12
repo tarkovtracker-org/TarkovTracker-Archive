@@ -1,5 +1,4 @@
 import type { UserProgressData } from '@/shared_state';
-
 export interface ProgressData {
   level: number;
   gameEdition?: string;
@@ -43,14 +42,12 @@ export interface ProgressData {
   sourceDomain?: string;
   [key: string]: unknown;
 }
-
 export interface ExportObject {
   type: 'tarkovtracker-migration';
   timestamp: string;
   version: number;
   data: ProgressData;
 }
-
 export type TransformedObjectives = UserProgressData['taskObjectives'];
 export type TransformedHideoutParts = UserProgressData['hideoutParts'];
 export type TransformedTraderStandings = UserProgressData['traderStandings'];
