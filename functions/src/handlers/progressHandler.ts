@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { ApiResponse, ApiToken } from '../types/api';
+import type { Request, Response } from 'express';
+import type { ApiResponse, ApiToken } from '../types/api';
 import { ProgressService } from '../services/ProgressService';
 import { ValidationService } from '../services/ValidationService';
 import { asyncHandler } from '../middleware/errorHandler';

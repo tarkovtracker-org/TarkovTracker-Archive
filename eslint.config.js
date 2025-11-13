@@ -16,6 +16,8 @@ export default [
       '**/node_modules/**',
       'firebase-export-*/**',
       'functions/openapi/**',
+      // Legacy test infra slated for removal after Phase 2
+      'functions/test/setup.ts',
       'bmad/**',
       'frontend/public/**',
       'frontend/playwright-report/**',

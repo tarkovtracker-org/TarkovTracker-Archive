@@ -203,7 +203,7 @@
   const { t } = useI18n({ useScope: 'global' });
   const currentStationLevel = computed(() => getHideoutLevelFor(props.station.id, 'self') || 0);
   const highlightClasses = computed(() => {
-    let classes = {};
+    const classes = {};
     if (currentStationLevel.value > 0) {
       classes['highlight-secondary'] = true;
     } else {
@@ -255,7 +255,7 @@
   const moduleStatus = ref('');
   const upgradeStation = () => {
     // Store next level to a variable because it can change mid-function
-    let upgradeLevel = nextLevel.value;
+    const upgradeLevel = nextLevel.value;
     tarkovStore.setHideoutModuleComplete(upgradeLevel.id);
     // For each objective, mark it as complete
     upgradeLevel.itemRequirements.forEach((o) => {
@@ -269,7 +269,7 @@
   };
   const downgradeStation = () => {
     // Store current level to a variable because it can change mid-function
-    let downgradeLevel = currentLevel.value;
+    const downgradeLevel = currentLevel.value;
     tarkovStore.setHideoutModuleUncomplete(downgradeLevel.id);
     // For each objective, mark it as incomplete
     downgradeLevel.itemRequirements.forEach((o) => {

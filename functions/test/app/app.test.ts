@@ -1,6 +1,6 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createApp } from '../../src/app/app';
-import { resetDb } from '../helpers/emulatorSetup';
+import { createTestSuite } from '../helpers';
 
 // Mock Express and related modules (these are necessary for testing app configuration)
 vi.mock('express', () => ({
@@ -95,13 +95,17 @@ vi.mock('../../src/config/features', () => ({
 }));
 
 describe('Express App Configuration', () => {
-  beforeEach(() => {
+  const suite = createTestSuite('app');
+
+  beforeEach(async () => {
     vi.stubEnv('NODE_ENV', 'test');
   });
 
   beforeEach(async () => {
-    await resetDb();
+    await suite.beforeEach();
   });
+
+  afterEach(suite.afterEach);
 
   it('should create an Express app', async () => {
     const app = await createApp();

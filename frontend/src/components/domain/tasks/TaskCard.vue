@@ -149,7 +149,7 @@
     if (!Array.isArray(children) || !children.length) return [];
     return children
       .map((id) => tasksById.value.get(id))
-      .filter((taskItem) => Boolean(taskItem && taskItem.name))
+      .filter((taskItem) => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,
         name: taskItem.name,
@@ -178,7 +178,7 @@
     if (!relevantRequirementIds.length) return [];
     return relevantRequirementIds
       .map((id) => tasksById.value.get(id))
-      .filter((taskItem) => Boolean(taskItem && taskItem.name))
+      .filter((taskItem) => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,
         name: taskItem.name,

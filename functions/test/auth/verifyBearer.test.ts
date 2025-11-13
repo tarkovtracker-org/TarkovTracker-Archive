@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { verifyBearer } from '../../src/auth/verifyBearer';
-import { resetDb, firestore } from '../helpers/emulatorSetup';
+import { createTestSuite, firestore } from '../helpers';
 
 // Mock logger from firebase-functions since we don't need to test it
 vi.mock('firebase-functions/v2', () => ({
@@ -11,12 +11,13 @@ vi.mock('firebase-functions/v2', () => ({
 }));
 
 describe('verifyBearer Authentication Middleware', () => {
+  const suite = createTestSuite('verifyBearer');
   let mockReq: any;
   let mockRes: any;
   let mockNext: any;
 
   beforeEach(async () => {
-    await resetDb();
+    await suite.beforeEach();
 
     // Setup fresh request/response objects for each test
     mockReq = {
@@ -29,6 +30,8 @@ describe('verifyBearer Authentication Middleware', () => {
     };
     mockNext = vi.fn();
   });
+
+  afterEach(suite.afterEach);
 
   it('should return 401 when no Authorization header is provided', async () => {
     mockReq.get.mockReturnValue(null);

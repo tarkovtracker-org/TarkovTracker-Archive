@@ -68,21 +68,21 @@
   const relativeLocation = computed(() => {
     // Determine the leftmost x position in the array of zone positions
     // Take the bounds of the map and figure out the initial relative position
-    let mapLeft = props.map.svg.bounds[0][0];
-    let mapTop = props.map.svg.bounds[0][1];
-    let mapWidth =
+    const mapLeft = props.map.svg.bounds[0][0];
+    const mapTop = props.map.svg.bounds[0][1];
+    const mapWidth =
       Math.max(props.map.svg.bounds[0][0], props.map.svg.bounds[1][0]) -
       Math.min(props.map.svg.bounds[0][0], props.map.svg.bounds[1][0]);
-    let mapHeight =
+    const mapHeight =
       Math.max(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]) -
       Math.min(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]);
     // Apply coordinate rotation to the outline points
     const coordinateRotation = props.map?.svg?.coordinateRotation || 0;
-    let outlinePercents = [];
+    const outlinePercents = [];
     props.zoneLocation.outline.forEach((outline) => {
       // Get original coordinates
-      let originalX = outline.x;
-      let originalZ = outline.z;
+      const originalX = outline.x;
+      const originalZ = outline.z;
       // Apply coordinate rotation if specified
       let x = originalX;
       let z = originalZ;
@@ -100,35 +100,35 @@
         z = -originalX;
       }
       // Calculate relative values using the coordinate system of the map
-      let relativeLeft = Math.abs(x - mapLeft);
-      let relativeTop = Math.abs(z - mapTop);
+      const relativeLeft = Math.abs(x - mapLeft);
+      const relativeTop = Math.abs(z - mapTop);
       // Calculate relative values relative to the map container
-      let relativeLeftPercent = (relativeLeft / mapWidth) * 100;
-      let relativeTopPercent = (relativeTop / mapHeight) * 100;
+      const relativeLeftPercent = (relativeLeft / mapWidth) * 100;
+      const relativeTopPercent = (relativeTop / mapHeight) * 100;
       outlinePercents.push({
         leftPercent: relativeLeftPercent,
         topPercent: relativeTopPercent,
       });
     });
     // Find the bounds of the outline
-    let leftPercent = outlinePercents.reduce((min, current) => {
+    const leftPercent = outlinePercents.reduce((min, current) => {
       return current.leftPercent < min ? current.leftPercent : min;
     }, outlinePercents[0].leftPercent);
-    let topPercent = outlinePercents.reduce((min, current) => {
+    const topPercent = outlinePercents.reduce((min, current) => {
       return current.topPercent < min ? current.topPercent : min;
     }, outlinePercents[0].topPercent);
-    let rightPercent = outlinePercents.reduce((max, current) => {
+    const rightPercent = outlinePercents.reduce((max, current) => {
       return current.leftPercent > max ? current.leftPercent : max;
     }, outlinePercents[0].leftPercent);
-    let bottomPercent = outlinePercents.reduce((max, current) => {
+    const bottomPercent = outlinePercents.reduce((max, current) => {
       return current.topPercent > max ? current.topPercent : max;
     }, outlinePercents[0].topPercent);
     // Now, calculate the percentages internally to the div based on the bounds
-    let internalPercents = [];
+    const internalPercents = [];
     outlinePercents.forEach((outline) => {
-      let internalLeftPercent =
+      const internalLeftPercent =
         ((outline.leftPercent - leftPercent) / (rightPercent - leftPercent)) * 100;
-      let internalTopPercent =
+      const internalTopPercent =
         ((outline.topPercent - topPercent) / (bottomPercent - topPercent)) * 100;
       internalPercents.push({
         leftPercent: internalLeftPercent,
@@ -136,11 +136,11 @@
       });
     });
     return {
-      leftPercent: leftPercent,
-      topPercent: topPercent,
-      rightPercent: rightPercent,
-      bottomPercent: bottomPercent,
-      internalPercents: internalPercents,
+      leftPercent,
+      topPercent,
+      rightPercent,
+      bottomPercent,
+      internalPercents,
     };
   });
   const zoneStyle = computed(() => {

@@ -42,9 +42,9 @@ export class TestSuiteContext {
    * Setup database with initial data
    * Resets database first to ensure clean state
    */
-  setupDatabase(data: Record<string, Record<string, any>>): void {
-    resetDb();
-    seedDb(data);
+  async setupDatabase(data: Record<string, Record<string, any>>): Promise<void> {
+    await resetDb();
+    await seedDb(data);
   }
 
   /**
@@ -77,11 +77,11 @@ export class TestSuiteContext {
 
   /**
    * Create isolated test data that gets cleaned up
-   * Automatically registers cleanup to reset database
+   * Database is cleared by global afterEach hook, not by this method
+   * This method just seeds the data for the test
    */
-  withDatabase(data: Record<string, Record<string, any>>): void {
-    this.setupDatabase(data);
-    this.addCleanup(() => resetDb());
+  async withDatabase(data: Record<string, Record<string, any>>): Promise<void> {
+    await this.setupDatabase(data);
   }
 
   /**
@@ -137,17 +137,33 @@ export const createTestSuite = (suiteName: string) => {
     suiteName,
 
     /**
-     * Standard beforeEach - resets database and mocks
+     * Standard beforeEach - clears mocks and provides defensive database reset
      * Call this in your beforeEach hook
+     *
+     * NOTE: The global afterEach hook in test/setup.ts is the canonical cleanup.
+     * This resetDb() call is defensive: it ensures a clean slate even if the
+     * global hook is somehow bypassed or a test runs in isolation.
+     * 
+     * In normal operation:
+     * - Global afterEach clears Firestore after the previous test
+     * - This beforeEach provides an extra safety check
+     * - Both together guarantee no state leakage
      */
-    beforeEach: () => {
-      resetDb();
+    beforeEach: async () => {
+      await resetDb();
       vi.clearAllMocks();
     },
 
     /**
-     * Standard afterEach - runs cleanup callbacks
+     * Standard afterEach - runs test-specific cleanup callbacks
      * Call this in your afterEach hook
+     *
+     * This runs custom cleanup callbacks registered via addCleanup() and restores mocks.
+     * 
+     * IMPORTANT: Does NOT clear Firestore - the global afterEach hook in 
+     * test/setup.ts handles that. This keeps cleanup responsibilities clear:
+     * - Global hook: Firestore cleanup (runs for ALL tests)
+     * - This method: Test-specific cleanup (mocks, custom callbacks)
      */
     afterEach: async () => {
       await context.cleanup();
@@ -160,7 +176,7 @@ export const createTestSuite = (suiteName: string) => {
      * @param data - Database state to seed
      */
     withDatabase: (data: Record<string, Record<string, any>>) => {
-      context.withDatabase(data);
+      return context.withDatabase(data);
     },
 
     /**
@@ -276,7 +292,7 @@ export const withTestIsolation = async (
 
   try {
     if (data) {
-      context.setupDatabase(data);
+      await context.setupDatabase(data);
     }
     await testFn();
   } finally {

@@ -170,7 +170,7 @@
   }
   function isHideoutModuleNeeded(need) {
     // If hideoutModule or its id is missing, this need cannot be for a hideout module
-    if (!need.hideoutModule || !need.hideoutModule.id) {
+    if (!need.hideoutModule?.id) {
       return false;
     }
     const moduleCompletionsForModule = moduleCompletions.value?.[need.hideoutModule?.id] || {};
@@ -312,17 +312,17 @@
   const selfCompletedNeed = computed(() => {
     if (props.need.needType == 'taskObjective') {
       const alternativeTaskCompleted = alternativeTasks.value[props.need.taskId]?.some(
-        (altTaskId) => tasksCompletions.value?.[altTaskId]?.['self']
+        (altTaskId) => tasksCompletions.value?.[altTaskId]?.self
       );
       return (
-        tasksCompletions.value?.[props.need.taskId]?.['self'] ||
+        tasksCompletions.value?.[props.need.taskId]?.self ||
         alternativeTaskCompleted ||
-        objectiveCompletions.value?.[props.need.id]?.['self']
+        objectiveCompletions.value?.[props.need.id]?.self
       );
     } else if (props.need.needType == 'hideoutModule') {
       return (
-        moduleCompletions.value?.[props.need.hideoutModule.id]?.['self'] ||
-        modulePartCompletions.value?.[props.need.id]?.['self']
+        moduleCompletions.value?.[props.need.hideoutModule.id]?.self ||
+        modulePartCompletions.value?.[props.need.id]?.self
       );
     } else {
       return false;
@@ -347,14 +347,14 @@
     }
   });
   const teamNeeds = computed(() => {
-    let needingUsers = [];
+    const needingUsers = [];
     if (props.need.needType == 'taskObjective') {
       // Find all of the users that need this objective
       Object.entries(objectiveCompletions.value?.[props.need.id] || {}).forEach(
         ([user, completed]) => {
           if (!completed && !tasksCompletions.value?.[props.need.taskId]?.[user]) {
             needingUsers.push({
-              user: user,
+              user,
               count: progressStore.teamStores[user]?.getObjectiveCount(props.need.id) ?? 0,
             });
           }
@@ -366,7 +366,7 @@
         ([user, completed]) => {
           if (!completed) {
             needingUsers.push({
-              user: user,
+              user,
               count: progressStore.teamStores[user]?.getHideoutPartCount(props.need.id) ?? 0,
             });
           }

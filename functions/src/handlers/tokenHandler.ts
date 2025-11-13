@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { ApiToken } from '../types/api';
+import type { Request, Response } from 'express';
+import type { ApiToken } from '../types/api';
 import { asyncHandler } from '../middleware/errorHandler';
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;

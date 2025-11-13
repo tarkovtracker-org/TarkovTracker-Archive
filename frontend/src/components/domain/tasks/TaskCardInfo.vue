@@ -91,7 +91,7 @@
     if (!Array.isArray(successors) || !successors.length) return [];
     return successors
       .map((id) => (tasks.value || []).find((taskItem) => taskItem.id === id))
-      .filter((taskItem): taskItem is Task => Boolean(taskItem && taskItem.name))
+      .filter((taskItem): taskItem is Task => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,
         name: taskItem.name ?? '',
@@ -118,7 +118,7 @@
     if (!relevantRequirementIds.length) return [];
     return relevantRequirementIds
       .map((id) => (tasks.value || []).find((taskItem) => taskItem.id === id))
-      .filter((taskItem): taskItem is Task => Boolean(taskItem && taskItem.name))
+      .filter((taskItem): taskItem is Task => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,
         name: taskItem.name ?? '',

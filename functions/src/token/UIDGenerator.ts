@@ -64,7 +64,7 @@ export default class UIDGenerator {
     }
     // Simple seeded pseudo-random generator
     const seed = this.seed + this.counter++;
-    let hash = this.hashCode(seed.toString());
+    const hash = this.hashCode(seed.toString());
     
     let result = '';
     const chars = this.base || UIDGenerator.BASE62;

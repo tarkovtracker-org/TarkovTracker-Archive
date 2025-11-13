@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { resetDb, firestore } from '../helpers/emulatorSetup';
+import { createTestSuite, firestore } from '../helpers';
 
 const mockGraphqlRequest = vi.fn();
 const mockGql = vi.fn((query: string) => query);
@@ -52,7 +52,7 @@ describe('Scheduled Functions', () => {
   let updateTarkovDataImplInternal: any;
 
   beforeEach(async () => {
-    await resetDb();
+    // Global afterEach in test/setup.ts handles Firestore cleanup
     vi.clearAllMocks();
     setupGraphQLMocks();
 

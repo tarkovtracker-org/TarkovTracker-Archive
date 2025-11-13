@@ -155,7 +155,7 @@
       );
       const result = await response.json();
       if (!response.ok) {
-        let backendMsg = result.error || t('page.team.card.manageteam.membercard.kick_error');
+        const backendMsg = result.error || t('page.team.card.manageteam.membercard.kick_error');
         kickTeammateResult.value = backendMsg;
         kickTeammateSnackbar.value = true;
         throw new Error(backendMsg);
@@ -168,7 +168,7 @@
       kickTeammateResult.value = t('page.team.card.manageteam.membercard.kick_success');
       kickTeammateSnackbar.value = true;
     } catch (error) {
-      let backendMsg = error?.message || error?.data?.message || error?.toString();
+      const backendMsg = error?.message || error?.data?.message || error?.toString();
       kickTeammateResult.value = backendMsg || t('page.team.card.manageteam.membercard.kick_error');
       logger.error('[TeammemberCard.vue] Error kicking teammate:', error);
       kickTeammateSnackbar.value = true;

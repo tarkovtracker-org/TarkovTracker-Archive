@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { formatProgress } from '../../src/progress/progressUtils';
+import { createTestSuite } from '../helpers';
 describe('progressUtils formatProgress', () => {
+  const suite = createTestSuite('progress/progressUtils');
+
+  beforeEach(suite.beforeEach);
+  afterEach(suite.afterEach);
+
   it('formats legacy progress data and applies faction/ hideout rules', () => {
     const progressData = {
       currentGameMode: 'pvp',

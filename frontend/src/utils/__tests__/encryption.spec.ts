@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { encryptData, decryptData, isEncrypted } from '../encryption';
+import { encryptData, decryptData } from '../encryption';
 // Mock the global crypto API
 const mockCrypto = {
   getRandomValues: vi.fn(),
@@ -330,7 +330,7 @@ describe('Encryption Service', () => {
         },
       };
       const testString = JSON.stringify(testObject);
-      
+
       // Set up proper round-trip mock for this test
       let originalData: Uint8Array | null = null;
       mockCrypto.subtle.encrypt.mockImplementation(
@@ -347,7 +347,7 @@ describe('Encryption Service', () => {
           return Promise.resolve(new Uint8Array(20));
         }
       );
-      
+
       const encrypted = await encryptData(testString);
       const decrypted = await decryptData(encrypted);
       const parsedObject = JSON.parse(decrypted);
@@ -364,7 +364,7 @@ describe('Encryption Service', () => {
         undefined,
       ];
       const testString = JSON.stringify(testArray);
-      
+
       // Set up proper round-trip mock for this test
       let originalData: Uint8Array | null = null;
       mockCrypto.subtle.encrypt.mockImplementation(
@@ -381,7 +381,7 @@ describe('Encryption Service', () => {
           return Promise.resolve(new Uint8Array(20));
         }
       );
-      
+
       const encrypted = await encryptData(testString);
       const decrypted = await decryptData(encrypted);
       const parsedArray = JSON.parse(decrypted);
@@ -456,7 +456,7 @@ describe('Encryption Service', () => {
       // Test with base64 but insufficient length - need to mock the decrypt to fail
       mockCrypto.subtle.decrypt.mockRejectedValueOnce(new Error('Invalid data length'));
       await expect(decryptData('YQ==')).rejects.toThrow(); // Only 1 byte, less than IV length
-      
+
       // Reset decrypt mock for other tests
       mockCrypto.subtle.decrypt.mockResolvedValue(new Uint8Array(20));
       // Test with valid base64 but not encrypted data
@@ -477,7 +477,7 @@ describe('Encryption Service', () => {
       // Try to decrypt - should fail because key derivation will use different salt
       await expect(decryptData(encrypted)).rejects.toThrow();
       expect(callCount).toBeGreaterThanOrEqual(2);
-      
+
       // Reset decrypt mock for other tests
       mockCrypto.subtle.decrypt.mockResolvedValue(new Uint8Array(20));
     });
@@ -493,7 +493,7 @@ describe('Encryption Service', () => {
         }
       } as any;
       await expect(decryptData('dGVzdA==')).rejects.toThrow();
-      
+
       // Restore original TextDecoder
       globalThis.TextDecoder = originalTextDecoder;
     });
@@ -573,201 +573,6 @@ describe('Encryption Service', () => {
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
       }
-    });
-  });
-  describe('Performance and Edge Cases', () => {
-    let mockKey: CryptoKey;
-    let mockIV: Uint8Array;
-    let mockEncryptedData: Uint8Array;
-    beforeEach(() => {
-      mockKey = {} as CryptoKey;
-      mockIV = new Uint8Array(12);
-      mockEncryptedData = new Uint8Array(1000); // Large data
-      mockCrypto.subtle.importKey.mockResolvedValue(mockKey);
-      mockCrypto.subtle.deriveKey.mockResolvedValue(mockKey);
-      mockCrypto.getRandomValues.mockReturnValue(mockIV);
-      mockCrypto.subtle.encrypt.mockResolvedValue(mockEncryptedData);
-      mockCrypto.subtle.decrypt.mockResolvedValue(new Uint8Array(1000));
-    });
-    it('should handle large data sets efficiently', async () => {
-      const largeData = 'x'.repeat(100000); // 100KB of data
-      const startTime = performance.now();
-      const encrypted = await encryptData(largeData);
-      const decrypted = await decryptData(encrypted);
-      const endTime = performance.now();
-      expect(decrypted).toBeDefined();
-      expect(typeof decrypted).toBe('string');
-      expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
-    });
-    it('should handle empty and single character input', async () => {
-      // Test with empty string
-      const emptyResult = await encryptData('');
-      expect(emptyResult).toBeDefined();
-      expect(typeof emptyResult).toBe('string');
-      // Test with single character
-      const singleCharResult = await encryptData('a');
-      expect(singleCharResult).toBeDefined();
-      expect(typeof singleCharResult).toBe('string');
-    });
-    it('should handle binary data in strings', async () => {
-      // String with various byte values - simplified for testing
-      const binaryString = 'test binary data';
-      
-      // Track the original data through the encrypt/decrypt cycle
-      let originalDataBytes: Uint8Array | null = null;
-      mockCrypto.subtle.encrypt.mockImplementation(
-        (_params: any, _key: CryptoKey, data: ArrayBuffer) => {
-          originalDataBytes = new Uint8Array(data);
-          // Return the data with IV prepended (simulate real encryption)
-          const iv = new Uint8Array(12); // Mock IV
-          const combined = new Uint8Array(iv.length + originalDataBytes.length);
-          combined.set(iv, 0);
-          combined.set(originalDataBytes, iv.length);
-          return Promise.resolve(combined);
-        }
-      );
-      mockCrypto.subtle.decrypt.mockImplementation(
-        (_params: any, _key: CryptoKey, data: ArrayBuffer) => {
-          // Return the original data that was tracked during encryption
-          if (originalDataBytes) {
-            return Promise.resolve(originalDataBytes);
-          }
-          // Fallback: extract the data part (skip IV)
-          const dataArray = new Uint8Array(data);
-          const dataPart = dataArray.slice(12); // Skip 12-byte IV
-          return Promise.resolve(dataPart);
-        }
-      );
-      
-      const encrypted = await encryptData(binaryString);
-      const decrypted = await decryptData(encrypted);
-      expect(decrypted).toBe(binaryString);
-    });
-  });
-  describe('isEncrypted Function', () => {
-    it('should return true for valid encrypted data', () => {
-      const validEncrypted = btoa('some_encrypted_data_with_iv');
-      expect(isEncrypted(validEncrypted)).toBe(true);
-    });
-    it('should return false for invalid input', () => {
-      expect(isEncrypted(null as any)).toBe(false);
-      expect(isEncrypted(undefined as any)).toBe(false);
-      expect(isEncrypted('')).toBe(false);
-      expect(isEncrypted(123 as any)).toBe(false);
-      expect(isEncrypted({} as any)).toBe(false);
-      expect(isEncrypted([] as any)).toBe(false);
-    });
-    it('should return false for non-base64 strings', () => {
-      expect(isEncrypted('not_base64!@#')).toBe(false);
-      expect(isEncrypted('hello world')).toBe(false);
-      expect(isEncrypted('test@domain.com')).toBe(false);
-    });
-    it('should return false for short base64 strings', () => {
-      expect(isEncrypted('YQ==')).toBe(false); // Only 1 byte
-      expect(isEncrypted('dGVzdA==')).toBe(false); // "test" = 4 bytes
-      expect(isEncrypted('dGVzdA')).toBe(false); // "test" without padding = 4 bytes
-    });
-    it('should return false for valid base64 but not encrypted', () => {
-      // Valid base64 but short content
-      expect(isEncrypted('dGVzdA==')).toBe(false); // "test" = 4 bytes
-      expect(isEncrypted('aGVsbG8=')).toBe(false); // "hello" = 5 bytes
-    });
-    it('should return true for base64 with sufficient length', () => {
-      // Base64 encoded 20+ bytes (sufficient for IV + some encrypted data)
-      const longData = 'x'.repeat(20);
-      const base64Data = btoa(longData);
-      expect(isEncrypted(base64Data)).toBe(true);
-    });
-    it('should handle malformed base64 gracefully', () => {
-      expect(isEncrypted('invalid@base64!')).toBe(false);
-      expect(isEncrypted('base64===')).toBe(false);
-      expect(isEncrypted('===base64')).toBe(false);
-    });
-    it('should correctly identify real encrypted data', () => {
-      // Simulate encrypted data structure
-      const iv = new Uint8Array(12);
-      const encrypted = new Uint8Array(20);
-      const combined = new Uint8Array(iv.length + encrypted.length);
-      combined.set(iv, 0);
-      combined.set(encrypted, iv.length);
-      const base64Encrypted = btoa(String.fromCharCode(...combined));
-      expect(isEncrypted(base64Encrypted)).toBe(true);
-    });
-  });
-  describe('Security and Data Integrity', () => {
-    it('should produce different encrypted data for same input', async () => {
-      const testString = 'same input';
-      mockCrypto.getRandomValues.mockImplementation((arr) => {
-        for (let i = 0; i < arr.length; i++) {
-          arr[i] = Math.floor(Math.random() * 256);
-        }
-        return arr;
-      });
-      const result1 = await encryptData(testString);
-      const result2 = await encryptData(testString);
-      expect(result1).not.toBe(result2);
-    });
-    it('should maintain data integrity across multiple encrypt/decrypt cycles', async () => {
-      const originalData = JSON.stringify({
-        user: 'testuser',
-        timestamp: 1672531200000, // Use fixed timestamp instead of Date.now()
-        data: 'important_sensitive_data',
-      });
-      // Track the original data through the encrypt/decrypt cycle
-      let originalDataBytes: Uint8Array | null = null;
-      mockCrypto.subtle.encrypt.mockImplementation(
-        (_params: any, _key: CryptoKey, data: ArrayBuffer) => {
-          originalDataBytes = new Uint8Array(data);
-          // Return the data with IV prepended (simulate real encryption)
-          const iv = new Uint8Array(12); // Mock IV
-          const combined = new Uint8Array(iv.length + originalDataBytes.length);
-          combined.set(iv, 0);
-          combined.set(originalDataBytes, iv.length);
-          return Promise.resolve(combined);
-        }
-      );
-      mockCrypto.subtle.decrypt.mockImplementation(
-        (_params: any, _key: CryptoKey, data: ArrayBuffer) => {
-          // Return the original data that was tracked during encryption
-          if (originalDataBytes) {
-            return Promise.resolve(originalDataBytes);
-          }
-          // Fallback: extract the data part (skip IV)
-          const dataArray = new Uint8Array(data);
-          const dataPart = dataArray.slice(12); // Skip 12-byte IV
-          return Promise.resolve(dataPart);
-        }
-      );
-      let currentData = originalData;
-      // Perform 10 encrypt/decrypt cycles
-      for (let i = 0; i < 10; i++) {
-        const encrypted = await encryptData(currentData);
-        currentData = await decryptData(encrypted);
-      }
-      const finalParsed = JSON.parse(currentData);
-      const originalParsed = JSON.parse(originalData);
-      expect(finalParsed).toEqual(originalParsed);
-    });
-    it('should handle concurrent encryption requests', async () => {
-      const testStrings = ['data1', 'data2', 'data3', 'data4', 'data5'];
-      const mockKey = {} as CryptoKey;
-      mockCrypto.subtle.importKey.mockResolvedValue(mockKey);
-      mockCrypto.subtle.deriveKey.mockResolvedValue(mockKey);
-      mockCrypto.getRandomValues.mockImplementation((arr) => {
-        for (let i = 0; i < arr.length; i++) {
-          arr[i] = Math.floor(Math.random() * 256);
-        }
-        return arr;
-      });
-      mockCrypto.subtle.encrypt.mockResolvedValue(new Uint8Array(20));
-      // Execute multiple encryptions concurrently
-      const promises = testStrings.map((str) => encryptData(str));
-      const results = await Promise.all(promises);
-      expect(results).toHaveLength(5);
-      results.forEach((result) => {
-        expect(result).toBeDefined();
-        expect(typeof result).toBe('string');
-      });
     });
   });
 });

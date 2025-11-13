@@ -51,7 +51,7 @@
     },
   });
   const highlightClasses = computed(() => {
-    let classes = {};
+    const classes = {};
     classes[`highlight-${props.highlightColor}`] = true;
     classes[`corner-highlight`] = true;
     classes[`elevation-3`] = true;

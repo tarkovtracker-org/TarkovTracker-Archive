@@ -1,6 +1,6 @@
 import functions from 'firebase-functions';
-import { Request, Response } from 'express';
-import admin from 'firebase-admin'; // Although not directly used, keep for consistency or potential future use
+import type { Request, Response } from 'express';
+import type admin from 'firebase-admin'; // Although not directly used, keep for consistency or potential future use
 // Define minimal interface for the token data attached by middleware
 // Duplicated from auth.ts/index.ts for simplicity, consider shared types
 interface ApiTokenData {

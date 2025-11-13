@@ -1,315 +1,126 @@
-import { logger } from 'firebase-functions/v2';
-import { Firestore, DocumentReference, FieldValue, Timestamp } from 'firebase-admin/firestore';
-import UIDGenerator from '../token/UIDGenerator';
-import { TeamDocument, SystemDocument, FormattedProgress } from '../types/api';
-import { errors } from '../middleware/errorHandler';
-import { formatProgress } from '../progress/progressUtils';
-import { getTaskData, getHideoutData } from '../utils/dataLoaders';
+/**
+ * TeamService - Main aggregator for team operations
+ * 
+ * This service provides a unified interface for all team-related operations
+ * by delegating to focused modules:
+ * 
+ * - teamCore: Team creation and core operations
+ * - teamMembership: Joining and leaving teams
+ * - teamProgress: Fetching team member progress
+ * 
+ * Uses repository pattern for better testability:
+ * - Can be tested with fake repositories (no Firestore emulator needed)
+ * - Clear separation between business logic and data access
+ * - Easier to mock edge cases and transaction failures
+ * 
+ * Architecture:
+ * - Each module is < 200 LOC with clear responsibilities
+ * - All transactional behavior is preserved
+ * - Public API remains unchanged for backward compatibility
+ */
+
+import type { Firestore } from 'firebase-admin/firestore';
 import { createLazyFirestore } from '../utils/factory';
-interface CreateTeamData {
-  password?: string;
-  maximumMembers?: number;
-}
-interface JoinTeamData {
-  id: string;
-  password: string;
-}
-interface UserDocData {
-  teamHide?: Record<string, boolean>;
-}
+import type { ITeamRepository } from '../repositories/ITeamRepository';
+import { FirestoreTeamRepository } from '../repositories/FirestoreTeamRepository';
+
+// Import focused modules
+import {
+  createTeam as createTeamImpl,
+  type CreateTeamData,
+  type CreateTeamResult,
+} from './team/teamCore';
+import {
+  joinTeam as joinTeamImpl,
+  leaveTeam as leaveTeamImpl,
+  type JoinTeamData,
+  type JoinTeamResult,
+  type LeaveTeamResult,
+} from './team/teamMembership';
+import {
+  getTeamProgress as getTeamProgressImpl,
+  type TeamProgressResult,
+} from './team/teamProgress';
+
+// Re-export types for public API
+export type { CreateTeamData, JoinTeamData };
+
+/**
+ * Service for managing team operations
+ * 
+ * This class is a thin aggregator that delegates to focused modules
+ * while maintaining the same public API for backward compatibility.
+ */
 export class TeamService {
+  private repository: ITeamRepository;
   private getDb: () => Firestore;
-  constructor() {
+
+  /**
+   * Create a new TeamService
+   * @param repository - Optional repository implementation (defaults to Firestore)
+   */
+  constructor(repository?: ITeamRepository) {
     this.getDb = createLazyFirestore();
+    // Use provided repository or create default Firestore implementation
+    this.repository = repository || new FirestoreTeamRepository(this.getDb());
   }
 
+  /**
+   * For backward compatibility - direct database access
+   * @deprecated Use repository methods instead
+   */
   private get db(): Firestore {
     return this.getDb();
   }
+
   /**
    * Creates a new team with proper transaction safety
+   * 
+   * Delegates to teamCore module
+   * 
+   * @param userId - ID of the user creating the team
+   * @param data - Team creation data (password, maximumMembers)
+   * @returns Object with team ID and password
    */
-  async createTeam(
-    userId: string,
-    data: CreateTeamData
-  ): Promise<{ team: string; password: string }> {
-    try {
-      let createdTeamId = '';
-      let finalPassword = '';
-      const db = this.getDb();
-      await db.runTransaction(async (transaction) => {
-        const systemRef = db
-          .collection('system')
-          .doc(userId) as DocumentReference<SystemDocument>;
-        const systemDoc = await transaction.get(systemRef);
-        const systemData = systemDoc.data();
-        // Check if user is already in a team
-        if (systemData?.team) {
-          throw errors.conflict('User is already in a team');
-        }
-        // Check cooldown period
-        if (systemData?.lastLeftTeam) {
-          const now = Timestamp.now();
-          const fiveMinutesAgo = Timestamp.fromMillis(
-            now.toMillis() - 5 * 60 * 1000
-          );
-          if (systemData.lastLeftTeam > fiveMinutesAgo) {
-            throw errors.forbidden(
-              'You must wait 5 minutes after leaving a team to create a new one'
-            );
-          }
-        }
-        // Generate team ID and password
-        const uidgen = new UIDGenerator(32);
-        createdTeamId = await uidgen.generate();
-        finalPassword = data.password || (await this.generateSecurePassword());
-        const teamRef = db
-          .collection('team')
-          .doc(createdTeamId) as DocumentReference<TeamDocument>;
-        // Create team document
-        transaction.set(teamRef, {
-          owner: userId,
-          password: finalPassword,
-          maximumMembers: data.maximumMembers || 10,
-          members: [userId],
-          createdAt: FieldValue.serverTimestamp(),
-        });
-        // Update user's system document
-        transaction.set(systemRef, { team: createdTeamId }, { merge: true });
-      });
-      logger.log('Team created successfully', {
-        owner: userId,
-        team: createdTeamId,
-        maximumMembers: data.maximumMembers || 10,
-      });
-      return { team: createdTeamId, password: finalPassword };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'ApiError') {
-        throw error;
-      }
-      logger.error('Error creating team:', {
-        error: error instanceof Error ? error.message : String(error),
-        owner: userId,
-      });
-      throw errors.internal('Failed to create team');
-    }
+  async createTeam(userId: string, data: CreateTeamData): Promise<CreateTeamResult> {
+    return createTeamImpl(this.repository, userId, data);
   }
+
   /**
    * Join an existing team
+   * 
+   * Delegates to teamMembership module
+   * 
+   * @param userId - ID of the user joining
+   * @param data - Join data (team ID and password)
+   * @returns Object indicating success
    */
-  async joinTeam(userId: string, data: JoinTeamData): Promise<{ joined: boolean }> {
-    if (!data.id || !data.password) {
-      throw errors.badRequest('Team ID and password are required');
-    }
-    try {
-      const db = this.getDb();
-      await db.runTransaction(async (transaction) => {
-        const systemRef = db
-          .collection('system')
-          .doc(userId) as DocumentReference<SystemDocument>;
-        const systemDoc = await transaction.get(systemRef);
-        const systemData = systemDoc.data();
-        // Check if user is already in a team
-        if (systemData?.team) {
-          throw errors.conflict('User is already in a team');
-        }
-        const teamRef = db.collection('team').doc(data.id) as DocumentReference<TeamDocument>;
-        const teamDoc = await transaction.get(teamRef);
-        if (!teamDoc.exists) {
-          throw errors.notFound('Team does not exist');
-        }
-        const teamData = teamDoc.data()!;
-        // Validate password
-        if (teamData.password !== data.password) {
-          throw errors.unauthorized('Incorrect team password');
-        }
-        // Check if team is full
-        const currentMembers = teamData.members?.length || 0;
-        if (currentMembers >= (teamData.maximumMembers || 10)) {
-          throw errors.forbidden('Team is full');
-        }
-        // Add user to team
-        transaction.update(teamRef, {
-          members: FieldValue.arrayUnion(userId),
-        });
-        // Update user's system document
-        transaction.set(systemRef, { team: data.id }, { merge: true });
-      });
-      logger.log('User joined team successfully', {
-        user: userId,
-        team: data.id,
-      });
-      return { joined: true };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'ApiError') {
-        throw error;
-      }
-      logger.error('Error joining team:', {
-        error: error instanceof Error ? error.message : String(error),
-        user: userId,
-        team: data.id,
-      });
-      throw errors.internal('Failed to join team');
-    }
+  async joinTeam(userId: string, data: JoinTeamData): Promise<JoinTeamResult> {
+    return joinTeamImpl(this.repository, userId, data);
   }
+
   /**
    * Leave current team
+   * 
+   * Delegates to teamMembership module
+   * 
+   * @param userId - ID of the user leaving
+   * @returns Object indicating success
    */
-  async leaveTeam(userId: string): Promise<{ left: boolean }> {
-    try {
-      let originalTeamId: string | null = null;
-      const db = this.getDb();
-      await db.runTransaction(async (transaction) => {
-        const systemRef = db
-          .collection('system')
-          .doc(userId) as DocumentReference<SystemDocument>;
-        const systemDoc = await transaction.get(systemRef);
-        const systemData = systemDoc.data();
-        originalTeamId = systemData?.team || null;
-        if (!originalTeamId) {
-          throw errors.badRequest('User is not in a team');
-        }
-        const teamRef = db
-          .collection('team')
-          .doc(originalTeamId) as DocumentReference<TeamDocument>;
-        const teamDoc = await transaction.get(teamRef);
-        const teamData = teamDoc.data();
-        if (teamData?.owner === userId) {
-          // If user is owner, disband team and remove all members
-          if (teamData.members) {
-            teamData.members.forEach((memberId: string) => {
-              const memberSystemRef = db.collection('system').doc(memberId);
-              transaction.set(
-                memberSystemRef,
-                {
-                  team: null,
-                  lastLeftTeam: FieldValue.serverTimestamp(),
-                },
-                { merge: true }
-              );
-            });
-          }
-          transaction.delete(teamRef);
-        } else {
-          // Remove user from team members
-          transaction.update(teamRef, {
-            members: FieldValue.arrayRemove(userId),
-          });
-          // Update user's system document
-          transaction.set(
-            systemRef,
-            {
-              team: null,
-              lastLeftTeam: FieldValue.serverTimestamp(),
-            },
-            { merge: true }
-          );
-        }
-      });
-      logger.log('User left team successfully', {
-        user: userId,
-        team: originalTeamId,
-      });
-      return { left: true };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'ApiError') {
-        throw error;
-      }
-      logger.error('Error leaving team:', {
-        error: error instanceof Error ? error.message : String(error),
-        user: userId,
-      });
-      throw errors.internal('Failed to leave team');
-    }
+  async leaveTeam(userId: string): Promise<LeaveTeamResult> {
+    return leaveTeamImpl(this.repository, userId);
   }
+
   /**
    * Get team progress for all members
+   * 
+   * Delegates to teamProgress module
+   * 
+   * @param userId - ID of the user requesting progress
+   * @param gameMode - Game mode to fetch progress for (pvp/pve)
+   * @returns Object with progress data and metadata
    */
-  async getTeamProgress(
-    userId: string,
-    gameMode: string = 'pvp'
-  ): Promise<{
-    data: FormattedProgress[];
-    meta: { self: string; hiddenTeammates: string[] };
-  }> {
-    try {
-      // Get user's team and visibility settings
-      const db = this.getDb();
-      const [systemDoc, userDoc, hideoutData, taskData] = await Promise.all([
-        (db.collection('system').doc(userId) as DocumentReference<SystemDocument>).get(),
-        (db.collection('user').doc(userId) as DocumentReference<UserDocData>).get(),
-        getHideoutData(),
-        getTaskData(),
-      ]);
-      if (!hideoutData || !taskData) {
-        throw errors.internal('Failed to load essential game data');
-      }
-      const systemData = systemDoc.data();
-      const userData = userDoc.data();
-      const teamId = systemData?.team;
-      const hiddenTeammatesMap = userData?.teamHide || {};
-      let memberIds = [userId]; // Start with self
-      // Get team members if in a team
-      if (teamId) {
-        const db = this.getDb();
-        const teamRef = db.collection('team').doc(teamId) as DocumentReference<TeamDocument>;
-        const teamDoc = await teamRef.get();
-        if (teamDoc.exists) {
-          const teamData = teamDoc.data()!;
-          memberIds = [...new Set([...(teamData.members || []), userId])];
-        }
-      }
-      // Fetch progress for all members
-      const progressPromises = memberIds.map((memberId) =>
-        db.collection('progress').doc(memberId).get()
-      );
-      const progressDocs = await Promise.all(progressPromises);
-      // Format progress for each member
-      const teamProgress = progressDocs
-        .map((doc, index) => {
-          const memberId = memberIds[index];
-          if (!doc.exists) {
-            logger.warn(`Progress document not found for member ${memberId}`);
-            return null;
-          }
-          return formatProgress(doc.data(), memberId, hideoutData, taskData, gameMode);
-        })
-        .filter((progress): progress is FormattedProgress => progress !== null);
-      // Determine hidden teammates
-      const hiddenTeammates = memberIds.filter((id) => id !== userId && hiddenTeammatesMap[id]);
-      return {
-        data: teamProgress,
-        meta: {
-          self: userId,
-          hiddenTeammates,
-        },
-      };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'ApiError') {
-        throw error;
-      }
-      logger.error('Error fetching team progress:', {
-        error: error instanceof Error ? error.message : String(error),
-        userId,
-      });
-      throw errors.internal('Failed to retrieve team progress');
-    }
-  }
-  /**
-   * Generates a secure password for team creation
-   */
-  private async generateSecurePassword(): Promise<string> {
-    try {
-      const passGen = new UIDGenerator(48, UIDGenerator.BASE62);
-      const generated = await passGen.generate();
-      if (generated && generated.length >= 4) {
-        return generated;
-      }
-      logger.warn('Generated password was invalid, using fallback');
-      return 'DEBUG_PASS_123';
-    } catch (error) {
-      logger.error('Error during password generation:', error);
-      return 'ERROR_PASS_456';
-    }
+  async getTeamProgress(userId: string, gameMode: string = 'pvp'): Promise<TeamProgressResult> {
+    return getTeamProgressImpl(this.repository, userId, gameMode);
   }
 }

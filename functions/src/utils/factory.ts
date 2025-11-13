@@ -1,3 +1,6 @@
+import admin from 'firebase-admin';
+import { getFirebaseProjectId } from '../config/project';
+
 /**
  * Returns a memoized initializer for synchronous singletons.
  *
@@ -80,7 +83,7 @@ export const createLazyFirestore = () => {
       // Initialize if not already done
       if (admin.apps.length === 0) {
         admin.initializeApp({
-          projectId: process.env.GCLOUD_PROJECT ?? 'test-project',
+          projectId: getFirebaseProjectId(),
         });
       }
       return admin.firestore();
@@ -88,7 +91,7 @@ export const createLazyFirestore = () => {
     // Regular initialization for non-emulator (production/development)
     if (admin.apps.length === 0) {
       admin.initializeApp({
-        projectId: process.env.GCLOUD_PROJECT ?? 'demo-test',
+        projectId: getFirebaseProjectId(),
       });
     }
     return admin.firestore();
@@ -110,7 +113,7 @@ export const createLazyAuth = () => {
     // Initialize if not already done
     if (admin.apps.length === 0) {
       admin.initializeApp({
-        projectId: process.env.GCLOUD_PROJECT ?? 'demo-test',
+        projectId: getFirebaseProjectId(),
       });
     }
     return admin.auth();
@@ -126,4 +129,3 @@ export const createLazyFirestoreForTests = () => {
     return admin.firestore();
   });
 };
-import admin from 'firebase-admin';

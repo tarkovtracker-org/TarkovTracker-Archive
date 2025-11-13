@@ -301,10 +301,10 @@
       const errorData = await response.json();
       throw new Error(errorData.error || 'HTTP request failed');
     }
-    return await response.json();
+    return response.json();
   };
   const createToken = async () => {
-    let { valid } = await newTokenForm.value.validate();
+    const { valid } = await newTokenForm.value.validate();
     if (!valid) {
       if (selectedPermissionsCount.value == 0) {
         selectOneError.value = true;
@@ -338,7 +338,7 @@
         // If callable fails (likely due to CORS), use HTTP endpoint
         result = await createTokenWithHttp(tokenData);
       }
-      if (!result || !result.token) {
+      if (!result?.token) {
         logger.error('Token not found in response. Expected: result.token');
         logger.error('Available response data:', Object.keys(result || {}));
         throw new Error('Token creation failed: No token returned from server');

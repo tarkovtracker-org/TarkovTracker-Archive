@@ -1,7 +1,7 @@
 import functions from 'firebase-functions';
 import admin from 'firebase-admin';
-import { Request, Response, NextFunction } from 'express';
-import { Firestore, DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
+import type { Request, Response, NextFunction } from 'express';
+import type { Firestore, DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
 import { createLazyFirestore } from '../utils/factory';
 // Define minimal interface for the token document data expected
 // Duplicated from index.ts for simplicity, consider shared types for larger projects
@@ -70,7 +70,7 @@ const verifyBearer = async (
     }
   } catch (error: unknown) {
     functions.logger.error('Error during token verification:', {
-      authHeader: authHeader,
+      authHeader,
       error: error instanceof Error ? error.message : error,
     });
     res.status(500).json({ error: 'Internal server error during authentication.' });

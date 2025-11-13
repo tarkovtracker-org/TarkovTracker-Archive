@@ -1,19 +1,23 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ProgressService } from '../../src/services/ProgressService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
-import { resetDb, seedDb } from '../setup';
+import { createTestSuite } from '../helpers/index.js';
 import type { TaskStatus } from '../../src/types/api';
+
 describe('Progress Performance Tests', () => {
+  const suite = createTestSuite('ProgressPerformance');
   let progressService: ProgressService;
   let monitor: PerformanceMonitor;
   let loadTester: LoadTester;
-  beforeEach(() => {
-    resetDb();
+
+  beforeEach(async () => {
+    await suite.beforeEach();
     progressService = new ProgressService();
     monitor = new PerformanceMonitor();
     loadTester = new LoadTester();
+
     // Seed basic test data
-    seedDb({
+    await suite.withDatabase({
       progress: {},
       tarkovdata: {
         tasks: {
@@ -30,19 +34,21 @@ describe('Progress Performance Tests', () => {
       },
     });
   });
-  afterEach(() => {
+
+  afterEach(async () => {
     monitor.reset();
     loadTester.reset();
+    await suite.afterEach();
   });
   describe('Progress Retrieval Performance', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Seed progress data for multiple users
       const progressData: Record<string, any> = {};
       for (let i = 0; i < 50; i++) {
         const userId = TestDataGenerator.generateUserId(`user${i}`);
         progressData[userId] = TestDataGenerator.generateProgressData();
       }
-      seedDb({ progress: progressData });
+      await suite.withDatabase({ progress: progressData });
     });
     it('should retrieve user progress efficiently under load', async () => {
       const userIds = Object.keys((global as any).dbState?.progress ?? {});
@@ -86,7 +92,7 @@ describe('Progress Performance Tests', () => {
     it('should handle progress retrieval for different game modes efficiently', async () => {
       const userId = TestDataGenerator.generateUserId();
       // Seed user with both game modes
-      seedDb({
+      await suite.withDatabase({
         progress: {
           [userId]: {
             pvp: TestDataGenerator.generateProgressData(),
@@ -111,14 +117,14 @@ describe('Progress Performance Tests', () => {
     });
   });
   describe('Progress Update Performance', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // Seed initial progress data
       const progressData: Record<string, any> = {};
       for (let i = 0; i < 30; i++) {
         const userId = TestDataGenerator.generateUserId(`user${i}`);
         progressData[userId] = TestDataGenerator.generateProgressData();
       }
-      seedDb({ progress: progressData });
+      await suite.withDatabase({ progress: progressData });
     });
     it('should update single task progress efficiently', async () => {
       const userIds = Object.keys((global as any).dbState?.progress ?? {});
@@ -146,7 +152,7 @@ describe('Progress Performance Tests', () => {
     });
     it('should update multiple tasks efficiently', async () => {
       const userId = TestDataGenerator.generateUserId();
-      seedDb({
+      await suite.withDatabase({
         progress: {
           [userId]: TestDataGenerator.generateProgressData(),
         },
@@ -156,7 +162,7 @@ describe('Progress Performance Tests', () => {
         async () => {
           const taskUpdates = Array.from({ length: 3 }, (_, i) => ({
             id: `perf-task-${i}`,
-            state: (Math.random() > 0.5 ? 'completed' : 'uncompleted') as TaskStatus
+            state: (Math.random() > 0.5 ? 'completed' : 'uncompleted') as TaskStatus,
           }));
           return progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
         },
@@ -203,7 +209,11 @@ describe('Progress Performance Tests', () => {
             return progressService.getUserProgress(randomUserId, 'pvp');
           } else {
             const taskId = `task-${Math.floor(Math.random() * 5) + 1}`;
-            return progressService.updateMultipleTasks(randomUserId, [{ id: taskId, state: 'completed' }], 'pvp');
+            return progressService.updateMultipleTasks(
+              randomUserId,
+              [{ id: taskId, state: 'completed' }],
+              'pvp'
+            );
           }
         },
         {
@@ -263,7 +273,11 @@ describe('Progress Performance Tests', () => {
           'updateProgress',
           async () => {
             const taskId = `task-${Math.floor(Math.random() * 5) + 1}`;
-            return progressService.updateMultipleTasks(userId, [{ id: taskId, state: 'completed' }], 'pvp');
+            return progressService.updateMultipleTasks(
+              userId,
+              [{ id: taskId, state: 'completed' }],
+              'pvp'
+            );
           },
           {
             totalOperations: operationsPerIteration,
@@ -294,7 +308,11 @@ describe('Progress Performance Tests', () => {
           if (Math.random() > 0.5) {
             return progressService.getUserProgress(userId, 'pvp');
           } else {
-            return progressService.updateMultipleTasks(userId, [{ id: taskId, state: 'completed' }], 'pvp');
+            return progressService.updateMultipleTasks(
+              userId,
+              [{ id: taskId, state: 'completed' }],
+              'pvp'
+            );
           }
         });
         responseTimes.push(metrics.metrics.duration);
@@ -324,7 +342,11 @@ describe('Progress Performance Tests', () => {
         'maxConcurrencyProgress',
         async (userId) => {
           const taskId = `task-${Math.floor(Math.random() * 5) + 1}`;
-          return progressService.updateMultipleTasks(userId, [{ id: taskId, state: 'completed' }], 'pvp');
+          return progressService.updateMultipleTasks(
+            userId,
+            [{ id: taskId, state: 'completed' }],
+            'pvp'
+          );
         },
         {
           concurrentUsers: maxConcurrency,
@@ -369,7 +391,11 @@ describe('Progress Performance Tests', () => {
         async () => {
           const userId = TestDataGenerator.generateUserId();
           const taskId = `task-${Math.floor(Math.random() * 5) + 1}`;
-          return progressService.updateMultipleTasks(userId, [{ id: taskId, state: 'completed' }], 'pvp');
+          return progressService.updateMultipleTasks(
+            userId,
+            [{ id: taskId, state: 'completed' }],
+            'pvp'
+          );
         },
         {
           totalOperations: 80,

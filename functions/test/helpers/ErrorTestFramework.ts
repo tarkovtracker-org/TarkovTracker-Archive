@@ -277,7 +277,7 @@ export class ResilienceTestHelper {
       if (Math.random() < failureRate) {
         throw new Error(`Simulated failure in operation ${index}`);
       }
-      return await operation();
+      return operation();
     });
 
     const results = await Promise.allSettled(promises);

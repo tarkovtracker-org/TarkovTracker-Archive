@@ -1,86 +1,8 @@
-# TarkovTracker Functions Testing Guide
+# TarkovTracker Functions Testing
 
-This directory contains tests for the Firebase Cloud Functions in the TarkovTracker application.
+Test suite for Firebase Cloud Functions using Vitest and Firebase Emulator.
 
-## 📚 Documentation
-
-For comprehensive testing guidelines, architecture, and best practices, see the **[test documentation](./docs/)**:
-
-- **[Main Documentation](./docs/README.md)** - Overview and getting started
-- **[Best Practices](./docs/BEST_PRACTICES.md)** - Testing guidelines and standards
-- **[Architecture](./docs/ARCHITECTURE.md)** - Test design and patterns
-- **[Maintenance](./docs/MAINTENANCE.md)** - Troubleshooting and upkeep
-- **[Documentation Index](./docs/INDEX.md)** - Complete reference guide
-
-## Test Structure
-
-```
-test/
-├── docs/                    # Test documentation (NEW)
-│   ├── README.md           # Main test documentation
-│   ├── BEST_PRACTICES.md   # Testing best practices
-│   ├── ARCHITECTURE.md     # Test architecture
-│   ├── MAINTENANCE.md      # Maintenance guidelines
-│   └── INDEX.md            # Documentation index
-├── utils/                   # Test utilities and helpers (NEW)
-│   ├── testHelpers.ts      # Common test setup/teardown
-│   └── assertionHelpers.ts # Custom assertion helpers
-├── factories/               # Test data factories (NEW)
-│   ├── index.ts            # Factory exports
-│   ├── TokenFactory.ts     # Token data factory
-│   ├── UserFactory.ts      # User data factory
-│   ├── TeamFactory.ts      # Team data factory
-│   ├── ProgressFactory.ts  # Progress data factory
-│   ├── TaskFactory.ts      # Task data factory
-│   └── TestDataBuilder.ts  # Comprehensive test data builder
-├── examples/                # Best practice examples (NEW)
-│   └── TokenService.bestPractices.test.ts
-├── integration/             # Integration tests
-│   ├── tokenWorkflow.test.ts
-│   └── userLifecycle.test.ts
-├── performance/             # Performance tests
-│   ├── loadTests.test.ts
-│   ├── performanceUtils.ts
-│   ├── progressPerformance.test.ts
-│   ├── teamPerformance.test.ts
-│   ├── tokenPerformance.test.ts
-│   └── README.md
-├── edge-cases/              # Edge case tests
-│   ├── boundaryConditions.test.ts
-│   ├── dataValidation.test.ts
-│   ├── errorRecovery.test.ts
-│   ├── unusualInputs.test.ts
-│   └── README.md
-├── services/                # Service layer tests
-├── handlers/                # HTTP handler tests
-├── middleware/              # Middleware tests
-├── utils/                   # Utility function tests
-├── mocks.js                 # Global mocks
-├── setup.js                 # Test setup
-└── tsconfig.json           # TypeScript config for tests
-```
-
-## Testing Approach
-
-We use [Vitest](https://vitest.dev/) as our testing framework, which provides a modern, fast testing experience similar to Jest.
-
-### Types of Tests
-
-1. **Unit Tests**: For isolated testing of function logic without external dependencies.
-2. **Integration Tests**: For testing function logic with mocked Firebase services.
-3. **Performance Tests**: For measuring system performance under load.
-4. **Edge Case Tests**: For testing boundary conditions and unusual inputs.
-
-## 🛠️ Test Utilities
-
-The test suite includes comprehensive utilities and helpers:
-
-- **[Test Helpers](./utils/testHelpers.ts)** - Common setup, teardown, and execution helpers
-- **[Assertion Helpers](./utils/assertionHelpers.ts)** - Custom matchers and assertion utilities
-- **[Data Factories](./factories/)** - Fluent factories for creating test data
-- **[Test Examples](./examples/)** - Complete examples following best practices
-
-## 🏃 Running Tests
+## Quick Start
 
 ```bash
 # Run all tests
@@ -89,133 +11,238 @@ npm test
 # Run with coverage
 npm run test:coverage
 
-# Run specific test suites
-npm run test:unit
-npm run test:integration
-npm run test:performance
-npm run test:edge-cases
+# Run specific file
+npm test -- TokenService.test.ts
 
-# Run performance tests
-npm run test:performance:all
+# Watch mode
+npm test -- --watch
 ```
 
-## 📊 Coverage Requirements
+## Test Structure
+
+```
+test/
+├── helpers/            # Test utilities and emulator setup
+│   ├── emulatorSetup.ts     # Firebase emulator initialization
+│   ├── dbTestUtils.ts       # Database test helpers
+│   ├── httpMocks.ts         # HTTP request/response mocks
+│   ├── assertionHelpers.ts  # Custom assertions
+│   ├── seedData.ts          # Test data fixtures
+│   └── index.ts             # Centralized exports
+├── services/           # Service layer tests
+├── handlers/           # HTTP handler tests
+├── middleware/         # Middleware tests
+├── integration/        # Integration workflow tests
+├── performance/        # Performance & load tests
+└── utils/             # Utility function tests
+```
+
+## Writing Tests
+
+### Basic Pattern
+
+```typescript
+import { createTestSuite } from './helpers';
+
+describe('MyService', () => {
+  const suite = createTestSuite('MyService');
+
+  beforeEach(suite.beforeEach);
+  afterEach(suite.afterEach);
+
+  it('should perform action', async () => {
+    // Arrange - seed test data
+    suite.withDatabase({
+      users: {
+        'user-1': { name: 'Test User', level: 5 }
+      }
+    });
+
+    // Act - perform operation
+    const result = await myService.doSomething('user-1');
+
+    // Assert - verify outcome
+    expect(result).toBeDefined();
+  });
+});
+```
+
+### Using Emulator
+
+All tests run against Firebase Emulator for authentic behavior:
+
+```typescript
+import { admin, firestore, resetDb, seedDb } from './helpers/emulatorSetup';
+
+// Real Firestore operations
+const db = admin.firestore();
+const doc = await db.collection('users').doc('user-1').get();
+
+// Real transactions
+await db.runTransaction(async (transaction) => {
+  const userRef = db.collection('users').doc('user-1');
+  const user = await transaction.get(userRef);
+  transaction.update(userRef, { level: user.data().level + 1 });
+});
+```
+
+### Common Helpers
+
+```typescript
+import {
+  createMockRequest,
+  createMockResponse,
+  expectApiSuccess,
+  expectApiError,
+  expectValidToken,
+  expectDocumentExists
+} from './helpers';
+
+// HTTP mocks
+const req = createMockRequest({ method: 'GET', params: { id: '123' } });
+const res = createMockResponse();
+
+// Semantic assertions
+expectApiSuccess(res, 200, { data: expectedData });
+expectApiError(res, 404, 'Not found');
+expectValidToken(tokenData);
+expectDocumentExists(db, 'users/user-1');
+```
+
+## Test Categories
+
+### Unit Tests
+- Test individual functions in isolation
+- Located in `services/`, `handlers/`, `middleware/`, `utils/`
+- Fast execution with focused assertions
+
+### Integration Tests
+- Test complete workflows across components
+- Located in `integration/`
+- Use realistic scenarios with seed data
+
+### Performance Tests
+- Measure system performance under load
+- Located in `performance/`
+- Include benchmarks and regression detection
+
+## Coverage Requirements
 
 - **Statements**: 85%
 - **Branches**: 80%
 - **Functions**: 80%
 - **Lines**: 85%
 
-## 🎯 Test Categories
+## Firebase Emulator
 
-### Unit Tests
-- Test individual functions and methods in isolation
-- Located in `services/`, `handlers/`, `middleware/`, and `utils/` directories
-- Fast execution with comprehensive mocking
+Tests use Firebase Local Emulator Suite for authentic Firebase behavior.
 
-### Integration Tests
-- Test complete workflows and component interactions
-- Located in `integration/` directory
-- Use realistic test scenarios with data factories
+### Emulator Benefits
+- Real Firestore transactions and queries
+- Proper FieldValue operations (increment, arrayUnion, etc.)
+- True test isolation between test runs
+- No mock drift issues
 
-### Performance Tests
-- Measure system performance under load
-- Located in `performance/` directory
-- Include benchmarks and regression detection
+### Automatic Setup
+Emulator starts automatically via `globalSetup.ts`. No manual configuration needed.
 
-### Edge Case Tests
-- Test boundary conditions and unusual inputs
-- Located in `edge-cases/` directory
-- Focus on error handling and recovery
+### Single-Threaded Execution
+Tests run sequentially across files (not concurrently) to prevent emulator state conflicts. This is configured in `vitest.config.js` with `singleThread: true` and ensures deterministic test results despite slightly longer execution time. See [TESTING_GUIDE.md](./TESTING_GUIDE.md#3-single-threaded-execution) for details.
 
-## 🏗️ Test Architecture
+## Best Practices
 
-The test suite follows a layered architecture:
+1. **Use `createTestSuite()`** - Automatic cleanup and isolation
+2. **Seed data with `withDatabase()`** - Scoped, declarative test data
+3. **Import from `helpers/index`** - Centralized utility imports
+4. **Follow AAA pattern** - Arrange-Act-Assert
+5. **Test error cases** - Always test failure scenarios
+6. **Keep tests focused** - One concept per test
 
-1. **Test Data Layer** - Factories and builders for creating test data
-2. **Mock Layer** - Firebase and external service mocks
-3. **Utility Layer** - Common test helpers and assertions
-4. **Test Layer** - Actual test implementations organized by category
-
-For detailed architecture information, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
-
-## 📝 Writing New Tests
-
-When writing new tests, follow these guidelines:
-
-1. **Use the AAA Pattern**: Arrange-Act-Assert
-2. **Leverage Data Factories**: Use factories for consistent test data
-3. **Follow Naming Conventions**: Descriptive test names that explain the scenario
-4. **Include Documentation**: Add JSDoc comments explaining complex scenarios
-5. **Test Error Cases**: Always test error scenarios and edge cases
-6. **Use Assertion Helpers**: Leverage custom assertion helpers for readability
-
-For complete guidelines, see [BEST_PRACTICES.md](./docs/BEST_PRACTICES.md).
-
-## 🔧 Test Data Management
-
-Use the provided factories for creating test data:
+### Do's ✅
 
 ```typescript
-// Create individual entities
-const user = UserFactory.create({ level: 25 });
-const token = TokenFactory.createExtended({ owner: user.uid });
-const team = TeamFactory.createWithMembers(5);
+// ✅ Use createTestSuite for automatic cleanup
+const suite = createTestSuite('MyTest');
 
-// Use presets for common scenarios
-const testData = TestDataPresets.experiencedUser();
+// ✅ Use semantic assertions
+expectApiSuccess(res, 200);
 
-// Use builder for complex scenarios
-const scenario = new TestDataBuilder()
-  .withUser(UserFactory.createExperienced())
-  .withTeam(TeamFactory.createFull())
-  .withToken(TokenFactory.createAdmin())
-  .build();
+// ✅ Use scoped database seeding
+suite.withDatabase({ users: { 'user-1': userData } });
+
+// ✅ Test specific error messages
+await expect(fn()).rejects.toThrow('Invalid token');
 ```
 
-## 🐛 Debugging Tests
+### Don'ts ❌
 
-For debugging tips and troubleshooting, see [MAINTENANCE.md](./docs/MAINTENANCE.md).
+```typescript
+// ❌ Manual mock setup (use helpers)
+const mockDb = { collection: vi.fn() };
 
-## 📈 Performance Testing
+// ❌ Generic assertions
+expect(result).toBeDefined();
 
-Performance tests are located in the `performance/` directory and include:
+// ❌ Hardcoded test data
+const user = { id: 'abc123', name: 'Test' };
 
-- Load testing for API endpoints
-- Database operation benchmarks
-- Memory usage monitoring
-- Regression detection
+// ❌ Vague error tests
+await expect(fn()).rejects.toThrow();
+```
 
-For performance testing guidelines, see [performance/README.md](./performance/README.md).
+## Debugging Tests
 
-## 🔄 CI/CD Integration
+```bash
+# Run single test file
+npm test -- MyService.test.ts
 
-The test suite is integrated with CI/CD pipelines:
+# Run with verbose output
+npm test -- --reporter=verbose
 
-- All tests must pass (100% success rate)
-- Coverage thresholds must be met
-- Performance regressions are detected
-- Test flakiness is monitored
+# Run with specific test name
+npm test -- -t "should create token"
 
-## 🤝 Contributing
+# Debug in VS Code
+# Set breakpoint and use "Debug Test" CodeLens
+```
 
-When contributing to the test suite:
+## CI/CD Integration
 
-1. Follow the established patterns and conventions
-2. Update documentation for new test categories
-3. Ensure coverage thresholds are maintained
-4. Add performance tests for new features
-5. Include edge case testing for new functionality
+- All tests must pass (zero tolerance)
+- Coverage thresholds enforced
+- Performance regression detection
+- Sequential execution for reliability (single-threaded to prevent emulator conflicts)
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for general contribution guidelines.
+## Troubleshooting
 
-## 📚 Additional Resources
+### Emulator Issues
+```bash
+# Manually start emulators
+npm run emulators
+
+# Check emulator status
+curl http://localhost:8080
+```
+
+### Test Failures
+1. Check emulator is running
+2. Verify test isolation (no shared state)
+3. Check for timing issues (use `waitFor`)
+4. Review seed data setup
+
+### Common Errors
+- **"ECONNREFUSED"** - Emulator not started
+- **"Document not found"** - Missing seed data
+- **"Transaction conflict"** - Real concurrent access (expected behavior)
+
+## Additional Resources
 
 - [Vitest Documentation](https://vitest.dev/)
-- [Firebase Testing Guide](https://firebase.google.com/docs/functions/unit-testing)
-- [Test Documentation Index](./docs/INDEX.md) - Complete reference
+- [Firebase Emulator Guide](https://firebase.google.com/docs/emulator-suite)
+- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Detailed testing standards
 
 ---
 
-**Last Updated**: 2025-11-11  
-**Maintained by**: TarkovTracker Development Team
+**Last Updated**: 2025-11-13
+**Test Framework**: Vitest + Firebase Emulator (single-threaded)
+**Coverage**: 85%+ maintained

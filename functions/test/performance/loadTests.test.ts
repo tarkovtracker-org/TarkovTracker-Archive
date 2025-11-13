@@ -3,22 +3,25 @@ import { TokenService } from '../../src/services/TokenService';
 import { ProgressService } from '../../src/services/ProgressService';
 import { TeamService } from '../../src/services/TeamService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
-import { resetDb, seedDb } from '../setup';
+import { createTestSuite } from '../helpers';
+
 describe('System Load Tests', () => {
+  const suite = createTestSuite('SystemLoadTests');
   let tokenService: TokenService;
   let progressService: ProgressService;
   let teamService: TeamService;
   let monitor: PerformanceMonitor;
   let loadTester: LoadTester;
-  beforeEach(() => {
-    resetDb();
+
+  beforeEach(async () => {
+    await suite.beforeEach();
     tokenService = new TokenService();
     progressService = new ProgressService();
     teamService = new TeamService();
     monitor = new PerformanceMonitor();
     loadTester = new LoadTester();
     // Seed basic test data
-    seedDb({
+    await suite.withDatabase({
       token: {},
       teams: {},
       system: {},
@@ -38,9 +41,11 @@ describe('System Load Tests', () => {
       },
     });
   });
-  afterEach(() => {
+
+  afterEach(async () => {
     monitor.reset();
     loadTester.reset();
+    await suite.afterEach();
   });
   describe('Realistic User Workflows', () => {
     it('should handle typical user lifecycle under load', async () => {
@@ -175,20 +180,20 @@ describe('System Load Tests', () => {
             if (operationType < 0.3) {
               // Read operation (30%)
               const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return await progressService.getUserProgress(userId, 'pvp');
+              return progressService.getUserProgress(userId, 'pvp');
             } else if (operationType < 0.5) {
               // Write operation (20%)
               const userId = userIds[Math.floor(Math.random() * userIds.length)];
               const taskUpdates = TestDataGenerator.generateTaskUpdates(1);
-              return await progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
+              return progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
             } else if (operationType < 0.7) {
               // Token validation (20%)
               const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return await tokenService.getTokenInfo(`perf-token-${userId}`);
+              return tokenService.getTokenInfo(`perf-token-${userId}`);
             } else if (operationType < 0.9 && teamIds.length > 0) {
               // Team operation (20%)
               const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return await teamService.getTeamProgress(userId, 'pvp');
+              return teamService.getTeamProgress(userId, 'pvp');
             } else {
               // Create new user (10%)
               const newUserId = TestDataGenerator.generateUserId();
@@ -198,7 +203,7 @@ describe('System Load Tests', () => {
                 permissions: ['GP'],
                 gameMode: 'pvp',
               });
-              return await progressService.getUserProgress(newUserId, 'pvp');
+              return progressService.getUserProgress(newUserId, 'pvp');
             }
           }
         );
@@ -241,7 +246,7 @@ describe('System Load Tests', () => {
             const taskUpdates = TestDataGenerator.generateTaskUpdates(1);
             operations.push(progressService.updateMultipleTasks(userId, taskUpdates, 'pvp'));
           }
-          return await Promise.all(operations);
+          return Promise.all(operations);
         },
         {
           concurrentUsers: peakUsers,
@@ -269,7 +274,7 @@ describe('System Load Tests', () => {
             gameMode: 'pvp',
           });
           const progressPromise = progressService.getUserProgress(userId, 'pvp');
-          return await Promise.all([tokenPromise, progressPromise]);
+          return Promise.all([tokenPromise, progressPromise]);
         },
         {
           totalOperations: flashCrowdSize,
@@ -433,7 +438,7 @@ describe('System Load Tests', () => {
           const userId = TestDataGenerator.generateUserId();
           const tokenData = TestDataGenerator.generateToken();
           
-          return await Promise.all([
+          return Promise.all([
             tokenService.createToken(tokenData, {
               note: 'Overload token',
               permissions: ['GP', 'WP', 'TP'],
@@ -458,7 +463,7 @@ describe('System Load Tests', () => {
         'recoveryPhase',
         async () => {
           const userId = TestDataGenerator.generateUserId();
-          return await progressService.getUserProgress(userId, 'pvp');
+          return progressService.getUserProgress(userId, 'pvp');
         },
         {
           totalOperations: 30,
@@ -488,10 +493,10 @@ describe('System Load Tests', () => {
             const operationType = Math.random();
             
             if (operationType < 0.5) {
-              return await progressService.getUserProgress(userId, 'pvp');
+              return progressService.getUserProgress(userId, 'pvp');
             } else {
               const taskUpdates = TestDataGenerator.generateTaskUpdates(1);
-              return await progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
+              return progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
             }
           },
           {

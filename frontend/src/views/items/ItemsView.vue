@@ -298,7 +298,7 @@
   });
   const visibleTaskItems = computed(() => {
     return allNeededTaskItems.value.filter((need) => {
-      if (!need || need.needType !== 'taskObjective') {
+      if (need?.needType !== 'taskObjective') {
         return false;
       }
       const relatedTask = need?.taskId ? taskMap.value.get(need.taskId) : undefined;
@@ -377,7 +377,7 @@
   });
   const visibleHideoutItems = computed(() => {
     return allNeededHideoutItems.value.filter((need) => {
-      if (!need || need.needType !== 'hideoutModule') {
+      if (need?.needType !== 'hideoutModule') {
         return false;
       }
       return isHideoutNeedVisible(need);

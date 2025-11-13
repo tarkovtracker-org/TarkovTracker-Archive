@@ -1,15 +1,16 @@
 import * as logger from 'firebase-functions/logger';
-import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import type { CallableRequest } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
 import UIDGenerator from './UIDGenerator';
-import {
+import type {
   Firestore,
   DocumentReference,
   DocumentSnapshot,
   Transaction,
   CollectionReference,
 } from 'firebase-admin/firestore';
-import { TokenGameMode } from '../types/api';
+import type { TokenGameMode } from '../types/api';
 import type { SystemDocData, TokenDocData } from './types';
 import { createLazyFirestore } from '../utils/factory';
 interface CreateTokenData {

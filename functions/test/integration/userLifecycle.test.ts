@@ -1,24 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { adminMock } from '../setup';
-import { ProgressService } from '../../src/services/ProgressService';
-import { TeamService } from '../../src/services/TeamService';
-import { TokenService } from '../../src/services/TokenService';
-import { resetDb, seedDb } from '../setup';
+import { admin, createTestSuite } from '../../helpers';
+import { ProgressService } from '../../../src/services/ProgressService';
+import { TokenService } from '../../../src/services/TokenService';
 describe('User Account Lifecycle Integration Tests', () => {
+  const suite = createTestSuite('UserLifecycle');
   let progressService: ProgressService;
-  let teamService: TeamService;
   let tokenService: TokenService;
   let testUserId: string;
   let testTeamId: string;
   beforeEach(async () => {
-    resetDb();
+    await suite.beforeEach();
     progressService = new ProgressService();
-    teamService = new TeamService();
     tokenService = new TokenService();
     testUserId = `test-user-${Date.now()}`;
     testTeamId = `test-team-${Date.now()}`;
-    // Seed required data for tests
-    seedDb({
+    await suite.withDatabase({
       tarkovdata: {
         tasks: {
           'user-task-1': { id: 'user-task-1' },
@@ -46,14 +42,14 @@ describe('User Account Lifecycle Integration Tests', () => {
       },
     });
   });
-  afterEach(() => {
-    resetDb();
-  });
+
+  afterEach(suite.afterEach);
+
   describe('User Registration → Team Creation → Progress Tracking → Account Deletion', () => {
     it('should handle complete user lifecycle with data consistency', async () => {
       // Step 1: User Registration (create initial progress document)
       // First create progress document
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -80,16 +76,16 @@ describe('User Account Lifecycle Integration Tests', () => {
       // Mark task 2 as failed
       await progressService.updateSingleTask(testUserId, 'user-task-2', 'failed', 'pvp');
       // Verify initial progress
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
       expect(progressDoc.exists).toBe(true);
       // Verify progress data structure
       const progressData = progressDoc.data();
       console.log('Progress data structure:', JSON.stringify(progressData, null, 2));
       // Handle both nested and legacy progress structures
       const taskCompletions =
-        progressData.taskCompletions ||
-        progressData.pvp?.taskCompletions ||
-        progressData.pve?.taskCompletions ||
+        progressData?.taskCompletions ??
+        progressData?.pvp?.taskCompletions ??
+        progressData?.pve?.taskCompletions ??
         {};
       console.log('Task completions found:', taskCompletions);
       // Verify task completions with better error handling
@@ -110,8 +106,8 @@ describe('User Account Lifecycle Integration Tests', () => {
           requireApproval: false,
         },
       };
-      await adminMock.firestore().collection('teams').doc(testTeamId).set(teamData);
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      await admin.firestore().collection('teams').doc(testTeamId).set(teamData);
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
       expect(teamDoc.exists).toBe(true);
       expect(teamDoc.data()?.owner).toBe(testUserId);
       expect(teamDoc.data()?.members).toContain(testUserId);
@@ -119,45 +115,45 @@ describe('User Account Lifecycle Integration Tests', () => {
       await progressService.validateTaskAccess(testUserId, 'user-task-3');
       await progressService.updateSingleTask(testUserId, 'user-task-3', 'completed', 'pvp');
       // Verify progress is maintained
-      const updatedProgressDoc = await adminMock
+      const updatedProgressDoc = await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
         .get();
       const updatedProgressData = updatedProgressDoc.data();
       const updatedTaskCompletions =
-        updatedProgressData.taskCompletions ||
-        updatedProgressData.pvp?.taskCompletions ||
-        updatedProgressData.pve?.taskCompletions ||
+        updatedProgressData?.taskCompletions ??
+        updatedProgressData?.pvp?.taskCompletions ??
+        updatedProgressData?.pve?.taskCompletions ??
         {};
       expect(updatedTaskCompletions).toHaveProperty('user-task-3');
       expect(updatedTaskCompletions['user-task-3']).toHaveProperty('complete', true);
       // Step 4: Account Deletion (cascade cleanup)
       // Delete progress document
-      await adminMock.firestore().collection('progress').doc(testUserId).delete();
+      await admin.firestore().collection('progress').doc(testUserId).delete();
       // Remove user from team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
         .update({
-          members: adminMock.firestore().FieldValue.arrayRemove(testUserId),
+          members: admin.firestore.FieldValue.arrayRemove(testUserId),
         });
       // Verify cleanup
-      const deletedProgressDoc = await adminMock
+      const deletedProgressDoc = await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
         .get();
       expect(deletedProgressDoc.exists).toBe(false);
-      const updatedTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const updatedTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
       expect(updatedTeamDoc.data()?.members).not.toContain(testUserId);
     });
     it('should handle cascade deletion when team owner deletes account', async () => {
       // Create team with multiple members
       const memberUserId = `member-user-${Date.now()}`;
       // Set up team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -168,7 +164,7 @@ describe('User Account Lifecycle Integration Tests', () => {
           createdAt: Date.now(),
         });
       // Set up member progress
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(memberUserId)
@@ -184,37 +180,37 @@ describe('User Account Lifecycle Integration Tests', () => {
       await progressService.validateTaskAccess(memberUserId, 'member-task-1');
       await progressService.updateSingleTask(memberUserId, 'member-task-1', 'completed', 'pvp');
       // Owner deletes account (simulate cascade)
-      await adminMock.firestore().collection('progress').doc(testUserId).delete();
+      await admin.firestore().collection('progress').doc(testUserId).delete();
       // Transfer ownership to first member or delete team
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
       if (teamDoc.exists) {
         const teamData = teamDoc.data();
-        if (teamData?.members?.length > 0) {
+        if (teamData && teamData.members?.length > 0) {
           // Transfer ownership to next member
           const newOwner = teamData.members.find((m: string) => m !== testUserId);
           if (newOwner) {
-            await adminMock
+            await admin
               .firestore()
               .collection('teams')
               .doc(testTeamId)
               .update({
                 owner: newOwner,
-                members: adminMock.firestore().FieldValue.arrayRemove(testUserId),
+                members: admin.firestore.FieldValue.arrayRemove(testUserId),
               });
           }
         } else {
           // Delete team if no members left
-          await adminMock.firestore().collection('teams').doc(testTeamId).delete();
+          await admin.firestore().collection('teams').doc(testTeamId).delete();
         }
       }
       // Verify owner is removed from team
-      const finalTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const finalTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
       if (finalTeamDoc.exists) {
         expect(finalTeamDoc.data()?.owner).not.toBe(testUserId);
         expect(finalTeamDoc.data()?.members).not.toContain(testUserId);
       }
       // Verify member progress is intact
-      const memberProgressDoc = await adminMock
+      const memberProgressDoc = await admin
         .firestore()
         .collection('progress')
         .doc(memberUserId)
@@ -225,7 +221,7 @@ describe('User Account Lifecycle Integration Tests', () => {
   describe('Data Consistency Across Operations', () => {
     it('should maintain consistency during concurrent user operations', async () => {
       // Create initial progress document
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -255,12 +251,12 @@ describe('User Account Lifecycle Integration Tests', () => {
         )
       );
       // Verify all updates are applied correctly
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
       const progressData = progressDoc.data();
       const taskCompletions =
-        progressData.taskCompletions ||
-        progressData.pvp?.taskCompletions ||
-        progressData.pve?.taskCompletions ||
+        progressData?.taskCompletions ??
+        progressData?.pvp?.taskCompletions ??
+        progressData?.pve?.taskCompletions ??
         {};
       expect(taskCompletions['concurrent-task-1']?.complete).toBe(true);
       expect(taskCompletions['concurrent-task-2']?.complete).toBe(true);
@@ -269,7 +265,7 @@ describe('User Account Lifecycle Integration Tests', () => {
     });
     it('should handle rollback scenarios correctly', async () => {
       // Create initial progress document
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -297,17 +293,17 @@ describe('User Account Lifecycle Integration Tests', () => {
         await progressService.updateSingleTask(testUserId, 'rollback-task', 'completed', 'pvp');
         // Simulate an error condition
         throw new Error('Simulated operation failure');
-      } catch (error) {
+      } catch (_error) {
         // In a real scenario, rollback would happen here
         // For this test, we'll verify initial state is preserved
       }
       // Verify initial state is preserved
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
       const progressData = progressDoc.data();
       const taskCompletions =
-        progressData.taskCompletions ||
-        progressData.pvp?.taskCompletions ||
-        progressData.pve?.taskCompletions ||
+        progressData?.taskCompletions ??
+        progressData?.pvp?.taskCompletions ??
+        progressData?.pve?.taskCompletions ??
         {};
       expect(taskCompletions['initial-task']?.complete).toBe(true);
       const tokenInfo = await tokenService.getTokenInfo(initialToken.token);
@@ -316,7 +312,7 @@ describe('User Account Lifecycle Integration Tests', () => {
     });
     it('should handle team member addition/removal with progress consistency', async () => {
       // Create team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -327,7 +323,7 @@ describe('User Account Lifecycle Integration Tests', () => {
           createdAt: Date.now(),
         });
       // Add progress for owner
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -344,15 +340,15 @@ describe('User Account Lifecycle Integration Tests', () => {
       await progressService.updateSingleTask(testUserId, 'owner-task', 'completed', 'pvp');
       // Add new member
       const newMemberId = `new-member-${Date.now()}`;
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
         .update({
-          members: adminMock.firestore().FieldValue.arrayUnion(newMemberId),
+          members: admin.firestore.FieldValue.arrayUnion(newMemberId),
         });
       // Add progress for new member
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(newMemberId)
@@ -368,33 +364,25 @@ describe('User Account Lifecycle Integration Tests', () => {
       await progressService.validateTaskAccess(newMemberId, 'member-task');
       await progressService.updateSingleTask(newMemberId, 'member-task', 'completed', 'pvp');
       // Verify both members have progress
-      const ownerProgress = await adminMock
-        .firestore()
-        .collection('progress')
-        .doc(testUserId)
-        .get();
-      const memberProgress = await adminMock
-        .firestore()
-        .collection('progress')
-        .doc(newMemberId)
-        .get();
+      const ownerProgress = await admin.firestore().collection('progress').doc(testUserId).get();
+      const memberProgress = await admin.firestore().collection('progress').doc(newMemberId).get();
       expect(ownerProgress.exists).toBe(true);
       expect(memberProgress.exists).toBe(true);
       // Remove member
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
         .update({
-          members: adminMock.firestore().FieldValue.arrayRemove(newMemberId),
+          members: admin.firestore.FieldValue.arrayRemove(newMemberId),
         });
       // Verify team state
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
-      const teamMembers = teamDoc.data()?.members || [];
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
+      const teamMembers = teamDoc.data()?.members ?? [];
       expect(teamMembers).not.toContain(newMemberId);
       expect(teamMembers).toContain(testUserId);
       // Member progress should remain intact
-      const finalMemberProgress = await adminMock
+      const finalMemberProgress = await admin
         .firestore()
         .collection('progress')
         .doc(newMemberId)

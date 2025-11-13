@@ -2,13 +2,14 @@ import { logger } from 'firebase-functions/v2';
 import { onRequest } from 'firebase-functions/v2/https';
 // Removed unused imports Request, Response
 import admin from 'firebase-admin';
-import {
+import type {
   Firestore,
   DocumentReference,
   DocumentSnapshot,
   Transaction,
 } from 'firebase-admin/firestore';
-import { HttpsError, FunctionsErrorCode } from 'firebase-functions/v2/https';
+import type { FunctionsErrorCode } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import { withCorsAndAuth } from '../middleware/onRequestAuth';
 import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types';
 import { createLazyFirestore } from '../utils/factory';
@@ -59,7 +60,7 @@ async function _revokeTokenLogic(
   const getDb = createLazyFirestore();
   const db: Firestore = getDb();
   logger.log('Starting revoke token logic (onRequest)', {
-    data: data,
+    data,
     owner: ownerUid,
   });
   // ownerUid is already validated by the time this is called in the onRequest wrapper
@@ -188,11 +189,11 @@ export async function revokeTokenHandler(req: any, res: any): Promise<void> {
         fullErrorMessage = e;
       }
       logger.error('Error from _revokeTokenLogic in revokeToken handler', {
-        uid: uid,
+        uid,
         originalError: e,
-        errorCode: errorCode,
+        errorCode,
         errorMessage: fullErrorMessage,
-        errorDetails: errorDetails,
+        errorDetails,
         clientMessageSent: messageToSend,
         httpStatusSet: httpStatus,
       });

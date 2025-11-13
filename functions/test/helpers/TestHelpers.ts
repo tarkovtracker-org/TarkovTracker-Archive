@@ -8,15 +8,19 @@ import {
   createMockResponse as sharedCreateMockResponse,
   createMockRequest as sharedCreateMockRequest,
 } from './httpMocks';
-import { seedDb, resetDb } from '../setup';
+import { seedDb, resetDb } from './emulatorSetup';
 import { MOCK_USERS, MOCK_TEAMS, MOCK_TASKS } from '../mocks/MockConstants';
 
 export class ServiceTestHelpers {
   /**
    * Standard setup for service tests with database seeding
-   * Note: This method is deprecated - tests should import setup directly
+   * 
+   * NOTE: This method is deprecated - tests should use createTestSuite() instead.
+   * The global afterEach hook in test/setup.ts handles Firestore cleanup automatically.
+   * 
+   * @deprecated Use createTestSuite() for new tests
    */
-  static setupServiceTest(additionalData = {}) {
+  static async setupServiceTest(additionalData = {}) {
     const defaultState = {
       users: MOCK_USERS,
       teams: MOCK_TEAMS,
@@ -25,8 +29,9 @@ export class ServiceTestHelpers {
       },
       ...additionalData,
     };
-    resetDb();
-    seedDb(defaultState as any);
+    // Global afterEach in test/setup.ts handles Firestore cleanup
+    // No manual resetDb needed here
+    await seedDb(defaultState as any);
     vi.resetAllMocks();
     return defaultState;
   }
@@ -35,21 +40,7 @@ export class ServiceTestHelpers {
    * Asynchronous setup for service tests with database seeding
    */
   static async setupServiceTestAsync(additionalData = {}) {
-    const defaultState = {
-      users: MOCK_USERS,
-      teams: MOCK_TEAMS,
-      tarkovdata: {
-        tasks: MOCK_TASKS,
-      },
-      ...additionalData,
-    };
-
-    // Import dynamically to avoid circular dependencies
-    const { seedDb } = await import('../setup');
-    seedDb(defaultState);
-
-    vi.resetAllMocks();
-    return defaultState;
+    return this.setupServiceTest(additionalData);
   }
 
   /**

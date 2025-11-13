@@ -1,5 +1,5 @@
 import { logger } from 'firebase-functions/v2';
-import { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
+import type { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
 import { createLazyFirestore } from '../utils/factory';
 const STASH_STATION_ID = '5d484fc0654e76006657e0ab'; // Stash ID
 const CULTIST_CIRCLE_STATION_ID = '667298e75ea6b4493c08f266'; // Cultist Circle ID
@@ -206,7 +206,7 @@ const _initializeBaseProgress = (
       : (rootGameEdition ?? 1);
   return {
     displayName: progressData?.displayName ?? userId.substring(0, 6),
-    userId: userId,
+    userId,
     playerLevel: progressData?.level ?? 1,
     gameEdition: normalizedGameEdition,
     pmcFaction: progressData?.pmcFaction ?? 'USEC',

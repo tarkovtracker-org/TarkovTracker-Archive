@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
 import { errors } from './errorHandler';
@@ -21,7 +21,7 @@ export const requireRecentAuth = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw errors.unauthorized('Authentication required');
     }
     const idToken = authHeader.split('Bearer ')[1];
@@ -97,7 +97,7 @@ export const requireValidAuthToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw errors.unauthorized('Authentication required');
     }
     const idToken = authHeader.split('Bearer ')[1];

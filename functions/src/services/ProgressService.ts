@@ -1,6 +1,7 @@
 import { logger } from 'firebase-functions/v2';
-import { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
-import {
+import type { Firestore, DocumentReference } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
+import type {
   ProgressDocument,
   FormattedProgress,
   TaskStatus,
@@ -110,8 +111,8 @@ export class ProgressService {
         const updateData: Record<string, boolean | number | FieldValue> = {};
         // Build update data based on state
         this.buildTaskUpdateData(taskId, state, updateTime, updateData, gameMode);
-        // Apply the update within transaction
-        transaction.update(progressRef, updateData);
+        // Apply the update within transaction (creates doc if missing)
+        transaction.set(progressRef, updateData, { merge: true });
         logger.log('Single task update applied in transaction', {
           userId,
           taskId,
@@ -165,8 +166,8 @@ export class ProgressService {
           const { id, state } = task;
           this.buildTaskUpdateData(id, state, updateTime, batchUpdateData, gameMode);
         }
-        // Apply all updates in single transaction
-        transaction.update(progressRef, batchUpdateData);
+        // Apply all updates in single transaction (creates doc if missing)
+        transaction.set(progressRef, batchUpdateData, { merge: true });
         logger.log('Multiple tasks updated in transaction', {
           userId,
           taskCount: taskUpdates.length,

@@ -2,7 +2,7 @@
  * Unit tests for httpMocks utilities
  * Verifies that all mock methods work correctly and maintain state
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createMockResponse,
   createMockRequest,
@@ -12,10 +12,19 @@ import {
   type MockResponse,
   type MockRequest,
 } from './httpMocks';
+import { createTestSuite } from '../helpers';
 describe('httpMocks', () => {
+  const suite = createTestSuite('helpers/httpMocks');
+
+  beforeEach(async () => {
+    await suite.beforeEach();
+  });
+
+  afterEach(suite.afterEach);
+
   describe('createMockResponse', () => {
     let res: MockResponse;
-    beforeEach(() => {
+    beforeEach(async () => {
       res = createMockResponse();
     });
     it('should initialize with default values', () => {

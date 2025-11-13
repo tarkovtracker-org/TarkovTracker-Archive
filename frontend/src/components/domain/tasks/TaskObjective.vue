@@ -131,7 +131,7 @@
         return objective.markerItem ?? null;
       case 'buildWeapon': {
         // Prefer the defaultPreset (full build) if available
-        const item = objective.item;
+        const {item} = objective;
         if (item?.properties?.defaultPreset) {
           return item.properties.defaultPreset;
         }

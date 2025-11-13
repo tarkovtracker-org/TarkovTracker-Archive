@@ -8,6 +8,7 @@ import { createToken } from './token/create';
 import { revokeToken } from './token/revoke';
 import { createApp } from './app/app';
 import { scheduledFunctions } from './scheduled/index';
+import { withCorsHandling } from './middleware/corsWrapper';
 // Firebase Admin initialization
 admin.initializeApp();
 // Export legacy functions for backward compatibility
@@ -25,7 +26,7 @@ async function getApiApp(): Promise<Express> {
   return cachedApp;
 }
 export const rawApp = getApiApp;
-// Main HTTP endpoint
+// Main HTTP endpoint with centralized CORS handling
 export const api = onRequest(
   {
     memory: '256MiB',
@@ -33,17 +34,8 @@ export const api = onRequest(
     minInstances: 0,
     maxInstances: 3,
   },
-  async (req, res) => {
-    const { setCorsHeaders } = await import('./config/corsConfig');
-    if (!setCorsHeaders(req, res)) {
-      res.status(403).send('Origin not allowed');
-      return;
-    }
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
+  withCorsHandling(async (req, res) => {
     const app = await getApiApp();
     return (app as unknown as (req: unknown, res: unknown) => void)(req, res);
-  }
+  })
 );

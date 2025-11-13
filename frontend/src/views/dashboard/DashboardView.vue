@@ -189,7 +189,7 @@
   });
   const neededItemTaskObjectives = computed(() => {
     // Defer computation until after initial render
-    if (!statsReady.value || !objectives || !objectives.value) {
+    if (!statsReady.value || !objectives?.value) {
       return [];
     }
     // Filter objectives to include only those that involve items relevant for counting
@@ -219,14 +219,14 @@
     let tasksWithAlternatives = tasks.value
       ? tasks.value.filter(
           // Ensure task exists and has alternatives before checking length
-          (task) => task && task.alternatives && task.alternatives.length > 0
+          (task) => task?.alternatives && task.alternatives.length > 0
         )
       : []; // Default to empty array if tasks.value is null
     // Ensure tasksWithAlternatives is valid before iterating
     if (tasksWithAlternatives && tasksWithAlternatives.length > 0) {
       tasksWithAlternatives.forEach((task) => {
         // Ensure task and alternatives exist
-        if (task && task.alternatives) {
+        if (task?.alternatives) {
           relevantTasks -= task.alternatives.length - 1;
           // Ensure alternatives exist before iterating
           if (task.alternatives.length > 0) {
@@ -255,7 +255,7 @@
       )
       .forEach((task) => {
         // Check if task and task.objectives exist before accessing length
-        if (task && task.objectives) {
+        if (task?.objectives) {
           total += task.objectives.length;
         }
       });
@@ -263,7 +263,7 @@
   });
   const completedObjectives = computed(() => {
     // Defer computation until after initial render
-    if (!statsReady.value || !objectives || !objectives.value || !tarkovStore) {
+    if (!statsReady.value || !objectives?.value || !tarkovStore) {
       return 0;
     }
     return objectives.value.filter(
@@ -278,7 +278,7 @@
       return 0;
     }
     return Object.values(tasksCompletions.value).filter(
-      (task) => task && task.self === true // Ensure task exists before checking self property
+      (task) => task?.self === true // Ensure task exists before checking self property
     ).length;
   });
   const completedTaskItems = computed(() => {
@@ -312,13 +312,12 @@
       ) {
         return;
       }
-      let relatedTask = tasks.value.find(
+      const relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
       const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
-        !relatedTask ||
-        !relatedTask.factionName ||
+        !relatedTask?.factionName ||
         currentPMCFaction === undefined ||
         (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
@@ -328,8 +327,8 @@
       const taskCompletion = tasksCompletions.value?.[objective.taskId];
       const objectiveCompletion = objectiveCompletions.value?.[objective.id];
       if (
-        (taskCompletion && taskCompletion['self']) ||
-        (objectiveCompletion && objectiveCompletion['self']) ||
+        (taskCompletion && taskCompletion.self) ||
+        (objectiveCompletion && objectiveCompletion.self) ||
         (objective.count &&
           objective.id &&
           objective.count <= tarkovStore.getObjectiveCount(objective.id))
@@ -345,7 +344,7 @@
   });
   const totalTaskItems = computed(() => {
     // Defer computation until after initial render
-    if (!statsReady.value || !objectives || !objectives.value || !tasks.value || !tarkovStore) {
+    if (!statsReady.value || !objectives?.value || !tasks.value || !tarkovStore) {
       return 0;
     }
     let total = 0;
@@ -367,13 +366,12 @@
       ) {
         return;
       }
-      let relatedTask = tasks.value.find(
+      const relatedTask = tasks.value.find(
         (task) => task && objective.taskId && task.id === objective.taskId
       );
       const currentPMCFaction = tarkovStore.getPMCFaction();
       if (
-        !relatedTask ||
-        !relatedTask.factionName ||
+        !relatedTask?.factionName ||
         currentPMCFaction === undefined ||
         (relatedTask.factionName !== 'Any' && relatedTask.factionName !== currentPMCFaction)
       ) {
@@ -394,8 +392,7 @@
     }
     return tasks.value.filter(
       (task) =>
-        task &&
-        task.kappaRequired === true &&
+        task?.kappaRequired === true &&
         (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
     ).length;
   });
@@ -406,8 +403,7 @@
     }
     return tasks.value.filter(
       (task) =>
-        task &&
-        task.kappaRequired === true &&
+        task?.kappaRequired === true &&
         (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction()) &&
         tasksCompletions.value?.[task.id]?.self === true
     ).length;

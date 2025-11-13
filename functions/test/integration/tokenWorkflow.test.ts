@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { adminMock } from '../setup';
-import { TokenService } from '../../src/services/TokenService';
-import { ProgressService } from '../../src/services/ProgressService';
-import { resetDb, seedDb } from '../setup';
+import { admin, createTestSuite } from '../../helpers';
+import { TokenService } from '../../../src/services/TokenService';
+import { ProgressService } from '../../../src/services/ProgressService';
 describe('Token Management Workflow Integration Tests', () => {
+  const suite = createTestSuite('TokenWorkflow');
   let tokenService: TokenService;
   let progressService: ProgressService;
   let testUserId: string;
   beforeEach(async () => {
-    resetDb();
+    await suite.beforeEach();
     tokenService = new TokenService();
     progressService = new ProgressService();
     testUserId = `test-user-token-${Date.now()}`;
     // Seed required data for tests
-    seedDb({
+    await suite.withDatabase({
       tarkovdata: {
         tasks: {
           'token-test-task': { id: 'token-test-task' },
@@ -30,9 +30,9 @@ describe('Token Management Workflow Integration Tests', () => {
       },
     });
   });
-  afterEach(() => {
-    resetDb();
-  });
+
+  afterEach(suite.afterEach);
+
   describe('Token Creation → Usage → Expiration → Renewal Cycle', () => {
     it('should handle complete token lifecycle with proper state management', async () => {
       // Step 1: Token Creation
@@ -52,7 +52,7 @@ describe('Token Management Workflow Integration Tests', () => {
       expect(tokenInfo.permissions).toEqual(['GP', 'WP']);
       // Verify token can be used for progress operations
       // Create progress document first
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -67,7 +67,7 @@ describe('Token Management Workflow Integration Tests', () => {
         });
       await progressService.validateTaskAccess(testUserId, 'token-test-task');
       await progressService.updateSingleTask(testUserId, 'token-test-task', 'completed', 'pvp');
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
       expect(progressDoc.exists).toBe(true);
       // Step 3: Token Listing and Management
       const userTokens = await tokenService.listUserTokens(testUserId);
@@ -103,7 +103,7 @@ describe('Token Management Workflow Integration Tests', () => {
       });
       // Simulate token collision by manually creating a token with same ID
       const tokenId = initialToken.token;
-      await adminMock
+      await admin
         .firestore()
         .collection('token')
         .doc(tokenId)
@@ -122,9 +122,9 @@ describe('Token Management Workflow Integration Tests', () => {
       expect(newToken.token).not.toBe(tokenId);
       expect(newToken.owner).toBe(testUserId);
       // Verify both tokens exist in database
-      const tokenDoc1 = await adminMock.firestore().collection('token').doc(tokenId).get();
+      const tokenDoc1 = await admin.firestore().collection('token').doc(tokenId).get();
 
-      const tokenDoc2 = await adminMock.firestore().collection('token').doc(newToken.token).get();
+      const tokenDoc2 = await admin.firestore().collection('token').doc(newToken.token).get();
       expect(tokenDoc1.exists).toBe(true);
       expect(tokenDoc2.exists).toBe(true);
     });
@@ -137,7 +137,7 @@ describe('Token Management Workflow Integration Tests', () => {
       });
       // Manually set expiration to past
       const pastTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
-      await adminMock.firestore().collection('token').doc(expiredToken.token).update({
+      await admin.firestore().collection('token').doc(expiredToken.token).update({
         expiresAt: pastTime,
       });
       // Verify expired token is not accessible
@@ -181,7 +181,7 @@ describe('Token Management Workflow Integration Tests', () => {
         gameMode: 'pvp',
       });
       // Create progress document first
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -243,7 +243,7 @@ describe('Token Management Workflow Integration Tests', () => {
       const uniqueTokenIds = new Set(tokenIds);
       expect(uniqueTokenIds.size).toBe(5);
       // Create progress document first
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -271,7 +271,7 @@ describe('Token Management Workflow Integration Tests', () => {
       });
       await Promise.all(usagePromises);
       // Verify all progress updates were applied
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
 
       expect(progressDoc.exists).toBe(true);
       // Revoke all tokens concurrently
@@ -304,7 +304,7 @@ describe('Token Management Workflow Integration Tests', () => {
       const writeTokenInfo = await tokenService.getTokenInfo(writeToken.token);
       expect(writeTokenInfo.permissions).toEqual(['GP', 'WP']);
       // Create progress document first
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(testUserId)
@@ -325,7 +325,7 @@ describe('Token Management Workflow Integration Tests', () => {
         'completed',
         'pvp'
       );
-      const progressDoc = await adminMock.firestore().collection('progress').doc(testUserId).get();
+      const progressDoc = await admin.firestore().collection('progress').doc(testUserId).get();
 
       expect(progressDoc.exists).toBe(true);
       // Both tokens should be able to access progress

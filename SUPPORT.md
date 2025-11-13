@@ -1,53 +1,23 @@
 # Support Resources
 
-Thanks for your interest in TarkovTracker! We want to make it easy to find
-answers and get help when you need it.
-
-## Self-service resources
-
-- **Documentation** – Start with the [README](README.md) for an overview and
-  check the [`docs/`](docs/) directory for API references.
-- **Changelog** – Review [CHANGELOG.md](CHANGELOG.md) to see what has changed
-  between releases.
-- **Discussions** – Browse
-  [GitHub Discussions](https://github.com/tarkovtracker-org/TarkovTracker/discussions)
-  for community Q&A, feature ideas, and announcements.
+## Self-service
+- Start with the [README](README.md) and the [`docs/`](docs/) guide tree to orient on features, development workflows, or API reference.
+- Use `npm run docs` locally to regenerate the OpenAPI spec if you need fresh API details.
 
 ## Ask the community
-
-- Join the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6) for live chat,
-  play sessions, and quick feedback loops.
-- Create a new discussion under the `Q&A` or `Ideas` categories.
-- Join informal playtests or co-working sessions announced in the `Events`
-  category.
-- Share tips, builds, or third-party integrations that other players might find
-  helpful.
+- Join the [TarkovTracker Discord](https://discord.gg/M8nBgA2sT6) for live chat, squad coordination, and quick feedback.
+- Open a GitHub Discussion in the `Q&A`, `Ideas`, or `Help Wanted` category to crowdsource answers or brainstorm features.
 
 ## Report a bug
-
-- Search
-  [existing issues](https://github.com/tarkovtracker-org/TarkovTracker/issues)
-  to avoid duplicates.
-- If no issue exists, open a new one and include reproduction steps,
-  screenshots, browser/OS versions, and any relevant logs.
-- Clearly label the issue (e.g., `bug`, `enhancement`, `documentation`) to help
-  maintainers triage quickly.
+- Search existing [issues](https://github.com/tarkovtracker-org/TarkovTracker/issues) first.
+- If nothing exists, open a new issue with reproduction steps, browser/OS info, and any relevant logs or screenshots.
+- Label the issue (e.g., `bug`, `documentation`) so maintainers can triage faster.
 
 ## Security & privacy
-
-If you discover a vulnerability or data exposure, follow our
-[Security Policy](SECURITY.md) for responsible disclosure. Please do **not**
-share sensitive findings publicly.
+- Report vulnerabilities through [SECURITY.md](SECURITY.md); do **not** post them publicly.
+- Include reproduction steps, impact, and mitigation ideas; encrypt via PGP if you prefer.
 
 ## Direct contact
-
-- General inquiries:
-  [support@tarkovtracker.org](mailto:support@tarkovtracker.org)
-- Conduct concerns:
-  [report@tarkovtracker.org](mailto:report@tarkovtracker.org)
-- Security incidents:
-  [security@tarkovtracker.org](mailto:security@tarkovtracker.org)
-
-We are a volunteer-run project, but we do our best to respond within a few
-business days. Thank you for your patience and for being part of the
-TarkovTracker community!
+- General inquiries: [support@tarkovtracker.org](mailto:support@tarkovtracker.org)
+- Conduct concerns: [report@tarkovtracker.org](mailto:report@tarkovtracker.org)
+- Security incidents: [security@tarkovtracker.org](mailto:security@tarkovtracker.org)

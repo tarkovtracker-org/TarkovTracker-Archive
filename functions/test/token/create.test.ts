@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { HttpsError } from 'firebase-functions/v2/https';
+import { createTestSuite } from '../helpers';
 // Mock types for testing
 interface MockCallableRequest {
   auth: { uid: string } | null;
@@ -43,6 +44,11 @@ function validateTokenRequest(request: MockCallableRequest): void {
   validateGameMode(request.data.gameMode);
 }
 describe('Token Creation - gameMode Validation', () => {
+  const suite = createTestSuite('token/create');
+
+  beforeEach(suite.beforeEach);
+  afterEach(suite.afterEach);
+
   describe('gameMode validation', () => {
     it('should accept valid gameMode values', () => {
       const validGameModes = ['pvp', 'pve', 'dual'];

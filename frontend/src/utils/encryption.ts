@@ -55,7 +55,8 @@ const deriveEncryptionKey = async (): Promise<CryptoKey> => {
     'tarkovtracker_v1', // App-specific constant
   ].join('|');
   const encoder = new TextEncoder();
-  const keyMaterialBuffer = encoder.encode(keyMaterial);
+  // Ensure we always work with the global Uint8Array instance to avoid cross-realm mismatches
+  const keyMaterialBuffer = new Uint8Array(encoder.encode(keyMaterial));
   // Import the key material
   const importedKey = await crypto.subtle.importKey('raw', keyMaterialBuffer, 'PBKDF2', false, [
     'deriveBits',
@@ -86,7 +87,7 @@ export const encryptData = async (plaintext: string): Promise<string> => {
     const key = await deriveEncryptionKey();
     const iv = generateRandomBuffer(IV_LENGTH);
     const encoder = new TextEncoder();
-    const data = encoder.encode(plaintext);
+    const data = new Uint8Array(encoder.encode(plaintext));
     const encryptedBuffer = await crypto.subtle.encrypt(
       {
         name: ALGORITHM,

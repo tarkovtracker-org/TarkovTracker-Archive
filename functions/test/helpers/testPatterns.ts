@@ -15,6 +15,9 @@ import { resetDb, seedDb, SeedData, admin, firestore } from './emulatorSetup';
 /**
  * Pattern for testing a service with Firestore operations
  *
+ * NOTE: Firestore is automatically cleaned by the global afterEach hook in test/setup.ts.
+ * This function focuses on seeding initial data for the test.
+ *
  * Usage:
  * ```typescript
  * const { service, db, seed } = await createServiceTest(TokenService);
@@ -26,8 +29,9 @@ import { resetDb, seedDb, SeedData, admin, firestore } from './emulatorSetup';
  * ```
  */
 export async function createServiceTest<T>(ServiceClass: new (db: any) => T, initialData?: SeedData) {
-  await resetDb();
-
+  // Global afterEach in test/setup.ts handles Firestore cleanup
+  // No need to reset here - DB is already clean from previous test
+  
   if (initialData) {
     await seedDb(initialData);
   }
@@ -39,6 +43,8 @@ export async function createServiceTest<T>(ServiceClass: new (db: any) => T, ini
     service,
     db,
     seed: seedDb,
+    // Exposed for tests that need explicit cleanup mid-test
+    // Most tests should rely on the global afterEach hook instead
     reset: resetDb,
     getAllDocs: (collection: string) => db.collection(collection).get(),
     getDoc: (collection: string, id: string) => db.collection(collection).doc(id).get(),
@@ -98,6 +104,8 @@ export function createHandlerTest() {
 /**
  * Pattern for testing Firestore transactions
  *
+ * NOTE: Firestore is automatically cleaned by the global afterEach hook in test/setup.ts.
+ *
  * Usage:
  * ```typescript
  * const transaction = createTransactionTest();
@@ -107,7 +115,7 @@ export function createHandlerTest() {
  * ```
  */
 export async function testTransaction<T>(callback: (db: any) => Promise<T>): Promise<T> {
-  await resetDb();
+  // Global afterEach in test/setup.ts handles Firestore cleanup
   const db = firestore();
   return callback(db);
 }

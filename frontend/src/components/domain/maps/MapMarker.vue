@@ -81,8 +81,8 @@
       return { leftPercent: 0, topPercent: 0 }; // Return default if bounds are invalid
     }
     // Get original coordinates
-    let originalX = props.markLocation.positions[0].x;
-    let originalZ = props.markLocation.positions[0].z;
+    const originalX = props.markLocation.positions[0].x;
+    const originalZ = props.markLocation.positions[0].z;
     // Apply coordinate rotation if specified (but keep original bounds)
     const coordinateRotation = props.map?.svg?.coordinateRotation || 0;
     let x = originalX;
@@ -102,20 +102,20 @@
     }
     // Use bounds to calculate percentage-based positioning
     // (transform matrix is for tarkov.dev's Leaflet system, not for our SVG percentages)
-    let mapLeft = bounds[0][0];
-    let mapTop = bounds[0][1];
-    let mapWidth = Math.abs(bounds[1][0] - bounds[0][0]);
-    let mapHeight = Math.abs(bounds[1][1] - bounds[0][1]);
+    const mapLeft = bounds[0][0];
+    const mapTop = bounds[0][1];
+    const mapWidth = Math.abs(bounds[1][0] - bounds[0][0]);
+    const mapHeight = Math.abs(bounds[1][1] - bounds[0][1]);
     // Prevent division by zero if width or height is 0
     if (mapWidth === 0 || mapHeight === 0) {
       logger.warn('MapMarker: Map width or height is zero for map:', props.map?.name);
       return { leftPercent: 0, topPercent: 0 };
     }
     // Calculate position relative to bounds with proper handling of coordinate direction
-    let relativeLeft = Math.abs(x - mapLeft);
-    let relativeTop = Math.abs(z - mapTop);
-    let relativeLeftPercent = (relativeLeft / mapWidth) * 100;
-    let relativeTopPercent = (relativeTop / mapHeight) * 100;
+    const relativeLeft = Math.abs(x - mapLeft);
+    const relativeTop = Math.abs(z - mapTop);
+    const relativeLeftPercent = (relativeLeft / mapWidth) * 100;
+    const relativeTopPercent = (relativeTop / mapHeight) * 100;
     return {
       leftPercent: relativeLeftPercent,
       topPercent: relativeTopPercent,

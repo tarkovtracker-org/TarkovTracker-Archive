@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { adminMock } from '../setup';
-import { TeamService } from '../../src/services/TeamService';
-import { ProgressService } from '../../src/services/ProgressService';
-import { TokenService } from '../../src/services/TokenService';
-import { resetDb, seedDb } from '../setup';
+import { admin, createTestSuite } from '../../helpers';
+import { TeamService } from '../../../src/services/TeamService';
+import { ProgressService } from '../../../src/services/ProgressService';
+import { TokenService } from '../../../src/services/TokenService';
 describe('Team Collaboration Integration Tests', () => {
+  const suite = createTestSuite('TeamCollaboration');
   let teamService: TeamService;
   let progressService: ProgressService;
   let tokenService: TokenService;
@@ -12,7 +12,7 @@ describe('Team Collaboration Integration Tests', () => {
   let memberUserIds: string[];
   let testTeamId: string;
   beforeEach(async () => {
-    resetDb();
+    await suite.beforeEach();
     teamService = new TeamService();
     progressService = new ProgressService();
     tokenService = new TokenService();
@@ -20,7 +20,7 @@ describe('Team Collaboration Integration Tests', () => {
     memberUserIds = [`member1-${Date.now()}`, `member2-${Date.now()}`, `member3-${Date.now()}`];
     testTeamId = `team-${Date.now()}`;
     // Seed required data for tests
-    seedDb({
+    await suite.withDatabase({
       tarkovdata: {
         tasks: {
           'task-1': { id: 'task-1' },
@@ -44,9 +44,9 @@ describe('Team Collaboration Integration Tests', () => {
       },
     });
   });
-  afterEach(() => {
-    resetDb();
-  });
+
+  afterEach(suite.afterEach);
+
   describe('Multi-user Scenarios: Team Creation → Member Addition → Progress Sharing → Ownership Transfer', () => {
     it('should handle complete team collaboration workflow', async () => {
       // Step 1: Team Creation
@@ -61,27 +61,27 @@ describe('Team Collaboration Integration Tests', () => {
           requireApproval: false,
         },
       };
-      await adminMock.firestore().collection('teams').doc(testTeamId).set(teamData);
+      await admin.firestore().collection('teams').doc(testTeamId).set(teamData);
       // Verify team creation
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
       expect(teamDoc.exists).toBe(true);
       expect(teamDoc.data()?.owner).toBe(ownerUserId);
       expect(teamDoc.data()?.members).toEqual([ownerUserId]);
       // Step 2: Member Addition
       for (const memberId of memberUserIds) {
-        await adminMock
+        await admin
           .firestore()
           .collection('teams')
           .doc(testTeamId)
           .update({
-            members: adminMock.FieldValue.arrayUnion(memberId),
+            members: admin.firestore.FieldValue.arrayUnion(memberId),
           });
       }
       // Verify all members are added
-      const updatedTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const updatedTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
-      const teamMembers = updatedTeamDoc.data()?.members || [];
+      const teamMembers = updatedTeamDoc.data()?.members ?? [];
       expect(teamMembers).toHaveLength(4); // owner + 3 members
       memberUserIds.forEach((memberId) => {
         expect(teamMembers).toContain(memberId);
@@ -96,7 +96,7 @@ describe('Team Collaboration Integration Tests', () => {
       ];
       for (const { userId, tasks } of memberProgress) {
         // Create progress document first
-        await adminMock
+        await admin
           .firestore()
           .collection('progress')
           .doc(userId)
@@ -116,15 +116,15 @@ describe('Team Collaboration Integration Tests', () => {
       }
       // Verify all progress is created
       for (const { userId, tasks } of memberProgress) {
-        const progressDoc = await adminMock.firestore().collection('progress').doc(userId).get();
+        const progressDoc = await admin.firestore().collection('progress').doc(userId).get();
 
         expect(progressDoc.exists).toBe(true);
 
         const progressData = progressDoc.data();
         const taskCompletions =
-          progressData.taskCompletions ||
-          progressData.pvp?.taskCompletions ||
-          progressData.pve?.taskCompletions ||
+          progressData?.taskCompletions ??
+          progressData?.pvp?.taskCompletions ??
+          progressData?.pve?.taskCompletions ??
           {};
 
         tasks.forEach((taskId) => {
@@ -138,18 +138,18 @@ describe('Team Collaboration Integration Tests', () => {
       expect(Object.keys(teamProgress)).toHaveLength(4); // All members
       // Step 5: Ownership Transfer
       const newOwner = memberUserIds[0];
-      await adminMock.firestore().collection('teams').doc(testTeamId).update({
+      await admin.firestore().collection('teams').doc(testTeamId).update({
         owner: newOwner,
       });
       // Verify ownership transfer
-      const finalTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const finalTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
       expect(finalTeamDoc.data()?.owner).toBe(newOwner);
       expect(finalTeamDoc.data()?.members).toContain(ownerUserId); // Old owner remains as member
     });
     it('should handle concurrent member operations', async () => {
       // Create initial team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -161,19 +161,19 @@ describe('Team Collaboration Integration Tests', () => {
         });
       // Add members concurrently
       const addMemberPromises = memberUserIds.map((memberId) =>
-        adminMock
+        admin
           .firestore()
           .collection('teams')
           .doc(testTeamId)
           .update({
-            members: adminMock.FieldValue.arrayUnion(memberId),
+            members: admin.firestore.FieldValue.arrayUnion(memberId),
           })
       );
       await Promise.all(addMemberPromises);
       // Verify all members were added
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
-      const teamMembers = teamDoc.data()?.members || [];
+      const teamMembers = teamDoc.data()?.members ?? [];
       expect(teamMembers).toHaveLength(4);
       memberUserIds.forEach((memberId) => {
         expect(teamMembers).toContain(memberId);
@@ -183,7 +183,7 @@ describe('Team Collaboration Integration Tests', () => {
 
       // First create progress documents for all users
       const createProgressPromises = allUserIds.map((userId) =>
-        adminMock
+        admin
           .firestore()
           .collection('progress')
           .doc(userId)
@@ -211,15 +211,15 @@ describe('Team Collaboration Integration Tests', () => {
       // Verify all progress was created
       for (let i = 0; i < allUserIds.length; i++) {
         const userId = allUserIds[i];
-        const progressDoc = await adminMock.firestore().collection('progress').doc(userId).get();
+        const progressDoc = await admin.firestore().collection('progress').doc(userId).get();
 
         expect(progressDoc.exists).toBe(true);
 
         const progressData = progressDoc.data();
         const taskCompletions =
-          progressData.taskCompletions ||
-          progressData.pvp?.taskCompletions ||
-          progressData.pve?.taskCompletions ||
+          progressData?.taskCompletions ??
+          progressData?.pvp?.taskCompletions ??
+          progressData?.pve?.taskCompletions ??
           {};
 
         expect(taskCompletions).toHaveProperty(`concurrent-task-${i}`);
@@ -228,7 +228,7 @@ describe('Team Collaboration Integration Tests', () => {
     });
     it('should handle member removal with progress preservation', async () => {
       // Create team with members
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -243,7 +243,7 @@ describe('Team Collaboration Integration Tests', () => {
 
       // First create progress documents
       const createProgressPromises = allUserIds.map((userId) =>
-        adminMock
+        admin
           .firestore()
           .collection('progress')
           .doc(userId)
@@ -268,21 +268,21 @@ describe('Team Collaboration Integration Tests', () => {
       }
       // Remove one member
       const memberToRemove = memberUserIds[0];
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
         .update({
-          members: adminMock.FieldValue.arrayRemove(memberToRemove),
+          members: admin.firestore.FieldValue.arrayRemove(memberToRemove),
         });
       // Verify member is removed from team
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
-      const teamMembers = teamDoc.data()?.members || [];
+      const teamMembers = teamDoc.data()?.members ?? [];
       expect(teamMembers).not.toContain(memberToRemove);
       expect(teamMembers).toHaveLength(3); // owner + 2 remaining members
       // Verify removed member's progress is preserved
-      const removedMemberProgress = await adminMock
+      const removedMemberProgress = await admin
         .firestore()
         .collection('progress')
         .doc(memberToRemove)
@@ -292,9 +292,9 @@ describe('Team Collaboration Integration Tests', () => {
 
       const progressData = removedMemberProgress.data();
       const taskCompletions =
-        progressData.taskCompletions ||
-        progressData.pvp?.taskCompletions ||
-        progressData.pve?.taskCompletions ||
+        progressData?.taskCompletions ??
+        progressData?.pvp?.taskCompletions ??
+        progressData?.pve?.taskCompletions ??
         {};
 
       expect(taskCompletions).toHaveProperty('removal-test-task');
@@ -308,7 +308,7 @@ describe('Team Collaboration Integration Tests', () => {
   describe('Permission Checks and Access Controls', () => {
     it('should enforce proper permission checks for team operations', async () => {
       // Create team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -341,7 +341,7 @@ describe('Team Collaboration Integration Tests', () => {
       expect(Object.keys(memberTeamProgress)).toHaveLength(4);
       // Test task access validation
       // Create progress document first
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(ownerUserId)
@@ -378,7 +378,7 @@ describe('Team Collaboration Integration Tests', () => {
     });
     it('should handle team ownership transfer with permission updates', async () => {
       // Create team with owner
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -396,7 +396,7 @@ describe('Team Collaboration Integration Tests', () => {
       });
       // Transfer ownership to member
       const newOwner = memberUserIds[0];
-      await adminMock.firestore().collection('teams').doc(testTeamId).update({
+      await admin.firestore().collection('teams').doc(testTeamId).update({
         owner: newOwner,
       });
       // Create token for new owner
@@ -409,7 +409,7 @@ describe('Team Collaboration Integration Tests', () => {
       const newOwnerTeamProgress = await teamService.getTeamProgress(testTeamId);
       expect(Object.keys(newOwnerTeamProgress)).toHaveLength(4);
       // Verify old owner is still a member but not owner
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
       expect(teamDoc.data()?.owner).toBe(newOwner);
       expect(teamDoc.data()?.members).toContain(ownerUserId);
@@ -419,7 +419,7 @@ describe('Team Collaboration Integration Tests', () => {
     });
     it('should handle team settings and member permissions', async () => {
       // Create team with restrictive settings
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -434,7 +434,7 @@ describe('Team Collaboration Integration Tests', () => {
           },
         });
       // Create progress for owner
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(ownerUserId)
@@ -451,7 +451,7 @@ describe('Team Collaboration Integration Tests', () => {
       await progressService.updateSingleTask(ownerUserId, 'owner-only-task', 'completed', 'pvp');
       // Create progress for members
       for (const memberId of memberUserIds) {
-        await adminMock
+        await admin
           .firestore()
           .collection('progress')
           .doc(memberId)
@@ -491,27 +491,27 @@ describe('Team Collaboration Integration Tests', () => {
       };
       // This should fail gracefully
       try {
-        await adminMock.firestore().collection('teams').doc(testTeamId).set(invalidTeamData);
+        await admin.firestore().collection('teams').doc(testTeamId).set(invalidTeamData);
 
         // If we get here, team was created despite invalid data
-        const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+        const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
         if (teamDoc.exists) {
           // Clean up invalid team
-          await adminMock.firestore().collection('teams').doc(testTeamId).delete();
+          await admin.firestore().collection('teams').doc(testTeamId).delete();
         }
-      } catch (error) {
+      } catch (_error) {
         // Expected behavior - invalid team creation should fail
-        expect(error).toBeTruthy();
+        expect(_error).toBeTruthy();
       }
       // Verify no invalid team exists
-      const teamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const teamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
       expect(teamDoc.exists).toBe(false);
     });
     it('should handle member addition failures with rollback', async () => {
       // Create initial team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -522,7 +522,7 @@ describe('Team Collaboration Integration Tests', () => {
           createdAt: Date.now(),
         });
       // Create progress for initial state
-      await adminMock
+      await admin
         .firestore()
         .collection('progress')
         .doc(ownerUserId)
@@ -537,32 +537,32 @@ describe('Team Collaboration Integration Tests', () => {
         });
       await progressService.validateTaskAccess(ownerUserId, 'initial-task');
       await progressService.updateSingleTask(ownerUserId, 'initial-task', 'completed', 'pvp');
-      const initialTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const initialTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
-      const initialMembers = initialTeamDoc.data()?.members || [];
+      const initialMembers = initialTeamDoc.data()?.members ?? [];
       // Simulate failed member addition
       try {
         // Try to add invalid member (empty string)
-        await adminMock
+        await admin
           .firestore()
           .collection('teams')
           .doc(testTeamId)
           .update({
-            members: adminMock.FieldValue.arrayUnion(''),
+            members: admin.firestore.FieldValue.arrayUnion(''),
           });
-      } catch (error) {
+      } catch (_error) {
         // Expected to fail
       }
       // Verify team state is unchanged
-      const finalTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const finalTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
-      const finalMembers = finalTeamDoc.data()?.members || [];
+      const finalMembers = finalTeamDoc.data()?.members ?? [];
       expect(finalMembers).toEqual(initialMembers);
       expect(finalMembers).not.toContain('');
     });
     it('should handle concurrent team operations with conflict resolution', async () => {
       // Create initial team
-      await adminMock
+      await admin
         .firestore()
         .collection('teams')
         .doc(testTeamId)
@@ -574,19 +574,19 @@ describe('Team Collaboration Integration Tests', () => {
         });
       // Simulate concurrent ownership transfers
       const transferPromises = memberUserIds.map((newOwner) =>
-        adminMock.firestore().collection('teams').doc(testTeamId).update({
+        admin.firestore().collection('teams').doc(testTeamId).update({
           owner: newOwner,
         })
       );
       await Promise.all(transferPromises);
       // Verify final state has one of the members as owner
-      const finalTeamDoc = await adminMock.firestore().collection('teams').doc(testTeamId).get();
+      const finalTeamDoc = await admin.firestore().collection('teams').doc(testTeamId).get();
 
       const finalOwner = finalTeamDoc.data()?.owner;
       expect(memberUserIds).toContain(finalOwner);
       expect(finalOwner).not.toBe(ownerUserId);
       // Verify team integrity is maintained
-      const finalMembers = finalTeamDoc.data()?.members || [];
+      const finalMembers = finalTeamDoc.data()?.members ?? [];
       expect(finalMembers).toContain(ownerUserId);
       expect(finalMembers).toHaveLength(4);
     });

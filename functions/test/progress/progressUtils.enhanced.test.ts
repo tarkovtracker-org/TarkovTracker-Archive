@@ -1,11 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   formatProgress,
   updateTaskState,
   invalidateTaskRecursive,
 } from '../../src/progress/progressUtils';
+import { createTestSuite } from '../helpers';
 
 describe('progressUtils - Enhanced Coverage', () => {
+  const suite = createTestSuite('progress/progressUtils.enhanced');
+
+  beforeEach(suite.beforeEach);
+  afterEach(suite.afterEach);
+
   describe('formatProgress', () => {
     it('formats progress with default game mode', () => {
       const mockHideoutData = {

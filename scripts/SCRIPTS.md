@@ -16,9 +16,7 @@ Scripts are organized to avoid confusion and provide clear entry points from the
 **Note:** Legacy upgrade scripts (`snapshot.sh`, `health-check.sh`, `batch-update.sh`)
 have been archived after completing the Firebase 12 and dependency upgrade cycle.
 
-**Quick Start:** See [docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md](../docs/REPORTS/DEPENDENCY_UPGRADE_QUICK_START.md)
-
-**Full Strategy:** See [docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md](../docs/REPORTS/DEPENDENCY_UPGRADE_STRATEGY.md)
+**Dependency Guide:** See [docs/DEVELOPMENT.md#dependency-management](../docs/DEVELOPMENT.md#dependency-management)
 
 ### Manual Dependency Checks
 

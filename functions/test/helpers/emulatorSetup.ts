@@ -6,26 +6,23 @@
  */
 
 import * as admin from 'firebase-admin';
-import {
-  FieldValue,
-  Query,
-  CollectionReference,
-} from 'firebase-admin/firestore';
-
-// ============================================================================
+import { FieldValue, Query, CollectionReference } from 'firebase-admin/firestore';
+// Import the entire module to avoid hard dependency on specific named exports
+// Some tests fully mock this module and omit certain exports (e.g., clearDataLoaderCache).
+// Using a namespace import lets us safely no-op when the export is missing.
+import * as dataLoaders from '../../src/utils/dataLoaders';
+import { getFirebaseProjectId } from '../../src/config/project';
 // INITIALIZATION
-// ============================================================================
-
 export function initializeEmulator(): admin.app.App {
   // Use emulator if FIRESTORE_EMULATOR_HOST is set (set by vitest.config.js)
   if (process.env.FIRESTORE_EMULATOR_HOST) {
-    process.env.FIREBASE_AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST || '127.0.0.1:9099';
+    process.env.FIREBASE_AUTH_EMULATOR_HOST =
+      process.env.FIREBASE_AUTH_EMULATOR_HOST ?? '127.0.0.1:9099';
   }
-
   // Initialize admin SDK pointing to test project
   if (!admin.apps.length) {
     admin.initializeApp({
-      projectId: 'test-project',
+      projectId: getFirebaseProjectId(),
     });
   }
 
@@ -58,8 +55,8 @@ export function auth() {
  * Uses HTTP DELETE to the emulator's clear endpoint
  */
 export async function resetDb(): Promise<void> {
-  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:5002';
-  const projectId = 'test-project';
+  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:5002';
+  const projectId = getFirebaseProjectId();
   const url = `http://${emulatorHost}/emulator/v1/projects/${projectId}/databases/(default)/documents`;
 
   try {
@@ -81,9 +78,18 @@ export async function resetDb(): Promise<void> {
     } finally {
       clearTimeout(timeoutId);
     }
-  } catch (err) {
+  } catch (_err) {
     // Silently fail if emulator is not running or times out
     // (tests might be using mocks or emulator might be started elsewhere)
+  }
+
+  // Always clear cached Firestore snapshots so future tests refetch seeded data.
+  // If the module was mocked and this export is missing, safely skip.
+  try {
+    // Optional chaining guards against mocked modules without this export
+    (dataLoaders as any).clearDataLoaderCache?.();
+  } catch {
+    // no-op if mocked without the export
   }
 }
 
@@ -287,7 +293,9 @@ export function deleteField(): FieldValue {
  * Run a transaction with automatic rollback on error
  * Emulator handles transaction semantics automatically
  */
-export async function runTransaction<T>(callback: (transaction: admin.firestore.Transaction) => Promise<T>): Promise<T> {
+export async function runTransaction<T>(
+  callback: (transaction: admin.firestore.Transaction) => Promise<T>
+): Promise<T> {
   const db = firestore();
   return db.runTransaction(callback);
 }
@@ -360,29 +368,27 @@ export async function waitFor(
   intervalMs: number = 100
 ): Promise<void> {
   const startTime = Date.now();
-
-  while (true) {
-    if (await condition()) {
-      return;
-    }
-
-    if (Date.now() - startTime > timeoutMs) {
-      throw new Error(`Timeout waiting for condition (${timeoutMs}ms)`);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  // Loop until condition passes or timeout occurs
+  // Using explicit while to allow early returns.
+  while (Date.now() - startTime <= timeoutMs) {
+    if (await condition()) return;
+    await new Promise((resolve) => {
+      setTimeout(resolve, intervalMs);
+    });
   }
+  throw new Error(`Timeout waiting for condition (${timeoutMs}ms)`);
 }
 
 /**
  * Assert that a collection has a specific count of documents
  */
-export async function assertCollectionSize(collectionName: string, expectedSize: number): Promise<void> {
+export async function assertCollectionSize(
+  collectionName: string,
+  expectedSize: number
+): Promise<void> {
   const docs = await getAllDocs(collectionName);
   if (docs.length !== expectedSize) {
-    throw new Error(
-      `Expected ${expectedSize} documents in ${collectionName}, got ${docs.length}`
-    );
+    throw new Error(`Expected ${expectedSize} documents in ${collectionName}, got ${docs.length}`);
   }
 }
 

@@ -9,12 +9,12 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { logger } from 'firebase-functions/v2';
-import { verifyBearer } from '../middleware/auth';
+import { verifyBearerToken } from '../middleware/httpAuthWrapper';
+import { requirePermission } from '../middleware/httpAuthWrapper';
 import { abuseGuard } from '../middleware/abuseGuard';
 import { requireRecentAuth } from '../middleware/reauth';
-import { requirePermission } from '../middleware/permissions';
 import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler';
-import { getExpressCorsOptions } from '../config/corsConfig';
+import { corsMiddleware } from '../middleware/corsWrapper';
 import progressHandler from '../handlers/progressHandler';
 import teamHandler from '../handlers/teamHandler';
 import tokenHandler from '../handlers/tokenHandler';
@@ -34,11 +34,13 @@ try {
 }
 export async function createApp(): Promise<Express> {
   const expressModule = await import('express');
-  const corsModule = await import('cors');
   const bodyParserModule = await import('body-parser');
   const app = expressModule.default();
-  // Middleware setup
-  app.use(corsModule.default(getExpressCorsOptions()));
+  // CORS middleware - centralized handling for all requests
+  // Note: The outer onRequest wrapper also handles CORS, but this ensures
+  // consistent behavior when the Express app is used directly (e.g., in tests)
+  app.use(corsMiddleware);
+  // Body parsing middleware
   app.use(bodyParserModule.default.json({ limit: '1mb' }));
   app.use(bodyParserModule.default.urlencoded({ extended: true, limit: '1mb' }));
   // Request logging in non-production
@@ -66,7 +68,8 @@ function setupRoutes(app: Express) {
     );
   }
   // Auth middleware for all /api routes
-  app.use('/api', verifyBearer);
+  // Verifies API bearer tokens and attaches token data to req.apiToken
+  app.use('/api', verifyBearerToken);
   app.use('/api', abuseGuard);
   app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
   // Token endpoints

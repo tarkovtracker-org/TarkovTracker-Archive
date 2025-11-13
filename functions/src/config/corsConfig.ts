@@ -53,18 +53,30 @@ export function validateOrigin(
   }
   try {
     const originUrl = new URL(origin);
+    const normalizedOrigin = origin.toLowerCase();
+    const protocol = originUrl.protocol.toLowerCase();
+    const hostname = originUrl.hostname.toLowerCase();
     const dangerousPatterns = [
       /^null$/i,
       /^file:/i,
+      /^javascript:/i,
+      /^data:/i,
+    ];
+    for (const pattern of dangerousPatterns) {
+      if (pattern.test(normalizedOrigin)) {
+        logger.warn(`CORS: Blocked suspicious origin format: ${origin}`);
+        return false;
+      }
+    }
+    const dangerousHosts = [
       /^localhost$/i,
-      /^127\.0\.0\.1(?:$|:)/i,
+      /^127\.0\.0\.1$/i,
       /^192\.168\./i,
       /^10\./i,
       /^172\.(1[6-9]|2[0-9]|3[0-1])\./i,
     ];
-    const originString = origin.toLowerCase();
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(originString)) {
+    for (const pattern of dangerousHosts) {
+      if (pattern.test(hostname)) {
         if (process.env.NODE_ENV !== 'production') {
           logger.warn(`CORS: Development origin detected: ${origin}`);
           return origin;
@@ -74,7 +86,7 @@ export function validateOrigin(
       }
     }
     if (
-      (originUrl.protocol !== 'http:' && originUrl.protocol !== 'https:') ||
+      (protocol !== 'http:' && protocol !== 'https:') ||
       originUrl.hostname.includes('..') ||
       originUrl.username ||
       originUrl.password
@@ -131,7 +143,7 @@ export function getExpressCorsOptions(): CorsOptions {
   };
 }
 export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
-  const origin = req.headers.origin;
+  const {origin} = req.headers;
   const validatedOrigin = validateOrigin(origin, {
     trustNoOrigin: true,
     allowedOrigins: getAllowedOrigins(),
