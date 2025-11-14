@@ -1,9 +1,9 @@
 /**
  * Authentication middleware for Express applications
- * 
+ *
  * @deprecated This file is kept for backward compatibility.
  * New code should import from ./httpAuthWrapper instead.
- * 
+ *
  * Re-exports authentication utilities from the centralized httpAuthWrapper module.
  */
 
@@ -16,5 +16,7 @@ export {
   withBearerAuthAndPermission,
   withCorsAndBearerAuthAndPermission,
   type AuthenticatedRequest,
-  type AuthenticatedFunctionsRequest,
 } from './httpAuthWrapper';
+
+// Re-export AuthenticatedRequest as AuthenticatedFunctionsRequest for backward compatibility
+export type { AuthenticatedRequest as AuthenticatedFunctionsRequest } from './httpAuthWrapper';

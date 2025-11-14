@@ -1,6 +1,6 @@
 /**
  * Integration tests for HTTP authentication wrapper
- * 
+ *
  * Tests:
  * - verifyBearerToken Express middleware
  * - withBearerAuth for Firebase Functions
@@ -11,7 +11,6 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
-import type { Request as FunctionsRequest, Response as FunctionsResponse } from 'firebase-functions/v2/https';
 import type { ApiToken } from '../../../src/types/api';
 import {
   verifyBearerToken,
@@ -25,8 +24,8 @@ import {
 // Mock TokenService
 vi.mock('../../../src/services/TokenService', () => {
   return {
-    TokenService: vi.fn().mockImplementation(() => ({
-      validateToken: vi.fn((authHeader: string | undefined) => {
+    TokenService: class MockTokenService {
+      validateToken = vi.fn((authHeader: string | undefined) => {
         if (!authHeader) {
           throw new Error('No Authorization header provided');
         }
@@ -51,8 +50,8 @@ vi.mock('../../../src/services/TokenService', () => {
           });
         }
         throw new Error('Invalid or expired token');
-      }),
-    })),
+      });
+    },
   };
 });
 
@@ -89,11 +88,7 @@ describe('HTTP Auth Wrapper', () => {
     it('should authenticate valid bearer token', async () => {
       mockReq.headers = { authorization: 'Bearer valid-token-123' };
 
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(mockReq.apiToken).toBeDefined();
       expect(mockReq.apiToken?.owner).toBe('user-123');
@@ -104,11 +99,7 @@ describe('HTTP Auth Wrapper', () => {
     });
 
     it('should return 401 for missing authorization header', async () => {
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -121,11 +112,7 @@ describe('HTTP Auth Wrapper', () => {
     it('should return 401 for invalid token', async () => {
       mockReq.headers = { authorization: 'Bearer invalid-token' };
 
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -138,11 +125,7 @@ describe('HTTP Auth Wrapper', () => {
     it('should allow OPTIONS requests without authentication', async () => {
       mockReq.method = 'OPTIONS';
 
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(nextFn).toHaveBeenCalled();
       expect(statusFn).not.toHaveBeenCalled();
@@ -183,11 +166,7 @@ describe('HTTP Auth Wrapper', () => {
     it('should allow request with required permission', () => {
       const middleware = requirePermission('GP');
 
-      middleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      middleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(nextFn).toHaveBeenCalled();
       expect(statusFn).not.toHaveBeenCalled();
@@ -196,11 +175,7 @@ describe('HTTP Auth Wrapper', () => {
     it('should return 403 for missing permission', () => {
       const middleware = requirePermission('TP');
 
-      middleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      middleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(403);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -214,11 +189,7 @@ describe('HTTP Auth Wrapper', () => {
       mockReq.apiToken = undefined;
       const middleware = requirePermission('GP');
 
-      middleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      middleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -233,11 +204,7 @@ describe('HTTP Auth Wrapper', () => {
       mockReq.apiToken = undefined;
       const middleware = requirePermission('GP');
 
-      middleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      middleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(nextFn).toHaveBeenCalled();
       expect(statusFn).not.toHaveBeenCalled();
@@ -245,8 +212,8 @@ describe('HTTP Auth Wrapper', () => {
   });
 
   describe('withBearerAuth (Firebase Functions wrapper)', () => {
-    let mockReq: Partial<FunctionsRequest>;
-    let mockRes: Partial<FunctionsResponse>;
+    let mockReq: Partial<ExpressRequest>;
+    let mockRes: Partial<ExpressResponse>;
     let statusFn: ReturnType<typeof vi.fn>;
     let jsonFn: ReturnType<typeof vi.fn>;
 
@@ -271,10 +238,7 @@ describe('HTTP Auth Wrapper', () => {
       const handlerFn = vi.fn().mockResolvedValue(undefined);
       const wrappedHandler = withBearerAuth(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(handlerFn).toHaveBeenCalled();
       const calledWith = handlerFn.mock.calls[0];
@@ -290,10 +254,7 @@ describe('HTTP Auth Wrapper', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withBearerAuth(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -305,8 +266,8 @@ describe('HTTP Auth Wrapper', () => {
   });
 
   describe('withBearerAuthAndPermission wrapper', () => {
-    let mockReq: Partial<FunctionsRequest>;
-    let mockRes: Partial<FunctionsResponse>;
+    let mockReq: Partial<ExpressRequest>;
+    let mockRes: Partial<ExpressResponse>;
     let statusFn: ReturnType<typeof vi.fn>;
     let jsonFn: ReturnType<typeof vi.fn>;
 
@@ -331,10 +292,7 @@ describe('HTTP Auth Wrapper', () => {
       const handlerFn = vi.fn().mockResolvedValue(undefined);
       const wrappedHandler = withBearerAuthAndPermission('GP', handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(handlerFn).toHaveBeenCalled();
       expect(statusFn).not.toHaveBeenCalled();
@@ -345,10 +303,7 @@ describe('HTTP Auth Wrapper', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withBearerAuthAndPermission('TP', handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(403);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -363,10 +318,7 @@ describe('HTTP Auth Wrapper', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withBearerAuthAndPermission('GP', handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(handlerFn).not.toHaveBeenCalled();
@@ -386,11 +338,7 @@ describe('HTTP Auth Wrapper', () => {
       };
       const nextFn = vi.fn();
 
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(mockReq.apiToken?.permissions).toEqual(['GP', 'WP', 'TP']);
       expect(mockReq.apiToken?.owner).toBe('admin-456');
@@ -409,11 +357,7 @@ describe('HTTP Auth Wrapper', () => {
       };
       const nextFn = vi.fn();
 
-      await verifyBearerToken(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      await verifyBearerToken(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(mockReq.user).toBeDefined();
       expect(mockReq.user?.id).toBe('user-123');

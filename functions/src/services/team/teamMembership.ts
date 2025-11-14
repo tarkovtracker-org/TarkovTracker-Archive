@@ -1,6 +1,6 @@
 /**
  * Team membership operations: joining and leaving teams
- * 
+ *
  * This module handles:
  * - Users joining existing teams
  * - Users leaving teams
@@ -27,17 +27,17 @@ export interface LeaveTeamResult {
 
 /**
  * Join an existing team
- * 
+ *
  * Validates:
  * - User is not already in a team
  * - Team exists
  * - Password is correct
  * - Team is not full
- * 
+ *
  * Atomically:
  * - Adds user to team members
  * - Updates user's system document
- * 
+ *
  * @param repository - Team repository for data access
  * @param userId - ID of the user joining
  * @param data - Join data (team ID and password)
@@ -109,16 +109,16 @@ export async function joinTeam(
 
 /**
  * Leave current team
- * 
+ *
  * Behavior depends on user role:
  * - Regular member: Removed from team, team continues
  * - Owner: Team is disbanded, all members removed
- * 
+ *
  * Atomically:
  * - Updates/deletes team document
  * - Updates all affected users' system documents
  * - Sets lastLeftTeam timestamp (for cooldown)
- * 
+ *
  * @param repository - Team repository for data access
  * @param userId - ID of the user leaving
  * @returns Object indicating success

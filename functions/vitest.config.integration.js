@@ -2,14 +2,14 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Integration Test Configuration
- * 
+ *
  * These tests:
  * - Use Firebase emulator (Firestore, Auth)
  * - Test full request/response cycles with Express handlers
  * - Touch real database operations (via emulator)
  * - Must run sequentially to avoid state conflicts
  * - Slower but comprehensive
- * 
+ *
  * Example: services/TeamService.test.ts uses createTestSuite + Firestore emulator
  */
 

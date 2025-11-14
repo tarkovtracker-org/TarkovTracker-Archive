@@ -1,6 +1,6 @@
 /**
  * Repository interface for progress-related Firestore operations
- * 
+ *
  * This interface abstracts Firestore operations to enable:
  * - Unit testing with fake implementations (no emulator needed)
  * - Clearer separation between business logic and data access
@@ -19,12 +19,12 @@ export interface IProgressTransactionContext {
    * Get progress document within transaction
    */
   getProgressDoc(userId: string): Promise<ProgressDocument | undefined>;
-  
+
   /**
    * Set/update progress document (merge mode)
    */
   setProgressDoc(userId: string, data: Record<string, unknown>, merge?: boolean): void;
-  
+
   /**
    * Update progress document fields
    */
@@ -40,15 +40,13 @@ export interface IProgressRepository {
    * @param callback - Function that receives transaction context and returns result
    * @returns Promise with transaction result
    */
-  runTransaction<T>(
-    callback: (tx: IProgressTransactionContext) => Promise<T>
-  ): Promise<T>;
-  
+  runTransaction<T>(callback: (tx: IProgressTransactionContext) => Promise<T>): Promise<T>;
+
   /**
    * Get user's progress document (non-transactional)
    */
   getProgressDocument(userId: string): Promise<ProgressDocument | null>;
-  
+
   /**
    * Set progress document (non-transactional)
    */
@@ -57,15 +55,12 @@ export interface IProgressRepository {
     data: Record<string, unknown>,
     merge?: boolean
   ): Promise<void>;
-  
+
   /**
    * Update progress document (non-transactional)
    */
-  updateProgressDocument(
-    userId: string,
-    updates: Record<string, unknown>
-  ): Promise<void>;
-  
+  updateProgressDocument(userId: string, updates: Record<string, unknown>): Promise<void>;
+
   /**
    * Server timestamp field value
    */

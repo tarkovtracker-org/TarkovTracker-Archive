@@ -10,8 +10,8 @@ vi.mock('firebase-functions/v2', () => ({
   logger: {
     info: vi.fn(),
     warn: vi.fn(),
-    error: vi.fn()
-  }
+    error: vi.fn(),
+  },
 }));
 
 describe('middleware/reauth', () => {
@@ -20,23 +20,25 @@ describe('middleware/reauth', () => {
   let mockRes: any;
   let mockNext: NextFunction;
   let mockVerifyIdToken: any;
+  let authSpy: ReturnType<typeof vi.spyOn<typeof admin, 'auth'>>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     await suite.beforeEach();
-    
+
     mockVerifyIdToken = vi.fn();
-    vi.mocked(admin.auth).mockReturnValue({
-      verifyIdToken: mockVerifyIdToken
+    authSpy = vi.spyOn(admin, 'auth');
+    authSpy.mockReturnValue({
+      verifyIdToken: mockVerifyIdToken,
     } as any);
     mockReq = {
       headers: {
-        authorization: 'Bearer valid-token-123'
-      }
+        authorization: 'Bearer valid-token-123',
+      },
     };
     mockRes = {
       status: vi.fn().mockReturnThis(),
-      json: vi.fn()
+      json: vi.fn(),
     };
     mockNext = vi.fn();
   });
@@ -48,18 +50,18 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(recentAuthTime / 1000)
+        auth_time: Math.floor(recentAuthTime / 1000),
       };
-      
+
       // Mock verifyIdToken to return recent auth time
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockReq.user).toEqual({
         id: 'test-user-123',
         username: 'test@example.com',
-        recentlyAuthenticated: true
+        recentlyAuthenticated: true,
       });
     });
 
@@ -69,18 +71,18 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(oldAuthTime / 1000)
+        auth_time: Math.floor(oldAuthTime / 1000),
       };
-      
+
       // Mock verifyIdToken to return old auth time
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Recent authentication required. Please sign out and sign back in to continue.',
-        code: 'RECENT_AUTH_REQUIRED'
+        code: 'RECENT_AUTH_REQUIRED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -92,7 +94,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -104,7 +106,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -117,7 +119,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Token has been revoked. Please sign in again.',
-        code: 'TOKEN_REVOKED'
+        code: 'TOKEN_REVOKED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -130,7 +132,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Token has expired. Please sign in again.',
-        code: 'TOKEN_EXPIRED'
+        code: 'TOKEN_EXPIRED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -144,7 +146,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Invalid authentication token',
-        code: 'INVALID_TOKEN'
+        code: 'INVALID_TOKEN',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -157,7 +159,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Invalid authentication token',
-        code: 'INVALID_TOKEN'
+        code: 'INVALID_TOKEN',
       });
     });
 
@@ -165,12 +167,12 @@ describe('middleware/reauth', () => {
       const mockDecodedToken = {
         uid: 'test-user-123',
         email: 'test@example.com',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       // Mock verifyIdToken to return expected data
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockReq.user.username).toBe('test@example.com');
@@ -180,12 +182,12 @@ describe('middleware/reauth', () => {
       const mockDecodedToken = {
         uid: 'test-user-123',
         name: 'Test User',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       // Mock verifyIdToken to return expected data
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockReq.user.username).toBe('Test User');
@@ -196,32 +198,32 @@ describe('middleware/reauth', () => {
       const mockDecodedToken = {
         uid: 'test-user-123',
         email: 'test@example.com',
-        auth_time: Math.floor(exactlyFiveMinutesAgo / 1000)
+        auth_time: Math.floor(exactlyFiveMinutesAgo / 1000),
       };
-      
+
       // Mock verifyIdToken to return old auth time
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Recent authentication required. Please sign out and sign back in to continue.',
-        code: 'RECENT_AUTH_REQUIRED'
+        code: 'RECENT_AUTH_REQUIRED',
       });
     });
 
     it('should handle boundary case just under 5 minutes', async () => {
-      const justUnderFiveMinutes = Date.now() - (5 * 60 * 1000) + 1000; // 4:59 ago
+      const justUnderFiveMinutes = Date.now() - 5 * 60 * 1000 + 1000; // 4:59 ago
       const mockDecodedToken = {
         uid: 'test-user-123',
         email: 'test@example.com',
-        auth_time: Math.floor(justUnderFiveMinutes / 1000)
+        auth_time: Math.floor(justUnderFiveMinutes / 1000),
       };
-      
+
       // Mock verifyIdToken to return recent auth time
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
-      
+
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockRes.status).not.toHaveBeenCalled();
@@ -234,16 +236,16 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
       expect(mockReq.user).toEqual({
         id: 'test-user-123',
         username: 'test@example.com',
-        recentlyAuthenticated: false
+        recentlyAuthenticated: false,
       });
     });
 
@@ -254,7 +256,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Authentication required',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -267,7 +269,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Token has been revoked. Please sign in again.',
-        code: 'TOKEN_REVOKED'
+        code: 'TOKEN_REVOKED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -280,7 +282,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Token has expired. Please sign in again.',
-        code: 'TOKEN_EXPIRED'
+        code: 'TOKEN_EXPIRED',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -294,7 +296,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: 'Invalid authentication token',
-        code: 'INVALID_TOKEN'
+        code: 'INVALID_TOKEN',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -306,7 +308,7 @@ describe('middleware/reauth', () => {
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Authentication verification failed'
+        error: 'Authentication verification failed',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -322,9 +324,9 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockReq.user).toBeDefined();
@@ -338,9 +340,9 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockReq.user.username).toBe('test@example.com');
@@ -350,9 +352,9 @@ describe('middleware/reauth', () => {
       const mockDecodedToken = {
         uid: 'test-user-123',
         name: 'Test User',
-        auth_time: Math.floor(Date.now() / 1000)
+        auth_time: Math.floor(Date.now() / 1000),
       };
-      
+
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockReq.user.username).toBe('Test User');
@@ -366,9 +368,9 @@ describe('middleware/reauth', () => {
         uid: 'test-user-123',
         email: 'test@example.com',
         name: 'Test User',
-        auth_time: Math.floor(veryOldAuthTime / 1000)
+        auth_time: Math.floor(veryOldAuthTime / 1000),
       };
-      
+
       mockVerifyIdToken.mockResolvedValue(mockDecodedToken);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
@@ -376,5 +378,8 @@ describe('middleware/reauth', () => {
     });
   });
 
-  afterEach(suite.afterEach);
+  afterEach(async () => {
+    authSpy?.mockRestore();
+    await suite.afterEach();
+  });
 });

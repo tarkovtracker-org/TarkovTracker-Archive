@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ProgressService } from '../../src/services/ProgressService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
-import { createTestSuite } from '../helpers/index.js';
+import { createTestSuite, getTarkovSeedData } from '../helpers/index.js';
 import type { TaskStatus } from '../../src/types/api';
 
-describe('Progress Performance Tests', () => {
+const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
+
+// Performance suites are opt-in to avoid slowing down normal dev/CI runs.
+// Enable by setting ENABLE_PERFORMANCE_TESTS=true in the environment.
+(RUN_PERFORMANCE_TESTS ? describe : describe.skip)('Progress Performance Tests', () => {
   const suite = createTestSuite('ProgressPerformance');
   let progressService: ProgressService;
   let monitor: PerformanceMonitor;
@@ -18,20 +22,8 @@ describe('Progress Performance Tests', () => {
 
     // Seed basic test data
     await suite.withDatabase({
+      ...getTarkovSeedData(),
       progress: {},
-      tarkovdata: {
-        tasks: {
-          'task-1': { id: 'task-1', name: 'Test Task 1' },
-          'task-2': { id: 'task-2', name: 'Test Task 2' },
-          'task-3': { id: 'task-3', name: 'Test Task 3' },
-          'task-4': { id: 'task-4', name: 'Test Task 4' },
-          'task-5': { id: 'task-5', name: 'Test Task 5' },
-        },
-        hideout: {
-          'module-1': { id: 'module-1', name: 'Test Module 1' },
-          'module-2': { id: 'module-2', name: 'Test Module 2' },
-        },
-      },
     });
   });
 
@@ -48,7 +40,10 @@ describe('Progress Performance Tests', () => {
         const userId = TestDataGenerator.generateUserId(`user${i}`);
         progressData[userId] = TestDataGenerator.generateProgressData();
       }
-      await suite.withDatabase({ progress: progressData });
+      await suite.withDatabase({
+        ...getTarkovSeedData(),
+        progress: progressData,
+      });
     });
     it('should retrieve user progress efficiently under load', async () => {
       const userIds = Object.keys((global as any).dbState?.progress ?? {});
@@ -93,6 +88,7 @@ describe('Progress Performance Tests', () => {
       const userId = TestDataGenerator.generateUserId();
       // Seed user with both game modes
       await suite.withDatabase({
+        ...getTarkovSeedData(),
         progress: {
           [userId]: {
             pvp: TestDataGenerator.generateProgressData(),
@@ -124,7 +120,10 @@ describe('Progress Performance Tests', () => {
         const userId = TestDataGenerator.generateUserId(`user${i}`);
         progressData[userId] = TestDataGenerator.generateProgressData();
       }
-      await suite.withDatabase({ progress: progressData });
+      await suite.withDatabase({
+        ...getTarkovSeedData(),
+        progress: progressData,
+      });
     });
     it('should update single task progress efficiently', async () => {
       const userIds = Object.keys((global as any).dbState?.progress ?? {});
@@ -153,6 +152,7 @@ describe('Progress Performance Tests', () => {
     it('should update multiple tasks efficiently', async () => {
       const userId = TestDataGenerator.generateUserId();
       await suite.withDatabase({
+        ...getTarkovSeedData(),
         progress: {
           [userId]: TestDataGenerator.generateProgressData(),
         },

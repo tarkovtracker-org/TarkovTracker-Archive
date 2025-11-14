@@ -1,5 +1,5 @@
-import { describe, it, expect, afterEach } from 'vitest';
-import { createTestSuite, admin } from '../../helpers';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { createTestSuite, admin, getTarkovSeedData, createProgressDoc } from '../../helpers/index';
 import { TeamService } from '../../../src/services/TeamService';
 
 describe('TeamService', () => {
@@ -12,6 +12,7 @@ describe('TeamService', () => {
 
     // Seed basic test data using centralized helper
     await suite.withDatabase({
+      ...getTarkovSeedData(),
       system: {
         'user-1': { team: 'team-1' },
         'user-2': {},
@@ -43,9 +44,10 @@ describe('TeamService', () => {
           email: 'test3@example.com',
         },
       },
-      tarkovdata: {
-        tasks: { tasks: [] },
-        hideout: {},
+      progress: {
+        'user-1': createProgressDoc({
+          pvp: { displayName: 'testuser1' },
+        }),
       },
     });
   });
@@ -74,7 +76,7 @@ describe('TeamService', () => {
         password: 'testpassword',
         maximumMembers: 5,
       };
-      const result = await service.createTeam('user-1', teamData);
+      const result = await service.createTeam('user-3', teamData);
       expect(result).toBeDefined();
       expect(typeof result.team).toBe('string');
       expect(typeof result.password).toBe('string');
@@ -83,26 +85,26 @@ describe('TeamService', () => {
       const db = admin.firestore();
       const teamDoc = await db.collection('team').doc(result.team).get();
       expect(teamDoc.exists).toBe(true);
-      expect(teamDoc.data()?.owner).toBe('user-1');
+      expect(teamDoc.data()?.owner).toBe('user-3');
     });
   });
 
   describe('joinTeam', () => {
     it('should add user to existing team', async () => {
       // Create a team first (ensures proper state)
-      const created = await service.createTeam('user-1', {
+      const created = await service.createTeam('user-3', {
         password: 'testpassword',
         maximumMembers: 5,
       });
       const joinData = { id: created.team, password: created.password };
-      const result = await service.joinTeam('user-3', joinData);
+      const result = await service.joinTeam('user-2', joinData);
       expect(result.joined).toBe(true);
 
       // Verify user was added to team in emulator
       const db = admin.firestore();
       const teamDoc = await db.collection('team').doc(created.team).get();
       expect(teamDoc.exists).toBe(true);
-      expect(teamDoc.data()?.members).toContain('user-3');
+      expect(teamDoc.data()?.members).toContain('user-2');
     });
   });
 

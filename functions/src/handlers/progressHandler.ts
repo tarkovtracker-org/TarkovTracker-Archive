@@ -396,10 +396,3 @@ export const updateTaskObjective = asyncHandler(
     res.status(200).json(response);
   }
 );
-export default {
-  getPlayerProgress,
-  setPlayerLevel,
-  updateSingleTask,
-  updateMultipleTasks,
-  updateTaskObjective,
-};

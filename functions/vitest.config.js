@@ -2,14 +2,14 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Default Test Configuration (All Tests)
- * 
+ *
  * Runs both unit and integration tests together.
  * Use this for comprehensive testing before commits.
- * 
+ *
  * For faster feedback:
  * - Unit only: npm run test:unit
  * - Integration only: npm run test:integration
- * 
+ *
  * This config uses integration test settings (sequential, with emulator)
  * since it includes integration tests.
  */
@@ -21,10 +21,7 @@ export default defineConfig({
     globalSetup: ['./test/globalSetup.ts'],
     setupFiles: ['./test/setup.ts'],
     // Include both unit and integration tests
-    include: [
-      'test/unit/**/*.{test,spec}.{js,ts}',
-      'test/integration/**/*.{test,spec}.{js,ts}'
-    ],
+    include: ['test/unit/**/*.{test,spec}.{js,ts}', 'test/integration/**/*.{test,spec}.{js,ts}'],
     exclude: ['**/node_modules/**', '**/dist/**', 'test/performance/**'],
     mockReset: true,
     clearMocks: true,

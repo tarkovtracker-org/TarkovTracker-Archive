@@ -45,7 +45,11 @@ export function useTeamManagement() {
   /**
    * Wait for store to update based on a condition with timeout
    */
-  const waitForStoreUpdate = (storeFn: () => any, condition: (v: any) => boolean, timeout = 15000) => {
+  const waitForStoreUpdate = (
+    storeFn: () => any,
+    condition: (v: any) => boolean,
+    timeout = 15000
+  ) => {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => reject(new Error('Store update timeout')), timeout);
       const unwatch = watch(
@@ -86,7 +90,7 @@ export function useTeamManagement() {
     loading.value.createTeam = true;
     try {
       validateAuth();
-      const result = await callTeamFunction('createTeam') as any;
+      const result = (await callTeamFunction('createTeam')) as any;
       if (!result?.team) {
         throw new Error(t('page.team.card.myteam.create_team_error_ui_update'));
       }
@@ -110,7 +114,9 @@ export function useTeamManagement() {
     } catch (error) {
       logger.error('[useTeamManagement] Error creating team:', error);
       const message =
-        (error as any).details?.error || (error as Error).message || t('page.team.card.myteam.create_team_error');
+        (error as any).details?.error ||
+        (error as Error).message ||
+        t('page.team.card.myteam.create_team_error');
       showNotification(message, 'error');
     }
     loading.value.createTeam = false;
@@ -123,7 +129,7 @@ export function useTeamManagement() {
     loading.value.leaveTeam = true;
     try {
       validateAuth();
-      const result = await callTeamFunction('leaveTeam') as any;
+      const result = (await callTeamFunction('leaveTeam')) as any;
       if (!result?.left && systemStore.$state.team) {
         throw new Error(t('page.team.card.myteam.leave_team_error'));
       }
@@ -135,7 +141,8 @@ export function useTeamManagement() {
       showNotification(t('page.team.card.myteam.leave_team_success'));
     } catch (error) {
       logger.error('[useTeamManagement] Error leaving team:', error);
-      const message = (error as Error).message || t('page.team.card.myteam.leave_team_error_unexpected');
+      const message =
+        (error as Error).message || t('page.team.card.myteam.leave_team_error_unexpected');
       showNotification(message, 'error');
     }
     loading.value.leaveTeam = false;

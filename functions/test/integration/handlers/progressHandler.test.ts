@@ -7,12 +7,12 @@ import {
   setPlayerLevel,
   updateSingleTask,
   updateMultipleTasks,
-  updateTaskObjective
+  updateTaskObjective,
 } from '../../../src/handlers/progressHandler';
 import {
   createProgressServiceMock,
   createValidationServiceMock,
-  createFirestoreLazyMock
+  createFirestoreLazyMock,
 } from '../../helpers/serviceMocks';
 import { createTestSuite } from '../../helpers';
 
@@ -20,7 +20,7 @@ import { createTestSuite } from '../../helpers';
 vi.mock('../../src/services/ProgressService', () => createProgressServiceMock());
 vi.mock('../../src/services/ValidationService', () => createValidationServiceMock());
 vi.mock('../../src/utils/factory', () => ({
-  createLazy: createFirestoreLazyMock
+  createLazy: createFirestoreLazyMock,
 }));
 describe('handlers/progressHandler', () => {
   const suite = createTestSuite('handlers/progressHandler');
@@ -44,15 +44,15 @@ describe('handlers/progressHandler', () => {
         note: 'Test token',
         permissions: ['GP', 'WP'],
         gameMode: 'pvp',
-        token: 'test-token-123'
+        token: 'test-token-123',
       },
       query: {},
       params: {},
-      body: {}
+      body: {},
     };
     mockRes = {
       status: vi.fn().mockReturnThis(),
-      json: vi.fn()
+      json: vi.fn(),
     };
   });
 
@@ -65,10 +65,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockProgressService.getUserProgress.mockResolvedValue({ level: 25 });
       await getPlayerProgress(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith(
-        'test-user-123',
-        'pve'
-      );
+      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith('test-user-123', 'pve');
     });
     it('should handle dual mode tokens with query parameter', async () => {
       mockReq.apiToken.gameMode = 'dual';
@@ -76,10 +73,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockProgressService.getUserProgress.mockResolvedValue({ level: 25 });
       await getPlayerProgress(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith(
-        'test-user-123',
-        'pve'
-      );
+      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith('test-user-123', 'pve');
     });
   });
   describe('getPlayerProgress', () => {
@@ -87,14 +81,14 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockProgressService.getUserProgress.mockResolvedValue({
         level: 25,
-        experience: 15000
+        experience: 15000,
       });
       await getPlayerProgress(mockReq, mockRes, vi.fn());
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: { level: 25, experience: 15000 },
-        meta: { self: 'test-user-123', gameMode: 'pvp' }
+        meta: { self: 'test-user-123', gameMode: 'pvp' },
       });
     });
     it('should use default pvp gameMode when token gameMode is undefined', async () => {
@@ -102,10 +96,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockProgressService.getUserProgress.mockResolvedValue({ level: 25 });
       await getPlayerProgress(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith(
-        'test-user-123',
-        'pvp'
-      );
+      expect(mockProgressService.getUserProgress).toHaveBeenCalledWith('test-user-123', 'pvp');
     });
     it('should handle empty progress data', async () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
@@ -115,7 +106,7 @@ describe('handlers/progressHandler', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {},
-        meta: { self: 'test-user-123', gameMode: 'pvp' }
+        meta: { self: 'test-user-123', gameMode: 'pvp' },
       });
     });
   });
@@ -133,8 +124,8 @@ describe('handlers/progressHandler', () => {
         success: true,
         data: {
           level: 30,
-          message: 'Level updated successfully'
-        }
+          message: 'Level updated successfully',
+        },
       });
     });
     it('should handle minimum level value', async () => {
@@ -142,22 +133,14 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockValidationService.validateLevel.mockReturnValue(1);
       await setPlayerLevel(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith(
-        'test-user-123',
-        1,
-        'pvp'
-      );
+      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith('test-user-123', 1, 'pvp');
     });
     it('should handle maximum level value', async () => {
       mockReq.params.levelValue = '79';
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockValidationService.validateLevel.mockReturnValue(79);
       await setPlayerLevel(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith(
-        'test-user-123',
-        79,
-        'pvp'
-      );
+      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith('test-user-123', 79, 'pvp');
     });
     it('should use custom gameMode from query for dual mode tokens', async () => {
       mockReq.apiToken.gameMode = 'dual';
@@ -165,11 +148,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockValidationService.validateLevel.mockReturnValue(30);
       await setPlayerLevel(mockReq, mockRes, vi.fn());
-      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith(
-        'test-user-123',
-        30,
-        'pve'
-      );
+      expect(mockProgressService.setPlayerLevel).toHaveBeenCalledWith('test-user-123', 30, 'pve');
     });
   });
   describe('updateSingleTask', () => {
@@ -189,8 +168,8 @@ describe('handlers/progressHandler', () => {
         data: {
           taskId: 'task-123',
           state: 'completed',
-          message: 'Task updated successfully'
-        }
+          message: 'Task updated successfully',
+        },
       });
     });
     it('should handle task with failed state', async () => {
@@ -240,7 +219,7 @@ describe('handlers/progressHandler', () => {
       mockReq.body = {
         'task-1': 'completed',
         'task-2': 'uncompleted',
-        'task-3': 'failed'
+        'task-3': 'failed',
       };
     });
     it('should update multiple tasks successfully', async () => {
@@ -248,7 +227,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateMultipleTaskUpdate.mockReturnValue({
         'task-1': 'completed',
         'task-2': 'uncompleted',
-        'task-3': 'failed'
+        'task-3': 'failed',
       });
       mockProgressService.updateMultipleTasks.mockResolvedValue(undefined);
       await updateMultipleTasks(mockReq, mockRes, vi.fn());
@@ -257,8 +236,8 @@ describe('handlers/progressHandler', () => {
         success: true,
         data: {
           updatedTasks: ['task-1', 'task-2', 'task-3'],
-          message: 'Tasks updated successfully'
-        }
+          message: 'Tasks updated successfully',
+        },
       });
     });
     it('should handle empty task updates', async () => {
@@ -272,14 +251,14 @@ describe('handlers/progressHandler', () => {
         success: true,
         data: {
           updatedTasks: [],
-          message: 'Tasks updated successfully'
-        }
+          message: 'Tasks updated successfully',
+        },
       });
     });
     it('should pass task updates correctly to service', async () => {
       const taskUpdates = {
         'task-1': 'completed',
-        'task-2': 'failed'
+        'task-2': 'failed',
       };
       mockReq.body = taskUpdates;
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
@@ -298,7 +277,7 @@ describe('handlers/progressHandler', () => {
       mockReq.params.objectiveId = 'objective-123';
       mockReq.body = {
         state: 'completed',
-        count: 5
+        count: 5,
       };
     });
     it('should update task objective successfully', async () => {
@@ -306,7 +285,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateObjectiveId.mockReturnValue('objective-123');
       mockValidationService.validateObjectiveUpdate.mockReturnValue({
         state: 'completed',
-        count: 5
+        count: 5,
       });
       mockProgressService.updateTaskObjective.mockResolvedValue(undefined);
       await updateTaskObjective(mockReq, mockRes, vi.fn());
@@ -317,8 +296,8 @@ describe('handlers/progressHandler', () => {
           objectiveId: 'objective-123',
           state: 'completed',
           count: 5,
-          message: 'Task objective updated successfully'
-        }
+          message: 'Task objective updated successfully',
+        },
       });
     });
     it('should handle update with only state', async () => {
@@ -326,7 +305,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockValidationService.validateObjectiveId.mockReturnValue('objective-123');
       mockValidationService.validateObjectiveUpdate.mockReturnValue({
-        state: 'completed'
+        state: 'completed',
       });
       mockProgressService.updateTaskObjective.mockResolvedValue(undefined);
       await updateTaskObjective(mockReq, mockRes, vi.fn());
@@ -342,7 +321,7 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       mockValidationService.validateObjectiveId.mockReturnValue('objective-123');
       mockValidationService.validateObjectiveUpdate.mockReturnValue({
-        count: 10
+        count: 10,
       });
       mockProgressService.updateTaskObjective.mockResolvedValue(undefined);
       await updateTaskObjective(mockReq, mockRes, vi.fn());

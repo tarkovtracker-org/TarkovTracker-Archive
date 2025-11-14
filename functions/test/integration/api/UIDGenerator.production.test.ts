@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 // Use centralized test utilities
-import { createTestSuite } from './helpers/index';
+import { createTestSuite } from '../../helpers';
 
 // Test production behavior of UIDGenerator
 describe('UIDGenerator Production Behavior', () => {

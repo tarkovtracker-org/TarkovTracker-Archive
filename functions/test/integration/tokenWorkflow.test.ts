@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { admin, createTestSuite } from '../../helpers';
-import { TokenService } from '../../../src/services/TokenService';
-import { ProgressService } from '../../../src/services/ProgressService';
+import { admin, createTestSuite, getTarkovSeedData } from '../helpers';
+import { TokenService } from '../../src/services/TokenService';
+import { ProgressService } from '../../src/services/ProgressService';
 describe('Token Management Workflow Integration Tests', () => {
   const suite = createTestSuite('TokenWorkflow');
   let tokenService: TokenService;
@@ -14,20 +14,7 @@ describe('Token Management Workflow Integration Tests', () => {
     testUserId = `test-user-token-${Date.now()}`;
     // Seed required data for tests
     await suite.withDatabase({
-      tarkovdata: {
-        tasks: {
-          'token-test-task': { id: 'token-test-task' },
-          'multi-token-task-1': { id: 'multi-token-task-1' },
-          'multi-token-task-2': { id: 'multi-token-task-2' },
-          'permission-test-task': { id: 'permission-test-task' },
-          'concurrent-token-task-0': { id: 'concurrent-token-task-0' },
-          'concurrent-token-task-1': { id: 'concurrent-token-task-1' },
-          'concurrent-token-task-2': { id: 'concurrent-token-task-2' },
-          'concurrent-token-task-3': { id: 'concurrent-token-task-3' },
-          'concurrent-token-task-4': { id: 'concurrent-token-task-4' },
-        },
-        hideout: {},
-      },
+      ...getTarkovSeedData(),
     });
   });
 

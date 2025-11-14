@@ -6,21 +6,21 @@ import {
   getAllowedOrigins,
   getExpressCorsOptions,
   setCorsHeaders,
-  OriginValidationOptions
+  OriginValidationOptions,
 } from '../../../src/config/corsConfig';
 import { createTestSuite } from '../../helpers';
 // Mock firebase-functions
 vi.mock('firebase-functions', () => {
   const mockLogger = {
     warn: vi.fn(),
-    error: vi.fn()
+    error: vi.fn(),
   };
 
   return {
     default: {
-      logger: mockLogger
+      logger: mockLogger,
     },
-    logger: mockLogger
+    logger: mockLogger,
   };
 });
 describe('config/corsConfig', () => {
@@ -34,7 +34,7 @@ describe('config/corsConfig', () => {
 
     // Mock response object
     mockRes = {
-      set: vi.fn()
+      set: vi.fn(),
     };
   });
   afterEach(async () => {
@@ -46,14 +46,14 @@ describe('config/corsConfig', () => {
     describe('with allowedOrigins', () => {
       it('should allow whitelisted origins', () => {
         const options: OriginValidationOptions = {
-          allowedOrigins: ['https://example.com', 'https://app.example.com']
+          allowedOrigins: ['https://example.com', 'https://app.example.com'],
         };
         expect(validateOrigin('https://example.com', options)).toBe('https://example.com');
         expect(validateOrigin('https://app.example.com', options)).toBe('https://app.example.com');
       });
       it('should block non-whitelisted origins', () => {
         const options: OriginValidationOptions = {
-          allowedOrigins: ['https://example.com']
+          allowedOrigins: ['https://example.com'],
         };
         expect(validateOrigin('https://malicious.com', options)).toBe(false);
         // Logger may not be mocked properly, so just check validation result
@@ -63,7 +63,7 @@ describe('config/corsConfig', () => {
       });
       it('should handle empty allowedOrigins array', () => {
         const options: OriginValidationOptions = {
-          allowedOrigins: []
+          allowedOrigins: [],
         };
         expect(validateOrigin('https://example.com', options)).toBe('https://example.com');
         expect(validateOrigin('null', options)).toBe(false);
@@ -73,7 +73,9 @@ describe('config/corsConfig', () => {
       it('should allow valid HTTPS origins', () => {
         expect(validateOrigin('https://example.com')).toBe('https://example.com');
         expect(validateOrigin('https://app.example.com:8080')).toBe('https://app.example.com:8080');
-        expect(validateOrigin('https://subdomain.example.com')).toBe('https://subdomain.example.com');
+        expect(validateOrigin('https://subdomain.example.com')).toBe(
+          'https://subdomain.example.com'
+        );
       });
       it('should allow valid HTTP origins', () => {
         expect(validateOrigin('http://example.com')).toBe('http://example.com');
@@ -90,9 +92,9 @@ describe('config/corsConfig', () => {
           '192.168.1.1',
           '10.0.0.1',
           '172.16.0.1',
-          '172.31.0.1'
+          '172.31.0.1',
         ];
-        dangerousOrigins.forEach(origin => {
+        dangerousOrigins.forEach((origin) => {
           expect(validateOrigin(origin)).toBe(false);
         });
         // Verify that warnings were called for blocked origins
@@ -118,34 +120,29 @@ describe('config/corsConfig', () => {
           'https://user:pass@example.com', // username/password
           'ftp://example.com', // wrong protocol
           'javascript:alert(1)', // javascript protocol
-          'data:text/html,<script>alert(1)</script>' // data protocol
+          'data:text/html,<script>alert(1)</script>', // data protocol
         ];
-        suspiciousOrigins.forEach(origin => {
+        suspiciousOrigins.forEach((origin) => {
           expect(validateOrigin(origin)).toBe(false);
         });
       });
       it('should handle missing origin with trustNoOrigin', () => {
         const optionsWithTrust: OriginValidationOptions = {
-          trustNoOrigin: true
+          trustNoOrigin: true,
         };
         expect(validateOrigin(undefined, optionsWithTrust)).toBe('*');
         expect(validateOrigin('', optionsWithTrust)).toBe('*');
       });
       it('should block missing origin without trustNoOrigin', () => {
         const optionsWithoutTrust: OriginValidationOptions = {
-          trustNoOrigin: false
+          trustNoOrigin: false,
         };
         expect(validateOrigin(undefined, optionsWithoutTrust)).toBe(false);
         expect(validateOrigin('', optionsWithoutTrust)).toBe(false);
       });
       it('should handle invalid origin formats gracefully', () => {
-        const invalidOrigins = [
-          'not-a-url',
-          'http://[invalid-url',
-          'https://',
-          '://example.com'
-        ];
-        invalidOrigins.forEach(origin => {
+        const invalidOrigins = ['not-a-url', 'http://[invalid-url', 'https://', '://example.com'];
+        invalidOrigins.forEach((origin) => {
           expect(validateOrigin(origin)).toBe(false);
           // Logger may not be mocked properly
           // expect(functions.logger.error).toHaveBeenCalledWith(
@@ -204,9 +201,7 @@ describe('config/corsConfig', () => {
       const corsOptions = getExpressCorsOptions();
       expect(corsOptions.credentials).toBe(false);
       expect(corsOptions.optionsSuccessStatus).toBe(200);
-      expect(corsOptions.methods).toEqual([
-        'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'
-      ]);
+      expect(corsOptions.methods).toEqual(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']);
     });
     it('should use correct allow headers', () => {
       const corsOptions = getExpressCorsOptions();
@@ -250,7 +245,7 @@ describe('config/corsConfig', () => {
     const allowedOrigin = 'http://localhost:5173';
     beforeEach(async () => {
       mockReq = {
-        headers: {}
+        headers: {},
       };
     });
     it('should return false for blocked origins', () => {
@@ -278,18 +273,21 @@ describe('config/corsConfig', () => {
       const result = setCorsHeaders(mockReq, mockRes);
       expect(result).toBe(true);
       // Check if the set method was called, don't rely on specific parameter ordering
-      expect(mockRes.set).toHaveBeenCalledWith(
-        'Access-Control-Allow-Origin', 
-        allowedOrigin
-      );
+      expect(mockRes.set).toHaveBeenCalledWith('Access-Control-Allow-Origin', allowedOrigin);
       // May or may not set Vary header depending on implementation
     });
     it('should handle development origins correctly', () => {
       mockReq.headers = { origin: 'http://localhost:3000' };
       const result = setCorsHeaders(mockReq, mockRes);
       expect(result).toBe(true);
-      expect(mockRes.set).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'http://localhost:3000');
-      expect(mockRes.set).toHaveBeenCalledWith('Vary', 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+      expect(mockRes.set).toHaveBeenCalledWith(
+        'Access-Control-Allow-Origin',
+        'http://localhost:3000'
+      );
+      expect(mockRes.set).toHaveBeenCalledWith(
+        'Vary',
+        'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+      );
     });
     it('should call validateOrigin with correct parameters', () => {
       mockReq.headers = { origin: allowedOrigin };
@@ -304,15 +302,16 @@ describe('config/corsConfig', () => {
       const result = setCorsHeaders(mockReq, mockRes);
       expect(result).toBe(true);
       const headerCalls = mockRes.set.mock.calls;
-      
+
       // Check that at least some headers are set - implementation may vary
       expect(headerCalls.length).toBeGreaterThan(0);
       // Look for specific header names in calls
       const headerNames = headerCalls.map((call: any[]) => call[0]);
       if (headerNames.length > 0) {
         // May not include all headers depending on implementation
-        const hasRequiredHeaders = headerNames.includes('Access-Control-Allow-Origin') ||
-                                headerNames.includes('Access-Control-Allow-Methods');
+        const hasRequiredHeaders =
+          headerNames.includes('Access-Control-Allow-Origin') ||
+          headerNames.includes('Access-Control-Allow-Methods');
         expect(hasRequiredHeaders).toBe(true);
       }
     });
@@ -331,7 +330,12 @@ describe('config/corsConfig', () => {
     });
     it('should export correct ALLOW_METHODS array', () => {
       expect(getExpressCorsOptions().methods).toEqual([
-        'GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'
+        'GET',
+        'POST',
+        'PUT',
+        'PATCH',
+        'DELETE',
+        'OPTIONS',
       ]);
     });
   });

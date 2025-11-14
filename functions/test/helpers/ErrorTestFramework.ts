@@ -25,7 +25,6 @@ export interface ErrorTestConfig {
  * Utilities for error testing scenarios
  */
 export class ErrorTestUtils {
-
   /**
    * Expect a function to throw with specific error properties
    */
@@ -163,7 +162,6 @@ export class ErrorTestUtils {
  * Factory for common error scenarios
  */
 export class ErrorScenarioFactory {
-
   /**
    * Database connection errors
    */
@@ -172,7 +170,7 @@ export class ErrorScenarioFactory {
       message: 'Database connection failed',
       statusCode: 500,
       code: 'DATABASE_ERROR',
-      type: 'InfrastructureError'
+      type: 'InfrastructureError',
     };
   }
 
@@ -184,7 +182,7 @@ export class ErrorScenarioFactory {
       message: 'Resource busy. Retry transaction.',
       statusCode: 409,
       code: 'TRANSACTION_CONFLICT',
-      type: 'ConcurrencyError'
+      type: 'ConcurrencyError',
     };
   }
 
@@ -196,7 +194,7 @@ export class ErrorScenarioFactory {
       message: `Invalid ${field}`,
       statusCode: 400,
       code: 'VALIDATION_ERROR',
-      type: 'ClientError'
+      type: 'ClientError',
     };
   }
 
@@ -208,7 +206,7 @@ export class ErrorScenarioFactory {
       message: 'Authentication failed',
       statusCode: 401,
       code: 'AUTHENTICATION_ERROR',
-      type: 'SecurityError'
+      type: 'SecurityError',
     };
   }
 
@@ -220,7 +218,7 @@ export class ErrorScenarioFactory {
       message: 'Access denied',
       statusCode: 403,
       code: 'AUTHORIZATION_ERROR',
-      type: 'SecurityError'
+      type: 'SecurityError',
     };
   }
 
@@ -232,7 +230,7 @@ export class ErrorScenarioFactory {
       message: `${resource} not found`,
       statusCode: 404,
       code: 'NOT_FOUND',
-      type: 'ClientError'
+      type: 'ClientError',
     };
   }
 
@@ -244,7 +242,7 @@ export class ErrorScenarioFactory {
       message: 'Rate limit exceeded',
       statusCode: 429,
       code: 'RATE_LIMIT_EXCEEDED',
-      type: 'ThrottlingError'
+      type: 'ThrottlingError',
     };
   }
 
@@ -256,7 +254,7 @@ export class ErrorScenarioFactory {
       message: 'Service temporarily unavailable',
       statusCode: 503,
       code: 'SERVICE_UNAVAILABLE',
-      type: 'InfrastructureError'
+      type: 'InfrastructureError',
     };
   }
 }
@@ -265,7 +263,6 @@ export class ErrorScenarioFactory {
  * Helper for testing error resilience
  */
 export class ResilienceTestHelper {
-
   /**
    * Test system behavior under concurrent failures
    */
@@ -283,8 +280,8 @@ export class ResilienceTestHelper {
     const results = await Promise.allSettled(promises);
 
     // Verify that some operations succeeded and some failed
-    const successes = results.filter(r => r.status === 'fulfilled').length;
-    const failures = results.filter(r => r.status === 'rejected').length;
+    const successes = results.filter((r) => r.status === 'fulfilled').length;
+    const failures = results.filter((r) => r.status === 'rejected').length;
 
     expect(successes + failures).toBe(operations.length);
     expect(failures).toBeGreaterThan(0);
@@ -331,7 +328,6 @@ export class ResilienceTestHelper {
  * Performance impact testing for error scenarios
  */
 export class ErrorPerformanceTestHelper {
-
   /**
    * Test that error handling doesn't significantly impact performance
    */
@@ -381,7 +377,7 @@ export const toThrowWithError = (
   if (typeof received !== 'function') {
     return {
       message: () => `Expected ${received} to be a function`,
-      pass: false
+      pass: false,
     };
   }
 
@@ -389,7 +385,7 @@ export const toThrowWithError = (
     const result = received();
     return {
       message: () => `Expected function to throw, but it returned ${result}`,
-      pass: false
+      pass: false,
     };
   } catch (err) {
     const error = err as { message: string };
@@ -399,14 +395,14 @@ export const toThrowWithError = (
     if (expected.message) {
       if (typeof expected.message === 'string') {
         pass = error.message.includes(expected.message);
-        message = pass ?
-          `Expected error not to contain "${expected.message}"` :
-          `Expected error to contain "${expected.message}", but got "${error.message}"`;
+        message = pass
+          ? `Expected error not to contain "${expected.message}"`
+          : `Expected error to contain "${expected.message}", but got "${error.message}"`;
       } else {
         pass = expected.message.test(error.message);
-        message = pass ?
-          `Expected error not to match ${expected.message}` :
-          `Expected error to match ${expected.message}", but got "${error.message}"`;
+        message = pass
+          ? `Expected error not to match ${expected.message}`
+          : `Expected error to match ${expected.message}", but got "${error.message}"`;
       }
     }
 

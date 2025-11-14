@@ -1,8 +1,8 @@
 /**
  * Legacy CORS and authentication middleware
- * 
+ *
  * @deprecated Use withCorsAndAuthentication from ./corsWrapper instead
- * 
+ *
  * This file is kept for backward compatibility but new code should use
  * the centralized CORS handling from corsWrapper.ts
  */
@@ -31,9 +31,9 @@ type AuthenticatedHandler = (
 
 /**
  * Wrapper that handles CORS and authentication for Express-style handlers
- * 
+ *
  * @deprecated Use withCorsAndAuthentication from ./corsWrapper instead
- * 
+ *
  * This function now delegates CORS handling to the centralized corsWrapper
  * and only handles authentication logic.
  */
@@ -43,13 +43,13 @@ export async function withCorsAndAuth(
   handler: AuthenticatedHandler
 ): Promise<void> {
   // Delegate to centralized CORS handling
-  await withExpressCors(async (req, res) => {
+  await withExpressCors(async (reqInner: any, resInner: any) => {
     // Extract and verify Bearer token
     try {
-      const authHeader = req.headers.authorization ?? '';
+      const authHeader = reqInner.headers.authorization ?? '';
       const match = authHeader.match(/^Bearer (.+)$/);
       if (!match) {
-        res.status(401).json({ error: 'Missing or invalid Authorization header' });
+        resInner.status(401).json({ error: 'Missing or invalid Authorization header' });
         return;
       }
       const idToken = match[1];
@@ -60,35 +60,35 @@ export async function withCorsAndAuth(
       // Log successful verification
       logger.log('Token verified successfully', {
         uid: decodedToken.uid,
-        method: req.method,
-        path: req.path,
+        method: reqInner.method,
+        path: reqInner.path,
       });
 
       // Call the handler with authenticated UID
-      await handler(req, res, decodedToken.uid);
+      await handler(reqInner, resInner, decodedToken.uid);
     } catch (err: unknown) {
       // Log error details
       if (err instanceof Error && err.message.includes('Firebase ID token')) {
         logger.warn('Token verification failed', {
           error: err.message,
-          method: req.method,
-          path: req.path,
+          method: reqInner.method,
+          path: reqInner.path,
         });
-        if (!res.headersSent) {
-          res.status(401).json({
+        if (!resInner.headersSent) {
+          resInner.status(401).json({
             error: err.message,
           });
         }
       } else {
         logger.error('Error in authentication', {
           error: err instanceof Error ? err.message : err,
-          method: req.method,
-          path: req.path,
+          method: reqInner.method,
+          path: reqInner.path,
         });
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'An error occurred while processing your request.' });
+        if (!resInner.headersSent) {
+          resInner.status(500).json({ error: 'An error occurred while processing your request.' });
         }
       }
     }
-  })(req, res);
+  })(req as any, res as any);
 }

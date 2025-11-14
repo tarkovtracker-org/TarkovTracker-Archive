@@ -2,14 +2,14 @@ import { defineConfig } from 'vitest/config';
 
 /**
  * Pure Unit Test Configuration
- * 
+ *
  * These tests:
  * - Do NOT touch Firestore or any Firebase services
  * - Use fake/mock implementations instead of real database
  * - Run extremely fast (milliseconds)
  * - Can run in parallel
  * - Perfect for watch mode and rapid feedback
- * 
+ *
  * Example: services/TeamService.unit.test.ts uses FakeTeamRepository
  */
 
@@ -23,7 +23,7 @@ export default defineConfig({
     mockReset: true,
     clearMocks: true,
     restoreMocks: true,
-    
+
     // Unit tests can run in parallel - no shared state!
     isolate: true,
     pool: 'threads',
@@ -35,10 +35,10 @@ export default defineConfig({
     sequence: {
       concurrent: true, // Enable concurrent test execution
     },
-    
+
     testTimeout: 5000, // 5 seconds - unit tests should be fast
     hookTimeout: 5000,
-    
+
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],

@@ -266,9 +266,3 @@ export const leaveTeam = asyncHandler(
     res.status(200).json(response);
   }
 );
-export default {
-  getTeamProgress,
-  createTeam,
-  joinTeam,
-  leaveTeam,
-};

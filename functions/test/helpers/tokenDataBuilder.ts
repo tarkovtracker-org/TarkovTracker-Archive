@@ -23,6 +23,7 @@
 
 /**
  * Token data structure matching Firestore TokenDocument
+ * Note: Date fields use plain Date objects for test compatibility
  */
 export interface TokenData {
   owner: string;
@@ -30,12 +31,12 @@ export interface TokenData {
   permissions: string[];
   gameMode: string;
   calls: number;
-  createdAt: { toDate: () => Date };
+  createdAt: Date;
   revoked?: boolean;
   isActive?: boolean;
   status?: 'active' | 'expired' | 'revoked';
-  lastUsed?: { toDate: () => Date };
-  expiredAt?: { toDate: () => Date };
+  lastUsed?: Date;
+  expiredAt?: Date;
 }
 
 /**
@@ -52,10 +53,10 @@ export class TokenDataBuilder {
       permissions: ['GP'],
       gameMode: 'pvp',
       calls: 0,
-      createdAt: { toDate: () => new Date() },
+      createdAt: new Date(),
       isActive: true,
       status: 'active',
-      lastUsed: { toDate: () => new Date() },
+      lastUsed: new Date(),
     };
   }
 
@@ -103,7 +104,7 @@ export class TokenDataBuilder {
    * Set the creation timestamp
    */
   withCreatedAt(date: Date): this {
-    this.data.createdAt = { toDate: () => date };
+    this.data.createdAt = date;
     return this;
   }
 
@@ -111,7 +112,7 @@ export class TokenDataBuilder {
    * Set the last used timestamp
    */
   withLastUsed(date: Date): this {
-    this.data.lastUsed = { toDate: () => date };
+    this.data.lastUsed = date;
     return this;
   }
 
@@ -126,9 +127,9 @@ export class TokenDataBuilder {
 
     this.data.isActive = false;
     this.data.status = 'expired';
-    this.data.expiredAt = { toDate: () => expiredDate };
-    this.data.createdAt = { toDate: () => createdDate };
-    this.data.lastUsed = { toDate: () => createdDate };
+    this.data.expiredAt = expiredDate;
+    this.data.createdAt = createdDate;
+    this.data.lastUsed = createdDate;
 
     return this;
   }
@@ -162,7 +163,7 @@ export class TokenDataBuilder {
   active(): this {
     this.data.isActive = true;
     this.data.status = 'active';
-    this.data.lastUsed = { toDate: () => new Date() };
+    this.data.lastUsed = new Date();
     return this;
   }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { admin, createTestSuite } from '../../helpers';
-import { ProgressService } from '../../../src/services/ProgressService';
-import { TokenService } from '../../../src/services/TokenService';
+import { admin, createTestSuite, getTarkovSeedData } from '../helpers';
+import { ProgressService } from '../../src/services/ProgressService';
+import { TokenService } from '../../src/services/TokenService';
 describe('User Account Lifecycle Integration Tests', () => {
   const suite = createTestSuite('UserLifecycle');
   let progressService: ProgressService;
@@ -15,31 +15,7 @@ describe('User Account Lifecycle Integration Tests', () => {
     testUserId = `test-user-${Date.now()}`;
     testTeamId = `test-team-${Date.now()}`;
     await suite.withDatabase({
-      tarkovdata: {
-        tasks: {
-          'user-task-1': { id: 'user-task-1' },
-          'user-task-2': { id: 'user-task-2' },
-          'user-task-3': { id: 'user-task-3' },
-          'concurrent-task-1': { id: 'concurrent-task-1' },
-          'concurrent-task-2': { id: 'concurrent-task-2' },
-          'concurrent-task-3': { id: 'concurrent-task-3' },
-          'initial-task': { id: 'initial-task' },
-          'rollback-task': { id: 'rollback-task' },
-          'owner-task': { id: 'owner-task' },
-          'member-task': { id: 'member-task' },
-          'permission-test-task': { id: 'permission-test-task' },
-          'removal-test-task': { id: 'removal-test-task' },
-          'token-test-task': { id: 'token-test-task' },
-          'multi-token-task-1': { id: 'multi-token-task-1' },
-          'multi-token-task-2': { id: 'multi-token-task-2' },
-          'concurrent-token-task-0': { id: 'concurrent-token-task-0' },
-          'concurrent-token-task-1': { id: 'concurrent-token-task-1' },
-          'concurrent-token-task-2': { id: 'concurrent-token-task-2' },
-          'concurrent-token-task-3': { id: 'concurrent-token-task-3' },
-          'concurrent-token-task-4': { id: 'concurrent-token-task-4' },
-        },
-        hideout: {},
-      },
+      ...getTarkovSeedData(),
     });
   });
 

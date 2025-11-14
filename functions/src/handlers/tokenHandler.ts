@@ -71,6 +71,3 @@ export const getTokenInfo = asyncHandler(
     res.status(200).json(response);
   }
 );
-export default {
-  getTokenInfo,
-};

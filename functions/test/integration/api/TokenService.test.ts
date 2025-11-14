@@ -2,7 +2,6 @@ import { vi, describe, it, expect, afterEach, beforeEach } from 'vitest';
 import type { Firestore } from 'firebase-admin/firestore';
 import { TokenService } from '../../../src/services/TokenService';
 import { errors } from '../../../src/middleware/errorHandler';
-import { TOKEN_FORMAT, TEST_TIMEOUTS } from './constants';
 // New centralized utilities
 import {
   createTestSuite,
@@ -14,8 +13,13 @@ import {
   createRevokedToken,
   createLegacyToken,
   admin,
-} from './helpers/index';
+} from '../../helpers';
+
 import * as factoryModule from '../../../src/utils/factory';
+
+// Test constants
+const TOKEN_FORMAT = /^[0-9A-Za-z]{19}$/; // BASE62 token format
+const TEST_TIMEOUTS = { default: 5000, long: 10000 };
 
 // Use centralized test suite management
 describe('TokenService', () => {

@@ -69,7 +69,16 @@
     </v-alert>
     <v-row v-if="!statsReady" justify="center" class="stats-row">
       <!-- Skeleton loaders for instant render without blocking computations -->
-      <v-col v-for="i in 4" :key="`skeleton-${i}`" cols="12" sm="6" md="6" lg="3" xl="3" class="stats-col">
+      <v-col
+        v-for="i in 4"
+        :key="`skeleton-${i}`"
+        cols="12"
+        sm="6"
+        md="6"
+        lg="3"
+        xl="3"
+        class="stats-col"
+      >
         <v-skeleton-loader type="card" />
       </v-col>
     </v-row>
@@ -157,9 +166,12 @@
   onMounted(() => {
     // Use requestIdleCallback to defer calculations until browser is idle
     if (typeof requestIdleCallback !== 'undefined') {
-      requestIdleCallback(() => {
-        statsReady.value = true;
-      }, { timeout: 200 });
+      requestIdleCallback(
+        () => {
+          statsReady.value = true;
+        },
+        { timeout: 200 }
+      );
     } else {
       // Fallback for browsers without requestIdleCallback
       setTimeout(() => {

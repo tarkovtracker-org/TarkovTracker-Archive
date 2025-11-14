@@ -51,7 +51,9 @@
   import { useLiveData } from '@/composables/livedata';
   import { fireuser } from '@/plugins/firebase';
   const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard'));
-  const TeammemberCard = defineAsyncComponent(() => import('@/components/domain/team/TeammemberCard'));
+  const TeammemberCard = defineAsyncComponent(
+    () => import('@/components/domain/team/TeammemberCard')
+  );
   const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
   const { useTeamStore: useTeamStoreFunction } = useLiveData();
   const { teamStore } = useTeamStoreFunction();

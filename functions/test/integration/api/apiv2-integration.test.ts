@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestSuite } from './helpers';
+import { createTestSuite } from '../../helpers';
 
 interface MockRequest {
   method: string;

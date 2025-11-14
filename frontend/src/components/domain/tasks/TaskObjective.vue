@@ -30,7 +30,9 @@
       style="font-size: smaller; margin-top: 1px; margin-bottom: 1px"
     >
       <v-col
-        v-if="fullObjective && itemObjectiveTypes.includes(fullObjective?.type ?? '') && relatedItem"
+        v-if="
+          fullObjective && itemObjectiveTypes.includes(fullObjective?.type ?? '') && relatedItem
+        "
         cols="auto"
         class="pa-0 d-flex align-center"
       >
@@ -72,7 +74,10 @@
   import { useLiveData } from '@/composables/livedata';
   import TaskObjectiveKillTracker from './TaskObjectiveKillTracker.vue';
   import TarkovItem from '@/components/domain/items/TarkovItem.vue';
-  import type { TaskObjective as TaskObjectiveModel, TarkovItem as TarkovItemModel } from '@/types/models/tarkov';
+  import type {
+    TaskObjective as TaskObjectiveModel,
+    TarkovItem as TarkovItemModel,
+  } from '@/types/models/tarkov';
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
   // Define the props for the component
@@ -131,7 +136,7 @@
         return objective.markerItem ?? null;
       case 'buildWeapon': {
         // Prefer the defaultPreset (full build) if available
-        const {item} = objective;
+        const { item } = objective;
         if (item?.properties?.defaultPreset) {
           return item.properties.defaultPreset;
         }

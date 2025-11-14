@@ -26,6 +26,7 @@
     "test:performance:team": "vitest run test/performance/teamPerformance.test.ts --reporter=verbose",
     "test:performance:load": "vitest run test/performance/loadTests.test.ts --reporter=verbose",
     "test:performance:all": "vitest run test/performance/ --reporter=verbose",
+    "fixtures:fetch:tarkovdata": "node ./scripts/fetch-tarkovdata-snapshot.mjs",
     "test:coverage": "vitest run --coverage --config vitest.config.js",
     "test:coverage:unit": "vitest run --coverage --config vitest.config.unit.js",
     "test:coverage:integration": "vitest run --coverage --config vitest.config.integration.js",

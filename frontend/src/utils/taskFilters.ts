@@ -25,14 +25,8 @@ export function taskMatchesRequirementFilters(
   if (!task || !options) {
     return false;
   }
-  const {
-    showKappa,
-    showLightkeeper,
-    showEod,
-    hideNonEndgame,
-    treatEodAsEndgame,
-  } = options;
-  
+  const { showKappa, showLightkeeper, showEod, hideNonEndgame, treatEodAsEndgame } = options;
+
   // Check for existence of task.requirements before accessing
   const hasKappaRequirement = task.kappaRequired === true;
   const hasLightkeeperRequirement = task.lightkeeperRequired === true;

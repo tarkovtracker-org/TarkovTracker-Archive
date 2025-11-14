@@ -143,15 +143,29 @@ export const createTestSuite = (suiteName: string) => {
      * NOTE: The global afterEach hook in test/setup.ts is the canonical cleanup.
      * This resetDb() call is defensive: it ensures a clean slate even if the
      * global hook is somehow bypassed or a test runs in isolation.
-     * 
+     *
      * In normal operation:
      * - Global afterEach clears Firestore after the previous test
      * - This beforeEach provides an extra safety check
      * - Both together guarantee no state leakage
+     *
+     * Also clears data loader caches to prevent stale cached data from leaking
+     * between tests, ensuring fresh data is loaded from Firestore each test.
      */
     beforeEach: async () => {
-      await resetDb();
+      // Global afterEach in test/setup.ts is the single source of truth for
+      // Firestore cleanup. We purposefully avoid calling resetDb() here to
+      // prevent redundant cleanup work and keep responsibility clear:
+      // - Global afterEach: clears Firestore between tests
+      // - This hook: clears mocks and in-memory caches for the current test
       vi.clearAllMocks();
+      // Clear data loader caches to prevent stale data leakage between tests
+      try {
+        const { clearDataLoaderCache } = await import('../../src/utils/dataLoaders');
+        clearDataLoaderCache();
+      } catch {
+        // If dataLoaders can't be imported (e.g., in mocked contexts), silently continue
+      }
     },
 
     /**
@@ -159,14 +173,22 @@ export const createTestSuite = (suiteName: string) => {
      * Call this in your afterEach hook
      *
      * This runs custom cleanup callbacks registered via addCleanup() and restores mocks.
-     * 
-     * IMPORTANT: Does NOT clear Firestore - the global afterEach hook in 
+     * Also clears data loader caches as extra protection against cross-test pollution.
+     *
+     * IMPORTANT: Does NOT clear Firestore - the global afterEach hook in
      * test/setup.ts handles that. This keeps cleanup responsibilities clear:
      * - Global hook: Firestore cleanup (runs for ALL tests)
-     * - This method: Test-specific cleanup (mocks, custom callbacks)
+     * - This method: Test-specific cleanup (mocks, custom callbacks, cache clearing)
      */
     afterEach: async () => {
       await context.cleanup();
+      // Clear data loader caches after test to prevent leakage to next test
+      try {
+        const { clearDataLoaderCache } = await import('../../src/utils/dataLoaders');
+        clearDataLoaderCache();
+      } catch {
+        // If dataLoaders can't be imported (e.g., in mocked contexts), silently continue
+      }
     },
 
     /**

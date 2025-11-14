@@ -23,7 +23,7 @@ describe('config/features', () => {
         newErrorHandling: true,
         newProgressService: false,
         newTeamService: true,
-        newTokenService: false
+        newTokenService: false,
       };
       expect(features.newErrorHandling).toBe(true);
       expect(features.newProgressService).toBe(false);
@@ -50,23 +50,23 @@ describe('config/features', () => {
     });
     it('should parse FEATURE_ERROR_HANDLING environment variable correctly', async () => {
       process.env.FEATURE_ERROR_HANDLING = 'true';
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       expect(freshFeatures.newErrorHandling).toBe(true);
     });
     it('should handle false value for FEATURE_ERROR_HANDLING', async () => {
       process.env.FEATURE_ERROR_HANDLING = 'false';
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       expect(freshFeatures.newErrorHandling).toBe(false);
     });
     it('should ignore invalid values for FEATURE_ERROR_HANDLING', async () => {
       process.env.FEATURE_ERROR_HANDLING = 'yes';
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       expect(freshFeatures.newErrorHandling).toBe(false);
     });
     it('should parse all environment variables correctly when all are set to true', async () => {
@@ -74,9 +74,9 @@ describe('config/features', () => {
       process.env.FEATURE_PROGRESS_SERVICE = 'true';
       process.env.FEATURE_TEAM_SERVICE = 'true';
       process.env.FEATURE_TOKEN_SERVICE = 'true';
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       expect(freshFeatures.newErrorHandling).toBe(true);
       expect(freshFeatures.newProgressService).toBe(true);
       expect(freshFeatures.newTeamService).toBe(true);
@@ -87,9 +87,9 @@ describe('config/features', () => {
       process.env.FEATURE_PROGRESS_SERVICE = 'false';
       process.env.FEATURE_TEAM_SERVICE = 'yes'; // Invalid value
       process.env.FEATURE_TOKEN_SERVICE = '1'; // Invalid value (not 'true')
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       expect(freshFeatures.newErrorHandling).toBe(true);
       expect(freshFeatures.newProgressService).toBe(false);
       expect(freshFeatures.newTeamService).toBe(false);
@@ -100,9 +100,9 @@ describe('config/features', () => {
       process.env.FEATURE_PROGRESS_SERVICE = '';
       process.env.FEATURE_TEAM_SERVICE = '';
       process.env.FEATURE_TOKEN_SERVICE = '';
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       // Empty string should be treated as falsy
       expect(freshFeatures.newErrorHandling).toBe(false);
       expect(freshFeatures.newProgressService).toBe(false);
@@ -112,9 +112,9 @@ describe('config/features', () => {
     it('should handle case sensitivity', async () => {
       process.env.FEATURE_ERROR_HANDLING = 'TRUE'; // Uppercase
       process.env.FEATURE_PROGRESS_SERVICE = 'True'; // Mixed case
-      
+
       const { API_FEATURES: freshFeatures } = await importFreshFeatures();
-      
+
       // Only exact 'true' (lowercase) should work
       expect(freshFeatures.newErrorHandling).toBe(false);
       expect(freshFeatures.newProgressService).toBe(false);
@@ -124,9 +124,9 @@ describe('config/features', () => {
     it('should match the documented environment variable names', () => {
       const documentedVars = [
         'FEATURE_ERROR_HANDLING',
-        'FEATURE_PROGRESS_SERVICE', 
+        'FEATURE_PROGRESS_SERVICE',
         'FEATURE_TEAM_SERVICE',
-        'FEATURE_TOKEN_SERVICE'
+        'FEATURE_TOKEN_SERVICE',
       ];
       // Verify that all documented variables are actually used
       // This is a compile-time check that will fail if the implementation changes
@@ -134,7 +134,7 @@ describe('config/features', () => {
         process.env.FEATURE_ERROR_HANDLING !== undefined,
         process.env.FEATURE_PROGRESS_SERVICE !== undefined,
         process.env.FEATURE_TEAM_SERVICE !== undefined,
-        process.env.FEATURE_TOKEN_SERVICE !== undefined
+        process.env.FEATURE_TOKEN_SERVICE !== undefined,
       ];
       expect(documentedVars).toHaveLength(4);
       expect(featureVars).toHaveLength(4);

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ProgressService } from '../../../src/services/ProgressService';
-import { createTestSuite, admin } from '../../helpers/index.js';
+import { createTestSuite, admin } from '../../helpers';
 import { ServiceTestHelpers } from '../../helpers/TestHelpers';
 import { MOCK_GAME_DATA, MOCK_TASKS } from '../mocks/MockConstants';
 
@@ -20,8 +20,8 @@ import { MOCK_GAME_DATA, MOCK_TASKS } from '../mocks/MockConstants';
  */
 
 // Ensure data loaders can be overridden test-by-test
-vi.doMock('../../src/utils/dataLoaders', async () => {
-  const actual = await vi.importActual('../../src/utils/dataLoaders');
+vi.doMock('../../../src/utils/dataLoaders', async () => {
+  const actual = await vi.importActual('../../../src/utils/dataLoaders');
   return {
     ...actual,
     getHideoutData: vi.fn().mockResolvedValue(MOCK_GAME_DATA.HIDEOUT_DATA),
@@ -32,8 +32,8 @@ vi.doMock('../../src/utils/dataLoaders', async () => {
 });
 
 // Spy-able dependency updater
-vi.mock('../../src/progress/progressUtils', async () => {
-  const actual = await vi.importActual('../../src/progress/progressUtils');
+vi.mock('../../../src/progress/progressUtils', async () => {
+  const actual = await vi.importActual('../../../src/progress/progressUtils');
   return {
     ...actual,
     updateTaskState: vi.fn().mockResolvedValue(undefined),
@@ -55,13 +55,13 @@ describe('ProgressService concurrency and transactions', () => {
       tarkovdata: MOCK_GAME_DATA,
     });
     // Default loader returns
-    const { getHideoutData, getTaskData } = await import('../../src/utils/dataLoaders');
+    const { getHideoutData, getTaskData } = await import('../../../src/utils/dataLoaders');
     vi.mocked(getHideoutData).mockResolvedValue(MOCK_GAME_DATA.HIDEOUT_DATA);
     vi.mocked(getTaskData).mockResolvedValue({
       tasks: [MOCK_TASKS.TASK_ALPHA, MOCK_TASKS.TASK_BETA],
     });
     // Default dependency updater
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     vi.mocked(updateTaskState).mockResolvedValue(undefined);
     vi.clearAllMocks();
   });
@@ -95,7 +95,7 @@ describe('ProgressService concurrency and transactions', () => {
 
     expect(runTransactionSpy).toHaveBeenCalledTimes(5);
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     // Dependency update invoked for each operation
     expect(vi.mocked(updateTaskState)).toHaveBeenCalledTimes(5);
     expect(vi.mocked(updateTaskState)).toHaveBeenNthCalledWith(
@@ -129,7 +129,7 @@ describe('ProgressService concurrency and transactions', () => {
     expect(randomSpy).toHaveBeenCalled(); // conflict path triggered
     randomSpy.mockRestore();
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     expect(updateTaskState).toHaveBeenCalledWith(taskId, 'completed', userId, expect.anything());
   });
 
@@ -143,7 +143,7 @@ describe('ProgressService concurrency and transactions', () => {
     ).rejects.toHaveProperty('message', 'Failed to update task');
 
     // No dependency updates on failure
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     expect(updateTaskState).not.toHaveBeenCalled();
   });
 
@@ -243,7 +243,7 @@ describe('ProgressService concurrency and transactions', () => {
 
     await Promise.all([pvpUpdate, pveUpdate]);
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     // Both modes should trigger dependency updater independently
     expect(updateTaskState).toHaveBeenCalledTimes(2);
   });
@@ -275,10 +275,10 @@ describe('ProgressService concurrency and transactions', () => {
         { id: 'task-c', alternatives: [], taskRequirements: [] },
       ],
     };
-    const { getTaskData } = await import('../../src/utils/dataLoaders');
+    const { getTaskData } = await import('../../../src/utils/dataLoaders');
     vi.mocked(getTaskData).mockResolvedValue(taskData);
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     vi.mocked(updateTaskState).mockResolvedValue(undefined);
 
     // Two race updates: complete and uncomplete A
@@ -317,14 +317,14 @@ describe('ProgressService concurrency and transactions', () => {
         },
       ],
     };
-    const { getTaskData } = await import('../../src/utils/dataLoaders');
+    const { getTaskData } = await import('../../../src/utils/dataLoaders');
     vi.mocked(getTaskData).mockResolvedValue(circularTaskData);
 
     await expect(
       service.updateSingleTask(userId, 'task-x', 'completed', 'pvp')
     ).resolves.toBeUndefined();
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     expect(updateTaskState).toHaveBeenCalledWith('task-x', 'completed', userId, circularTaskData);
   });
 
@@ -343,10 +343,10 @@ describe('ProgressService concurrency and transactions', () => {
         { id: 'task-c', alternatives: [], taskRequirements: [] },
       ],
     };
-    const { getTaskData } = await import('../../src/utils/dataLoaders');
+    const { getTaskData } = await import('../../../src/utils/dataLoaders');
     vi.mocked(getTaskData).mockResolvedValue(taskData);
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     // Make one of the dependency updates fail to validate error swallowing
     vi.mocked(updateTaskState)
       .mockImplementationOnce(async () => {
@@ -439,7 +439,7 @@ describe('ProgressService concurrency and transactions', () => {
 
     expect(runTransactionSpy).toHaveBeenCalledTimes(3);
 
-    const { updateTaskState } = await import('../../src/progress/progressUtils');
+    const { updateTaskState } = await import('../../../src/progress/progressUtils');
     expect(updateTaskState).toHaveBeenCalledTimes(3);
   });
 });

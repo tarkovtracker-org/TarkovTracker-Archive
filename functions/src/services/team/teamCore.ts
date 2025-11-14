@@ -1,6 +1,6 @@
 /**
  * Core team operations: creation and fundamental team management
- * 
+ *
  * This module handles:
  * - Team creation with validation
  * - Password generation
@@ -25,15 +25,15 @@ export interface CreateTeamResult {
 
 /**
  * Creates a new team with proper transaction safety
- * 
+ *
  * Validates:
  * - User is not already in a team
  * - Cooldown period after leaving team (5 minutes)
- * 
+ *
  * Atomically:
  * - Creates team document
  * - Updates user's system document
- * 
+ *
  * @param repository - Team repository for data access
  * @param userId - ID of the user creating the team
  * @param data - Team creation data (password, maximumMembers)
@@ -107,12 +107,12 @@ export async function createTeam(
 
 /**
  * Generates a secure password for team creation
- * 
+ *
  * Uses UIDGenerator with BASE62 encoding to create
  * a cryptographically random 48-character password.
- * 
+ *
  * Falls back to debug passwords on error (should not happen in production)
- * 
+ *
  * @returns Secure random password string
  */
 export async function generateSecurePassword(): Promise<string> {

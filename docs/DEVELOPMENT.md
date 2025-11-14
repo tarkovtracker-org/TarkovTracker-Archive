@@ -237,6 +237,7 @@ See [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) for ongoing refactoring
 
 ## Related Documentation
 
+- [NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md) – Step-by-step guide for adding new features
 - [WORKFLOWS.md](./WORKFLOWS.md) – Branch strategy and deployment process
 - [SECURITY.md](./SECURITY.md) – Authentication, validation, CORS
 - [ARCHITECTURE.md](./ARCHITECTURE.md) – System design and caching

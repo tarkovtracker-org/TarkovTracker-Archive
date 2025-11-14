@@ -1,17 +1,26 @@
 /**
  * Pure unit tests for TeamService using fake repository
- * 
+ *
  * These tests run without Firestore emulator:
  * - Much faster execution
  * - Easy to simulate edge cases
  * - No external dependencies
  * - Ideal for CI/CD pipelines
+ *
+ * @vitest-env node
+ * @sequential - Tests must run sequentially to maintain FakeRepository isolation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Timestamp } from 'firebase-admin/firestore';
 import { TeamService } from '../../../src/services/TeamService';
 import { FakeTeamRepository } from '../../repositories/FakeTeamRepository';
-import { Timestamp } from 'firebase-admin/firestore';
+
+// Mock timestamp utilities for consistent testing
+const mockTimestamp = {
+  now: () => ({ toMillis: () => Date.now() }),
+  fromMillis: (value: number) => ({ toMillis: () => value }),
+};
 
 // Mock data loaders (not needed for pure unit tests)
 vi.mock('../../../src/utils/dataLoaders', () => ({
@@ -30,13 +39,21 @@ vi.mock('../../../src/token/UIDGenerator', () => {
   };
 });
 
-describe('TeamService - Pure Unit Tests (No Emulator)', () => {
+// Run tests sequentially to maintain FakeRepository isolation
+describe.sequential('TeamService - Pure Unit Tests (No Emulator)', () => {
   let teamService: TeamService;
   let fakeRepo: FakeTeamRepository;
 
   beforeEach(async () => {
+    // Create fresh repository instance for each test to ensure isolation
     fakeRepo = new FakeTeamRepository();
     teamService = new TeamService(fakeRepo);
+  });
+
+  afterEach(() => {
+    // Explicitly clear repository state after each test
+    // This prevents any potential state leakage between tests
+    fakeRepo.reset();
   });
 
   describe('createTeam', () => {
@@ -74,9 +91,9 @@ describe('TeamService - Pure Unit Tests (No Emulator)', () => {
       fakeRepo.seedSystemDoc('user-1', { team: 'existing-team-id' });
 
       // Act & Assert
-      await expect(
-        teamService.createTeam('user-1', { maximumMembers: 10 })
-      ).rejects.toThrow('User is already in a team');
+      await expect(teamService.createTeam('user-1', { maximumMembers: 10 })).rejects.toThrow(
+        'User is already in a team'
+      );
     });
 
     it('should enforce cooldown period after leaving team', async () => {
@@ -85,9 +102,9 @@ describe('TeamService - Pure Unit Tests (No Emulator)', () => {
       fakeRepo.seedSystemDoc('user-1', { lastLeftTeam: twoMinutesAgo });
 
       // Act & Assert
-      await expect(
-        teamService.createTeam('user-1', { maximumMembers: 10 })
-      ).rejects.toThrow('You must wait 5 minutes after leaving a team');
+      await expect(teamService.createTeam('user-1', { maximumMembers: 10 })).rejects.toThrow(
+        'You must wait 5 minutes after leaving a team'
+      );
     });
 
     it('should allow team creation after cooldown expires', async () => {
@@ -110,13 +127,16 @@ describe('TeamService - Pure Unit Tests (No Emulator)', () => {
 
   describe('joinTeam', () => {
     beforeEach(async () => {
+      // Clear any previous state and ensure fresh repository
+      fakeRepo.clear();
+
       // Setup: existing team with one member
       fakeRepo.seedTeamDoc('team-123', {
         owner: 'owner-user',
         password: 'team-password',
         maximumMembers: 10,
         members: ['owner-user'],
-        createdAt: Timestamp.now(),
+        createdAt: mockTimestamp.now(),
       });
       fakeRepo.seedSystemDoc('user-2', {});
     });
@@ -181,7 +201,7 @@ describe('TeamService - Pure Unit Tests (No Emulator)', () => {
         password: 'password',
         maximumMembers: 2,
         members: ['owner-user', 'member-1'],
-        createdAt: Timestamp.now(),
+        createdAt: mockTimestamp.now(),
       });
 
       // Act & Assert
@@ -274,9 +294,7 @@ describe('TeamService - Pure Unit Tests (No Emulator)', () => {
       );
 
       // Act & Assert
-      await expect(
-        teamService.createTeam('user-1', { maximumMembers: 10 })
-      ).rejects.toThrow();
+      await expect(teamService.createTeam('user-1', { maximumMembers: 10 })).rejects.toThrow();
 
       // Verify no changes were made
       const systemDoc = await fakeRepo.getSystemDocument('user-1');

@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TeamService } from '../../../src/services/TeamService';
 import { ValidationService } from '../../../src/services/ValidationService';
-import { getTeamProgress, createTeam, joinTeam, leaveTeam } from '../../../src/handlers/teamHandler';
-import { createTestSuite } from '../../helpers';
+import {
+  getTeamProgress,
+  createTeam,
+  joinTeam,
+  leaveTeam,
+} from '../../../src/handlers/teamHandler';
+import { createTestSuite, getTarkovSeedData, createProgressDoc, admin } from '../../helpers';
 import { createHandlerTest } from '../../helpers/testPatterns';
 
 describe('handlers/teamHandler', () => {
@@ -19,6 +24,7 @@ describe('handlers/teamHandler', () => {
 
     // Set up basic test data using centralized helper
     await suite.withDatabase({
+      ...getTarkovSeedData(),
       users: {
         'test-user-123': {
           id: 'test-user-123',
@@ -26,13 +32,19 @@ describe('handlers/teamHandler', () => {
           email: 'test@example.com',
         },
       },
+      progress: {
+        'test-user-123': createProgressDoc({
+          pvp: { displayName: 'testuser', pmcFaction: 'USEC' },
+        }),
+      },
       system: {},
       team: {},
-      tarkovdata: {
-        tasks: { tasks: [] },
-        hideout: {},
-      },
     });
+
+    const tasksDoc = await admin.firestore().collection('tarkovdata').doc('tasks').get();
+    const hideoutDoc = await admin.firestore().collection('tarkovdata').doc('hideout').get();
+    expect(tasksDoc.exists).toBe(true);
+    expect(hideoutDoc.exists).toBe(true);
 
     mockReq = {
       apiToken: {
@@ -64,7 +76,7 @@ describe('handlers/teamHandler', () => {
         password: created.password,
       });
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -77,10 +89,10 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should use token gameMode when available', () => {
+    it('', async () => {
       mockReq.apiToken.gameMode = 'pve';
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -93,10 +105,10 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should default to pvp when token gameMode is not set', () => {
+    it('', async () => {
       mockReq.apiToken.gameMode = undefined;
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -109,23 +121,23 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should use query parameter for dual mode tokens', () => {
+    it('', async () => {
       mockReq.apiToken.gameMode = 'dual';
       mockReq.query.gameMode = 'pve';
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
     });
 
-    it('should default to pvp for dual mode tokens without query parameter', () => {
+    it('', async () => {
       mockReq.apiToken.gameMode = 'dual';
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
     });
 
-    it('should handle empty team progress data', () => {
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+    it('', async () => {
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: true,
@@ -146,7 +158,7 @@ describe('handlers/teamHandler', () => {
         password: created.password,
       });
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -161,8 +173,8 @@ describe('handlers/teamHandler', () => {
   });
 
   describe('createTeam', () => {
-    it('should create team successfully with default settings', () => {
-      createTeam(mockReq, mockRes.res, vi.fn());
+    it('should create team successfully with default settings', async () => {
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -175,12 +187,12 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should create team with custom password', () => {
+    it('should create team with custom password', async () => {
       mockReq.body = {
         password: 'custom-password-123',
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -193,12 +205,12 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should create team with custom maximum members', () => {
+    it('should create team with custom maximum members', async () => {
       mockReq.body = {
         maximumMembers: 25,
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -211,13 +223,13 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should create team with both custom password and maximum members', () => {
+    it('should create team with both custom password and maximum members', async () => {
       mockReq.body = {
         password: 'custom-password',
         maximumMembers: 15,
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -230,12 +242,12 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should reject password shorter than 4 characters', () => {
+    it('should reject password shorter than 4 characters', async () => {
       mockReq.body = {
         password: 'abc',
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -243,12 +255,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should reject maximum members less than 2', () => {
+    it('should reject maximum members less than 2', async () => {
       mockReq.body = {
         maximumMembers: 1,
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -256,12 +268,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should reject maximum members greater than 50', () => {
+    it('should reject maximum members greater than 50', async () => {
       mockReq.body = {
         maximumMembers: 51,
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -269,12 +281,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should reject non-numeric maximum members', () => {
+    it('should reject non-numeric maximum members', async () => {
       mockReq.body = {
         maximumMembers: 'not-a-number',
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -282,12 +294,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should trim whitespace from password', () => {
+    it('should trim whitespace from password', async () => {
       mockReq.body = {
         password: '  my-password  ',
       };
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -299,10 +311,10 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should handle empty request body', () => {
+    it('should handle empty request body', async () => {
       mockReq.body = {};
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -315,10 +327,10 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should handle null request body', () => {
+    it('should handle null request body', async () => {
       mockReq.body = null;
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -349,7 +361,7 @@ describe('handlers/teamHandler', () => {
 
       mockReq.body.id = created.team;
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -361,10 +373,10 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should require team ID and password', () => {
+    it('', async () => {
       mockReq.body = {};
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -372,12 +384,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should require team ID', () => {
+    it('', async () => {
       mockReq.body = {
         password: 'team-password',
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -385,12 +397,12 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should require password', () => {
+    it('', async () => {
       mockReq.body = {
         id: 'team-123',
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -410,17 +422,17 @@ describe('handlers/teamHandler', () => {
         password: '  team-password  ',
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
     });
 
-    it('should reject empty team ID after trimming', () => {
+    it('', async () => {
       mockReq.body = {
         id: '   ',
         password: 'team-password',
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -428,13 +440,13 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should reject empty password', () => {
+    it('', async () => {
       mockReq.body = {
         id: 'team-123',
         password: '',
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -442,20 +454,20 @@ describe('handlers/teamHandler', () => {
       });
     });
 
-    it('should convert team ID and password to strings', () => {
+    it('', async () => {
       mockReq.body = {
         id: 123,
         password: 456,
       };
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
     });
 
-    it('should handle null body', () => {
+    it('', async () => {
       mockReq.body = null;
 
-      joinTeam(mockReq, mockRes.res, vi.fn());
+      await joinTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(400);
       expect(mockRes.mockJson).toHaveBeenCalledWith({
         success: false,
@@ -477,7 +489,7 @@ describe('handlers/teamHandler', () => {
         password: created.password,
       });
 
-      leaveTeam(mockReq, mockRes.res, vi.fn());
+      await leaveTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -489,8 +501,8 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('should call TeamService.leaveTeam with correct user ID', () => {
-      leaveTeam(mockReq, mockRes.res, vi.fn());
+    it('', async () => {
+      await leaveTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockStatus).toHaveBeenCalledWith(200);
     });
 
@@ -506,7 +518,7 @@ describe('handlers/teamHandler', () => {
         password: created.password,
       });
 
-      leaveTeam(mockReq, mockRes.res, vi.fn());
+      await leaveTeam(mockReq, mockRes.res, vi.fn());
       expect(mockRes.mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
           success: true,
@@ -519,12 +531,12 @@ describe('handlers/teamHandler', () => {
   });
 
   describe('Error handling through asyncHandler', () => {
-    it('should handle validation errors gracefully', () => {
+    it('', async () => {
       // Mock validation to throw an error
       const originalValidate = ValidationService.validateUserId;
       ValidationService.validateUserId = vi.fn().mockRejectedValue(new Error('Invalid user ID'));
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       // asyncHandler should catch errors and pass to next
       expect(vi.fn()).toHaveBeenCalled();
 
@@ -532,12 +544,12 @@ describe('handlers/teamHandler', () => {
       ValidationService.validateUserId = originalValidate;
     });
 
-    it('should handle team service errors', () => {
+    it('', async () => {
       // Mock team service to throw an error
       const originalGetTeamProgress = teamService.getTeamProgress;
       teamService.getTeamProgress = vi.fn().mockRejectedValue(new Error('Team not found'));
 
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       // asyncHandler should catch this and pass to next
       expect(vi.fn()).toHaveBeenCalled();
 
@@ -545,14 +557,14 @@ describe('handlers/teamHandler', () => {
       teamService.getTeamProgress = originalGetTeamProgress;
     });
 
-    it('should handle validation errors in createTeam', () => {
+    it('', async () => {
       // Mock validation to throw an error
       const originalValidate = ValidationService.validateUserId;
       ValidationService.validateUserId = vi
         .fn()
         .mockRejectedValue(new Error('User already in team'));
 
-      createTeam(mockReq, mockRes.res, vi.fn());
+      await createTeam(mockReq, mockRes.res, vi.fn());
       expect(vi.fn()).toHaveBeenCalled();
 
       // Restore
@@ -561,8 +573,8 @@ describe('handlers/teamHandler', () => {
   });
 
   describe('API response structure', () => {
-    it('should return consistent API response format', () => {
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+    it('', async () => {
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       const response = mockRes.mockJson.mock.calls[0][0];
       expect(response).toHaveProperty('success');
       expect(response).toHaveProperty('data');
@@ -570,8 +582,8 @@ describe('handlers/teamHandler', () => {
       expect(response.success).toBe(true);
     });
 
-    it('should include meta information in team progress response', () => {
-      getTeamProgress(mockReq, mockRes.res, vi.fn());
+    it('', async () => {
+      await getTeamProgress(mockReq, mockRes.res, vi.fn());
       const response = mockRes.mockJson.mock.calls[0][0];
       expect(response.meta).toEqual(
         expect.objectContaining({

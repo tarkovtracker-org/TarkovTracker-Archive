@@ -1,19 +1,18 @@
 /**
  * Centralized HTTP authentication wrappers for bearer token verification
- * 
+ *
  * This module provides:
  * - Express middleware for API bearer token authentication
  * - Higher-order function wrappers for Firebase onRequest functions
  * - Permission checking utilities
  * - Composable with CORS middleware
- * 
+ *
  * Two types of authentication are supported:
  * 1. API Bearer Tokens - Custom tokens stored in Firestore (for API access)
  * 2. Firebase ID Tokens - Standard Firebase Auth tokens (for user actions)
  */
 
 import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
-import type { Request as FunctionsRequest, Response as FunctionsResponse } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 import type { ApiToken } from '../types/api';
 import { TokenService } from '../services/TokenService';
@@ -31,9 +30,9 @@ export interface AuthenticatedRequest extends ExpressRequest {
 }
 
 /**
- * Extended Firebase Functions request with authentication data
+ * Extended Express request with authentication data
  */
-export interface AuthenticatedFunctionsRequest extends FunctionsRequest {
+export interface AuthenticatedExpressRequest extends ExpressRequest {
   apiToken?: ApiToken;
   user?: {
     id: string;
@@ -43,13 +42,13 @@ export interface AuthenticatedFunctionsRequest extends FunctionsRequest {
 
 /**
  * Express middleware that validates API Bearer tokens
- * 
+ *
  * Usage in Express app:
  * ```typescript
  * import { verifyBearerToken } from './middleware/httpAuthWrapper';
  * app.use('/api', verifyBearerToken);
  * ```
- * 
+ *
  * Behavior:
  * - Allows OPTIONS requests without authentication
  * - Validates Bearer token from Authorization header
@@ -95,23 +94,23 @@ export const verifyBearerToken = asyncHandler(
 
 /**
  * Higher-order function that wraps a Firebase onRequest handler with API bearer token authentication
- * 
+ *
  * Usage with Firebase Functions v2:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
  * import { withBearerAuth } from './middleware/httpAuthWrapper';
- * 
+ *
  * const myHandler = async (req, res, token) => {
  *   // token.owner contains the authenticated user ID
  *   res.json({ userId: token.owner });
  * };
- * 
+ *
  * export const myFunction = onRequest(
  *   { memory: '256MiB' },
  *   withBearerAuth(myHandler)
  * );
  * ```
- * 
+ *
  * The wrapper:
  * 1. Extracts Bearer token from Authorization header
  * 2. Validates token using TokenService
@@ -120,12 +119,12 @@ export const verifyBearerToken = asyncHandler(
  */
 export function withBearerAuth(
   handler: (
-    req: AuthenticatedFunctionsRequest,
-    res: FunctionsResponse,
+    req: AuthenticatedExpressRequest,
+    res: ExpressResponse,
     token: ApiToken
   ) => Promise<void> | void
-): (req: FunctionsRequest, res: FunctionsResponse) => Promise<void> {
-  return async (req: FunctionsRequest, res: FunctionsResponse): Promise<void> => {
+): (req: ExpressRequest, res: ExpressResponse) => Promise<void> {
+  return async (req: ExpressRequest, res: ExpressResponse): Promise<void> => {
     try {
       const tokenService = new TokenService();
 
@@ -133,7 +132,7 @@ export function withBearerAuth(
       const token = await tokenService.validateToken(req.headers.authorization);
 
       // Attach token data to request
-      const authReq = req as AuthenticatedFunctionsRequest;
+      const authReq = req as AuthenticatedExpressRequest;
       authReq.apiToken = token;
       authReq.user = { id: token.owner };
 
@@ -159,22 +158,22 @@ export function withBearerAuth(
 
 /**
  * Combined CORS and API bearer token authentication wrapper
- * 
+ *
  * Usage with Firebase Functions v2:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
  * import { withCorsAndBearerAuth } from './middleware/httpAuthWrapper';
- * 
+ *
  * const myHandler = async (req, res, token) => {
  *   res.json({ userId: token.owner, message: 'Hello' });
  * };
- * 
+ *
  * export const myFunction = onRequest(
  *   { memory: '256MiB' },
  *   withCorsAndBearerAuth(myHandler)
  * );
  * ```
- * 
+ *
  * The wrapper:
  * 1. Handles CORS (origin validation, headers, OPTIONS)
  * 2. Verifies API bearer token from Authorization header
@@ -183,17 +182,17 @@ export function withBearerAuth(
  */
 export function withCorsAndBearerAuth(
   handler: (
-    req: AuthenticatedFunctionsRequest,
-    res: FunctionsResponse,
+    req: AuthenticatedExpressRequest,
+    res: ExpressResponse,
     token: ApiToken
   ) => Promise<void> | void
-): (req: FunctionsRequest, res: FunctionsResponse) => Promise<void> {
+): (req: ExpressRequest, res: ExpressResponse) => Promise<void> {
   // Import CORS wrapper dynamically to avoid circular dependencies
-  return async (req: FunctionsRequest, res: FunctionsResponse): Promise<void> => {
+  return async (req: ExpressRequest, res: ExpressResponse): Promise<void> => {
     const { withCorsHandling } = await import('./corsWrapper');
 
     // Wrap with CORS first, then auth
-    const corsHandler = withCorsHandling(async (req: FunctionsRequest, res: FunctionsResponse) => {
+    const corsHandler = withCorsHandling(async (req: ExpressRequest, res: ExpressResponse) => {
       // Now apply bearer auth
       await withBearerAuth(handler)(req, res);
     });
@@ -204,18 +203,18 @@ export function withCorsAndBearerAuth(
 
 /**
  * Express middleware that checks if the authenticated token has a specific permission
- * 
+ *
  * Usage in Express app:
  * ```typescript
  * import { requirePermission } from './middleware/httpAuthWrapper';
- * 
- * app.get('/api/progress', 
+ *
+ * app.get('/api/progress',
  *   verifyBearerToken,           // First authenticate
  *   requirePermission('GP'),      // Then check permission
  *   progressHandler.getPlayerProgress
  * );
  * ```
- * 
+ *
  * Behavior:
  * - Assumes verifyBearerToken has already run
  * - Checks if req.apiToken has the required permission
@@ -266,17 +265,17 @@ export const requirePermission =
 
 /**
  * Helper to create a permission-checking wrapper for onRequest functions
- * 
+ *
  * Usage:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
  * import { withBearerAuthAndPermission } from './middleware/httpAuthWrapper';
- * 
+ *
  * const myHandler = async (req, res, token) => {
  *   // token has been verified and has 'GP' permission
  *   res.json({ data: 'progress data' });
  * };
- * 
+ *
  * export const myFunction = onRequest(
  *   { memory: '256MiB' },
  *   withBearerAuthAndPermission('GP', myHandler)
@@ -286,11 +285,11 @@ export const requirePermission =
 export function withBearerAuthAndPermission(
   permission: string,
   handler: (
-    req: AuthenticatedFunctionsRequest,
-    res: FunctionsResponse,
+    req: AuthenticatedExpressRequest,
+    res: ExpressResponse,
     token: ApiToken
   ) => Promise<void> | void
-): (req: FunctionsRequest, res: FunctionsResponse) => Promise<void> {
+): (req: ExpressRequest, res: ExpressResponse) => Promise<void> {
   return withBearerAuth(async (req, res, token) => {
     // Check permission
     if (!Array.isArray(token.permissions) || !token.permissions.includes(permission)) {
@@ -313,16 +312,16 @@ export function withBearerAuthAndPermission(
 
 /**
  * Combined CORS, auth, and permission wrapper
- * 
+ *
  * Usage:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
  * import { withCorsAndBearerAuthAndPermission } from './middleware/httpAuthWrapper';
- * 
+ *
  * const myHandler = async (req, res, token) => {
  *   res.json({ data: 'protected data' });
  * };
- * 
+ *
  * export const myFunction = onRequest(
  *   { memory: '256MiB' },
  *   withCorsAndBearerAuthAndPermission('GP', myHandler)
@@ -332,11 +331,11 @@ export function withBearerAuthAndPermission(
 export function withCorsAndBearerAuthAndPermission(
   permission: string,
   handler: (
-    req: AuthenticatedFunctionsRequest,
-    res: FunctionsResponse,
+    req: AuthenticatedExpressRequest,
+    res: ExpressResponse,
     token: ApiToken
   ) => Promise<void> | void
-): (req: FunctionsRequest, res: FunctionsResponse) => Promise<void> {
+): (req: ExpressRequest, res: ExpressResponse) => Promise<void> {
   return withCorsAndBearerAuth(async (req, res, token) => {
     // Check permission
     if (!Array.isArray(token.permissions) || !token.permissions.includes(permission)) {
@@ -359,7 +358,7 @@ export function withCorsAndBearerAuthAndPermission(
 
 /**
  * Re-export for backward compatibility
- * 
+ *
  * @deprecated Use verifyBearerToken instead
  */
 export const verifyBearer = verifyBearerToken;

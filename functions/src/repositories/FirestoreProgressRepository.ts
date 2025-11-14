@@ -1,16 +1,18 @@
 /**
  * Firestore implementation of IProgressRepository
- * 
+ *
  * Encapsulates all Firestore operations for progress-related data access.
  * This implementation can be swapped with a fake for unit testing.
  */
 
-import type { Firestore, Transaction, DocumentReference, FieldValue } from 'firebase-admin/firestore';
-import { FieldValue as FieldValueClass } from 'firebase-admin/firestore';
 import type {
-  IProgressRepository,
-  IProgressTransactionContext,
-} from './IProgressRepository';
+  Firestore,
+  Transaction,
+  DocumentReference,
+  FieldValue,
+} from 'firebase-admin/firestore';
+import { FieldValue as FieldValueClass } from 'firebase-admin/firestore';
+import type { IProgressRepository, IProgressTransactionContext } from './IProgressRepository';
 import type { ProgressDocument } from '../types/api';
 
 /**
@@ -23,9 +25,7 @@ class FirestoreProgressTransactionContext implements IProgressTransactionContext
   ) {}
 
   async getProgressDoc(userId: string): Promise<ProgressDocument | undefined> {
-    const ref = this.db
-      .collection('progress')
-      .doc(userId) as DocumentReference<ProgressDocument>;
+    const ref = this.db.collection('progress').doc(userId) as DocumentReference<ProgressDocument>;
     const doc = await this.transaction.get(ref);
     return doc.data();
   }
@@ -47,9 +47,7 @@ class FirestoreProgressTransactionContext implements IProgressTransactionContext
 export class FirestoreProgressRepository implements IProgressRepository {
   constructor(private db: Firestore) {}
 
-  async runTransaction<T>(
-    callback: (tx: IProgressTransactionContext) => Promise<T>
-  ): Promise<T> {
+  async runTransaction<T>(callback: (tx: IProgressTransactionContext) => Promise<T>): Promise<T> {
     return this.db.runTransaction(async (transaction) => {
       const txContext = new FirestoreProgressTransactionContext(transaction, this.db);
       return callback(txContext);
@@ -57,9 +55,7 @@ export class FirestoreProgressRepository implements IProgressRepository {
   }
 
   async getProgressDocument(userId: string): Promise<ProgressDocument | null> {
-    const ref = this.db
-      .collection('progress')
-      .doc(userId) as DocumentReference<ProgressDocument>;
+    const ref = this.db.collection('progress').doc(userId) as DocumentReference<ProgressDocument>;
     const doc = await ref.get();
     return doc.exists ? doc.data()! : null;
   }
@@ -73,10 +69,7 @@ export class FirestoreProgressRepository implements IProgressRepository {
     await ref.set(data, { merge });
   }
 
-  async updateProgressDocument(
-    userId: string,
-    updates: Record<string, unknown>
-  ): Promise<void> {
+  async updateProgressDocument(userId: string, updates: Record<string, unknown>): Promise<void> {
     const ref = this.db.collection('progress').doc(userId);
     await ref.update(updates);
   }

@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TeamService } from '../../src/services/TeamService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
-import { createTestSuite } from '../helpers/index.js';
+import { createTestSuite, getTarkovSeedData } from '../helpers/index.js';
 
-describe('Team Performance Tests', () => {
+const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
+
+// Performance suites are opt-in to avoid slowing down normal dev/CI runs.
+// Enable by setting ENABLE_PERFORMANCE_TESTS=true in the environment.
+(RUN_PERFORMANCE_TESTS ? describe : describe.skip)('Team Performance Tests', () => {
   const suite = createTestSuite('TeamPerformance');
   let teamService: TeamService;
   let monitor: PerformanceMonitor;
@@ -17,19 +21,10 @@ describe('Team Performance Tests', () => {
 
     // Seed basic test data
     await suite.withDatabase({
+      ...getTarkovSeedData(),
       teams: {},
       system: {},
       progress: {},
-      tarkovdata: {
-        tasks: {
-          'team-task-1': { id: 'team-task-1', name: 'Team Task 1' },
-          'team-task-2': { id: 'team-task-2', name: 'Team Task 2' },
-          'team-task-3': { id: 'team-task-3', name: 'Team Task 3' },
-        },
-        hideout: {
-          'team-module-1': { id: 'team-module-1', name: 'Team Module 1' },
-        },
-      },
     });
   });
 
@@ -141,7 +136,11 @@ describe('Team Performance Tests', () => {
         system[ownerId] = { team: teamId };
       }
 
-      await suite.withDatabase({ teams, system });
+      await suite.withDatabase({
+        ...getTarkovSeedData(),
+        teams,
+        system,
+      });
     });
     it('should handle team joining efficiently under load', async () => {
       const teams = Object.keys((global as any).dbState?.teams || {});
@@ -223,7 +222,12 @@ describe('Team Performance Tests', () => {
         });
       }
 
-      await suite.withDatabase({ teams, system, progress });
+      await suite.withDatabase({
+        ...getTarkovSeedData(),
+        teams,
+        system,
+        progress,
+      });
     });
     it('should retrieve team progress efficiently under load', async () => {
       const userIds = Object.keys((global as any).dbState?.system || {});
@@ -335,7 +339,11 @@ describe('Team Performance Tests', () => {
         });
       }
 
-      await suite.withDatabase({ teams, system });
+      await suite.withDatabase({
+        ...getTarkovSeedData(),
+        teams,
+        system,
+      });
     });
     it('should handle team leaving efficiently under load', async () => {
       const memberUserIds = Object.keys((global as any).dbState?.system || {}).filter(
@@ -507,6 +515,7 @@ describe('Team Performance Tests', () => {
       const maxMembers = 50;
 
       await suite.withDatabase({
+        ...getTarkovSeedData(),
         teams: {
           [largeTeamId]: {
             owner: ownerId,

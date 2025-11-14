@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { admin, createTestSuite } from '../../helpers';
-import { TeamService } from '../../../src/services/TeamService';
-import { ProgressService } from '../../../src/services/ProgressService';
-import { TokenService } from '../../../src/services/TokenService';
+import { admin, createTestSuite, getTarkovSeedData } from '../helpers';
+import { TeamService } from '../../src/services/TeamService';
+import { ProgressService } from '../../src/services/ProgressService';
+import { TokenService } from '../../src/services/TokenService';
 describe('Team Collaboration Integration Tests', () => {
   const suite = createTestSuite('TeamCollaboration');
   let teamService: TeamService;
@@ -21,27 +21,7 @@ describe('Team Collaboration Integration Tests', () => {
     testTeamId = `team-${Date.now()}`;
     // Seed required data for tests
     await suite.withDatabase({
-      tarkovdata: {
-        tasks: {
-          'task-1': { id: 'task-1' },
-          'task-2': { id: 'task-2' },
-          'task-3': { id: 'task-3' },
-          'task-4': { id: 'task-4' },
-          'task-5': { id: 'task-5' },
-          'task-6': { id: 'task-6' },
-          'task-7': { id: 'task-7' },
-          'task-8': { id: 'task-8' },
-          'concurrent-task-0': { id: 'concurrent-task-0' },
-          'concurrent-task-1': { id: 'concurrent-task-1' },
-          'concurrent-task-2': { id: 'concurrent-task-2' },
-          'concurrent-task-3': { id: 'concurrent-task-3' },
-          'removal-test-task': { id: 'removal-test-task' },
-          'permission-test-task': { id: 'permission-test-task' },
-          'owner-only-task': { id: 'owner-only-task' },
-          'member-task': { id: 'member-task' },
-        },
-        hideout: {},
-      },
+      ...getTarkovSeedData(),
     });
   });
 

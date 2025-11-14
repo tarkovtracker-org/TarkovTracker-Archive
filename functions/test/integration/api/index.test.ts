@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestSuite } from './helpers';
+import { createTestSuite } from '../../helpers';
 
 describe('Functions Index (entry point)', () => {
   const suite = createTestSuite('functions/index');

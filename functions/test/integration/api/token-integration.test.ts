@@ -5,7 +5,7 @@ import {
   createMockResponse,
   expectApiError,
   createTestSuite,
-} from './helpers/index';
+} from '../../helpers';
 
 describe('Token callable/HTTP wrappers', () => {
   const suite = createTestSuite('token-integration');

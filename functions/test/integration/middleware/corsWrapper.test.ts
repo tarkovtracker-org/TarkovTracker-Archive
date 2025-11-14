@@ -1,6 +1,6 @@
 /**
  * Integration tests for CORS wrapper middleware
- * 
+ *
  * Tests:
  * - corsMiddleware for Express apps
  * - withCorsHandling for Firebase Functions
@@ -11,8 +11,11 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
-import type { Request as FunctionsRequest, Response as FunctionsResponse } from 'firebase-functions/v2/https';
-import { corsMiddleware, withCorsHandling, withCorsAndAuthentication } from '../../../src/middleware/corsWrapper';
+import {
+  corsMiddleware,
+  withCorsHandling,
+  withCorsAndAuthentication,
+} from '../../../src/middleware/corsWrapper';
 
 // Mock setCorsHeaders from corsConfig
 vi.mock('../../../src/config/corsConfig', () => ({
@@ -63,11 +66,7 @@ describe('CORS Wrapper Middleware', () => {
     });
 
     it('should set CORS headers and call next() for valid origin', () => {
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(setFn).toHaveBeenCalledWith('Access-Control-Allow-Origin', 'http://localhost:3000');
       expect(nextFn).toHaveBeenCalled();
@@ -77,11 +76,7 @@ describe('CORS Wrapper Middleware', () => {
     it('should return 403 for invalid origin', () => {
       mockReq.headers = { origin: 'https://evil.com' };
 
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(403);
       expect(jsonFn).toHaveBeenCalledWith({ error: 'Origin not allowed' });
@@ -91,11 +86,7 @@ describe('CORS Wrapper Middleware', () => {
     it('should handle OPTIONS preflight with 204', () => {
       mockReq.method = 'OPTIONS';
 
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(setFn).toHaveBeenCalled();
       expect(statusFn).toHaveBeenCalledWith(204);
@@ -106,11 +97,7 @@ describe('CORS Wrapper Middleware', () => {
     it('should handle requests without origin header', () => {
       mockReq.headers = {};
 
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(setFn).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
       expect(nextFn).toHaveBeenCalled();
@@ -118,8 +105,8 @@ describe('CORS Wrapper Middleware', () => {
   });
 
   describe('withCorsHandling (Firebase Functions)', () => {
-    let mockReq: Partial<FunctionsRequest>;
-    let mockRes: Partial<FunctionsResponse>;
+    let mockReq: Partial<ExpressRequest>;
+    let mockRes: Partial<ExpressResponse>;
     let statusFn: ReturnType<typeof vi.fn>;
     let sendFn: ReturnType<typeof vi.fn>;
     let jsonFn: ReturnType<typeof vi.fn>;
@@ -151,10 +138,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn().mockResolvedValue(undefined);
       const wrappedHandler = withCorsHandling(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(setFn).toHaveBeenCalled();
       expect(handlerFn).toHaveBeenCalled();
@@ -165,10 +149,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withCorsHandling(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(403);
       expect(sendFn).toHaveBeenCalledWith('Origin not allowed');
@@ -180,10 +161,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withCorsHandling(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(204);
       expect(sendFn).toHaveBeenCalledWith('');
@@ -196,17 +174,14 @@ describe('CORS Wrapper Middleware', () => {
       const wrappedHandler = withCorsHandling(handlerFn);
 
       await expect(
-        wrappedHandler(
-          mockReq as FunctionsRequest,
-          mockRes as FunctionsResponse
-        )
+        wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse)
       ).rejects.toThrow('Handler error');
     });
   });
 
   describe('withCorsAndAuthentication', () => {
-    let mockReq: Partial<FunctionsRequest>;
-    let mockRes: Partial<FunctionsResponse>;
+    let mockReq: Partial<ExpressRequest>;
+    let mockRes: Partial<ExpressResponse>;
     let statusFn: ReturnType<typeof vi.fn>;
     let jsonFn: ReturnType<typeof vi.fn>;
     let sendFn: ReturnType<typeof vi.fn>;
@@ -253,17 +228,10 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn().mockResolvedValue(undefined);
       const wrappedHandler = withCorsAndAuthentication(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(setFn).toHaveBeenCalled();
-      expect(handlerFn).toHaveBeenCalledWith(
-        mockReq,
-        mockRes,
-        'test-user-123'
-      );
+      expect(handlerFn).toHaveBeenCalledWith(mockReq, mockRes, 'test-user-123');
     });
 
     it('should reject requests without Authorization header', async () => {
@@ -271,10 +239,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withCorsAndAuthentication(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -288,10 +253,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withCorsAndAuthentication(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(401);
       expect(jsonFn).toHaveBeenCalledWith({
@@ -305,10 +267,7 @@ describe('CORS Wrapper Middleware', () => {
       const handlerFn = vi.fn();
       const wrappedHandler = withCorsAndAuthentication(handlerFn);
 
-      await wrappedHandler(
-        mockReq as FunctionsRequest,
-        mockRes as FunctionsResponse
-      );
+      await wrappedHandler(mockReq as ExpressRequest, mockRes as ExpressResponse);
 
       expect(statusFn).toHaveBeenCalledWith(403);
       expect(handlerFn).not.toHaveBeenCalled();
@@ -331,16 +290,18 @@ describe('CORS Wrapper Middleware', () => {
       };
       const nextFn = vi.fn();
 
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       // Verify standard CORS headers are set
       expect(setFn).toHaveBeenCalledWith('Access-Control-Allow-Origin', expect.any(String));
-      expect(setFn).toHaveBeenCalledWith('Access-Control-Allow-Methods', expect.stringContaining('GET'));
-      expect(setFn).toHaveBeenCalledWith('Access-Control-Allow-Headers', expect.stringContaining('Content-Type'));
+      expect(setFn).toHaveBeenCalledWith(
+        'Access-Control-Allow-Methods',
+        expect.stringContaining('GET')
+      );
+      expect(setFn).toHaveBeenCalledWith(
+        'Access-Control-Allow-Headers',
+        expect.stringContaining('Content-Type')
+      );
     });
 
     it('should handle preflight requests with all required headers', () => {
@@ -363,11 +324,7 @@ describe('CORS Wrapper Middleware', () => {
       };
       const nextFn = vi.fn();
 
-      corsMiddleware(
-        mockReq as ExpressRequest,
-        mockRes as ExpressResponse,
-        nextFn
-      );
+      corsMiddleware(mockReq as ExpressRequest, mockRes as ExpressResponse, nextFn);
 
       expect(statusFn).toHaveBeenCalledWith(204);
       expect(sendFn).toHaveBeenCalledWith('');

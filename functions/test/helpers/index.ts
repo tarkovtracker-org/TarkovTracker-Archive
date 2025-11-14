@@ -67,4 +67,14 @@ export {
 } from './tokenDataBuilder';
 
 // Re-export from emulator setup for convenience
-export { seedDb, resetDb, firestore, auth, admin } from './emulatorSetup';
+export {
+  seedDb,
+  resetDb,
+  firestore,
+  auth,
+  admin,
+  serverTimestamp,
+} from './emulatorSetup';
+
+// Tarkov data fixtures
+export { getTarkovSeedData, createProgressDoc } from './tarkovFixtures';

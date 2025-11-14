@@ -1,6 +1,6 @@
 /**
  * Team progress operations: retrieving and formatting team member progress
- * 
+ *
  * This module handles:
  * - Fetching progress for all team members
  * - Formatting progress data
@@ -24,15 +24,15 @@ export interface TeamProgressResult {
 
 /**
  * Get team progress for all members
- * 
+ *
  * Fetches and formats progress data for:
  * - All team members (if user is in a team)
  * - Just the requesting user (if not in a team)
- * 
+ *
  * Respects visibility settings:
  * - Hidden teammates are listed in meta but their progress is still included
  * - Frontend uses this to filter display
- * 
+ *
  * @param repository - Team repository for data access
  * @param userId - ID of the user requesting progress
  * @param gameMode - Game mode to fetch progress for (pvp/pve)

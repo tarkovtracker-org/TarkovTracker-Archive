@@ -56,12 +56,7 @@ export function validateOrigin(
     const normalizedOrigin = origin.toLowerCase();
     const protocol = originUrl.protocol.toLowerCase();
     const hostname = originUrl.hostname.toLowerCase();
-    const dangerousPatterns = [
-      /^null$/i,
-      /^file:/i,
-      /^javascript:/i,
-      /^data:/i,
-    ];
+    const dangerousPatterns = [/^null$/i, /^file:/i, /^javascript:/i, /^data:/i];
     for (const pattern of dangerousPatterns) {
       if (pattern.test(normalizedOrigin)) {
         logger.warn(`CORS: Blocked suspicious origin format: ${origin}`);
@@ -143,7 +138,7 @@ export function getExpressCorsOptions(): CorsOptions {
   };
 }
 export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
-  const {origin} = req.headers;
+  const { origin } = req.headers;
   const validatedOrigin = validateOrigin(origin, {
     trustNoOrigin: true,
     allowedOrigins: getAllowedOrigins(),

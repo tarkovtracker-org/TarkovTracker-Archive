@@ -3,7 +3,7 @@ import { ProgressService } from '../../../src/services/ProgressService';
 import { createTestSuite } from '../../helpers';
 
 // Mock only external data loaders, not Firestore operations
-vi.mock('../../src/utils/dataLoaders', () => ({
+vi.mock('../../../src/utils/dataLoaders', () => ({
   getHideoutData: vi.fn().mockResolvedValue({ hideoutStations: [] }),
   getTaskData: vi.fn().mockResolvedValue({
     tasks: [
@@ -17,7 +17,7 @@ vi.mock('../../src/utils/dataLoaders', () => ({
 }));
 
 // Mock progress utility functions
-vi.mock('../../src/progress/progressUtils', () => ({
+vi.mock('../../../src/progress/progressUtils', () => ({
   formatProgress: vi.fn(),
   updateTaskState: vi.fn(),
 }));
@@ -40,7 +40,7 @@ describe('ProgressService', () => {
     vi.clearAllMocks();
 
     // Reset mock implementations
-    const { getHideoutData, getTaskData } = await import('../../src/utils/dataLoaders');
+    const { getHideoutData, getTaskData } = await import('../../../src/utils/dataLoaders');
     vi.mocked(getHideoutData).mockResolvedValue(MOCK_HIDEOUT_DATA);
     vi.mocked(getTaskData).mockResolvedValue(MOCK_TASK_DATA);
   });
@@ -55,8 +55,8 @@ describe('ProgressService', () => {
       };
 
       // Get mocked functions
-      const { getHideoutData, getTaskData } = await import('../../src/utils/dataLoaders');
-      const { formatProgress } = await import('../../src/progress/progressUtils');
+      const { getHideoutData, getTaskData } = await import('../../../src/utils/dataLoaders');
+      const { formatProgress } = await import('../../../src/progress/progressUtils');
 
       // Seed test data
       await suite.withDatabase({
@@ -87,7 +87,7 @@ describe('ProgressService', () => {
     });
 
     it('throws when essential game data is missing', async () => {
-      const { getHideoutData, getTaskData } = await import('../../src/utils/dataLoaders');
+      const { getHideoutData, getTaskData } = await import('../../../src/utils/dataLoaders');
 
       await suite.withDatabase({
         progress: {
@@ -108,7 +108,7 @@ describe('ProgressService', () => {
     });
 
     it('handles missing progress document gracefully', async () => {
-      const { formatProgress } = await import('../../src/progress/progressUtils');
+      const { formatProgress } = await import('../../../src/progress/progressUtils');
 
       // Don't seed any progress data
       const formatted = { displayName: 'New Player', tasksProgress: [] } as any;
@@ -129,7 +129,7 @@ describe('ProgressService', () => {
 
   describe('updateSingleTask', () => {
     it('updates a single task and handles dependency updates', async () => {
-      const { updateTaskState } = await import('../../src/progress/progressUtils');
+      const { updateTaskState } = await import('../../../src/progress/progressUtils');
 
       await suite.withDatabase({
         progress: {
@@ -152,7 +152,7 @@ describe('ProgressService', () => {
     });
 
     it('swallows dependency errors after updating a task', async () => {
-      const { updateTaskState } = await import('../../src/progress/progressUtils');
+      const { updateTaskState } = await import('../../../src/progress/progressUtils');
 
       await suite.withDatabase({
         progress: {
@@ -172,7 +172,7 @@ describe('ProgressService', () => {
       ).resolves.toBeUndefined();
 
       // Verify the task was actually updated in Firestore (transaction completed)
-      const { admin } = await import('../helpers');
+      const { admin } = await import('../../helpers');
       const docSnap = await admin.firestore().collection('progress').doc('user-4').get();
       expect(docSnap.exists).toBe(true);
       const data = docSnap.data();
@@ -206,7 +206,7 @@ describe('ProgressService', () => {
       await service.updateSingleTask('user-7', 'task-epsilon', 'completed', 'pvp');
 
       // Verify the task completion was actually written to Firestore
-      const { admin } = await import('../helpers');
+      const { admin } = await import('../../helpers');
       const docSnap = await admin.firestore().collection('progress').doc('user-7').get();
       expect(docSnap.exists).toBe(true);
       const data = docSnap.data();
@@ -216,7 +216,7 @@ describe('ProgressService', () => {
 
   describe('Integration Scenarios', () => {
     it('handles complete task update workflow', async () => {
-      const { updateTaskState } = await import('../../src/progress/progressUtils');
+      const { updateTaskState } = await import('../../../src/progress/progressUtils');
 
       const userData = {
         currentGameMode: 'pvp',
@@ -236,7 +236,7 @@ describe('ProgressService', () => {
       await service.updateSingleTask('user-8', 'task-zeta', 'completed', 'pvp');
 
       // Verify the task was written to Firestore
-      const { admin } = await import('../helpers');
+      const { admin } = await import('../../helpers');
       const docSnap = await admin.firestore().collection('progress').doc('user-8').get();
       expect(docSnap.exists).toBe(true);
       const data = docSnap.data();

@@ -152,8 +152,8 @@ export const progress = {
       'hideout-002': { level: 1, upgrades: [] },
     },
     traderProgress: {
-      'prapor': { level: 4, reputation: 0.35 },
-      'therapist': { level: 3, reputation: 0.15 },
+      prapor: { level: 4, reputation: 0.35 },
+      therapist: { level: 3, reputation: 0.15 },
     },
   },
   user2Progress: {
@@ -166,7 +166,7 @@ export const progress = {
       'hideout-001': { level: 2, upgrades: ['upgrade-1'] },
     },
     traderProgress: {
-      'prapor': { level: 2, reputation: 0.10 },
+      prapor: { level: 2, reputation: 0.1 },
     },
   },
 };

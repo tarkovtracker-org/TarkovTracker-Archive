@@ -206,7 +206,7 @@ export class MemoryMonitor {
     hasLeak: boolean;
     increaseMb: number;
   } {
-    const testSnapshots = this.snapshots.filter(s => s.testName === testName);
+    const testSnapshots = this.snapshots.filter((s) => s.testName === testName);
     if (testSnapshots.length < 2) {
       return { hasLeak: false, increaseMb: 0 };
     }
@@ -226,17 +226,17 @@ export class MemoryMonitor {
    * Clear snapshots for a test
    */
   static clearSnapshots(testName: string): void {
-    this.snapshots = this.snapshots.filter(s => s.testName !== testName);
+    this.snapshots = this.snapshots.filter((s) => s.testName !== testName);
   }
 
   /**
    * Get memory usage statistics
    */
   static getStats(testName: string) {
-    const testSnapshots = this.snapshots.filter(s => s.testName === testName);
+    const testSnapshots = this.snapshots.filter((s) => s.testName === testName);
     if (testSnapshots.length === 0) return null;
 
-    const heapUsages = testSnapshots.map(s => s.heapUsed);
+    const heapUsages = testSnapshots.map((s) => s.heapUsed);
     return {
       min: Math.min(...heapUsages),
       max: Math.max(...heapUsages),
@@ -270,8 +270,8 @@ export class LoadTester {
 
     for (let i = 0; i < concurrency; i++) {
       promises.push(
-        this.runOperationWithRetry(operation, iterations).catch(error => {
-          const existingError = errors.find(e => e.error.message === error.message);
+        this.runOperationWithRetry(operation, iterations).catch((error) => {
+          const existingError = errors.find((e) => e.error.message === error.message);
           if (existingError) {
             existingError.count++;
           } else {
@@ -294,7 +294,7 @@ export class LoadTester {
     return {
       totalTime,
       averageTime: totalTime / (concurrency * iterations),
-      successCount: (concurrency * iterations) - errors.reduce((sum, e) => sum + e.count, 0),
+      successCount: concurrency * iterations - errors.reduce((sum, e) => sum + e.count, 0),
       errorCount: errors.reduce((sum, e) => sum + e.count, 0),
       errors,
     };
@@ -314,7 +314,7 @@ export class LoadTester {
         lastError = error as Error;
         if (i < retries - 1) {
           // Brief delay before retry
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
     }
@@ -329,10 +329,12 @@ export class LoadTester {
     operation: () => Promise<any>,
     maxConcurrency: number,
     stepSize: number = 5
-  ): Promise<Array<{
-    concurrency: number;
-    results: any;
-  }>> {
+  ): Promise<
+    Array<{
+      concurrency: number;
+      results: any;
+    }>
+  > {
     const results = [];
 
     for (let concurrency = stepSize; concurrency <= maxConcurrency; concurrency += stepSize) {
@@ -354,10 +356,7 @@ export class PerformanceAssertions {
   /**
    * Assert that an operation completes within time limit
    */
-  static async completesWithin(
-    operation: () => Promise<any>,
-    maxMs: number
-  ): Promise<void> {
+  static async completesWithin(operation: () => Promise<any>, maxMs: number): Promise<void> {
     const startTime = performance.now();
     await operation();
     const duration = performance.now() - startTime;

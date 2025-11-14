@@ -14,10 +14,10 @@ import { MOCK_USERS, MOCK_TEAMS, MOCK_TASKS } from '../mocks/MockConstants';
 export class ServiceTestHelpers {
   /**
    * Standard setup for service tests with database seeding
-   * 
+   *
    * NOTE: This method is deprecated - tests should use createTestSuite() instead.
    * The global afterEach hook in test/setup.ts handles Firestore cleanup automatically.
-   * 
+   *
    * @deprecated Use createTestSuite() for new tests
    */
   static async setupServiceTest(additionalData = {}) {

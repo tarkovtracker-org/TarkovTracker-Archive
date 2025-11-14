@@ -35,3 +35,5 @@ jobs:
             echo "Bundle exceeds 500kb (actual: $SIZE bytes)";
             exit 1;
           fi
+      - name: Check OpenAPI documentation sync
+        run: npm run docs:check

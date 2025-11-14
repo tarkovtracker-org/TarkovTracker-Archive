@@ -4,17 +4,38 @@
  *   schemas:
  *     Token:
  *       title: Token
- *       description: User's token data.
+ *       description: API token information
  *       type: object
+ *       required:
+ *         - token
+ *         - permissions
+ *         - owner
+ *         - note
+ *         - calls
+ *         - gameMode
  *       properties:
  *         token:
  *           type: string
- *           description: Shows token used to make this call
+ *           description: The API token string
  *         permissions:
  *           type: array
- *           description: GP == Get Progression, TP == Team Progression, WP == Write Progression
+ *           description: GP = Get Progress, TP = Team Progress, WP = Write Progress
  *           items:
  *             type: string
+ *             enum: [GP, WP, TP]
+ *         owner:
+ *           type: string
+ *           description: User ID of the token owner
+ *         note:
+ *           type: string
+ *           description: User-provided token description
+ *         calls:
+ *           type: integer
+ *           description: Number of API calls made with this token
+ *         gameMode:
+ *           type: string
+ *           description: Token game mode
+ *           enum: [pvp, pve, dual]
  *     TeamProgress:
  *       title: TeamProgress
  *       description: Array of team member's progress data.

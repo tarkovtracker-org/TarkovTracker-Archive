@@ -23,7 +23,9 @@
 </template>
 <script setup lang="ts">
   import { computed, defineAsyncComponent } from 'vue';
-  const StationLink = defineAsyncComponent(() => import('@/components/domain/hideout/StationLink.vue'));
+  const StationLink = defineAsyncComponent(
+    () => import('@/components/domain/hideout/StationLink.vue')
+  );
   const props = defineProps<{
     needType: string;
     levelRequired: number;

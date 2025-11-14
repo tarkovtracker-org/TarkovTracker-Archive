@@ -28,10 +28,13 @@ import { resetDb, seedDb, SeedData, admin, firestore } from './emulatorSetup';
  * });
  * ```
  */
-export async function createServiceTest<T>(ServiceClass: new (db: any) => T, initialData?: SeedData) {
+export async function createServiceTest<T>(
+  ServiceClass: new (db: any) => T,
+  initialData?: SeedData
+) {
   // Global afterEach in test/setup.ts handles Firestore cleanup
   // No need to reset here - DB is already clean from previous test
-  
+
   if (initialData) {
     await seedDb(initialData);
   }
@@ -93,7 +96,8 @@ export function createHandlerTest() {
     mockStatus,
     mockJson,
     expectStatus: (code: number) => expect(mockStatus).toHaveBeenCalledWith(code),
-    expectJsonResponse: (data: any) => expect(mockJson).toHaveBeenCalledWith(expect.objectContaining(data)),
+    expectJsonResponse: (data: any) =>
+      expect(mockJson).toHaveBeenCalledWith(expect.objectContaining(data)),
   };
 }
 
@@ -137,9 +141,7 @@ export async function testConcurrentTransactions(
   await resetDb();
   const db = firestore();
 
-  const promises = callbacks.map((callback) =>
-    db.runTransaction((tx: any) => callback(tx, db))
-  );
+  const promises = callbacks.map((callback) => db.runTransaction((tx: any) => callback(tx, db)));
 
   await Promise.all(promises);
 }

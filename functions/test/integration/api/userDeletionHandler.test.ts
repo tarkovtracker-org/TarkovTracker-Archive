@@ -5,7 +5,7 @@ import {
   __setUserDeletionService,
 } from '../../../src/handlers/userDeletionHandler';
 import { errors } from '../../../src/middleware/errorHandler';
-import { createTestSuite, admin } from './helpers/index';
+import { createTestSuite, admin } from '../../helpers';
 
 const confirmationRequest = { confirmationText: 'DELETE MY ACCOUNT' };
 
@@ -132,9 +132,9 @@ describe('UserDeletionService (emulator-backed)', () => {
   });
 
   it('throws for invalid confirmation text', async () => {
-    await expect(
-      service.deleteUserAccount('victim', { confirmationText: 'nope' })
-    ).rejects.toThrow('Invalid confirmation text');
+    await expect(service.deleteUserAccount('victim', { confirmationText: 'nope' })).rejects.toThrow(
+      'Invalid confirmation text'
+    );
     expect(deleteUserSpy).not.toHaveBeenCalled();
   });
 
@@ -162,7 +162,9 @@ describe('deleteUserAccountHandler', () => {
     __setUserDeletionService();
   });
 
-  const makeReq = (overrides: Partial<{ user?: { id: string }; body: { confirmationText: string } }> = {}) =>
+  const makeReq = (
+    overrides: Partial<{ user?: { id: string }; body: { confirmationText: string } }> = {}
+  ) =>
     ({
       user: { id: 'victim', ...(overrides.user ?? {}) },
       body: { confirmationText: 'DELETE MY ACCOUNT', ...(overrides.body ?? {}) },
@@ -204,9 +206,11 @@ describe('deleteUserAccountHandler', () => {
 
   it('maps ApiError responses from the service', async () => {
     const mockService = {
-      deleteUserAccount: vi.fn().mockRejectedValue(
-        errors.badRequest('Invalid confirmation text. Must be exactly "DELETE MY ACCOUNT"')
-      ),
+      deleteUserAccount: vi
+        .fn()
+        .mockRejectedValue(
+          errors.badRequest('Invalid confirmation text. Must be exactly "DELETE MY ACCOUNT"')
+        ),
     } as unknown as UserDeletionService;
     __setUserDeletionService(mockService);
 

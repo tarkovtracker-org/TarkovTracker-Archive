@@ -1,18 +1,18 @@
 /**
  * TeamService - Main aggregator for team operations
- * 
+ *
  * This service provides a unified interface for all team-related operations
  * by delegating to focused modules:
- * 
+ *
  * - teamCore: Team creation and core operations
  * - teamMembership: Joining and leaving teams
  * - teamProgress: Fetching team member progress
- * 
+ *
  * Uses repository pattern for better testability:
  * - Can be tested with fake repositories (no Firestore emulator needed)
  * - Clear separation between business logic and data access
  * - Easier to mock edge cases and transaction failures
- * 
+ *
  * Architecture:
  * - Each module is < 200 LOC with clear responsibilities
  * - All transactional behavior is preserved
@@ -47,7 +47,7 @@ export type { CreateTeamData, JoinTeamData };
 
 /**
  * Service for managing team operations
- * 
+ *
  * This class is a thin aggregator that delegates to focused modules
  * while maintaining the same public API for backward compatibility.
  */
@@ -75,9 +75,9 @@ export class TeamService {
 
   /**
    * Creates a new team with proper transaction safety
-   * 
+   *
    * Delegates to teamCore module
-   * 
+   *
    * @param userId - ID of the user creating the team
    * @param data - Team creation data (password, maximumMembers)
    * @returns Object with team ID and password
@@ -88,9 +88,9 @@ export class TeamService {
 
   /**
    * Join an existing team
-   * 
+   *
    * Delegates to teamMembership module
-   * 
+   *
    * @param userId - ID of the user joining
    * @param data - Join data (team ID and password)
    * @returns Object indicating success
@@ -101,9 +101,9 @@ export class TeamService {
 
   /**
    * Leave current team
-   * 
+   *
    * Delegates to teamMembership module
-   * 
+   *
    * @param userId - ID of the user leaving
    * @returns Object indicating success
    */
@@ -113,9 +113,9 @@ export class TeamService {
 
   /**
    * Get team progress for all members
-   * 
+   *
    * Delegates to teamProgress module
-   * 
+   *
    * @param userId - ID of the user requesting progress
    * @param gameMode - Game mode to fetch progress for (pvp/pve)
    * @returns Object with progress data and metadata

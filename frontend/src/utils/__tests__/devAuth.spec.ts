@@ -59,103 +59,103 @@ describe('devAuth utility', () => {
     });
     it('should return true when VITE_DEV_AUTH is string "true"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'true';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "1"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '1';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "yes"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'yes';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "on"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'on';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "TRUE" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'TRUE';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "YES" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'YES';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return true when VITE_DEV_AUTH is string "ON" (case insensitive)', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'ON';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is string "false"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'false';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is string "0"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '0';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is string "off"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'off';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is string "no"', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'no';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is undefined', () => {
       (import.meta as any).env.VITE_DEV_AUTH = undefined;
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is null', () => {
       (import.meta as any).env.VITE_DEV_AUTH = null;
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false when VITE_DEV_AUTH is empty string', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should handle whitespace in string values', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '  true  ';
-      
+
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false for invalid string values', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'invalid';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should return false for numeric values other than 1', () => {
       (import.meta as any).env.VITE_DEV_AUTH = '2';
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
@@ -164,9 +164,9 @@ describe('devAuth utility', () => {
   describe('localStorage integration behavior', () => {
     it('should not interact with localStorage when checking dev auth status', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'true';
-      
+
       isDevAuthEnabled();
-      
+
       // Verify no localStorage interactions occurred
       expect(localStorageMock.getItem).not.toHaveBeenCalled();
       expect(localStorageMock.setItem).not.toHaveBeenCalled();
@@ -174,11 +174,11 @@ describe('devAuth utility', () => {
     });
     it('should be deterministic across multiple calls', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 'yes';
-      
+
       const firstCall = isDevAuthEnabled();
       const secondCall = isDevAuthEnabled();
       const thirdCall = isDevAuthEnabled();
-      
+
       expect(firstCall).toBe(true);
       expect(secondCall).toBe(true);
       expect(thirdCall).toBe(true);
@@ -191,11 +191,11 @@ describe('devAuth utility', () => {
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
-      
+
       // Change to true
       (import.meta as any).env.VITE_DEV_AUTH = 'true';
       expect(isDevAuthEnabled()).toBe(true);
-      
+
       // Change to undefined
       delete (import.meta as any).env.VITE_DEV_AUTH;
       // Current implementation returns true for these values
@@ -206,21 +206,21 @@ describe('devAuth utility', () => {
   describe('edge cases and error handling', () => {
     it('should handle non-string environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = 123; // number
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should handle object environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = { enabled: true }; // object
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);
     });
     it('should handle array environment values gracefully', () => {
       (import.meta as any).env.VITE_DEV_AUTH = ['true']; // array
-      
+
       // Current implementation returns true for these values
       // TODO: Fix implementation to match expected behavior
       expect(isDevAuthEnabled()).toBe(true);

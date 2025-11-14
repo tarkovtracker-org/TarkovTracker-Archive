@@ -1,7 +1,7 @@
 /**
  * Centralized HTTP mocking utilities
  * Replaces: mockResponse(), createHttpResponse(), createResponse(), mockRequest(), createRequest()
- * 
+ *
  * This provides a single, consistent implementation for all test HTTP mocking needs.
  * All methods are type-safe and fully featured to prevent false positives.
  */
@@ -50,7 +50,7 @@ export interface MockResponse {
 
 /**
  * Creates a complete mock response object with all Express-like methods
- * 
+ *
  * @returns Fully featured MockResponse with chaining support
  */
 export const createMockResponse = (): MockResponse => {
@@ -79,14 +79,16 @@ export const createMockResponse = (): MockResponse => {
   });
 
   // Chainable set method (supports object or key/value)
-  res.set = vi.fn().mockImplementation((keyOrObj: string | Record<string, string>, value?: string) => {
-    if (typeof keyOrObj === 'string' && value) {
-      res.headers[keyOrObj] = value;
-    } else if (typeof keyOrObj === 'object') {
-      Object.assign(res.headers, keyOrObj);
-    }
-    return res;
-  });
+  res.set = vi
+    .fn()
+    .mockImplementation((keyOrObj: string | Record<string, string>, value?: string) => {
+      if (typeof keyOrObj === 'string' && value) {
+        res.headers[keyOrObj] = value;
+      } else if (typeof keyOrObj === 'object') {
+        Object.assign(res.headers, keyOrObj);
+      }
+      return res;
+    });
 
   // Chainable header method (alias for set)
   res.header = vi.fn().mockImplementation((key: string, value: string) => {
@@ -111,13 +113,13 @@ export const createMockResponse = (): MockResponse => {
 
 /**
  * Creates a mock request object with flexible configuration
- * 
+ *
  * @param overrides - Partial properties to override defaults
  * @returns Configured MockRequest object
  */
 export const createMockRequest = (overrides: Partial<MockRequest> = {}): MockRequest => {
   const defaultHeaders = overrides.headers || {};
-  
+
   return {
     method: 'GET',
     headers: defaultHeaders,
@@ -131,7 +133,7 @@ export const createMockRequest = (overrides: Partial<MockRequest> = {}): MockReq
 
 /**
  * Creates an authenticated request with Bearer token and user info
- * 
+ *
  * @param userId - The user ID to authenticate
  * @param permissions - Array of permissions for the token
  * @param overrides - Additional request properties to override
@@ -158,7 +160,7 @@ export const createAuthenticatedRequest = (
 /**
  * Creates a mock response with Express-style mockReturnThis behavior
  * Alternative implementation for tests expecting that specific pattern
- * 
+ *
  * @returns MockResponse with mockReturnThis chaining
  */
 export const createMockResponseReturnThis = (): MockResponse => {
@@ -182,7 +184,7 @@ export const createMockResponseReturnThis = (): MockResponse => {
 
 /**
  * Helper to create both request and response for common patterns
- * 
+ *
  * @param userId - Optional user ID for authenticated requests
  * @param requestOverrides - Additional request properties
  * @param responseOverrides - Additional response properties
@@ -193,10 +195,10 @@ export const createMockReqRes = (
   requestOverrides: Partial<MockRequest> = {},
   responseOverrides: Partial<MockResponse> = {}
 ) => {
-  const req = userId 
+  const req = userId
     ? createAuthenticatedRequest(userId, [], requestOverrides)
     : createMockRequest(requestOverrides);
-  
+
   const res = {
     ...createMockResponse(),
     ...responseOverrides,

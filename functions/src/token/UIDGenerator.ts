@@ -1,6 +1,6 @@
 /**
  * UIDGenerator - Generates unique identifiers with optional deterministic seeding for tests
- * 
+ *
  * This class provides backward compatibility with the existing uid-generator package
  * while adding support for deterministic generation in test environments.
  */
@@ -15,10 +15,10 @@ export default class UIDGenerator {
   constructor(length: number, base?: string) {
     this.length = length || 128;
     this.base = base;
-    
+
     // Detect test environment by checking common test indicators
     this.isTestEnvironment = this.detectTestEnvironment();
-    
+
     // Initialize seed if in test environment
     if (this.isTestEnvironment) {
       this.seed = this.getSeedFromEnvironment() || Date.now();
@@ -32,7 +32,7 @@ export default class UIDGenerator {
     if (this.isTestEnvironment && this.seed !== undefined) {
       return this.generateDeterministic();
     }
-    
+
     // Production: use crypto for secure random generation
     return this.generateSecure();
   }
@@ -43,9 +43,9 @@ export default class UIDGenerator {
     return (
       process.env.NODE_ENV === 'test' ||
       process.env.VITEST === 'true' ||
-      typeof global !== 'undefined' && (global as any).__VITEST__ ||
+      (typeof global !== 'undefined' && (global as any).__VITEST__) ||
       // Check if we're being mocked (common in test setup)
-      typeof require !== 'undefined' && require.main?.filename?.includes('vitest')
+      (typeof require !== 'undefined' && require.main?.filename?.includes('vitest'))
     );
   }
   /**
@@ -65,14 +65,14 @@ export default class UIDGenerator {
     // Simple seeded pseudo-random generator
     const seed = this.seed + this.counter++;
     const hash = this.hashCode(seed.toString());
-    
+
     let result = '';
     const chars = this.base || UIDGenerator.BASE62;
-    
+
     for (let i = 0; i < this.length; i++) {
       result += chars[Math.abs(hash + i) % chars.length];
     }
-    
+
     return result;
   }
   /**
@@ -82,7 +82,7 @@ export default class UIDGenerator {
     const chars = this.base || UIDGenerator.BASE62;
     let result = '';
     const array = new Uint8Array(this.length);
-    
+
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
       crypto.getRandomValues(array);
     } else {
@@ -93,11 +93,11 @@ export default class UIDGenerator {
         array[i] = buffer[i];
       }
     }
-    
+
     for (let i = 0; i < array.length; i++) {
       result += chars[array[i] % chars.length];
     }
-    
+
     return result;
   }
   /**
@@ -106,13 +106,13 @@ export default class UIDGenerator {
   private hashCode(str: string): number {
     let hash = 0;
     if (str.length === 0) return hash;
-    
+
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
+
     return hash;
   }
   /**

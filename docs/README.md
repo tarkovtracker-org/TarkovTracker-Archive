@@ -8,6 +8,7 @@ Comprehensive documentation for contributors, maintainers, and architects.
 - **[DEVELOPMENT.md](./DEVELOPMENT.md)** – Setup, testing, workflows, and dependency management
 - **[WORKFLOWS.md](./WORKFLOWS.md)** – Branch strategy and deployment process
 - **[ACTIONS.md](./ACTIONS.md)** – How we prioritize and track work
+- **[NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md)** – Step-by-step guide for adding new features (backend + frontend)
 
 ### Architecture & Design
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** – System design, caching strategy, performance optimization
@@ -36,9 +37,10 @@ Detailed implementation documentation preserved for reference:
 3. Review [development/TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) for areas needing help
 
 **Working on features:**
-1. Reference [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
-2. Follow [SECURITY.md](./SECURITY.md) for security requirements
-3. Use [ACTIONS.md](./ACTIONS.md) framework for prioritization
+1. Follow [NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md) for implementing new features
+2. Reference [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
+3. Follow [SECURITY.md](./SECURITY.md) for security requirements
+4. Use [ACTIONS.md](./ACTIONS.md) framework for prioritization
 
 **Before deploying:**
 1. Run quality gates (see [DEVELOPMENT.md](./DEVELOPMENT.md#quality-gates))

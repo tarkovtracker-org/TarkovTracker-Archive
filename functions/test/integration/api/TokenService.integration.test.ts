@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { admin, createTestSuite } from './helpers';
+import { admin, createTestSuite } from '../../helpers';
 import { TokenService } from '../../../src/services/TokenService';
 
 const DEFAULT_SEED = {
@@ -50,14 +50,11 @@ describe('TokenService integration tests with emulator-backed Firestore operatio
     it('creates token with specific scopes and persists to Firestore', async () => {
       const tokenService = new TokenService();
 
-      const result = await tokenService.createToken(
-        'test-user-123',
-        {
-          note: 'Test token with specific scopes',
-          permissions: ['GP', 'WP', 'TP'],
-          gameMode: 'pve',
-        }
-      );
+      const result = await tokenService.createToken('test-user-123', {
+        note: 'Test token with specific scopes',
+        permissions: ['GP', 'WP', 'TP'],
+        gameMode: 'pve',
+      });
 
       expect(result.token).toMatch(/^[a-zA-Z0-9-_]{10,}$/);
       expect(result.owner).toBe('test-user-123');

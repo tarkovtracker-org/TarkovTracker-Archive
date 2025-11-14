@@ -118,14 +118,26 @@ export interface SeedData {
  * });
  * ```
  */
+const TARKOVDATA_ALIASES: Record<string, string> = {
+  tarkovdata: 'tarkovData',
+  tarkovData: 'tarkovdata',
+};
+
 export async function seedDb(data: SeedData): Promise<void> {
   const db = firestore();
 
   for (const [collectionName, docs] of Object.entries(data)) {
-    const collectionRef = db.collection(collectionName);
+    const targetCollections = new Set<string>([collectionName]);
+    const alias = TARKOVDATA_ALIASES[collectionName];
+    if (alias && !(alias in data)) {
+      targetCollections.add(alias);
+    }
 
-    for (const [docId, docData] of Object.entries(docs)) {
-      await collectionRef.doc(docId).set(docData);
+    for (const targetCollection of targetCollections) {
+      const collectionRef = db.collection(targetCollection);
+      for (const [docId, docData] of Object.entries(docs)) {
+        await collectionRef.doc(docId).set(docData);
+      }
     }
   }
 }

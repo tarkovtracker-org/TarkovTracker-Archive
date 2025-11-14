@@ -3,7 +3,11 @@ import { TokenService } from '../../src/services/TokenService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
 import { createTestSuite } from '../helpers/index.js';
 
-describe('Token Performance Tests', () => {
+const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
+
+// Performance suites are opt-in to avoid slowing down normal dev/CI runs.
+// Enable by setting ENABLE_PERFORMANCE_TESTS=true in the environment.
+(RUN_PERFORMANCE_TESTS ? describe : describe.skip)('Token Performance Tests', () => {
   const suite = createTestSuite('TokenPerformance');
   let tokenService: TokenService;
   let monitor: PerformanceMonitor;

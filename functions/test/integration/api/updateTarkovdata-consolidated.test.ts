@@ -1,6 +1,6 @@
 // Consolidated tarkovdata update tests
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestSuite } from './helpers';
+import { createTestSuite } from '../../helpers';
 
 describe('Tarkov Data Updates', () => {
   const suite = createTestSuite('tarkovdata-updates');

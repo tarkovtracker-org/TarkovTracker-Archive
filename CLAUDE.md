@@ -112,5 +112,6 @@ If you alter API endpoints or request/response shapes, rerun `npm run docs` and 
 - Prefer `apply_patch` for surgical edits; avoid rewriting large files unless necessary.
 - Default to workspace-level scripts (`npm run … --workspace=<workspace>`) instead of invoking binaries directly.
 - When uncertain about project behaviour, search the repo (`rg`) before guessing. Ask the maintainer only if facts remain unclear.
+- When implementing new features, follow the repeatable pattern documented in `docs/NEW_FEATURE_TEMPLATE.md` for consistency.
 
 Keep this guidance in sync across `CLAUDE.md` and `AGENTS.md`.

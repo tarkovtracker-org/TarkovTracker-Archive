@@ -3,9 +3,13 @@ import { TokenService } from '../../src/services/TokenService';
 import { ProgressService } from '../../src/services/ProgressService';
 import { TeamService } from '../../src/services/TeamService';
 import { PerformanceMonitor, LoadTester, TestDataGenerator } from './performanceUtils';
-import { createTestSuite } from '../helpers';
+import { createTestSuite, getTarkovSeedData } from '../helpers';
 
-describe('System Load Tests', () => {
+const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
+
+// Performance suites are opt-in to avoid slowing down normal dev/CI runs.
+// Enable by setting ENABLE_PERFORMANCE_TESTS=true in the environment.
+(RUN_PERFORMANCE_TESTS ? describe : describe.skip)('System Load Tests', () => {
   const suite = createTestSuite('SystemLoadTests');
   let tokenService: TokenService;
   let progressService: ProgressService;
@@ -22,23 +26,11 @@ describe('System Load Tests', () => {
     loadTester = new LoadTester();
     // Seed basic test data
     await suite.withDatabase({
+      ...getTarkovSeedData(),
       token: {},
       teams: {},
       system: {},
       progress: {},
-      tarkovdata: {
-        tasks: {
-          'load-task-1': { id: 'load-task-1', name: 'Load Test Task 1' },
-          'load-task-2': { id: 'load-task-2', name: 'Load Test Task 2' },
-          'load-task-3': { id: 'load-task-3', name: 'Load Test Task 3' },
-          'load-task-4': { id: 'load-task-4', name: 'Load Test Task 4' },
-          'load-task-5': { id: 'load-task-5', name: 'Load Test Task 5' },
-        },
-        hideout: {
-          'load-module-1': { id: 'load-module-1', name: 'Load Test Module 1' },
-          'load-module-2': { id: 'load-module-2', name: 'Load Test Module 2' },
-        },
-      },
     });
   });
 
@@ -54,7 +46,7 @@ describe('System Load Tests', () => {
         'userLifecycle',
         async () => {
           const userId = TestDataGenerator.generateUserId();
-          
+
           // Step 1: Create token
           const tokenData = TestDataGenerator.generateToken();
           const tokenResult = await tokenService.createToken(tokenData, {
@@ -103,7 +95,7 @@ describe('System Load Tests', () => {
           password: `teampass${i}`,
           maximumMembers: membersPerTeam + 1,
         });
-        
+
         teams.push({
           teamId: teamResult.team,
           password: teamResult.password,
@@ -116,7 +108,7 @@ describe('System Load Tests', () => {
         async () => {
           const team = teams[Math.floor(Math.random() * teams.length)];
           const userId = TestDataGenerator.generateUserId();
-          
+
           // Join team
           await teamService.joinTeam(userId, {
             id: team.teamId,
@@ -148,11 +140,11 @@ describe('System Load Tests', () => {
       // Pre-seed some data
       const userIds: string[] = [];
       const teamIds: string[] = [];
-      
+
       for (let i = 0; i < 10; i++) {
         const userId = TestDataGenerator.generateUserId(`seed${i}`);
         userIds.push(userId);
-        
+
         // Create token
         const tokenData = TestDataGenerator.generateToken();
         await tokenService.createToken(tokenData, {
@@ -172,54 +164,52 @@ describe('System Load Tests', () => {
         }
       }
       while (Date.now() - startTime < duration) {
-        const metrics = await monitor.measureOperation(
-          'mixedSustainedLoad',
-          async () => {
-            const operationType = Math.random();
-            
-            if (operationType < 0.3) {
-              // Read operation (30%)
-              const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return progressService.getUserProgress(userId, 'pvp');
-            } else if (operationType < 0.5) {
-              // Write operation (20%)
-              const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              const taskUpdates = TestDataGenerator.generateTaskUpdates(1);
-              return progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
-            } else if (operationType < 0.7) {
-              // Token validation (20%)
-              const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return tokenService.getTokenInfo(`perf-token-${userId}`);
-            } else if (operationType < 0.9 && teamIds.length > 0) {
-              // Team operation (20%)
-              const userId = userIds[Math.floor(Math.random() * userIds.length)];
-              return teamService.getTeamProgress(userId, 'pvp');
-            } else {
-              // Create new user (10%)
-              const newUserId = TestDataGenerator.generateUserId();
-              const tokenData = TestDataGenerator.generateToken();
-              await tokenService.createToken(tokenData, {
-                note: 'Sustained load token',
-                permissions: ['GP'],
-                gameMode: 'pvp',
-              });
-              return progressService.getUserProgress(newUserId, 'pvp');
-            }
+        const metrics = await monitor.measureOperation('mixedSustainedLoad', async () => {
+          const operationType = Math.random();
+
+          if (operationType < 0.3) {
+            // Read operation (30%)
+            const userId = userIds[Math.floor(Math.random() * userIds.length)];
+            return progressService.getUserProgress(userId, 'pvp');
+          } else if (operationType < 0.5) {
+            // Write operation (20%)
+            const userId = userIds[Math.floor(Math.random() * userIds.length)];
+            const taskUpdates = TestDataGenerator.generateTaskUpdates(1);
+            return progressService.updateMultipleTasks(userId, taskUpdates, 'pvp');
+          } else if (operationType < 0.7) {
+            // Token validation (20%)
+            const userId = userIds[Math.floor(Math.random() * userIds.length)];
+            return tokenService.getTokenInfo(`perf-token-${userId}`);
+          } else if (operationType < 0.9 && teamIds.length > 0) {
+            // Team operation (20%)
+            const userId = userIds[Math.floor(Math.random() * userIds.length)];
+            return teamService.getTeamProgress(userId, 'pvp');
+          } else {
+            // Create new user (10%)
+            const newUserId = TestDataGenerator.generateUserId();
+            const tokenData = TestDataGenerator.generateToken();
+            await tokenService.createToken(tokenData, {
+              note: 'Sustained load token',
+              permissions: ['GP'],
+              gameMode: 'pvp',
+            });
+            return progressService.getUserProgress(newUserId, 'pvp');
           }
-        );
+        });
         responseTimes.push(metrics.metrics.duration);
         operationCount++;
         // Small delay to simulate realistic usage patterns
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
       }
       // Calculate performance metrics
-      const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      const avgResponseTime =
+        responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
       expect(avgResponseTime).toBeLessThan(2000); // < 2 seconds average under mixed load
       expect(maxResponseTime).toBeLessThan(5000); // < 5 seconds max response time
       expect(operationCount).toBeGreaterThan(10); // Should complete reasonable number of operations
-      
+
       // Performance should be relatively stable (low variance)
       const variance = maxResponseTime / minResponseTime;
       expect(variance).toBeLessThan(10); // < 10x variance
@@ -237,7 +227,9 @@ describe('System Load Tests', () => {
           const operations = [];
           // 1. Validate token (most common operation)
           operations.push(
-            tokenService.getTokenInfo(`peak-token-${userId}`).catch(() => ({ error: 'Token not found' }))
+            tokenService
+              .getTokenInfo(`peak-token-${userId}`)
+              .catch(() => ({ error: 'Token not found' }))
           );
           // 2. Get progress
           operations.push(progressService.getUserProgress(userId, 'pvp'));
@@ -265,7 +257,7 @@ describe('System Load Tests', () => {
         'flashCrowd',
         async () => {
           const userId = TestDataGenerator.generateUserId();
-          
+
           // Most users will try to create tokens and get progress simultaneously
           const tokenData = TestDataGenerator.generateToken();
           const tokenPromise = tokenService.createToken(tokenData, {
@@ -291,16 +283,17 @@ describe('System Load Tests', () => {
       const duration = 15000; // 15 seconds of sustained high load
       const concurrentUsers = 30;
       const startTime = Date.now();
-      const operationMetrics: Array<{ timestamp: number; responseTime: number; success: boolean }> = [];
+      const operationMetrics: Array<{ timestamp: number; responseTime: number; success: boolean }> =
+        [];
       const userPromises = Array.from({ length: concurrentUsers }, async (_, userIndex) => {
         const userId = TestDataGenerator.generateUserId(`sustained${userIndex}`);
-        
+
         while (Date.now() - startTime < duration) {
           const operationStart = Date.now();
-          
+
           try {
             const operationType = Math.random();
-            
+
             if (operationType < 0.4) {
               await progressService.getUserProgress(userId, 'pvp');
             } else if (operationType < 0.7) {
@@ -311,7 +304,7 @@ describe('System Load Tests', () => {
             } else {
               await teamService.getTeamProgress(userId, 'pvp');
             }
-            
+
             operationMetrics.push({
               timestamp: Date.now(),
               responseTime: Date.now() - operationStart,
@@ -325,21 +318,23 @@ describe('System Load Tests', () => {
             });
           }
           // Small delay between operations
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+          await new Promise((resolve) => setTimeout(resolve, Math.random() * 100));
         }
       });
       await Promise.all(userPromises);
       // Analyze performance over time
       const totalOperations = operationMetrics.length;
-      const successfulOperations = operationMetrics.filter(m => m.success).length;
-      const responseTimes = operationMetrics.map(m => m.responseTime);
-      const avgResponseTime = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      const successfulOperations = operationMetrics.filter((m) => m.success).length;
+      const responseTimes = operationMetrics.map((m) => m.responseTime);
+      const avgResponseTime =
+        responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
       // Check for performance degradation over time
       const midpoint = startTime + duration / 2;
-      const firstHalf = operationMetrics.filter(m => m.timestamp < midpoint);
-      const secondHalf = operationMetrics.filter(m => m.timestamp >= midpoint);
+      const firstHalf = operationMetrics.filter((m) => m.timestamp < midpoint);
+      const secondHalf = operationMetrics.filter((m) => m.timestamp >= midpoint);
       const firstHalfAvg = firstHalf.reduce((sum, m) => sum + m.responseTime, 0) / firstHalf.length;
-      const secondHalfAvg = secondHalf.reduce((sum, m) => sum + m.responseTime, 0) / secondHalf.length;
+      const secondHalfAvg =
+        secondHalf.reduce((sum, m) => sum + m.responseTime, 0) / secondHalf.length;
       expect(totalOperations).toBeGreaterThan(100); // Should complete many operations
       expect(successfulOperations / totalOperations).toBeGreaterThan(0.8); // > 80% success rate
       expect(avgResponseTime).toBeLessThan(500); // < 500ms average under sustained load
@@ -354,7 +349,7 @@ describe('System Load Tests', () => {
         'memoryPressure',
         async () => {
           const userId = TestDataGenerator.generateUserId();
-          
+
           // Create multiple tokens per user to increase memory usage
           const tokenPromises = [];
           for (let i = 0; i < 3; i++) {
@@ -369,7 +364,7 @@ describe('System Load Tests', () => {
           }
           // Create large progress data
           const largeTaskUpdates = TestDataGenerator.generateTaskUpdates(20);
-          
+
           const [tokens] = await Promise.all([
             Promise.all(tokenPromises),
             progressService.getUserProgress(userId, 'pvp'),
@@ -396,9 +391,9 @@ describe('System Load Tests', () => {
         'dbConnectionLimits',
         async () => {
           const userId = TestDataGenerator.generateUserId();
-          
+
           // Perform multiple database operations in parallel
-          const operations = [
+          const operations: Array<Promise<unknown>> = [
             progressService.getUserProgress(userId, 'pvp'),
             progressService.getUserProgress(userId, 'pve'),
             tokenService.createToken(TestDataGenerator.generateToken(), {
@@ -437,7 +432,7 @@ describe('System Load Tests', () => {
         async () => {
           const userId = TestDataGenerator.generateUserId();
           const tokenData = TestDataGenerator.generateToken();
-          
+
           return Promise.all([
             tokenService.createToken(tokenData, {
               note: 'Overload token',
@@ -457,7 +452,7 @@ describe('System Load Tests', () => {
         }
       );
       // Phase 2: Allow recovery period
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       // Phase 3: Test recovery performance
       const recoveryMetrics = await loadTester.runLoadTest(
         'recoveryPhase',
@@ -482,16 +477,17 @@ describe('System Load Tests', () => {
         { operations: 40, concurrency: 12 },
         { operations: 50, concurrency: 15 },
       ];
-      const phaseMetrics: Array<{ phase: number; avgResponseTime: number; successRate: number }> = [];
+      const phaseMetrics: Array<{ phase: number; avgResponseTime: number; successRate: number }> =
+        [];
       for (let i = 0; i < phases.length; i++) {
         const phase = phases[i];
-        
+
         const metrics = await loadTester.runLoadTest(
           `gradualLoadPhase${i}`,
           async () => {
             const userId = TestDataGenerator.generateUserId();
             const operationType = Math.random();
-            
+
             if (operationType < 0.5) {
               return progressService.getUserProgress(userId, 'pvp');
             } else {
@@ -511,19 +507,20 @@ describe('System Load Tests', () => {
         });
         // Small delay between phases
         if (i < phases.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
       // Performance should degrade gracefully
       expect(phaseMetrics[0].avgResponseTime).toBeLessThan(150); // Phase 1 should be fast
       expect(phaseMetrics[3].avgResponseTime).toBeLessThan(2000); // Phase 4 should still be reasonable
-      
+
       // Success rate should remain high
-      phaseMetrics.forEach(metric => {
+      phaseMetrics.forEach((metric) => {
         expect(metric.successRate).toBeGreaterThan(85); // > 85% success rate in all phases
       });
       // Performance degradation should be linear, not exponential
-      const performanceDegradation = phaseMetrics[3].avgResponseTime / phaseMetrics[0].avgResponseTime;
+      const performanceDegradation =
+        phaseMetrics[3].avgResponseTime / phaseMetrics[0].avgResponseTime;
       expect(performanceDegradation).toBeLessThan(3); // < 3x degradation from phase 1 to 4
     });
   });

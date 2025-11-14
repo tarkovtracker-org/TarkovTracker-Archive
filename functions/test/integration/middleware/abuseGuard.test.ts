@@ -11,7 +11,7 @@ vi.mock('firebase-functions/v2', () => ({
   logger: mockLogger,
 }));
 const loadGuard = async () => {
-  const module = await import('../../src/middleware/abuseGuard');
+  const module = await import('../../../src/middleware/abuseGuard');
   return {
     abuseGuard: module.abuseGuard,
     internals: module.__abuseGuardInternals,

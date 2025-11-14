@@ -3,7 +3,7 @@ import type { CallableRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 import type admin from 'firebase-admin';
-import type { DocumentReference, WriteBatch} from 'firebase-admin/firestore';
+import type { DocumentReference, WriteBatch } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
 import UIDGenerator from '../token/UIDGenerator';
 import { createLazyFirestore } from './factory';
@@ -74,7 +74,7 @@ export async function waitForAll<T>(
     if (result.status === 'fulfilled') {
       results.push(result.value);
     } else {
-      const {reason} = result;
+      const { reason } = result;
       const error = reason instanceof Error ? reason : new Error(String(reason));
       errors.push(error);
     }

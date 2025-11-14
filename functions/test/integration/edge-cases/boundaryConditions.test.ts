@@ -3,7 +3,7 @@ import { ValidationService } from '../../../src/services/ValidationService';
 import { ProgressService } from '../../../src/services/ProgressService';
 import { TokenService } from '../../../src/services/TokenService';
 import { TeamService } from '../../../src/services/TeamService';
-import { createTestSuite } from '../../helpers';
+import { createTestSuite, getTarkovSeedData } from '../../helpers';
 
 // Mock dependencies
 vi.mock('../../src/utils/dataLoaders', () => ({
@@ -290,29 +290,11 @@ describe('Boundary Conditions Tests', () => {
       const ownerId = 'owner-user';
       const maxMembers = 10;
 
-      // Mock game data loaders to return valid data
-      const { getHideoutData, getTaskData } = await import('../../src/utils/dataLoaders');
-      (getHideoutData as any).mockResolvedValue({ hideout1: { id: 'hideout1', name: 'Test' } });
-      (getTaskData as any).mockResolvedValue({ task1: { id: 'task1', name: 'Test' } });
-
-      // Mock formatProgress to return a valid formatted progress object
-      const { formatProgress } = await import('../../src/progress/progressUtils');
-      (formatProgress as any).mockReturnValue({
-        userId: 'test',
-        displayName: 'Test User',
-        playerLevel: 1,
-        gameEdition: 1,
-        pmcFaction: 'USEC',
-        tasksProgress: [],
-        taskObjectivesProgress: [],
-        hideoutModulesProgress: [],
-        hideoutPartsProgress: [],
-      });
-
       // Create team with maximum members
       const members = Array.from({ length: maxMembers }, (_, i) => `user${i}`);
       members[0] = ownerId; // Owner is first member
       await suite.withDatabase({
+        ...getTarkovSeedData(),
         team: {
           'team-123': {
             owner: ownerId,
@@ -340,18 +322,6 @@ describe('Boundary Conditions Tests', () => {
           },
           {} as Record<string, any>
         ),
-        tarkovdata: {
-          tasks: {
-            data: [{ id: 'task1', name: 'Test Task' }],
-            lastUpdated: new Date(),
-            source: 'tarkov.dev',
-          },
-          hideout: {
-            data: [{ id: 'hideout1', name: 'Test Hideout' }],
-            lastUpdated: new Date(),
-            source: 'tarkov.dev',
-          },
-        },
       });
       // Should handle maximum team size
       const result = await teamService.getTeamProgress(ownerId);

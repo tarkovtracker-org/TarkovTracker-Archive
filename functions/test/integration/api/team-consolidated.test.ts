@@ -82,7 +82,7 @@ describe('Team Management', () => {
   let teamService: TeamService;
 
   beforeAll(async () => {
-    const teamModule = await import('../src/handlers/teamHandler');
+    const teamModule = await import('../../../src/handlers/teamHandler');
     createTeamLogic = teamModule.createTeam;
     joinTeamLogic = teamModule.joinTeam;
     leaveTeamLogic = teamModule.leaveTeam;

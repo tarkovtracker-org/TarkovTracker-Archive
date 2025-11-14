@@ -409,7 +409,7 @@ describe('taskFilters', () => {
       };
       // Should not throw and handle gracefully
       expect(() => {
-        emptyTasks.forEach(task => {
+        emptyTasks.forEach((task) => {
           taskMatchesRequirementFilters(task, options);
         });
       }).not.toThrow();

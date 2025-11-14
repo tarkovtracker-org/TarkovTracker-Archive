@@ -84,13 +84,7 @@
   defineProps<CollapsibleComponentProps>();
   const tarkovStore = useTarkovStore();
   const { minPlayerLevel, maxPlayerLevel, playerLevels } = useTarkovData();
-  const {
-    userLevel,
-    isEditing,
-    editValue,
-    startEditing,
-    confirmLevelChange,
-  } = useUserLevel();
+  const { userLevel, isEditing, editValue, startEditing, confirmLevelChange } = useUserLevel();
   // Allow setting level to maxPlayerLevel + 1
   const maxPlayerLevelUI = computed(() => maxPlayerLevel.value + 1);
   const pmcFactionIcon = computed(() => {

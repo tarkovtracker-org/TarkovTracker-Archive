@@ -102,7 +102,7 @@ export class PerformanceMonitor {
    * Get metrics for a specific operation
    */
   getOperationMetrics(operationName: string): PerformanceMetrics[] {
-    return this.metrics.filter(metric => metric.operationName === operationName);
+    return this.metrics.filter((metric) => metric.operationName === operationName);
   }
   /**
    * Calculate statistics for an operation
@@ -118,7 +118,7 @@ export class PerformanceMonitor {
     errorCount: number;
   } {
     const operationMetrics = this.getOperationMetrics(operationName);
-    
+
     if (operationMetrics.length === 0) {
       return {
         count: 0,
@@ -131,8 +131,8 @@ export class PerformanceMonitor {
         errorCount: 0,
       };
     }
-    const durations = operationMetrics.map(m => m.duration).sort((a, b) => a - b);
-    const successCount = operationMetrics.filter(m => m.success).length;
+    const durations = operationMetrics.map((m) => m.duration).sort((a, b) => a - b);
+    const successCount = operationMetrics.filter((m) => m.success).length;
     const errorCount = operationMetrics.length - successCount;
     return {
       count: operationMetrics.length,
@@ -166,7 +166,7 @@ export class PerformanceMonitor {
     }
     const initial = this.memorySnapshots[0];
     const final = this.memorySnapshots[this.memorySnapshots.length - 1];
-    
+
     // Find peak memory usage
     const peak = this.memorySnapshots.reduce((max, current) => {
       return current.heapUsed > max.heapUsed ? current : max;
@@ -210,25 +210,24 @@ export class LoadTester {
     const delayBetweenBatches = rampUpTime > 0 ? rampUpTime / concurrency : 0;
     for (let i = 0; i < concurrency; i++) {
       const batchOperations = Math.min(batchSize, totalOperations - i * batchSize);
-      
+
       const batch = Array.from({ length: batchOperations }, async (_, index) => {
         // Add delay for ramp-up
         if (delayBetweenBatches > 0 && i > 0) {
-          await new Promise(resolve => setTimeout(resolve, i * delayBetweenBatches));
+          await new Promise((resolve) => setTimeout(resolve, i * delayBetweenBatches));
         }
         try {
-          const result = await this.monitor.measureOperation(
-            operationName,
-            operation,
-            { batch: i, index }
-          );
-          
+          const result = await this.monitor.measureOperation(operationName, operation, {
+            batch: i,
+            index,
+          });
+
           // Update peak memory
           const currentMemory = process.memoryUsage();
           if (currentMemory.heapUsed > peakMemory.heapUsed) {
             peakMemory = currentMemory;
           }
-          
+
           return result;
         } catch (error) {
           errors.push(error as Error);
@@ -244,8 +243,8 @@ export class LoadTester {
     // Count successful and failed operations
     let successfulOperations = 0;
     let failedOperations = 0;
-    results.forEach(batch => {
-      batch.forEach(result => {
+    results.forEach((batch) => {
+      batch.forEach((result) => {
         if (result.status === 'fulfilled') {
           successfulOperations++;
         } else {
@@ -255,12 +254,13 @@ export class LoadTester {
     });
     // Calculate response time statistics
     const operationMetrics = this.monitor.getOperationMetrics(operationName);
-    const durations = operationMetrics.map(m => m.duration).sort((a, b) => a - b);
+    const durations = operationMetrics.map((m) => m.duration).sort((a, b) => a - b);
     const metrics: LoadTestMetrics = {
       totalOperations,
       successfulOperations,
       failedOperations,
-      averageResponseTime: durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0,
+      averageResponseTime:
+        durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0,
       minResponseTime: durations.length > 0 ? durations[0] : 0,
       maxResponseTime: durations.length > 0 ? durations[durations.length - 1] : 0,
       p95ResponseTime: durations.length > 0 ? durations[Math.floor(durations.length * 0.95)] : 0,
@@ -299,13 +299,19 @@ export class LoadTester {
       let operationCount = 0;
       const executeOperation = async (): Promise<void> => {
         try {
-          const endOperation = this.monitor.startOperation(operationName, { userId, operationIndex: operationCount });
+          const endOperation = this.monitor.startOperation(operationName, {
+            userId,
+            operationIndex: operationCount,
+          });
           await operation(userId);
           const metrics = endOperation();
           userMetrics.push(metrics);
           operationCount++;
         } catch (error) {
-          const endOperation = this.monitor.startOperation(operationName, { userId, operationIndex: operationCount });
+          const endOperation = this.monitor.startOperation(operationName, {
+            userId,
+            operationIndex: operationCount,
+          });
           const metrics = endOperation();
           metrics.success = false;
           metrics.error = error as Error;
@@ -319,14 +325,14 @@ export class LoadTester {
         while (performance.now() < endTime && operationCount < operationsPerUser) {
           await executeOperation();
           // Small delay to prevent overwhelming the system
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
+          await new Promise((resolve) => setTimeout(resolve, Math.random() * 10));
         }
       } else {
         // Run fixed number of operations
         for (let i = 0; i < operationsPerUser; i++) {
           await executeOperation();
           // Small delay to simulate realistic usage
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 5));
+          await new Promise((resolve) => setTimeout(resolve, Math.random() * 5));
         }
       }
       // Take memory snapshot after user completes
@@ -338,12 +344,12 @@ export class LoadTester {
     const endTime = performance.now();
     // Aggregate results
     const allMetrics = userResults.flat();
-    const successfulOperations = allMetrics.filter(m => m.success).length;
+    const successfulOperations = allMetrics.filter((m) => m.success).length;
     const failedOperations = allMetrics.length - successfulOperations;
-    const durations = allMetrics.map(m => m.duration).sort((a, b) => a - b);
+    const durations = allMetrics.map((m) => m.duration).sort((a, b) => a - b);
     // Count errors by type
     const errorCounts = new Map<string, number>();
-    allMetrics.forEach(metric => {
+    allMetrics.forEach((metric) => {
       if (metric.error) {
         const errorType = metric.error.constructor.name;
         errorCounts.set(errorType, (errorCounts.get(errorType) || 0) + 1);
@@ -355,7 +361,8 @@ export class LoadTester {
       totalOperations: allMetrics.length,
       successfulOperations,
       failedOperations,
-      averageResponseTime: durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0,
+      averageResponseTime:
+        durations.length > 0 ? durations.reduce((sum, d) => sum + d, 0) / durations.length : 0,
       throughput: (successfulOperations / (endTime - startTime)) * 1000,
       errors: Array.from(errorCounts.entries()).map(([error, count]) => ({ error, count })),
       memoryUsage: memorySnapshots,
@@ -394,20 +401,45 @@ export class TestDataGenerator {
   }
   /**
    * Generate task update data
+   * Returns array matching MultipleTaskUpdateRequest: { id: string; state: TaskStatus }[]
    */
-  static generateTaskUpdates(count: number = 1): Record<string, { complete: boolean; timestamp: number }> {
-    const updates: Record<string, { complete: boolean; timestamp: number }> = {};
-    
+  static generateTaskUpdates(
+    count: number = 1
+  ): Array<{ id: string; state: 'completed' | 'failed' | 'uncompleted' }> {
+    const updates: Array<{ id: string; state: 'completed' | 'failed' | 'uncompleted' }> = [];
+
     for (let i = 0; i < count; i++) {
       const taskId = `perf-task-${i}`;
-      updates[taskId] = {
-        complete: Math.random() > 0.5,
-        timestamp: Date.now(),
-      };
+      const states: Array<'completed' | 'failed' | 'uncompleted'> = [
+        'completed',
+        'failed',
+        'uncompleted',
+      ];
+      const state = states[Math.floor(Math.random() * states.length)];
+      updates.push({
+        id: taskId,
+        state,
+      });
     }
-    
+
     return updates;
   }
+  /**
+   * Convert task updates array to Record format for database seeding
+   */
+  static taskUpdatesToRecord(
+    updates: Array<{ id: string; state: 'completed' | 'failed' | 'uncompleted' }>
+  ): Record<string, { complete: boolean; timestamp: number }> {
+    const record: Record<string, { complete: boolean; timestamp: number }> = {};
+    updates.forEach(({ id, state }) => {
+      record[id] = {
+        complete: state === 'completed',
+        timestamp: Date.now(),
+      };
+    });
+    return record;
+  }
+
   /**
    * Generate progress data
    */
@@ -424,7 +456,7 @@ export class TestDataGenerator {
       level: Math.floor(Math.random() * 70) + 1,
       gameEdition: Math.floor(Math.random() * 5) + 1,
       pmcFaction: Math.random() > 0.5 ? 'USEC' : 'BEAR',
-      taskCompletions: this.generateTaskUpdates(10),
+      taskCompletions: this.taskUpdatesToRecord(this.generateTaskUpdates(10)),
       taskObjectives: {},
       hideoutModules: {},
       hideoutParts: {},

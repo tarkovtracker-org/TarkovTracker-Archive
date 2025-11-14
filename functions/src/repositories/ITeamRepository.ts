@@ -1,6 +1,6 @@
 /**
  * Repository interface for team-related Firestore operations
- * 
+ *
  * This interface abstracts Firestore operations to enable:
  * - Unit testing with fake implementations (no emulator needed)
  * - Clearer separation between business logic and data access
@@ -27,27 +27,27 @@ export interface ITeamTransactionContext {
    * Get system document within transaction
    */
   getSystemDoc(userId: string): Promise<SystemDocument | undefined>;
-  
+
   /**
    * Get team document within transaction
    */
   getTeamDoc(teamId: string): Promise<TeamDocument | undefined>;
-  
+
   /**
    * Set/update system document
    */
   setSystemDoc(userId: string, data: Partial<SystemDocument>): void;
-  
+
   /**
    * Set/create team document
    */
   setTeamDoc(teamId: string, data: TeamDocument): void;
-  
+
   /**
    * Update team document (merge)
    */
   updateTeamDoc(teamId: string, updates: Record<string, unknown>): void;
-  
+
   /**
    * Delete team document
    */
@@ -63,40 +63,38 @@ export interface ITeamRepository {
    * @param callback - Function that receives transaction context and returns result
    * @returns Promise with transaction result
    */
-  runTransaction<T>(
-    callback: (tx: ITeamTransactionContext) => Promise<T>
-  ): Promise<T>;
-  
+  runTransaction<T>(callback: (tx: ITeamTransactionContext) => Promise<T>): Promise<T>;
+
   /**
    * Get user's system document (non-transactional)
    */
   getSystemDocument(userId: string): Promise<SystemDocument | null>;
-  
+
   /**
    * Get team document (non-transactional)
    */
   getTeamDocument(teamId: string): Promise<TeamDocument | null>;
-  
+
   /**
    * Get user document for visibility settings (non-transactional)
    */
   getUserDocument(userId: string): Promise<UserDocumentData | null>;
-  
+
   /**
    * Get multiple progress documents for team members (non-transactional)
    */
   getProgressDocuments(userIds: string[]): Promise<Map<string, ProgressDocument>>;
-  
+
   /**
    * Generate a server timestamp
    */
   serverTimestamp(): Timestamp;
-  
+
   /**
    * Create array union field value
    */
   arrayUnion(...elements: unknown[]): unknown;
-  
+
   /**
    * Create array remove field value
    */

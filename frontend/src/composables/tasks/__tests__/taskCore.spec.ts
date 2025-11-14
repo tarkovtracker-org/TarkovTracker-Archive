@@ -74,7 +74,7 @@ describe('taskCore', () => {
       const task2 = { id: 'task2', successors: ['task1'] } as Task;
       const tasks = [task1, task2];
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
+
       const depth = successorDepth(task1, tasks);
       expect(depth).toBeGreaterThan(0);
       consoleWarnSpy.mockRestore();
@@ -85,7 +85,7 @@ describe('taskCore', () => {
       const task3 = { id: 'task3', successors: ['task4'] } as Task;
       const task4 = { id: 'task4', successors: [] } as Task;
       const tasks = [task1, task2, task3, task4];
-      
+
       const depth = successorDepth(task1, tasks);
       expect(depth).toBe(3);
     });
@@ -100,7 +100,7 @@ describe('taskCore', () => {
       const task3 = { id: 'task3', successors: [] } as Task;
       const task4 = { id: 'task4', successors: [] } as Task;
       const tasks = [task1, task2, task3, task4];
-      
+
       expect(successorDepth(task1, tasks)).toBe(3);
     });
   });
@@ -117,7 +117,7 @@ describe('taskCore', () => {
       const parent = { id: 'parent', parents: [] } as Task;
       const child = { id: 'child', parents: ['parent'] } as Task;
       const tasks = [child, parent];
-      
+
       const result = sortVisibleTasks(tasks, 'all', tasks);
       expect(result[0].id).toBe('parent');
       expect(result[1].id).toBe('child');
@@ -126,7 +126,7 @@ describe('taskCore', () => {
       const task1 = { id: 'task1', successors: ['task2'] } as Task;
       const task2 = { id: 'task2', successors: [] } as Task;
       const tasks = [task2, task1];
-      
+
       const result = sortVisibleTasks(tasks, 'all', tasks);
       expect(result[0].id).toBe('task2');
       expect(result[1].id).toBe('task1');
@@ -145,14 +145,14 @@ describe('taskCore', () => {
     it('checks "all" view using isTaskUnlockedByAny', () => {
       const isTaskUnlockedByAny = vi.fn().mockReturnValue(true);
       const isTaskUnlockedFor = vi.fn();
-      
+
       const result = taskUnlockedForCurrentView(
         'task1',
         'all',
         isTaskUnlockedByAny,
         isTaskUnlockedFor
       );
-      
+
       expect(result).toBe(true);
       expect(isTaskUnlockedByAny).toHaveBeenCalledWith('task1');
       expect(isTaskUnlockedFor).not.toHaveBeenCalled();
@@ -160,14 +160,14 @@ describe('taskCore', () => {
     it('checks specific user view using isTaskUnlockedFor', () => {
       const isTaskUnlockedByAny = vi.fn();
       const isTaskUnlockedFor = vi.fn().mockReturnValue(true);
-      
+
       const result = taskUnlockedForCurrentView(
         'task1',
         'user123',
         isTaskUnlockedByAny,
         isTaskUnlockedFor
       );
-      
+
       expect(result).toBe(true);
       expect(isTaskUnlockedFor).toHaveBeenCalledWith('task1', 'user123');
       expect(isTaskUnlockedByAny).not.toHaveBeenCalled();
@@ -180,7 +180,7 @@ describe('taskCore', () => {
       const task = {
         objectives: [{ id: 'obj1' }] as TaskObjective[],
       } as Task;
-      
+
       const result = taskHasIncompleteObjectiveOnMap(
         task,
         ['customs'],
@@ -188,7 +188,7 @@ describe('taskCore', () => {
         mockResolveObjectiveMapIds,
         mockGetObjectiveCompletionMap
       );
-      
+
       expect(result).toBe(true);
     });
     it('returns false when all objectives complete', () => {
@@ -196,7 +196,7 @@ describe('taskCore', () => {
         objectives: [{ id: 'obj1' }] as TaskObjective[],
       } as Task;
       const getCompletion = () => ({ user1: true });
-      
+
       const result = taskHasIncompleteObjectiveOnMap(
         task,
         ['customs'],
@@ -204,7 +204,7 @@ describe('taskCore', () => {
         mockResolveObjectiveMapIds,
         getCompletion
       );
-      
+
       expect(result).toBe(false);
     });
     it('returns true in "all" view when any user has incomplete objective', () => {
@@ -212,7 +212,7 @@ describe('taskCore', () => {
         objectives: [{ id: 'obj1' }] as TaskObjective[],
       } as Task;
       const getCompletion = () => ({ user1: true, user2: false });
-      
+
       const result = taskHasIncompleteObjectiveOnMap(
         task,
         ['customs'],
@@ -220,7 +220,7 @@ describe('taskCore', () => {
         mockResolveObjectiveMapIds,
         getCompletion
       );
-      
+
       expect(result).toBe(true);
     });
     it('handles missing completion data gracefully', () => {
@@ -228,7 +228,7 @@ describe('taskCore', () => {
         objectives: [{ id: 'obj1' }] as TaskObjective[],
       } as Task;
       const getCompletion = () => undefined;
-      
+
       const result = taskHasIncompleteObjectiveOnMap(
         task,
         ['customs'],
@@ -236,7 +236,7 @@ describe('taskCore', () => {
         mockResolveObjectiveMapIds,
         getCompletion
       );
-      
+
       expect(result).toBe(true);
     });
     it('skips objectives not on the specified map', () => {
@@ -244,7 +244,7 @@ describe('taskCore', () => {
         objectives: [{ id: 'obj1' }] as TaskObjective[],
       } as Task;
       const resolveMapIds = () => ['factory'];
-      
+
       const result = taskHasIncompleteObjectiveOnMap(
         task,
         ['customs'],
@@ -252,7 +252,7 @@ describe('taskCore', () => {
         resolveMapIds,
         mockGetObjectiveCompletionMap
       );
-      
+
       expect(result).toBe(false);
     });
   });
@@ -318,10 +318,7 @@ describe('taskCore', () => {
         objectives: [
           {
             id: 'obj1',
-            possibleLocations: [
-              { map: { id: 'customs' } },
-              { map: { id: 'factory' } },
-            ],
+            possibleLocations: [{ map: { id: 'customs' } }, { map: { id: 'factory' } }],
           },
         ],
       } as unknown as Task;
@@ -386,11 +383,8 @@ describe('taskCore', () => {
     ];
     const mockCollectTaskLocationIds = (_task: Task) => new Set(['customs']);
     it('returns all tasks when not in maps view', () => {
-      const tasks = [
-        { id: 'task1' } as Task,
-        { id: 'task2' } as Task,
-      ];
-      
+      const tasks = [{ id: 'task1' } as Task, { id: 'task2' } as Task];
+
       const result = filterTasksByPrimaryView(
         tasks,
         'all',
@@ -399,26 +393,16 @@ describe('taskCore', () => {
         mockCollectTaskLocationIds,
         'all'
       );
-      
+
       expect(result).toHaveLength(2);
     });
     it('filters by map when in maps view', () => {
-      const tasks = [
-        { id: 'task1' } as Task,
-        { id: 'task2' } as Task,
-      ];
+      const tasks = [{ id: 'task1' } as Task, { id: 'task2' } as Task];
       const collectIds = (task: Task) =>
         task.id === 'task1' ? new Set(['customs']) : new Set(['factory']);
-      
-      const result = filterTasksByPrimaryView(
-        tasks,
-        'maps',
-        'customs',
-        maps,
-        collectIds,
-        'all'
-      );
-      
+
+      const result = filterTasksByPrimaryView(tasks, 'maps', 'customs', maps, collectIds, 'all');
+
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('task1');
     });
@@ -427,7 +411,7 @@ describe('taskCore', () => {
         { id: 'task1', trader: { id: 'prapor' } } as Task,
         { id: 'task2', trader: { id: 'therapist' } } as Task,
       ];
-      
+
       const result = filterTasksByPrimaryView(
         tasks,
         'all',
@@ -436,7 +420,7 @@ describe('taskCore', () => {
         mockCollectTaskLocationIds,
         'prapor'
       );
-      
+
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe('task1');
     });
@@ -449,7 +433,7 @@ describe('taskCore', () => {
         mockCollectTaskLocationIds,
         'all'
       );
-      
+
       expect(result).toEqual([]);
     });
   });

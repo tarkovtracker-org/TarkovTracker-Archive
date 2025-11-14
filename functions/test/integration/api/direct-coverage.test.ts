@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vitest';
-import { createTestSuite } from './helpers';
+import { createTestSuite } from '../../helpers';
 interface MockResponse {
   status: Mock<(code: number) => MockResponse>;
   json: Mock<(data: any) => MockResponse>;

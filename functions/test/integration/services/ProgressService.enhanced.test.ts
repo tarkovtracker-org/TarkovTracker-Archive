@@ -3,7 +3,7 @@ import { ProgressService } from '../../../src/services/ProgressService';
 import { createTestSuite } from '../../helpers/index.js';
 
 // Mock the data loaders to avoid complex setup
-vi.mock('../../src/utils/dataLoaders', () => ({
+vi.mock('../../../src/utils/dataLoaders', () => ({
   getHideoutData: vi.fn().mockResolvedValue({ hideoutStations: [] }),
   getTaskData: vi.fn().mockResolvedValue({ tasks: [] }),
 }));

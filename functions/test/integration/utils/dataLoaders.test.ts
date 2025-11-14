@@ -2,29 +2,8 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestSuite, firestore } from '../../helpers';
-
-// Unmock firebase-admin to use real emulator instead of setup.ts mocks
-vi.unmock('firebase-admin');
-
-// Mock factory BEFORE importing the module under test so dataLoaders captures the mocked factory
-vi.mock('../../src/utils/factory', () => ({
-  createLazy: vi.fn((init) => {
-    let instance: any;
-    let hasInitialized = false;
-    return () => {
-      if (hasInitialized) return instance;
-      instance = init();
-      hasInitialized = true;
-      return instance;
-    };
-  }),
-  createLazyAsync: vi.fn((init) => async () => await init()),
-  createLazyFirestore: vi.fn(() => () => firestore()), // Use emulator firestore instance
-  createLazyAuth: vi.fn(() => () => ({ mock: true })),
-  createLazyFirestoreForTests: vi.fn(() => () => firestore()),
-}));
 
 import {
   fetchTeam,
@@ -34,8 +13,6 @@ import {
   fetchTraderProgress,
   clearDataLoaderCache,
 } from '../../../src/utils/dataLoaders';
-
-// (Factory mock defined above prior to import)
 
 describe('dataLoaders', () => {
   const suite = createTestSuite('utils/dataLoaders');

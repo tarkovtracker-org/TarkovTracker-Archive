@@ -12,4 +12,3 @@ export const getFirebaseProjectId = (): string => {
     'tarkovtracker-org'
   );
 };
-

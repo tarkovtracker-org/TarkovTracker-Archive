@@ -7,14 +7,14 @@ export const createProgressServiceMock = () => ({
   updateSingleTask: vi.fn(),
   updateMultipleTasks: vi.fn(),
   updateTaskObjective: vi.fn(),
-  getTaskStatus: vi.fn()
+  getTaskStatus: vi.fn(),
 });
 
 export const createTeamServiceMock = () => ({
   getTeamProgress: vi.fn(),
   createTeam: vi.fn(),
   joinTeam: vi.fn(),
-  leaveTeam: vi.fn()
+  leaveTeam: vi.fn(),
 });
 
 export const createTokenServiceMock = () => ({
@@ -22,7 +22,7 @@ export const createTokenServiceMock = () => ({
   validateToken: vi.fn(),
   getTokenInfo: vi.fn(),
   listUserTokens: vi.fn(),
-  revokeToken: vi.fn()
+  revokeToken: vi.fn(),
 });
 
 export const createValidationServiceMock = () => ({
@@ -32,7 +32,7 @@ export const createValidationServiceMock = () => ({
   validateTaskUpdate: vi.fn(),
   validateMultipleTaskUpdate: vi.fn(),
   validateObjectiveId: vi.fn(),
-  validateObjectiveUpdate: vi.fn()
+  validateObjectiveUpdate: vi.fn(),
 });
 
 export const createFirestoreLazyMock = (mockService: any) => {
@@ -62,5 +62,5 @@ export const createFirestoreMock = () => ({
   Timestamp: {
     now: vi.fn(),
     fromDate: vi.fn(),
-  }
+  },
 });

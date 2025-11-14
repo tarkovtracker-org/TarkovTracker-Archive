@@ -180,6 +180,7 @@ Achieve **FCP ≤ 2.5s, LCP ≤ 3.0s, TBT ≤ 200ms** on Lighthouse Mobile by el
 
 ## Related Documentation
 
+- [NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md) – Step-by-step guide for adding new features
 - [SECURITY.md](./SECURITY.md) – Authentication, permissions, validation, CORS
 - [DEVELOPMENT.md](./DEVELOPMENT.md) – Development workflows, testing, deployment
 - [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) – Ongoing refactoring priorities

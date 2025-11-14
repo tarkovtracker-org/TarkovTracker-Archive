@@ -1,6 +1,6 @@
 /**
  * Fake implementation of ITeamRepository for unit testing
- * 
+ *
  * This allows testing TeamService business logic without Firestore emulator:
  * - Fast test execution (no network calls)
  * - Easy simulation of edge cases
@@ -20,6 +20,8 @@ import { Timestamp } from 'firebase-admin/firestore';
  */
 class FakeTeamTransactionContext implements ITeamTransactionContext {
   private pendingWrites: Array<() => void> = [];
+  private transactionReads: Map<string, SystemDocument | undefined> = new Map();
+  private teamReads: Map<string, TeamDocument | undefined> = new Map();
 
   constructor(
     private systemDocs: Map<string, SystemDocument>,
@@ -27,17 +29,40 @@ class FakeTeamTransactionContext implements ITeamTransactionContext {
   ) {}
 
   async getSystemDoc(userId: string): Promise<SystemDocument | undefined> {
-    return this.systemDocs.get(userId);
+    // Use cached read within transaction to ensure snapshot isolation
+    if (this.transactionReads.has(userId)) {
+      return this.transactionReads.get(userId);
+    }
+    const doc = this.systemDocs.get(userId);
+    this.transactionReads.set(userId, doc);
+    return doc;
   }
 
   async getTeamDoc(teamId: string): Promise<TeamDocument | undefined> {
-    return this.teamDocs.get(teamId);
+    // Use cached read within transaction to ensure snapshot isolation
+    if (this.teamReads.has(teamId)) {
+      return this.teamReads.get(teamId);
+    }
+    const doc = this.teamDocs.get(teamId);
+    this.teamReads.set(teamId, doc);
+    return doc;
   }
 
   setSystemDoc(userId: string, data: Partial<SystemDocument>): void {
     this.pendingWrites.push(() => {
       const existing = this.systemDocs.get(userId) || {};
-      this.systemDocs.set(userId, { ...existing, ...data });
+      // Properly handle null values to clear fields
+      const merged: SystemDocument = { ...existing };
+      Object.entries(data).forEach(([key, value]) => {
+        if (value === null) {
+          // @ts-ignore - Allow null to clear fields
+          merged[key as keyof SystemDocument] = null;
+        } else if (value !== undefined) {
+          // @ts-ignore - Type assertion for partial update
+          merged[key as keyof SystemDocument] = value;
+        }
+      });
+      this.systemDocs.set(userId, merged);
     });
   }
 
@@ -51,7 +76,7 @@ class FakeTeamTransactionContext implements ITeamTransactionContext {
     this.pendingWrites.push(() => {
       const existing = this.teamDocs.get(teamId);
       if (existing) {
-        // Handle array operations
+        // Handle array operations and field updates
         Object.entries(updates).forEach(([key, value]) => {
           if (typeof value === 'object' && value !== null && 'type' in value) {
             const op = value as { type: string; values: unknown[] };
@@ -65,7 +90,27 @@ class FakeTeamTransactionContext implements ITeamTransactionContext {
               existing.members = current.filter((m) => !removeValues.has(m));
             }
           } else {
-            (existing as Record<string, unknown>)[key] = value;
+            // Handle known TeamDocument fields explicitly
+            switch (key) {
+              case 'members':
+                existing.members = value as string[];
+                break;
+              case 'password':
+                existing.password = value as string;
+                break;
+              case 'maximumMembers':
+                existing.maximumMembers = value as number;
+                break;
+              case 'owner':
+                existing.owner = value as string;
+                break;
+              case 'createdAt':
+                existing.createdAt = value as any;
+                break;
+              default:
+                // Silently ignore unknown fields (matches Firestore behavior)
+                break;
+            }
           }
         });
         this.teamDocs.set(teamId, existing);
@@ -97,13 +142,18 @@ export class FakeTeamRepository implements ITeamRepository {
   private userDocs = new Map<string, UserDocumentData>();
   private progressDocs = new Map<string, ProgressDocument>();
 
-  async runTransaction<T>(
-    callback: (tx: ITeamTransactionContext) => Promise<T>
-  ): Promise<T> {
+  async runTransaction<T>(callback: (tx: ITeamTransactionContext) => Promise<T>): Promise<T> {
+    // Create transaction with snapshot of current state
     const tx = new FakeTeamTransactionContext(this.systemDocs, this.teamDocs);
-    const result = await callback(tx);
-    tx.commit(); // Commit writes
-    return result;
+
+    try {
+      const result = await callback(tx);
+      tx.commit(); // Commit writes on success
+      return result;
+    } catch (error) {
+      // Transaction failed - don't commit writes (rollback)
+      throw error;
+    }
   }
 
   async getSystemDocument(userId: string): Promise<SystemDocument | null> {
@@ -145,16 +195,20 @@ export class FakeTeamRepository implements ITeamRepository {
 
   /**
    * Seed a system document for testing
+   * Note: This completely replaces any existing document
    */
   seedSystemDoc(userId: string, data: SystemDocument): void {
-    this.systemDocs.set(userId, data);
+    // Create a clean copy to avoid reference issues
+    this.systemDocs.set(userId, { ...data });
   }
 
   /**
    * Seed a team document for testing
+   * Note: This completely replaces any existing document
    */
   seedTeamDoc(teamId: string, data: TeamDocument): void {
-    this.teamDocs.set(teamId, data);
+    // Create a clean copy to avoid reference issues
+    this.teamDocs.set(teamId, { ...data });
   }
 
   /**
@@ -173,6 +227,7 @@ export class FakeTeamRepository implements ITeamRepository {
 
   /**
    * Clear all data (for test cleanup)
+   * Call this in afterEach to ensure clean state between tests
    */
   clear(): void {
     this.systemDocs.clear();
@@ -182,7 +237,16 @@ export class FakeTeamRepository implements ITeamRepository {
   }
 
   /**
+   * Reset to initial state (alias for clear())
+   * Ensures no state leaks between tests
+   */
+  reset(): void {
+    this.clear();
+  }
+
+  /**
    * Get all team documents (for assertions)
+   * Returns a copy to prevent external modification
    */
   getAllTeams(): Map<string, TeamDocument> {
     return new Map(this.teamDocs);
@@ -190,8 +254,21 @@ export class FakeTeamRepository implements ITeamRepository {
 
   /**
    * Get all system documents (for assertions)
+   * Returns a copy to prevent external modification
    */
   getAllSystemDocs(): Map<string, SystemDocument> {
     return new Map(this.systemDocs);
+  }
+
+  /**
+   * Get internal state size for debugging
+   */
+  getStateSize(): { systems: number; teams: number; users: number; progress: number } {
+    return {
+      systems: this.systemDocs.size,
+      teams: this.teamDocs.size,
+      users: this.userDocs.size,
+      progress: this.progressDocs.size,
+    };
   }
 }

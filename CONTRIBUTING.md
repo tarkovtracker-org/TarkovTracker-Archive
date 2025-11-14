@@ -32,6 +32,7 @@ The guidelines below explain how to participate effectively and respectfully. If
    - `npm run lint` (runs ESLint, TypeScript type-checks, markdownlint)
    - `npm run format` (if files need formatting)
    - `npm run build`
+   - `npm run docs:check` (if you modified API endpoints or OpenAPI annotations)
 7. **Open a pull request** targeting the `main` branch and fill in the template completely. Reference related issues with `Fixes #<issue-number>` when appropriate.
 
 > **Note:** Changes that affect production data models, Firebase rules, or infrastructure must be reviewed by a core maintainer before merging. Coordinate in advance if you anticipate schema migrations or configuration changes.
@@ -43,6 +44,7 @@ The guidelines below explain how to participate effectively and respectfully. If
 - [ ] Added screenshots or recordings for UI-affecting changes when possible.
 - [ ] Linked relevant issues and provided a clear summary of the change.
 - [ ] Requested review from a maintainer (`@TarkovTracker/maintainers` on GitHub) once the PR is ready.
+- [ ] **If API endpoints changed:** Run `npm run docs:generate` and commit updated OpenAPI files.
 
 Maintainers will review submissions for correctness, accessibility, performance, and adherence to the project style. Expect constructive feedback and iterate as needed. Merge is performed by a maintainer after approval.
 

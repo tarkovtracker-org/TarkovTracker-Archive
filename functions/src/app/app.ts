@@ -15,10 +15,19 @@ import { abuseGuard } from '../middleware/abuseGuard';
 import { requireRecentAuth } from '../middleware/reauth';
 import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler';
 import { corsMiddleware } from '../middleware/corsWrapper';
-import progressHandler from '../handlers/progressHandler';
-import teamHandler from '../handlers/teamHandler';
-import tokenHandler from '../handlers/tokenHandler';
-import { deleteUserAccountHandler } from '../handlers/userDeletionHandler';
+import {
+  getPlayerProgress,
+  setPlayerLevel,
+  updateSingleTask,
+  updateMultipleTasks,
+  updateTaskObjective,
+  getTeamProgress,
+  createTeam,
+  joinTeam,
+  leaveTeam,
+  getTokenInfo,
+  deleteUserAccountHandler,
+} from '../handlers';
 import { API_FEATURES } from '../config/features';
 // Read package version at module load
 const __filename = fileURLToPath(import.meta.url);
@@ -73,46 +82,34 @@ function setupRoutes(app: Express) {
   app.use('/api', abuseGuard);
   app.delete('/api/user/account', requireRecentAuth, asyncHandler(deleteUserAccountHandler));
   // Token endpoints
-  app.get('/api/token', tokenHandler.getTokenInfo);
-  app.get('/api/v2/token', tokenHandler.getTokenInfo);
+  app.get('/api/token', getTokenInfo);
+  app.get('/api/v2/token', getTokenInfo);
   // Progress endpoints
-  app.get('/api/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
-  app.get('/api/v2/progress', requirePermission('GP'), progressHandler.getPlayerProgress);
-  app.post(
-    '/api/progress/level/:levelValue',
-    requirePermission('WP'),
-    progressHandler.setPlayerLevel
-  );
-  app.post(
-    '/api/v2/progress/level/:levelValue',
-    requirePermission('WP'),
-    progressHandler.setPlayerLevel
-  );
-  app.post('/api/progress/task/:taskId', requirePermission('WP'), progressHandler.updateSingleTask);
-  app.post(
-    '/api/v2/progress/task/:taskId',
-    requirePermission('WP'),
-    progressHandler.updateSingleTask
-  );
-  app.post('/api/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
-  app.post('/api/v2/progress/tasks', requirePermission('WP'), progressHandler.updateMultipleTasks);
+  app.get('/api/progress', requirePermission('GP'), getPlayerProgress);
+  app.get('/api/v2/progress', requirePermission('GP'), getPlayerProgress);
+  app.post('/api/progress/level/:levelValue', requirePermission('WP'), setPlayerLevel);
+  app.post('/api/v2/progress/level/:levelValue', requirePermission('WP'), setPlayerLevel);
+  app.post('/api/progress/task/:taskId', requirePermission('WP'), updateSingleTask);
+  app.post('/api/v2/progress/task/:taskId', requirePermission('WP'), updateSingleTask);
+  app.post('/api/progress/tasks', requirePermission('WP'), updateMultipleTasks);
+  app.post('/api/v2/progress/tasks', requirePermission('WP'), updateMultipleTasks);
   app.post(
     '/api/progress/task/objective/:objectiveId',
     requirePermission('WP'),
-    progressHandler.updateTaskObjective
+    updateTaskObjective
   );
   app.post(
     '/api/v2/progress/task/objective/:objectiveId',
     requirePermission('WP'),
-    progressHandler.updateTaskObjective
+    updateTaskObjective
   );
   // Team endpoints
-  app.get('/api/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
-  app.get('/api/v2/team/progress', requirePermission('TP'), teamHandler.getTeamProgress);
+  app.get('/api/team/progress', requirePermission('TP'), getTeamProgress);
+  app.get('/api/v2/team/progress', requirePermission('TP'), getTeamProgress);
   // Team management
-  app.post('/api/team/create', teamHandler.createTeam);
-  app.post('/api/team/join', teamHandler.joinTeam);
-  app.post('/api/team/leave', teamHandler.leaveTeam);
+  app.post('/api/team/create', createTeam);
+  app.post('/api/team/join', joinTeam);
+  app.post('/api/team/leave', leaveTeam);
   // Health check endpoint
   app.get(
     '/health',
