@@ -51,7 +51,7 @@ TarkovTracker is built as a modern Jamstack-style application:
 ### Quick start
 ```bash
 # Clone the repository
-git clone https://github.com/TarkovTracker/tarkovtracker.git
+git clone https://github.com/TarkovTracker-org/tarkovtracker.git
 cd tarkovtracker
 
 # Install dependencies for all workspaces
