@@ -6,11 +6,11 @@ import { TeamService } from '../../../src/services/TeamService';
 import { createTestSuite, getTarkovSeedData } from '../../helpers';
 
 // Mock dependencies
-vi.mock('../../src/utils/dataLoaders', () => ({
+vi.mock('../../../src/utils/dataLoaders', () => ({
   getHideoutData: vi.fn(),
   getTaskData: vi.fn(),
 }));
-vi.mock('../../src/progress/progressUtils', () => ({
+vi.mock('../../../src/progress/progressUtils', () => ({
   formatProgress: vi.fn(),
   updateTaskState: vi.fn(),
 }));

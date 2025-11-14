@@ -20,7 +20,14 @@ import { createApp } from './app/app';
 import { scheduledFunctions } from './scheduled/index';
 import { withCorsHandling } from './middleware/corsWrapper';
 // Firebase Admin initialization
-admin.initializeApp();
+try {
+  admin.initializeApp();
+} catch (error: any) {
+  // Ignore "app already exists" errors - Firebase is already initialized
+  if (!error?.message?.includes('already exists')) {
+    throw error;
+  }
+}
 
 // ============================================================================
 // LEGACY FUNCTION EXPORTS - BACKWARD COMPATIBILITY

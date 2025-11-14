@@ -64,16 +64,10 @@ describe('handlers/teamHandler', () => {
 
   describe('getTeamProgress', () => {
     it('should return team progress successfully', async () => {
-      // Create a team first
+      // Create a team first (user is automatically added to the team)
       const created = await teamService.createTeam('test-user-123', {
         password: 'testpassword',
         maximumMembers: 5,
-      });
-
-      // Add user to the team
-      await teamService.joinTeam('test-user-123', {
-        id: created.team,
-        password: created.password,
       });
 
       await getTeamProgress(mockReq, mockRes.res, vi.fn());
@@ -89,7 +83,12 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('', async () => {
+    it('should handle pve game mode', async () => {
+      // Create a team first
+      await teamService.createTeam('test-user-123', {
+        password: 'testpassword',
+        maximumMembers: 5,
+      });
       mockReq.apiToken.gameMode = 'pve';
 
       await getTeamProgress(mockReq, mockRes.res, vi.fn());
@@ -105,7 +104,12 @@ describe('handlers/teamHandler', () => {
       );
     });
 
-    it('', async () => {
+    it('should use pvp as default game mode', async () => {
+      // Create a team first
+      await teamService.createTeam('test-user-123', {
+        password: 'testpassword',
+        maximumMembers: 5,
+      });
       mockReq.apiToken.gameMode = undefined;
 
       await getTeamProgress(mockReq, mockRes.res, vi.fn());

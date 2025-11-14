@@ -71,3 +71,8 @@ export const getTokenInfo = asyncHandler(
     res.status(200).json(response);
   }
 );
+
+// Default export for tests and unified handler access
+export default {
+  getTokenInfo,
+};

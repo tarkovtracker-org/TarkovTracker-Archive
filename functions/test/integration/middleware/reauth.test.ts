@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import { requireRecentAuth, requireValidAuthToken } from '../../../src/middleware/reauth';
 import { errors } from '../../../src/middleware/errorHandler';
 import { admin, createTestSuite, serverTimestamp } from '../../helpers';
-import { AuthError } from 'firebase-admin/auth';
 
 // Mock firebase-functions logger only
 vi.mock('firebase-functions/v2', () => ({
@@ -112,7 +111,8 @@ describe('middleware/reauth', () => {
     });
 
     it('should handle revoked tokens', async () => {
-      const revokedError = new AuthError('auth/id-token-revoked', 'Token has been revoked');
+      const revokedError = new Error('Token has been revoked') as any;
+      revokedError.code = 'auth/id-token-revoked';
       mockVerifyIdToken.mockRejectedValue(revokedError);
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(401);
@@ -125,7 +125,8 @@ describe('middleware/reauth', () => {
     });
 
     it('should handle expired tokens', async () => {
-      const expiredError = new AuthError('auth/id-token-expired', 'Token has expired');
+      const expiredError = new Error('Token has expired') as any;
+      expiredError.code = 'auth/id-token-expired';
       mockVerifyIdToken.mockRejectedValue(expiredError);
       await requireRecentAuth(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(401);
@@ -262,7 +263,8 @@ describe('middleware/reauth', () => {
     });
 
     it('should handle revoked tokens', async () => {
-      const revokedError = new AuthError('auth/id-token-revoked', 'Token has been revoked');
+      const revokedError = new Error('Token has been revoked') as any;
+      revokedError.code = 'auth/id-token-revoked';
       mockVerifyIdToken.mockRejectedValue(revokedError);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(401);
@@ -275,7 +277,8 @@ describe('middleware/reauth', () => {
     });
 
     it('should handle expired tokens', async () => {
-      const expiredError = new AuthError('auth/id-token-expired', 'Token has expired');
+      const expiredError = new Error('Token has expired') as any;
+      expiredError.code = 'auth/id-token-expired';
       mockVerifyIdToken.mockRejectedValue(expiredError);
       await requireValidAuthToken(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(401);

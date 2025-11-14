@@ -9,7 +9,7 @@ describe('Tarkov Data Updates', () => {
   afterEach(suite.afterEach);
 
   it('should import scheduled tarkovdata function', async () => {
-    const module = await import('../src/scheduled/index.js');
+    const module = await import('../../../src/scheduled/index.js');
     expect(module.scheduledFunctions).toBeDefined();
     expect(module.scheduledFunctions.updateTarkovData).toBeDefined();
   });

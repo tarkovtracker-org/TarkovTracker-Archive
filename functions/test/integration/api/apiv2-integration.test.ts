@@ -31,7 +31,7 @@ describe('API v2 Integration Tests', () => {
 
   describe('Auth Middleware', () => {
     it('attaches token info and calls next on success', async () => {
-      const { TokenService } = await import('../src/services/TokenService');
+      const { TokenService } = await import('../../../src/services/TokenService');
       vi.spyOn(TokenService.prototype, 'validateToken').mockResolvedValue({
         permissions: ['GP', 'WP'],
         owner: 'test-user',
@@ -39,7 +39,7 @@ describe('API v2 Integration Tests', () => {
         note: 'integration test',
       });
 
-      const { verifyBearer } = await import('../src/middleware/auth');
+      const { verifyBearer } = await import('../../../src/middleware/auth');
 
       const req: MockRequest = {
         method: 'GET',
@@ -52,7 +52,7 @@ describe('API v2 Integration Tests', () => {
         json: vi.fn().mockReturnThis(),
       };
       const next = vi.fn();
-      verifyBearer(req as any, res as any, next);
+      await verifyBearer(req as any, res as any, next);
       expect(TokenService.prototype.validateToken).toHaveBeenCalledWith('Bearer valid-token');
       expect(req.apiToken).toEqual(
         expect.objectContaining({ owner: 'test-user', permissions: ['GP', 'WP'] })
@@ -62,12 +62,12 @@ describe('API v2 Integration Tests', () => {
     });
 
     it('responds with 401 when validation fails', async () => {
-      const { TokenService } = await import('../src/services/TokenService');
+      const { TokenService } = await import('../../../src/services/TokenService');
       vi.spyOn(TokenService.prototype, 'validateToken').mockRejectedValue(
         new Error('Authentication failed')
       );
 
-      const { verifyBearer } = await import('../src/middleware/auth');
+      const { verifyBearer } = await import('../../../src/middleware/auth');
 
       const req: MockRequest = {
         method: 'GET',
@@ -82,7 +82,7 @@ describe('API v2 Integration Tests', () => {
 
       const next = vi.fn();
 
-      verifyBearer(req as any, res as any, next);
+      await verifyBearer(req as any, res as any, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
@@ -106,7 +106,7 @@ describe('API v2 Integration Tests', () => {
         },
       });
 
-      const progressHandler = (await import('../src/handlers/progressHandler')).default;
+      const progressHandler = await import('../../../src/handlers/progressHandler');
 
       const req: MockRequest = {
         apiToken: { permissions: ['GP'], owner: 'test-user' },
@@ -120,7 +120,7 @@ describe('API v2 Integration Tests', () => {
         json: vi.fn().mockReturnThis(),
       };
 
-      progressHandler.getPlayerProgress(req as any, res as any, vi.fn());
+      await progressHandler.getPlayerProgress(req as any, res as any, vi.fn());
 
       // Verify the service was called and response was sent
       expect(res.status).toHaveBeenCalledWith(200);
@@ -156,7 +156,7 @@ describe('API v2 Integration Tests', () => {
         },
       });
 
-      const progressHandler = (await import('../src/handlers/progressHandler')).default;
+      const progressHandler = await import('../../../src/handlers/progressHandler');
 
       const req: MockRequest = {
         apiToken: { permissions: ['WP'], owner: 'test-user' },
@@ -172,7 +172,7 @@ describe('API v2 Integration Tests', () => {
         json: vi.fn().mockReturnThis(),
       };
 
-      progressHandler.updateSingleTask(req as any, res as any, vi.fn());
+      await progressHandler.updateSingleTask(req as any, res as any, vi.fn());
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
@@ -188,7 +188,7 @@ describe('API v2 Integration Tests', () => {
 
   describe('API Router export', () => {
     it('exposes the HTTP function handler', async () => {
-      const module = await import('../src/index');
+      const module = await import('../../../src/index');
       expect(typeof module.api).toBe('function');
     });
   });

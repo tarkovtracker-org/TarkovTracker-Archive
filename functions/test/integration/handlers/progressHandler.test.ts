@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Request, Response } from 'express';
 import { ApiResponse, ApiToken } from '../../../src/types/api';
-import { ProgressService, ValidationService } from '../../../src/index';
+import { ProgressService } from '../../../src/services/ProgressService';
+import { ValidationService } from '../../../src/services/ValidationService';
 import {
   getPlayerProgress,
   setPlayerLevel,
@@ -9,19 +10,9 @@ import {
   updateMultipleTasks,
   updateTaskObjective,
 } from '../../../src/handlers/progressHandler';
-import {
-  createProgressServiceMock,
-  createValidationServiceMock,
-  createFirestoreLazyMock,
-} from '../../helpers/serviceMocks';
+import { createProgressServiceMock, createValidationServiceMock } from '../../helpers/serviceMocks';
 import { createTestSuite } from '../../helpers';
 
-// Mock services with factory pattern
-vi.mock('../../src/services/ProgressService', () => createProgressServiceMock());
-vi.mock('../../src/services/ValidationService', () => createValidationServiceMock());
-vi.mock('../../src/utils/factory', () => ({
-  createLazy: createFirestoreLazyMock,
-}));
 describe('handlers/progressHandler', () => {
   const suite = createTestSuite('handlers/progressHandler');
   let mockReq: any;
@@ -30,14 +21,47 @@ describe('handlers/progressHandler', () => {
   let mockValidationService: any;
   beforeEach(async () => {
     await suite.beforeEach();
-    // Use mocked services from our factory
     mockProgressService = createProgressServiceMock();
     mockValidationService = createValidationServiceMock();
-    vi.mocked(ProgressService).mockImplementation(() => mockProgressService);
-    vi.mocked(ValidationService).mockImplementation(() => mockValidationService);
-    // Mock the factory lazy initialization
-    const factoryModule = await import('../../src/utils/factory');
-    vi.mocked(factoryModule.createLazy).mockReturnValue(() => mockProgressService);
+    vi.spyOn(ProgressService.prototype, 'getUserProgress').mockImplementation(
+      mockProgressService.getUserProgress
+    );
+    vi.spyOn(ProgressService.prototype, 'setPlayerLevel').mockImplementation(
+      mockProgressService.setPlayerLevel
+    );
+    vi.spyOn(ProgressService.prototype, 'updateSingleTask').mockImplementation(
+      mockProgressService.updateSingleTask
+    );
+    vi.spyOn(ProgressService.prototype, 'updateMultipleTasks').mockImplementation(
+      mockProgressService.updateMultipleTasks
+    );
+    vi.spyOn(ProgressService.prototype, 'updateTaskObjective').mockImplementation(
+      mockProgressService.updateTaskObjective
+    );
+    vi.spyOn(ProgressService.prototype, 'getTaskStatus').mockImplementation(
+      mockProgressService.getTaskStatus
+    );
+    vi.spyOn(ValidationService, 'validateUserId').mockImplementation(
+      mockValidationService.validateUserId
+    );
+    vi.spyOn(ValidationService, 'validateLevel').mockImplementation(
+      mockValidationService.validateLevel
+    );
+    vi.spyOn(ValidationService, 'validateTaskId').mockImplementation(
+      mockValidationService.validateTaskId
+    );
+    vi.spyOn(ValidationService, 'validateTaskUpdate').mockImplementation(
+      mockValidationService.validateTaskUpdate
+    );
+    vi.spyOn(ValidationService, 'validateMultipleTaskUpdate').mockImplementation(
+      mockValidationService.validateMultipleTaskUpdate
+    );
+    vi.spyOn(ValidationService, 'validateObjectiveId').mockImplementation(
+      mockValidationService.validateObjectiveId
+    );
+    vi.spyOn(ValidationService, 'validateObjectiveUpdate').mockImplementation(
+      mockValidationService.validateObjectiveUpdate
+    );
     mockReq = {
       apiToken: {
         owner: 'test-user-123',
@@ -56,7 +80,10 @@ describe('handlers/progressHandler', () => {
     };
   });
 
-  afterEach(suite.afterEach);
+  afterEach(async () => {
+    vi.restoreAllMocks();
+    await suite.afterEach();
+  });
   describe('resolveGameMode', () => {
     // We need to import the resolveGameMode function directly
     // For now, let's test the behavior through the handlers

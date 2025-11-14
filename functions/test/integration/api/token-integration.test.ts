@@ -21,7 +21,7 @@ describe('Token callable/HTTP wrappers', () => {
   });
 
   it('revokeToken rejects non-POST methods with 405', async () => {
-    const { revokeToken } = await import('../src/token/revoke');
+    const { revokeToken } = await import('../../../src/token/revoke');
     const req = createMockRequest({ method: 'GET', headers: {} });
     const res = createMockResponse();
     await revokeToken(req as any, res as any);
@@ -30,7 +30,7 @@ describe('Token callable/HTTP wrappers', () => {
   });
 
   it('revokeToken returns 401 when authorization header is missing', async () => {
-    const { revokeToken } = await import('../src/token/revoke');
+    const { revokeToken } = await import('../../../src/token/revoke');
     const req = createMockRequest({ method: 'POST', headers: {}, body: {} });
     const res = createMockResponse();
     await revokeToken(req as any, res as any);

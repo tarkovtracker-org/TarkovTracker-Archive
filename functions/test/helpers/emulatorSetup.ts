@@ -29,8 +29,25 @@ export function initializeEmulator(): admin.app.App {
   return admin.app();
 }
 
-// Initialize on module load
-initializeEmulator();
+// Initialize on module load with error handling
+try {
+  initializeEmulator();
+} catch (err) {
+  console.warn('Warning: Failed to initialize Firebase emulator on module load');
+  // Continue anyway - tests using mocks or deferred initialization
+}
+
+// Utility to ensure initialization happened
+export function ensureInitialized(): admin.app.App {
+  if (!admin.apps.length) {
+    try {
+      initializeEmulator();
+    } catch (err) {
+      console.warn('Warning: Failed to initialize Firebase emulator');
+    }
+  }
+  return admin.app();
+}
 
 // ============================================================================
 // EXPORTS FOR TEST FILES
@@ -39,10 +56,12 @@ initializeEmulator();
 export { admin };
 
 export function firestore() {
+  ensureInitialized();
   return admin.firestore();
 }
 
 export function auth() {
+  ensureInitialized();
   return admin.auth();
 }
 
@@ -55,6 +74,9 @@ export function auth() {
  * Uses HTTP DELETE to the emulator's clear endpoint
  */
 export async function resetDb(): Promise<void> {
+  // Ensure Firebase is initialized with the correct environment
+  ensureInitialized();
+
   const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:5002';
   const projectId = getFirebaseProjectId();
   const url = `http://${emulatorHost}/emulator/v1/projects/${projectId}/databases/(default)/documents`;

@@ -25,7 +25,7 @@ describe('Direct HTTP handlers', () => {
     await suite.afterEach();
   });
   it('token handler returns token info from request', async () => {
-    const tokenHandler = (await import('../src/handlers/tokenHandler')).default;
+    const tokenHandler = (await import('../../../src/handlers/tokenHandler')).default;
     const req = {
       apiToken: {
         permissions: ['GP', 'WP'],
@@ -50,12 +50,12 @@ describe('Direct HTTP handlers', () => {
     });
   });
   it('team handler createTeam returns service response', async () => {
-    const { TeamService } = await import('../src/services/TeamService');
+    const { TeamService } = await import('../../../src/services/TeamService');
     vi.spyOn(TeamService.prototype, 'createTeam').mockResolvedValue({
       team: 'team-123',
       password: 'secret',
     });
-    const teamHandler = (await import('../src/handlers/teamHandler')).default;
+    const teamHandler = (await import('../../../src/handlers/teamHandler')).default;
     const req = {
       apiToken: { owner: 'owner-1', permissions: ['TP'] },
       body: { password: 'secret' },
@@ -76,9 +76,9 @@ describe('Direct HTTP handlers', () => {
     });
   });
   it('team handler joinTeam returns join status', async () => {
-    const { TeamService } = await import('../src/services/TeamService');
+    const { TeamService } = await import('../../../src/services/TeamService');
     vi.spyOn(TeamService.prototype, 'joinTeam').mockResolvedValue({ joined: true });
-    const teamHandler = (await import('../src/handlers/teamHandler')).default;
+    const teamHandler = (await import('../../../src/handlers/teamHandler')).default;
     const req = {
       apiToken: { owner: 'member-1', permissions: ['TP'] },
       body: { id: 'team-123', password: 'secret' },
@@ -100,9 +100,9 @@ describe('Direct HTTP handlers', () => {
     });
   });
   it('team handler leaveTeam returns leave status', async () => {
-    const { TeamService } = await import('../src/services/TeamService');
+    const { TeamService } = await import('../../../src/services/TeamService');
     vi.spyOn(TeamService.prototype, 'leaveTeam').mockResolvedValue({ left: true });
-    const teamHandler = (await import('../src/handlers/teamHandler')).default;
+    const teamHandler = (await import('../../../src/handlers/teamHandler')).default;
     const req = {
       apiToken: { owner: 'member-1', permissions: ['TP'] },
     };
@@ -120,7 +120,7 @@ describe('Direct HTTP handlers', () => {
     });
   });
   it('team handler getTeamProgress returns formatted progress', async () => {
-    const { TeamService } = await import('../src/services/TeamService');
+    const { TeamService } = await import('../../../src/services/TeamService');
     vi.spyOn(TeamService.prototype, 'getTeamProgress').mockResolvedValue({
       data: [
         {
@@ -137,7 +137,7 @@ describe('Direct HTTP handlers', () => {
       ],
       meta: { self: 'owner-1', hiddenTeammates: [] },
     });
-    const teamHandler = (await import('../src/handlers/teamHandler')).default;
+    const teamHandler = (await import('../../../src/handlers/teamHandler')).default;
     const req = {
       apiToken: { owner: 'owner-1', permissions: ['TP'] },
       query: {},

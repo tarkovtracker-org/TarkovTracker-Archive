@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createTestSuite, firestore } from '../../helpers';
+import { createTestSuite } from '../../helpers';
 
 import {
   fetchTeam,

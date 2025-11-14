@@ -34,7 +34,7 @@ describe('config/features', () => {
   describe('API_FEATURES constant', () => {
     const importFreshFeatures = async () => {
       vi.resetModules();
-      return import('../../src/config/features');
+      return import('../../../src/config/features');
     };
     it('should default all features to false when no environment variables are set', async () => {
       // Clear all feature-related environment variables

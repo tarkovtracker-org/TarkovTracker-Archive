@@ -25,7 +25,7 @@ describe('UIDGenerator Production Behavior', () => {
   });
   it('should generate cryptographically secure tokens in production mode', async () => {
     // Dynamic import to avoid module caching issues
-    const { default: UIDGenerator } = await import('../src/token/UIDGenerator');
+    const { default: UIDGenerator } = await import('../../../src/token/UIDGenerator');
 
     const uidgen = new UIDGenerator(128);
     const token1 = await uidgen.generate();
@@ -43,7 +43,7 @@ describe('UIDGenerator Production Behavior', () => {
     expect(token2).toMatch(/^[a-zA-Z0-9]{128}$/);
   });
   it('should support BASE62 encoding for backward compatibility', async () => {
-    const { default: UIDGenerator } = await import('../src/token/UIDGenerator');
+    const { default: UIDGenerator } = await import('../../../src/token/UIDGenerator');
 
     const uidgen = new UIDGenerator(32, UIDGenerator.BASE62);
     const token = await uidgen.generate();
@@ -57,7 +57,7 @@ describe('UIDGenerator Production Behavior', () => {
     process.env.VITEST = 'true';
     process.env.UID_GENERATOR_SEED = '99999';
 
-    const { default: UIDGenerator } = await import('../src/token/UIDGenerator');
+    const { default: UIDGenerator } = await import('../../../src/token/UIDGenerator');
 
     const uidgen1 = new UIDGenerator(64);
     const uidgen2 = new UIDGenerator(64);

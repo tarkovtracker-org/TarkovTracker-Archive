@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ProgressService } from '../../../src/services/ProgressService';
 import { createTestSuite, admin } from '../../helpers';
 import { ServiceTestHelpers } from '../../helpers/TestHelpers';
-import { MOCK_GAME_DATA, MOCK_TASKS } from '../mocks/MockConstants';
+import { MOCK_GAME_DATA, MOCK_TASKS } from '../../mocks/MockConstants';
 
 /**
  * Concurrent and transaction-focused test suite for ProgressService

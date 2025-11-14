@@ -28,17 +28,6 @@ vi.mock('../../../src/utils/dataLoaders', () => ({
   getHideoutData: vi.fn().mockResolvedValue({ hideout1: {} }),
 }));
 
-// Mock UIDGenerator for deterministic tests
-vi.mock('../../../src/token/UIDGenerator', () => {
-  return {
-    default: class MockUIDGenerator {
-      async generate(): Promise<string> {
-        return 'generated-team-id-123';
-      }
-    },
-  };
-});
-
 // Run tests sequentially to maintain FakeRepository isolation
 describe.sequential('TeamService - Pure Unit Tests (No Emulator)', () => {
   let teamService: TeamService;
@@ -68,13 +57,12 @@ describe.sequential('TeamService - Pure Unit Tests (No Emulator)', () => {
       });
 
       // Assert
-      expect(result).toEqual({
-        team: 'generated-team-id-123',
-        password: 'secure-password',
-      });
+      expect(result.password).toBe('secure-password');
+      expect(typeof result.team).toBe('string');
+      expect(result.team.length).toBeGreaterThanOrEqual(8);
 
       // Verify team was created
-      const teamDoc = await fakeRepo.getTeamDocument('generated-team-id-123');
+      const teamDoc = await fakeRepo.getTeamDocument(result.team);
       expect(teamDoc).toBeDefined();
       expect(teamDoc?.owner).toBe('user-1');
       expect(teamDoc?.password).toBe('secure-password');
@@ -83,7 +71,7 @@ describe.sequential('TeamService - Pure Unit Tests (No Emulator)', () => {
 
       // Verify system doc was updated
       const systemDoc = await fakeRepo.getSystemDocument('user-1');
-      expect(systemDoc?.team).toBe('generated-team-id-123');
+      expect(systemDoc?.team).toBe(result.team);
     });
 
     it('should reject if user is already in a team', async () => {
@@ -119,8 +107,9 @@ describe.sequential('TeamService - Pure Unit Tests (No Emulator)', () => {
       });
 
       // Assert
-      expect(result.team).toBe('generated-team-id-123');
-      const teamDoc = await fakeRepo.getTeamDocument('generated-team-id-123');
+      expect(typeof result.team).toBe('string');
+      expect(result.team.length).toBeGreaterThanOrEqual(8);
+      const teamDoc = await fakeRepo.getTeamDocument(result.team);
       expect(teamDoc?.maximumMembers).toBe(5);
     });
   });
