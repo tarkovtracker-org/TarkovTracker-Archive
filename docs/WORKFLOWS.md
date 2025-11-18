@@ -146,3 +146,10 @@ npm run deploy:prod
 - Update `firebase.json` carefully (validate with emulators first)
 - Document Firestore rule changes in PR
 - Test index requirements before deploying
+
+---
+
+## Related Documentation
+
+- [DEVELOPMENT.md](./DEVELOPMENT.md) – Setup, testing, and dependency management
+- [ARCHITECTURE.md](./ARCHITECTURE.md) – System design and caching

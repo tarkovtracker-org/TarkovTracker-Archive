@@ -38,7 +38,7 @@
     </template>
   </icon-card>
 </template>
-<script setup>
+<script setup lang="ts">
   import {
     computed,
     defineAsyncComponent,
@@ -50,14 +50,14 @@
   } from 'vue';
   import { useLiveData } from '@/composables/livedata';
   import { fireuser } from '@/plugins/firebase';
-  const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard'));
+  const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard.vue'));
   const TeammemberCard = defineAsyncComponent(
-    () => import('@/components/domain/team/TeammemberCard')
+    () => import('@/components/domain/team/TeammemberCard.vue')
   );
-  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip'));
+  const TrackerTip = defineAsyncComponent(() => import('@/components/ui/TrackerTip.vue'));
   const { useTeamStore: useTeamStoreFunction } = useLiveData();
   const { teamStore } = useTeamStoreFunction();
-  const teamMembers = ref([]);
+  const teamMembers = ref<string[]>([]);
   teamStore.$subscribe((mutation, state) => {
     if (state.members) {
       teamMembers.value = state.members;

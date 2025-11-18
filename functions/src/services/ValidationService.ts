@@ -1,182 +1,421 @@
+import type { Request, Response, NextFunction } from 'express';
+import { createError } from '../middleware/errorHandler.js';
 import type {
   TaskStatus,
   TaskUpdateRequest,
   MultipleTaskUpdateRequest,
   ObjectiveUpdateRequest,
-  ApiToken,
-} from '../types/api';
-import { errors } from '../middleware/errorHandler';
+} from '../types/api.js';
+
+/**
+ * Input validation service for security
+ * Provides centralized validation for API inputs
+ */
+
+interface ValidationRule {
+  field: string;
+  required?: boolean;
+  type?: 'string' | 'number' | 'boolean' | 'array' | 'object';
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  sanitize?: boolean;
+}
+
+/**
+ * Validates and sanitizes input data
+ */
+export const validateInput = (
+  data: unknown,
+  rules: ValidationRule[]
+): { isValid: boolean; errors: string[]; sanitizedData?: unknown } => {
+  const errors: string[] = [];
+  const sanitizedData = data;
+
+  // Security: Validate basic structure
+  if (data === null || data === undefined) {
+    return { isValid: false, errors: ['Input is required'] };
+  }
+
+  if (typeof data !== 'object') {
+    return { isValid: false, errors: ['Invalid input format'] };
+  }
+
+  const objData = data as Record<string, unknown>;
+
+  for (const rule of rules) {
+    const value = objData[rule.field];
+
+    // Required field validation
+    if (rule.required && (value === undefined || value === null || value === '')) {
+      errors.push(`${rule.field} is required`);
+      continue;
+    }
+
+    // Type validation
+    if (rule.type && value !== undefined) {
+      if (rule.type === 'string' && typeof value !== 'string') {
+        errors.push(`${rule.field} must be a string`);
+      } else if (rule.type === 'number' && typeof value !== 'number') {
+        errors.push(`${rule.field} must be a number`);
+      } else if (rule.type === 'boolean' && typeof value !== 'boolean') {
+        errors.push(`${rule.field} must be a boolean`);
+      }
+    }
+
+    // Length validation
+    if (rule.maxLength && typeof value === 'string' && value.length > rule.maxLength) {
+      errors.push(`${rule.field} exceeds maximum length of ${rule.maxLength}`);
+    }
+
+    if (rule.minLength && typeof value === 'string' && value.length < rule.minLength) {
+      errors.push(`${rule.field} must be at least ${rule.minLength} characters`);
+    }
+
+    // Pattern validation
+    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+      errors.push(`${rule.field} contains invalid characters`);
+    }
+
+    // Security: Sanitization
+    if (rule.sanitize && typeof value === 'string') {
+      // Basic XSS prevention
+      const sanitized = value
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*<\/script>)/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*<\/iframe>)/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+\s*=/gi, '')
+        .trim();
+
+      if (sanitized !== value) {
+        objData[rule.field] = sanitized;
+      }
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    sanitizedData,
+  };
+};
+
+/**
+ * Middleware for input validation
+ */
+export const validationMiddleware = (rules: ValidationRule[]) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const validation = validateInput(req.body, rules);
+
+    if (!validation.isValid) {
+      const errors = validation.errors.join(', ');
+      return next(createError(400, `Validation failed: ${errors}`));
+    }
+
+    // Use sanitized data if available
+    if (validation.sanitizedData) {
+      req.body = validation.sanitizedData;
+    }
+
+    next();
+  };
+};
+
+// Common validation rules
+export const commonRules = {
+  teamId: {
+    field: 'teamId',
+    required: true,
+    type: 'string',
+    minLength: 1,
+    maxLength: 50,
+    pattern: /^[a-zA-Z0-9_-]+$/,
+  },
+  username: {
+    field: 'username',
+    required: true,
+    type: 'string',
+    minLength: 3,
+    maxLength: 30,
+    pattern: /^[a-zA-Z0-9_-]+$/,
+    sanitize: true,
+  },
+  note: {
+    field: 'note',
+    type: 'string',
+    maxLength: 500,
+    sanitize: true,
+  },
+  permissions: {
+    field: 'permissions',
+    required: true,
+    type: 'array',
+  },
+  maximumMembers: {
+    field: 'maximumMembers',
+    type: 'number',
+  },
+};
+
+/**
+ * ValidationService class for backward compatibility
+ * Provides access to validation utilities
+ */
 export class ValidationService {
+  static validateInput = validateInput;
+  static validationMiddleware = validationMiddleware;
+  static rules = commonRules;
+
   /**
-   * Validates task status values
+   * Validates user ID and returns trimmed value
    */
-  static validateTaskStatus(status: unknown): status is TaskStatus {
-    return typeof status === 'string' && ['completed', 'failed', 'uncompleted'].includes(status);
-  }
-  /**
-   * Validates and sanitizes task update request
-   */
-  static validateTaskUpdate(body: unknown): TaskUpdateRequest {
-    if (!body || typeof body !== 'object') {
-      throw errors.badRequest('Request body is required');
-    }
-    const { state } = body as { state?: unknown };
-    if (!state) {
-      throw errors.badRequest('State is required');
-    }
-    if (!this.validateTaskStatus(state)) {
-      throw errors.badRequest(
-        "Invalid state provided. Must be 'completed', 'failed', or 'uncompleted'"
-      );
-    }
-    return { state };
-  }
-  /**
-   * Validates multiple task updates request
-   */
-  static validateMultipleTaskUpdate(body: unknown): MultipleTaskUpdateRequest {
-    if (!body || typeof body !== 'object' || !Array.isArray(body)) {
-      throw errors.badRequest('Request body must be an array');
-    }
-    const updates = body as unknown[];
-    if (updates.length === 0) {
-      throw errors.badRequest('At least one task update is required');
-    }
-    // Validate each task update
-    const validatedUpdates: MultipleTaskUpdateRequest = [];
-    for (const task of updates) {
-      if (!task || typeof task !== 'object') {
-        throw errors.badRequest('Each task must be an object');
-      }
-      if (!('id' in task) || !('state' in task)) {
-        throw errors.badRequest('Each task must have id and state fields');
-      }
-      const { id, state } = task;
-      if (typeof id !== 'string') {
-        throw errors.badRequest('Task id must be a string');
-      }
-      if (!this.validateTaskStatus(state)) {
-        throw errors.badRequest(
-          `Invalid state for task ${id}. Must be 'completed', 'failed', or 'uncompleted'`
-        );
-      }
-      validatedUpdates.push({ id, state });
-    }
-    return validatedUpdates;
-  }
-  /**
-   * Validates objective update request
-   */
-  static validateObjectiveUpdate(body: unknown): ObjectiveUpdateRequest {
-    if (!body || typeof body !== 'object') {
-      throw errors.badRequest('Request body is required');
-    }
-    const { state, count } = body as { state?: unknown; count?: unknown };
-    if (!state && count == null) {
-      throw errors.badRequest('Either state or count must be provided');
-    }
-    const update: ObjectiveUpdateRequest = {};
-    if (state) {
-      if (state !== 'completed' && state !== 'uncompleted') {
-        throw errors.badRequest('State must be "completed" or "uncompleted"');
-      }
-      update.state = state;
-    }
-    if (count != null) {
-      if (typeof count !== 'number' || count < 0 || !Number.isInteger(count)) {
-        throw errors.badRequest('Count must be a non-negative integer');
-      }
-      update.count = count;
-    }
-    return update;
-  }
-  /**
-   * Validates task ID parameter
-   */
-  static validateTaskId(taskId: string): string {
-    if (!taskId || typeof taskId !== 'string' || taskId.trim().length === 0) {
-      throw errors.badRequest('Task ID is required and must be a non-empty string');
-    }
-    return taskId.trim();
-  }
-  /**
-   * Validates objective ID parameter
-   */
-  static validateObjectiveId(objectiveId: string): string {
-    if (!objectiveId || typeof objectiveId !== 'string' || objectiveId.trim().length === 0) {
-      throw errors.badRequest('Objective ID is required and must be a non-empty string');
-    }
-    return objectiveId.trim();
-  }
-  /**
-   * Validates player level
-   */
-  static validateLevel(level: unknown): number {
-    const levelNum = parseInt(String(level), 10);
-    if (isNaN(levelNum) || levelNum < 1 || levelNum > 79) {
-      throw errors.badRequest('Level must be a number between 1 and 79');
-    }
-    return levelNum;
-  }
-  /**
-   * Validates API token permissions
-   */
-  static validatePermissions(token: ApiToken | undefined, requiredPermission: string): void {
-    if (!token) {
-      throw errors.unauthorized('Authentication required');
-    }
-    if (!token.permissions.includes(requiredPermission)) {
-      throw errors.forbidden(`Missing required permission: ${requiredPermission}`);
-    }
-  }
-  /**
-   * Validates user ID
-   */
-  static validateUserId(userId: string | undefined): string {
-    if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-      throw errors.unauthorized('Valid user ID is required');
+  static validateUserId(userId: unknown): string {
+    if (typeof userId !== 'string' || !userId.trim()) {
+      throw new Error('Valid user ID is required');
     }
     return userId.trim();
   }
+
   /**
-   * Sanitizes and validates display name
+   * Validates player level (1-79)
+   */
+  static validateLevel(level: unknown): number {
+    const numLevel = typeof level === 'string' ? parseInt(level, 10) : (level as number);
+
+    if (typeof numLevel !== 'number' || isNaN(numLevel)) {
+      throw new Error('Level must be a number between 1 and 79');
+    }
+
+    const flooredLevel = Math.floor(numLevel);
+    if (flooredLevel < 1 || flooredLevel > 79) {
+      throw new Error('Level must be a number between 1 and 79');
+    }
+
+    return flooredLevel;
+  }
+
+  /**
+   * Validates task ID and returns trimmed value
+   */
+  static validateTaskId(taskId: unknown): string {
+    if (typeof taskId !== 'string' || !taskId.trim()) {
+      throw new Error('Task ID is required and must be a non-empty string');
+    }
+    return taskId.trim();
+  }
+
+  /**
+   * Validates objective ID and returns trimmed value
+   */
+  static validateObjectiveId(objectiveId: unknown): string {
+    if (typeof objectiveId !== 'string' || !objectiveId.trim()) {
+      throw new Error('Objective ID is required and must be a non-empty string');
+    }
+    return objectiveId.trim();
+  }
+
+  /**
+   * Validates task update request body
+   */
+  static validateTaskUpdate(body: unknown): TaskUpdateRequest {
+    if (!body || typeof body !== 'object') {
+      throw new Error('Request body is required');
+    }
+
+    const update = body as Record<string, unknown>;
+
+    if (!update.state || typeof update.state !== 'string') {
+      throw new Error('State is required');
+    }
+
+    const validStates: TaskStatus[] = ['completed', 'failed', 'uncompleted'];
+    if (!validStates.includes(update.state as TaskStatus)) {
+      throw new Error("Invalid state provided. Must be 'completed', 'failed', or 'uncompleted'");
+    }
+
+    return { state: update.state as TaskStatus };
+  }
+
+  /**
+   * Validates multiple task update request body
+   */
+  static validateMultipleTaskUpdate(body: unknown): MultipleTaskUpdateRequest {
+    if (!Array.isArray(body)) {
+      throw new Error('Request body must be an array');
+    }
+
+    if (body.length === 0) {
+      throw new Error('At least one task update is required');
+    }
+
+    return body.map((update) => {
+      if (!update || typeof update !== 'object') {
+        throw new Error('Each task must be an object');
+      }
+
+      const taskUpdate = update as Record<string, unknown>;
+
+      if (!taskUpdate.id || typeof taskUpdate.id !== 'string') {
+        if (!taskUpdate.id) {
+          throw new Error('Each task must have id and state fields');
+        } else {
+          throw new Error('Task id must be a string');
+        }
+      }
+
+      if (!taskUpdate.state || typeof taskUpdate.state !== 'string') {
+        throw new Error('Each task must have id and state fields');
+      }
+
+      const validStates: TaskStatus[] = ['completed', 'failed', 'uncompleted'];
+      if (!validStates.includes(taskUpdate.state as TaskStatus)) {
+        throw new Error(
+          `Invalid state for task ${taskUpdate.id}. Must be 'completed', 'failed', or 'uncompleted'`
+        );
+      }
+
+      return {
+        id: taskUpdate.id.trim(),
+        state: taskUpdate.state as TaskStatus,
+      };
+    });
+  }
+
+  /**
+   * Validates objective update request body
+   */
+  static validateObjectiveUpdate(body: unknown): ObjectiveUpdateRequest {
+    if (!body || typeof body !== 'object') {
+      throw new Error('Request body is required');
+    }
+
+    const update = body as Record<string, unknown>;
+    const result: ObjectiveUpdateRequest = {};
+
+    // Treat null as undefined for validation
+    // Treat null as undefined for validation
+    const hasState = update.state !== null && update.state !== undefined;
+    const hasCount = update.count !== null && update.count !== undefined;
+
+    if (!hasState && !hasCount) {
+      throw new Error('Either state or count must be provided');
+    }
+
+    if (hasState) {
+      if (typeof update.state !== 'string') {
+        throw new Error('State must be a string');
+      }
+
+      const validStates: ('completed' | 'uncompleted')[] = ['completed', 'uncompleted'];
+      if (!validStates.includes(update.state as 'completed' | 'uncompleted')) {
+        throw new Error('State must be "completed" or "uncompleted"');
+      }
+
+      result.state = update.state as 'completed' | 'uncompleted';
+    }
+
+    if (hasCount) {
+      if (typeof update.count !== 'number') {
+        throw new Error('Count must be a non-negative integer');
+      }
+
+      const count = update.count as number;
+
+      if (isNaN(count) || count < 0 || !Number.isInteger(count)) {
+        throw new Error('Count must be a non-negative integer');
+      }
+
+      result.count = count;
+    }
+
+    return result;
+  }
+
+  /**
+   * Validates task status (returns boolean)
+   */
+  static validateTaskStatus(status: unknown): boolean {
+    const validStatuses = ['completed', 'failed', 'uncompleted'];
+    return typeof status === 'string' && validStatuses.includes(status);
+  }
+
+  /**
+   * Validates display name and returns sanitized value
    */
   static validateDisplayName(displayName: unknown): string {
     if (typeof displayName !== 'string') {
-      throw errors.badRequest('Display name must be a string');
+      throw new Error('Display name must be a string');
     }
-    const sanitized = displayName.trim();
-    if (sanitized.length === 0) {
-      throw errors.badRequest('Display name cannot be empty');
+
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      throw new Error('Display name cannot be empty');
     }
-    if (sanitized.length > 50) {
-      throw errors.badRequest('Display name cannot exceed 50 characters');
+
+    if (trimmed.length > 50) {
+      throw new Error('Display name cannot exceed 50 characters');
     }
-    // Basic sanitization - remove potentially harmful characters and patterns
-    let cleanName = sanitized.replace(/[<>"'&]/g, '');
-    // Remove common event handler patterns
-    cleanName = cleanName.replace(/on\w+\s*=/gi, '');
-    // Remove javascript: patterns
-    cleanName = cleanName.replace(/javascript:/gi, '');
-    return cleanName;
+
+    // Sanitize by removing harmful characters
+    const sanitized = trimmed
+      .replace(/</g, '') // Remove < characters first to avoid matching non-tags
+      .replace(/>/g, '') // Remove > characters
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .replace(/'/g, '') // Remove quotes
+      .replace(/"/g, '') // Remove quotes
+      .replace(/&/g, '') // Remove ampersands
+      .replace(/\s+/g, ' ') // Normalize whitespace, but keep single spaces
+      .trim();
+
+    return sanitized;
   }
+
   /**
-   * Validates game edition
+   * Validates game edition (1-6)
    */
   static validateGameEdition(edition: unknown): number {
-    const editionNum = parseInt(String(edition), 10);
-    if (isNaN(editionNum) || editionNum < 1 || editionNum > 6) {
-      throw errors.badRequest('Game edition must be a number between 1 and 6');
+    const numEdition = typeof edition === 'string' ? parseInt(edition, 10) : (edition as number);
+
+    if (typeof numEdition !== 'number' || isNaN(numEdition) || numEdition < 1 || numEdition > 6) {
+      throw new Error('Game edition must be a number between 1 and 6');
     }
-    return editionNum;
+
+    return Math.floor(numEdition);
   }
+
   /**
-   * Validates PMC faction
+   * Validates PMC faction (USEC or BEAR)
    */
-  static validatePmcFaction(faction: unknown): 'USEC' | 'BEAR' {
-    if (faction !== 'USEC' && faction !== 'BEAR') {
-      throw errors.badRequest('PMC faction must be either "USEC" or "BEAR"');
+  static validatePmcFaction(faction: unknown): string {
+    if (typeof faction !== 'string') {
+      throw new Error('PMC faction must be either "USEC" or "BEAR"');
     }
-    return faction;
+
+    const trimmed = faction.trim();
+    if (trimmed !== 'USEC' && trimmed !== 'BEAR') {
+      throw new Error('PMC faction must be either "USEC" or "BEAR"');
+    }
+
+    return trimmed;
+  }
+
+  /**
+   * Validates token permissions
+   */
+  static validatePermissions(token: unknown, requiredPermission: string): void {
+    if (!token || typeof token !== 'object') {
+      throw new Error('Authentication required');
+    }
+
+    const apiToken = token as { permissions?: string[] };
+
+    if (!apiToken.permissions || !Array.isArray(apiToken.permissions)) {
+      throw new Error('Missing required permission: ' + requiredPermission);
+    }
+
+    if (!apiToken.permissions.includes(requiredPermission)) {
+      throw new Error('Missing required permission: ' + requiredPermission);
+    }
   }
 }

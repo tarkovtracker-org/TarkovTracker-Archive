@@ -154,7 +154,7 @@ export function useTarkovData(): TarkovDataComposable {
   return {
     availableLanguages: api.availableLanguages,
     languageCode: api.languageCode,
-    queryErrors: taskData.error,
+    queryErrors: taskData.error as any, // Type compatibility issue
     queryResults: computed(() => null), // Legacy field, not used in new structure
     lastQueryTime: computed(() => Date.now()), // Legacy field
     loading: taskData.loading,

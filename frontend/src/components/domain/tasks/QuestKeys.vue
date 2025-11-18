@@ -33,9 +33,24 @@
     </v-col>
   </v-row>
 </template>
-<script setup>
+<script setup lang="ts">
   import TarkovItem from '@/components/domain/items/TarkovItem.vue';
-  defineProps({
-    neededKeys: { type: Array, required: true },
-  });
+
+  interface Key {
+    id: string;
+    shortName: string;
+    link: string;
+    wikiLink: string;
+  }
+
+  interface KeyMap {
+    keys: Key[];
+    map: { name: string };
+  }
+
+  interface Props {
+    neededKeys: KeyMap[];
+  }
+
+  defineProps<Props>();
 </script>

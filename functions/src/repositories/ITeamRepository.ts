@@ -8,7 +8,7 @@
  */
 
 import type { Timestamp } from 'firebase-admin/firestore';
-import type { TeamDocument, SystemDocument, ProgressDocument } from '../types/api';
+import type { TeamDocument, SystemDocument, ProgressDocument } from '../types/api.js';
 
 /**
  * User document data (from 'user' collection)
@@ -37,6 +37,11 @@ export interface ITeamTransactionContext {
    * Set/update system document
    */
   setSystemDoc(userId: string, data: Partial<SystemDocument>): void;
+
+  /**
+   * Delete system document
+   */
+  deleteSystemDoc(userId: string): void;
 
   /**
    * Set/create team document

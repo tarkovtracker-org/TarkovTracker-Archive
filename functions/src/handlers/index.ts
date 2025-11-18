@@ -4,9 +4,9 @@
  * Use these explicit imports for clarity and easier import tracing.
  *
  * Example usage:
- *   import { getPlayerProgress, setPlayerLevel } from './handlers';
+ *   import { getPlayerProgress, setPlayerLevel } from './handlers.js';
  *   // OR
- *   import * as handlers from './handlers';
+ *   import * as handlers from './handlers.js';
  *   handlers.getPlayerProgress(...)
  */
 
@@ -16,10 +16,10 @@ export {
   updateSingleTask,
   updateMultipleTasks,
   updateTaskObjective,
-} from './progressHandler';
+} from './progressHandler.js';
 
-export { getTeamProgress, createTeam, joinTeam, leaveTeam } from './teamHandler';
+export { getTeamProgress, createTeam, joinTeam, leaveTeam } from './teamHandler.js';
 
-export { getTokenInfo } from './tokenHandler';
+export { getTokenInfo } from './tokenHandler.js';
 
-export { deleteUserAccountHandler } from './userDeletionHandler';
+export { deleteUserAccountHandler } from './userDeletionHandler.js';

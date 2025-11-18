@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Request, Response } from 'express';
-import { ApiResponse, ApiToken } from '../../../src/types/api';
+import type { Request as _Request, Response as _Response } from 'express';
+import type { ApiResponse as _ApiResponse, ApiToken as _ApiToken } from '../../../src/types/api';
 import { ProgressService } from '../../../src/services/ProgressService';
 import { ValidationService } from '../../../src/services/ValidationService';
 import {
@@ -381,18 +381,20 @@ describe('handlers/progressHandler', () => {
       mockValidationService.validateUserId.mockImplementation(() => {
         throw validationError;
       });
-      await getPlayerProgress(mockReq, mockRes, vi.fn());
+      const next = vi.fn();
+      await getPlayerProgress(mockReq, mockRes, next);
       // Since asyncHandler catches errors and passes them to next,
       // we need to check if next was called with the error
-      expect(vi.fn()).toHaveBeenCalled(); // This will be called by asyncHandler
+      expect(next).toHaveBeenCalledWith(validationError);
     });
     it('should handle progress service errors', async () => {
       mockValidationService.validateUserId.mockReturnValue('test-user-123');
       const serviceError = new Error('Database connection failed');
       mockProgressService.getUserProgress.mockRejectedValue(serviceError);
-      await getPlayerProgress(mockReq, mockRes, vi.fn());
+      const next = vi.fn();
+      await getPlayerProgress(mockReq, mockRes, next);
       // asyncHandler should catch this and pass to next
-      expect(vi.fn()).toHaveBeenCalled();
+      expect(next).toHaveBeenCalledWith(serviceError);
     });
   });
   describe('API response structure', () => {

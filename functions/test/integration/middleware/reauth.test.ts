@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction } from 'express';
 import { requireRecentAuth, requireValidAuthToken } from '../../../src/middleware/reauth';
-import { errors } from '../../../src/middleware/errorHandler';
-import { admin, createTestSuite, serverTimestamp } from '../../helpers';
+import { admin, createTestSuite } from '../../helpers';
+
+const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+};
 
 // Mock firebase-functions logger only
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 describe('middleware/reauth', () => {

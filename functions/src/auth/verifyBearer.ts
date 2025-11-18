@@ -1,8 +1,8 @@
-import functions from 'firebase-functions';
 import admin from 'firebase-admin';
 import type { Request, Response, NextFunction } from 'express';
 import type { Firestore, DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
-import { createLazyFirestore } from '../utils/factory';
+import { createLazyFirestore } from '../utils/factory.js';
+import { logger } from '../logger.js';
 // Define minimal interface for the token document data expected
 // Duplicated from index.ts for simplicity, consider shared types for larger projects
 interface ApiTokenData {
@@ -28,7 +28,7 @@ const verifyBearer = async (
   const getDb = createLazyFirestore();
   const db: Firestore = getDb();
   const authHeader = req.get('Authorization');
-  if (authHeader == null) {
+  if (!authHeader) {
     res.status(401).json({ error: 'No Authorization header sent' });
     return;
   }
@@ -48,28 +48,50 @@ const verifyBearer = async (
     if (tokenDoc.exists) {
       const tokenData = tokenDoc.data();
       if (!tokenData) {
-        functions.logger.error('Token document exists but data is undefined', {
+        logger.error('Token document exists but data is undefined', {
           token: authToken,
         });
         res.status(500).json({ error: 'Internal server error reading token data.' });
         return;
       }
-      functions.logger.log('Found Token', { token: tokenData });
+
+      // Security: Check token expiration
+      const now = admin.firestore.Timestamp.now();
+      const tokenAge = now.seconds - (tokenData.createdAt?.seconds ?? 0);
+      const maxTokenAge = 30 * 24 * 60 * 60; // 30 days
+      if (tokenAge > maxTokenAge) {
+        logger.warn('Token expired', { token: authToken, age: tokenAge });
+        res.status(401).json({ error: 'Token expired' });
+        return;
+      }
+
+      // Security: Validate token permissions
+      if (
+        !tokenData.permissions ||
+        !Array.isArray(tokenData.permissions) ||
+        tokenData.permissions.length === 0
+      ) {
+        logger.warn('Invalid token permissions', { token: authToken });
+        res.status(401).json({ error: 'Invalid token permissions' });
+        return;
+      }
+
+      logger.log('Found Token', { token: tokenData });
       req.apiToken = { ...tokenData, token: authToken };
       const callIncrement = admin.firestore.FieldValue.increment(1);
       tokenRef.update({ calls: callIncrement }).catch((err: unknown) => {
-        functions.logger.error('Failed to increment token calls', {
+        logger.error('Failed to increment token calls', {
           error: err instanceof Error ? err.message : err,
           token: authToken,
         });
       });
       next();
     } else {
-      functions.logger.log('Did not find token', { token: authToken });
+      logger.log('Did not find token', { token: authToken });
       res.status(401).json({ error: 'Invalid or expired token.' });
     }
   } catch (error: unknown) {
-    functions.logger.error('Error during token verification:', {
+    logger.error('Error during token verification:', {
       authHeader,
       error: error instanceof Error ? error.message : error,
     });

@@ -19,10 +19,7 @@ const deepMerge = <T extends AnyRecord>(target: T, source: AnyRecord): T => {
       typeof (target as AnyRecord)[key] === 'object' &&
       !Array.isArray((target as AnyRecord)[key])
     ) {
-      (target as AnyRecord)[key] = deepMerge(
-        { ...(target as AnyRecord)[key] },
-        value as AnyRecord
-      );
+      (target as AnyRecord)[key] = deepMerge({ ...(target as AnyRecord)[key] }, value as AnyRecord);
     } else {
       (target as AnyRecord)[key] = value;
     }

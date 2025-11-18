@@ -1,4 +1,4 @@
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import { onRequest } from 'firebase-functions/v2/https';
 // Removed unused imports Request, Response
 import admin from 'firebase-admin';
@@ -10,9 +10,9 @@ import type {
 } from 'firebase-admin/firestore';
 import type { FunctionsErrorCode } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
-import { withCorsAndAuth } from '../middleware/onRequestAuth';
-import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types';
-import { createLazyFirestore } from '../utils/factory';
+import { withCorsAndAuth } from '../middleware/onRequestAuth.js';
+import type { RevokeTokenData, RevokeTokenResult, SystemDocData, TokenDocData } from './types.js';
+import { createLazyFirestore } from '../utils/factory.js';
 // Map HttpsError codes to HTTP status codes
 function getStatusFromHttpsErrorCode(code: FunctionsErrorCode): number {
   switch (code) {
@@ -145,6 +145,7 @@ async function _revokeTokenLogic(
     }
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function revokeTokenHandler(req: any, res: any): Promise<void> {
   if (req.method !== 'POST' && req.method !== 'OPTIONS') {
     res.status(405).json({ error: 'Method Not Allowed' });

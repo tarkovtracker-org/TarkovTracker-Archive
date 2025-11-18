@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ApiFeatures, API_FEATURES } from '../../../src/config/features';
+import { ApiFeatures } from '../../../src/config/features';
 import { createTestSuite } from '../../helpers';
 describe('config/features', () => {
   const suite = createTestSuite('config/features');

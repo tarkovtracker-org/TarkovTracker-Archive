@@ -1,9 +1,9 @@
 // Firebase scheduled functions for data synchronization
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { request, gql } from 'graphql-request';
 import admin from 'firebase-admin';
-import { createLazyFirestore } from '../utils/factory';
+import { createLazyFirestore } from '../utils/factory.js';
 import type {
   QueryDocumentSnapshot,
   // Removed unused imports DocumentSnapshot, QuerySnapshot
@@ -19,7 +19,7 @@ import type {
   ItemsResponse,
   Shard,
   TasksResponse,
-} from './types';
+} from './types.js';
 const TARKOV_DEV_GRAPHQL_ENDPOINT = 'https://api.tarkov.dev/graphql';
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
@@ -86,42 +86,124 @@ const UPDATE_TASKS_QUERY = gql`
     tasks {
       id
       name
-      description
-      trader {
-        name
-      }
-      requirements {
-        level
-        tasks {
-          id
-          status
-        }
-        items {
-          id
-          count
-        }
-        traderLevel {
-          name
-          level
-        }
-      }
-      objectives {
+      normalizedName
+      factionName
+      kappaRequired
+      lightkeeperRequired
+      minPlayerLevel
+      experience
+      taskImageLink
+      wikiLink
+      availableDelaySecondsMin
+      availableDelaySecondsMax
+      restartable
+      descriptionMessageId
+      startMessageId
+      successMessageId
+      failMessageId
+      map {
         id
-        description
+        name
+        normalizedName
+      }
+      trader {
+        id
+        name
+        normalizedName
+        imageLink
+      }
+      # task requirements omitted for now (schema churn)
+      objectives {
+        __typename
+        id
         type
-        target {
+        description
+        optional
+        maps {
           id
           name
+          normalizedName
         }
-        location {
-          id
-          name
+        ... on TaskObjectiveItem {
+          items {
+            id
+            name
+            shortName
+            image512pxLink
+            baseImageLink
+            backgroundColor
+          }
+          count
+          foundInRaid
+          zones {
+            id
+            map {
+              id
+              name
+            }
+            position {
+              x
+              y
+            }
+          }
         }
-        conditions {
-          compareMethod
-          conditionType
-          value
-          dynamicValues
+        ... on TaskObjectiveMark {
+          markerItem {
+            id
+            name
+            shortName
+            image512pxLink
+            baseImageLink
+            backgroundColor
+          }
+          zones {
+            id
+            map {
+              id
+              name
+            }
+            position {
+              x
+              y
+            }
+          }
+        }
+        ... on TaskObjectiveShoot {
+          count
+          shotType
+          targetNames
+          zoneNames
+          zones {
+            id
+            map {
+              id
+              name
+            }
+            position {
+              x
+              y
+            }
+          }
+        }
+      }
+      finishRewards {
+        items {
+          count
+          item {
+            id
+            name
+            shortName
+            image512pxLink
+            baseImageLink
+            backgroundColor
+          }
+        }
+        traderStanding {
+          trader {
+            id
+            name
+          }
+          standing
         }
       }
     }
@@ -132,15 +214,40 @@ const UPDATE_HIDEOUT_QUERY = gql`
     hideoutStations {
       id
       name
-      description
+      normalizedName
       levels {
+        id
         level
+        description
+        constructionTime
         itemRequirements {
           id
           count
+          item {
+            id
+            name
+            shortName
+          }
         }
-        requirements {
-          type
+        stationLevelRequirements {
+          id
+          station {
+            id
+            name
+          }
+          level
+        }
+        skillRequirements {
+          id
+          name
+          level
+        }
+        traderRequirements {
+          id
+          trader {
+            id
+            name
+          }
           value
         }
       }
@@ -152,17 +259,15 @@ const UPDATE_ITEMS_QUERY = gql`
     items {
       id
       name
+      shortName
       description
       width
       height
-      categories {
-        name
-      }
       types
-      properties {
-        name
-        value
-      }
+      backgroundColor
+      iconLink
+      image512pxLink
+      baseImageLink
     }
   }
 `;
@@ -190,11 +295,61 @@ async function updateTarkovDataImplInternal(
       if (!validateTasksResponse(tasksResponse)) {
         throw new Error('Invalid tasks response structure');
       }
+      // Shard tasks to stay under the 1MB document limit
       const tasksRef = db.collection('tarkovData').doc('tasks');
+      const tasksShardsCollectionRef = tasksRef.collection('shards');
+      const existingTaskShardDocs = await tasksShardsCollectionRef.listDocuments();
+      // Remove old shards
+      existingTaskShardDocs.forEach((docRef) => batch.delete(docRef));
+      const TASK_SHARD_TARGET_MAX = 700_000;
+      const taskShards: Shard[] = [];
+      let currentTaskShard: any[] = [];
+      let currentTaskShardSize = 0;
+      let taskShardIndex = 0;
+      const approxSize = (obj: unknown): number => {
+        try {
+          return Buffer.byteLength(JSON.stringify(obj), 'utf8');
+        } catch {
+          return JSON.stringify(obj).length;
+        }
+      };
+      for (const task of tasksResponse.tasks) {
+        const size = approxSize(task);
+        if (currentTaskShardSize + size > TASK_SHARD_TARGET_MAX && currentTaskShard.length > 0) {
+          taskShards.push({
+            data: [...currentTaskShard],
+            index: taskShardIndex.toString().padStart(3, '0'),
+            size: currentTaskShardSize,
+          });
+          currentTaskShard = [];
+          currentTaskShardSize = 0;
+          taskShardIndex++;
+        }
+        currentTaskShard.push(task);
+        currentTaskShardSize += size;
+      }
+      if (currentTaskShard.length > 0) {
+        taskShards.push({
+          data: [...currentTaskShard],
+          index: taskShardIndex.toString().padStart(3, '0'),
+          size: currentTaskShardSize,
+        });
+      }
+      taskShards.forEach((shard) => {
+        const shardRef = tasksShardsCollectionRef.doc(shard.index);
+        batch.set(shardRef, {
+          data: shard.data,
+          gameMode: 'regular',
+          index: shard.index,
+          size: shard.size,
+        });
+      });
+      // Keep a lightweight metadata document
       batch.set(tasksRef, {
-        data: tasksResponse.tasks,
         lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         source: 'tarkov.dev',
+        shardCount: taskShards.length,
+        count: tasksResponse.tasks.length,
       });
       logger.info(`Updated ${tasksResponse.tasks.length} tasks`);
     } catch (error) {
@@ -344,7 +499,7 @@ async function updateTarkovDataImplInternal(
         }
       };
       try {
-        await db.runTransaction(async (transaction: Transaction) => {
+        await db.runTransaction((transaction: Transaction): Promise<void> => {
           transaction.set(itemsMetadataRef, {
             sharded: true,
             shardCount: shards.length,
@@ -352,6 +507,7 @@ async function updateTarkovDataImplInternal(
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             schemaVersion: 2,
           });
+          return Promise.resolve();
         });
         logger.info(
           `Successfully sharded ${itemsResponse.items.length} items into ${shards.length} shards and updated metadata.`

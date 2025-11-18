@@ -17,15 +17,10 @@ Comprehensive documentation for contributors, maintainers, and architects.
 ### Feature Documentation
 - **[PROGRESS_RESET.md](./PROGRESS_RESET.md)** – Progress reset system architecture
 
-### Ongoing Work
-- **[development/TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md)** – Known refactoring priorities
-
----
-
-## 🗂️ Archive
-
-Detailed implementation documentation preserved for reference:
-- **[archive/](./archive/)** – In-depth technical documentation and historical records
+### Operational & Organizational Guides
+- **[BACKEND_STRUCTURE.md](./BACKEND_STRUCTURE.md)** – Functions workspace organization, patterns, and technical debt targets (essential for backend developers)
+- **[CI_PIPELINE.md](./CI_PIPELINE.md)** – Comprehensive CI/CD pipeline with quality gates and enforcement (critical for maintainers)
+- **[OPENAPI_SYNC.md](./OPENAPI_SYNC.md)** – Automated API documentation synchronization workflow (required after any API changes)
 
 ---
 
@@ -34,15 +29,18 @@ Detailed implementation documentation preserved for reference:
 **New contributors:**
 1. Read [DEVELOPMENT.md](./DEVELOPMENT.md) for setup and workflows
 2. Check [WORKFLOWS.md](./WORKFLOWS.md) before creating branches
-3. Review [development/TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) for areas needing help
+3. Review [GitHub Issues](https://github.com/tarkovtracker-org/TarkovTracker/issues) for areas needing help
 
 **Working on features:**
 1. Follow [NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md) for implementing new features
 2. Reference [ARCHITECTURE.md](./ARCHITECTURE.md) for design patterns
 3. Follow [SECURITY.md](./SECURITY.md) for security requirements
 4. Use [ACTIONS.md](./ACTIONS.md) framework for prioritization
+5. Consult [BACKEND_STRUCTURE.md](./BACKEND_STRUCTURE.md) for backend patterns and technical debt
 
 **Before deploying:**
 1. Run quality gates (see [DEVELOPMENT.md](./DEVELOPMENT.md#quality-gates))
 2. Follow [WORKFLOWS.md](./WORKFLOWS.md) deployment checklist
-3. Update relevant docs with any architecture or security changes
+3. Ensure OpenAPI docs are synchronized ([OPENAPI_SYNC.md](./OPENAPI_SYNC.md))
+4. Understand CI/CD pipeline requirements ([CI_PIPELINE.md](./CI_PIPELINE.md))
+5. Update relevant docs with any architecture or security changes

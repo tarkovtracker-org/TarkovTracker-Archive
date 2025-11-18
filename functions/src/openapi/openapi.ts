@@ -36,6 +36,7 @@ Ensure LICENSE.md exists at the project root.`
   );
 }
 const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 const openapiOptions: import('swagger-jsdoc').Options = {
   definition: {
     openapi: '3.0.0',

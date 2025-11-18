@@ -1,8 +1,8 @@
-import * as logger from 'firebase-functions/logger';
+import { logger } from '../logger.js';
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import admin from 'firebase-admin';
-import UIDGenerator from './UIDGenerator';
+import UIDGenerator from './UIDGenerator.js';
 import type {
   Firestore,
   DocumentReference,
@@ -10,9 +10,9 @@ import type {
   Transaction,
   CollectionReference,
 } from 'firebase-admin/firestore';
-import type { TokenGameMode } from '../types/api';
-import type { SystemDocData, TokenDocData } from './types';
-import { createLazyFirestore } from '../utils/factory';
+import type { TokenGameMode } from '../types/api.js';
+import type { SystemDocData, TokenDocData } from './types.js';
+import { createLazyFirestore } from '../utils/factory.js';
 interface CreateTokenData {
   note: string;
   permissions: string[];
@@ -34,9 +34,10 @@ export async function _createTokenLogic(
     throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
   if (
-    request.data.note == null ||
+    request.data.note === null ||
+    request.data.note === undefined ||
     !request.data.permissions ||
-    !(request.data.permissions.length > 0)
+    request.data.permissions.length === 0
   ) {
     logger.warn('Invalid token parameters received.', { data: request.data });
     throw new HttpsError(
@@ -74,7 +75,7 @@ export async function _createTokenLogic(
       let potentialToken = '';
       let potentialTokenRef: DocumentReference<TokenDocData>;
       while (tokenExists && attempts < 5) {
-        potentialToken = await uidgen.generate();
+        potentialToken = uidgen.generate();
         potentialTokenRef = tokenCollectionRef.doc(potentialToken);
         const existingTokenDoc: DocumentSnapshot = await transaction.get(potentialTokenRef);
         tokenExists = existingTokenDoc.exists;
@@ -91,7 +92,7 @@ export async function _createTokenLogic(
         owner: ownerUid,
         note: request.data.note,
         permissions: request.data.permissions,
-        gameMode: (request.data.gameMode as TokenGameMode) || 'pvp',
+        gameMode: (request.data.gameMode as TokenGameMode) ?? 'pvp',
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       transaction.set(potentialTokenRef!, newTokenData);

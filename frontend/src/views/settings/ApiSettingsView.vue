@@ -208,7 +208,7 @@
   const notLoggedInAlert = ref(true);
   // Computed properties for token count
   const userTokenCount = computed(() => {
-    return systemStore.$state.tokens?.length || 0;
+    return systemStore.$state.tokens?.length ?? 0;
   });
   // Scroll to tokens section
   const scrollToTokens = () => {

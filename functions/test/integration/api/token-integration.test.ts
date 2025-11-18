@@ -1,11 +1,6 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 // Use centralized test utilities
-import {
-  createMockRequest,
-  createMockResponse,
-  expectApiError,
-  createTestSuite,
-} from '../../helpers';
+import { createMockRequest, createMockResponse, createTestSuite } from '../../helpers';
 
 describe('Token callable/HTTP wrappers', () => {
   const suite = createTestSuite('token-integration');

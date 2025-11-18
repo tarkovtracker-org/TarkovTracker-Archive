@@ -24,11 +24,15 @@ vi.mock('body-parser', () => ({
   },
 }));
 
+const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+};
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    log: vi.fn(),
-    error: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 // Mock all the middleware and handlers (necessary for testing app configuration)

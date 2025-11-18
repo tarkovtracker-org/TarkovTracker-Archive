@@ -6,7 +6,7 @@
  */
 
 import { expect } from 'vitest';
-import { resetDb, seedDb, SeedData, admin, firestore } from './emulatorSetup';
+import { resetDb, seedDb, SeedData, admin as _admin, firestore } from './emulatorSetup';
 
 // ============================================================================
 // BASIC SERVICE TEST PATTERN
@@ -63,11 +63,11 @@ export async function createServiceTest<T>(
  *
  * Usage:
  * ```typescript
- * const { req, res, send } = createHandlerTest();
+ * const { req, res, next } = createHandlerTest();
  * req.user = { uid: 'user-1' };
  * req.body = { name: 'token' };
  *
- * await tokenCreateHandler(req, res);
+ * await tokenCreateHandler(req, res, next);
  * expect(res.status).toHaveBeenCalledWith(201);
  * ```
  */
@@ -90,9 +90,19 @@ export function createHandlerTest() {
     end: vi.fn(),
   };
 
+  // Create a next function that mimics Express error middleware behavior
+  // When called with an error, it should convert it to an HTTP response
+  const next = vi.fn((error?: any) => {
+    if (error) {
+      // Call error middleware synchronously to convert error to HTTP response
+      errorHandler(error, req as any, res as any, vi.fn());
+    }
+  });
+
   return {
     req,
     res,
+    next,
     mockStatus,
     mockJson,
     expectStatus: (code: number) => expect(mockStatus).toHaveBeenCalledWith(code),
@@ -411,3 +421,5 @@ export async function queryWithConstraints<T = any>(
 
 // Import for vi.fn if needed
 import { vi } from 'vitest';
+// Import error handler for test helper
+import { errorHandler } from '../../src/middleware/errorHandler.js';

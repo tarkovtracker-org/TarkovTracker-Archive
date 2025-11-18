@@ -96,7 +96,7 @@ export class ErrorTestUtils {
 
     try {
       await fn();
-    } catch (error) {
+    } catch (_error) {
       // Expected to throw
     } finally {
       console.error = originalError;
@@ -150,7 +150,7 @@ export class ErrorTestUtils {
    */
   static testPartialFailure = async (
     fn: () => Promise<any>,
-    mockFailures: Array<{ method: string; error: Error }>
+    _mockFailures: Array<{ method: string; error: Error }>
   ): Promise<void> => {
     // This would be implemented with specific mock setups
     // Implementation depends on the service being tested
@@ -313,7 +313,7 @@ export class ResilienceTestHelper {
 
     try {
       await primaryOperation();
-    } catch (error) {
+    } catch (_error) {
       primaryFailed = true;
     }
 
@@ -352,7 +352,7 @@ export class ErrorPerformanceTestHelper {
       if (Math.random() < errorRate) {
         try {
           await operation();
-        } catch (error) {
+        } catch (_error) {
           // Expected error
         }
       } else {

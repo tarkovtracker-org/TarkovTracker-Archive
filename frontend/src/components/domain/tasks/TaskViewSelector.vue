@@ -41,9 +41,9 @@
               prepend-icon="mdi-compass"
             >
               <v-badge
-                :color="(mapTaskTotals[mapItem.id] || 0) > 0 ? 'secondary' : 'grey'"
-                :content="mapTaskTotals[mapItem.id] || 0"
-                :label="String(mapTaskTotals[mapItem.id] || 0)"
+                :color="(mapTaskTotals[mapItem.id] ?? 0) > 0 ? 'secondary' : 'grey'"
+                :content="mapTaskTotals[mapItem.id] ?? 0"
+                :label="String(mapTaskTotals[mapItem.id] ?? 0)"
                 offset-y="-5"
                 offset-x="-10"
               >
@@ -73,9 +73,9 @@
               :prepend-icon="view.icon"
             >
               <v-badge
-                :color="(secondaryTaskCounts[view.view] || 0) > 0 ? 'secondary' : 'grey'"
-                :content="secondaryTaskCounts[view.view] || 0"
-                :label="String(secondaryTaskCounts[view.view] || 0)"
+                :color="(secondaryTaskCounts[view.view] ?? 0) > 0 ? 'secondary' : 'grey'"
+                :content="secondaryTaskCounts[view.view] ?? 0"
+                :label="String(secondaryTaskCounts[view.view] ?? 0)"
                 offset-y="-5"
                 offset-x="-10"
               >

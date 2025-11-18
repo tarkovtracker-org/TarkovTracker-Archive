@@ -101,35 +101,38 @@
     </v-row>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { getEditionName } from '@/utils/gameEditions';
-  const props = defineProps({
-    data: {
-      type: Object,
-      default: null,
-    },
-    completedTasks: {
-      type: Number,
-      default: 0,
-    },
-    failedTasks: {
-      type: Number,
-      default: 0,
-    },
-    taskObjectives: {
-      type: Number,
-      default: 0,
-    },
-    hideoutModules: {
-      type: Number,
-      default: 0,
-    },
-    hideoutParts: {
-      type: Number,
-      default: 0,
-    },
+
+  interface ImportData {
+    level?: number;
+    pmcFaction?: string;
+    gameEdition?: number;
+  }
+
+  interface Props {
+    data?: ImportData | null;
+    completedTasks?: number;
+    failedTasks?: number;
+    taskObjectives?: number;
+    hideoutModules?: number;
+    hideoutParts?: number;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    data: null,
+    completedTasks: 0,
+    failedTasks: 0,
+    taskObjectives: 0,
+    hideoutModules: 0,
+    hideoutParts: 0,
   });
-  defineEmits(['show-objectives-details', 'show-failed-tasks-details']);
+
+  defineEmits<{
+    'show-objectives-details': [];
+    'show-failed-tasks-details': [];
+  }>();
+
   const editionName = computed(() => getEditionName(props.data?.gameEdition));
 </script>

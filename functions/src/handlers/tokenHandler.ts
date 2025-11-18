@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import type { ApiToken } from '../types/api';
-import { asyncHandler } from '../middleware/errorHandler';
+import type { ApiToken } from '../types/api.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 interface AuthenticatedRequest extends Request {
   apiToken?: ApiToken;
   user?: {
@@ -56,7 +56,7 @@ interface AuthenticatedRequest extends Request {
  *         description: "Internal server error."
  */
 export const getTokenInfo = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  (req: AuthenticatedRequest, res: Response): Promise<void> => {
     // Token is already validated by middleware and attached to req.apiToken
     const token = req.apiToken!;
     const response = {
@@ -65,10 +65,11 @@ export const getTokenInfo = asyncHandler(
       token: token.token,
       owner: token.owner,
       note: token.note,
-      calls: token.calls || 0,
-      gameMode: token.gameMode || 'pvp',
+      calls: token.calls ?? 0,
+      gameMode: token.gameMode ?? 'pvp',
     };
     res.status(200).json(response);
+    return Promise.resolve();
   }
 );
 

@@ -8,7 +8,7 @@ import {
   createMockResponse as sharedCreateMockResponse,
   createMockRequest as sharedCreateMockRequest,
 } from './httpMocks';
-import { seedDb, resetDb } from './emulatorSetup';
+import { seedDb } from './emulatorSetup';
 import { MOCK_USERS, MOCK_TEAMS, MOCK_TASKS } from '../mocks/MockConstants';
 
 export class ServiceTestHelpers {

@@ -7,7 +7,7 @@
             <task-link :task="task" />
           </v-col>
         </v-row>
-        <v-tooltip v-if="task.minPlayerLevel > 0" location="top">
+        <v-tooltip v-if="task.minPlayerLevel && task.minPlayerLevel > 0" location="top">
           <template #activator="activator">
             <span class="tooltip-activator" v-bind="activator.props" tabindex="0">
               <InfoRow icon="mdi-menu-right">
@@ -41,7 +41,7 @@
           </template>
           {{ t('page.tasks.questcard.lockedbehind_tooltip') }}
         </v-tooltip>
-        <InfoRow v-if="task?.factionName != 'Any'" class="mb-1">
+        <InfoRow v-if="task?.factionName !== 'Any'" class="mb-1">
           <template #icon>
             <img :src="factionImage" class="faction-icon mx-1" />
           </template>
@@ -99,17 +99,17 @@
           <span class="next-tasks__list">
             <span
               v-for="(nextTask, index) in nextTasks"
-              :key="nextTask.id || index"
+              :key="nextTask.id ?? index"
               class="next-task"
             >
               <template v-if="nextTask?.wikiLink">
                 <a :href="nextTask.wikiLink" target="_blank" rel="noopener" class="next-task__link">
-                  {{ nextTask?.name || nextTask?.id || t('page.tasks.questcard.unknown_task') }}
+                  {{ nextTask?.name ?? nextTask?.id ?? t('page.tasks.questcard.unknown_task') }}
                 </a>
               </template>
               <template v-else>
                 <span class="next-task__link next-task__link--plain">
-                  {{ nextTask?.name || nextTask?.id || t('page.tasks.questcard.unknown_task') }}
+                  {{ nextTask?.name ?? nextTask?.id ?? t('page.tasks.questcard.unknown_task') }}
                 </span>
               </template>
               <span v-if="index < nextTasks.length - 1" class="next-task__separator">•</span>
@@ -125,17 +125,17 @@
           <span class="next-tasks__list">
             <span
               v-for="(prevTask, index) in previousTasks"
-              :key="prevTask.id || index"
+              :key="prevTask.id ?? index"
               class="next-task"
             >
               <template v-if="prevTask?.wikiLink">
                 <a :href="prevTask.wikiLink" target="_blank" rel="noopener" class="next-task__link">
-                  {{ prevTask?.name || prevTask?.id || t('page.tasks.questcard.unknown_task') }}
+                  {{ prevTask?.name ?? prevTask?.id ?? t('page.tasks.questcard.unknown_task') }}
                 </a>
               </template>
               <template v-else>
                 <span class="next-task__link next-task__link--plain">
-                  {{ prevTask?.name || prevTask?.id || t('page.tasks.questcard.unknown_task') }}
+                  {{ prevTask?.name ?? prevTask?.id ?? t('page.tasks.questcard.unknown_task') }}
                 </span>
               </template>
               <span v-if="index < previousTasks.length - 1" class="next-task__separator">•</span>
@@ -164,31 +164,46 @@
     </template>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import type { Task } from '@/types/models/tarkov';
   import TaskLink from '@/components/domain/tasks/TaskLink.vue';
   import InfoRow from '@/components/domain/tasks/InfoRow.vue';
-  const props = defineProps({
-    task: { type: Object, required: true },
-    xs: { type: Boolean, required: true },
-    lockedBefore: { type: Number, required: true },
-    lockedBehind: { type: Number, required: true },
-    factionImage: { type: String, required: true },
-    showKappaStatus: { type: Boolean, required: true },
-    kappaRequired: { type: Boolean, default: false },
-    showLightkeeperStatus: { type: Boolean, required: true },
-    lightkeeperRequired: { type: Boolean, default: false },
-    neededBy: { type: Array, required: true },
-    activeUserView: { type: String, required: true },
-    showNextTasks: { type: Boolean, default: false },
-    nextTasks: { type: Array, default: () => [] },
-    showPreviousTasks: { type: Boolean, default: false },
-    previousTasks: { type: Array, default: () => [] },
-    showTaskIds: { type: Boolean, default: false },
-    showEodStatus: { type: Boolean, default: false },
+
+  interface Props {
+    task: Task;
+    xs: boolean;
+    lockedBefore: number;
+    lockedBehind: number;
+    factionImage: string;
+    showKappaStatus: boolean;
+    showLightkeeperStatus: boolean;
+    neededBy: string[];
+    activeUserView: string;
+    kappaRequired?: boolean;
+    lightkeeperRequired?: boolean;
+    showNextTasks?: boolean;
+    nextTasks?: Task[];
+    showPreviousTasks?: boolean;
+    previousTasks?: Task[];
+    showTaskIds?: boolean;
+    showEodStatus?: boolean;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    kappaRequired: false,
+    lightkeeperRequired: false,
+    showNextTasks: false,
+    nextTasks: () => [],
+    showPreviousTasks: false,
+    previousTasks: () => [],
+    showTaskIds: false,
+    showEodStatus: false,
   });
+
   const { t } = useI18n({ useScope: 'global' });
+
   const showEodChip = computed(() => {
     return props.showEodStatus && props.task?.eodOnly === true;
   });

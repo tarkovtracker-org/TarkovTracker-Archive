@@ -13,8 +13,8 @@
     </template>
   </icon-card>
 </template>
-<script setup>
+<script setup lang="ts">
   import { defineAsyncComponent } from 'vue';
-  const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard'));
+  const IconCard = defineAsyncComponent(() => import('@/components/ui/IconCard.vue'));
 </script>
 <style lang="scss" scoped></style>

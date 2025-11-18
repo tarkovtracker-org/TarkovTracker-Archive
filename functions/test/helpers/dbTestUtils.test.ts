@@ -3,7 +3,7 @@
  * Verifies that test suite context management works correctly
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createTestSuite, quickSetup, withTestIsolation, TestSuiteContext } from './dbTestUtils';
 import * as emulatorSetup from './emulatorSetup';
 
@@ -67,7 +67,9 @@ describe('dbTestUtils', () => {
       });
       context.withDatabase(testData);
 
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 0);
+      });
       await context.cleanup();
       expect(seedCalled).toBe(true);
       expect(resetCalled).toBe(true);
@@ -165,8 +167,8 @@ describe('dbTestUtils', () => {
 
       try {
         await withTestIsolation(testFn);
-      } catch (err) {
-        expect(err).toBe(error);
+      } catch (_err) {
+        expect(_err).toBe(error);
       }
 
       expect(cleanedUp).toBe(true);

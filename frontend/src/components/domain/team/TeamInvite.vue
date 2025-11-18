@@ -36,7 +36,7 @@
     </template>
   </v-snackbar>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useTeamInvite } from '@/composables/team/useTeamInvite';
 
   const invite = useTeamInvite();

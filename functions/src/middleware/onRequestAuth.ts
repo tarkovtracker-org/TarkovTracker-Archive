@@ -7,9 +7,9 @@
  * the centralized CORS handling from corsWrapper.ts
  */
 
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import * as admin from 'firebase-admin';
-import { withExpressCors } from './corsWrapper';
+import { withExpressCors } from './corsWrapper.js';
 import type { Request } from 'express';
 
 // Use a flexible response type compatible with both Firebase's bundled Express and standalone Express
@@ -43,6 +43,7 @@ export async function withCorsAndAuth(
   handler: AuthenticatedHandler
 ): Promise<void> {
   // Delegate to centralized CORS handling
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await withExpressCors(async (reqInner: any, resInner: any) => {
     // Extract and verify Bearer token
     try {
@@ -90,5 +91,6 @@ export async function withCorsAndAuth(
         }
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })(req as any, res as any);
 }

@@ -11,7 +11,9 @@
         @click.stop="changeNavigationDrawer"
       ></v-app-bar-nav-icon>
     </template>
-    <v-toolbar-title>{{ t(`page.${route.name.replace('-', '_')}.title`) }}</v-toolbar-title>
+    <v-toolbar-title>{{
+      t(`page.${typeof route.name === 'string' ? route.name.replace('-', '_') : 'unknown'}.title`)
+    }}</v-toolbar-title>
     <span v-if="dataError">
       <!-- Show an icon and tooltip if we have a GraphQL error -->
       <v-tooltip activator="parent" location="left">
@@ -21,7 +23,7 @@
         </template>
       </v-tooltip>
     </span>
-    <span v-if="dataLoading || hideoutLoading">
+    <span v-if="dataLoading ?? hideoutLoading">
       <!-- Show an icon and tooltip while we load the GraphQL result -->
       <v-tooltip activator="parent" location="left">
         Loading Tarkov Data
@@ -53,22 +55,22 @@
     </template>
   </v-app-bar>
 </template>
-<script setup>
-  import { computed } from 'vue';
-  import { defineAsyncComponent } from 'vue';
+<script setup lang="ts">
+  import { computed, reactive, defineAsyncComponent } from 'vue';
   import { useAppStore } from '@/stores/app';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useRoute } from 'vue-router';
   import { useDisplay } from 'vuetify';
-  import { reactive } from 'vue';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useI18n } from 'vue-i18n';
+
   const { t } = useI18n({ useScope: 'global' });
-  const state = reactive({ menu: null });
+  const state = reactive<{ menu: boolean | undefined }>({ menu: undefined });
   const appStore = useAppStore();
   const tarkovStore = useTarkovStore();
   const route = useRoute();
   const { mobile, lgAndUp } = useDisplay();
+
   const navBarIcon = computed(() => {
     // On mobile (xs): show based on drawerShow state
     if (mobile.value) {
@@ -77,14 +79,18 @@
     // On tablet and desktop: show based on rail state (rail=true means collapsed/narrow)
     return appStore.drawerRail ? 'mdi-menu' : 'mdi-menu-open';
   });
+
   const currentGameMode = computed(() => {
     return tarkovStore.getCurrentGameMode();
   });
+
   const gameModeColor = computed(() => {
     return currentGameMode.value === 'pvp' ? 'red' : 'green';
   });
-  const OverflowMenu = defineAsyncComponent(() => import('@/components/layout/OverflowMenu'));
-  const { loading: dataLoading, error: dataError, hideoutLoading } = useTarkovData();
+
+  const OverflowMenu = defineAsyncComponent(() => import('@/components/layout/OverflowMenu.vue'));
+  const { loading: dataLoading, queryErrors: dataError, hideoutLoading } = useTarkovData();
+
   function changeNavigationDrawer() {
     // Only mobile (xs) toggles visibility; tablet (600px-1280px) toggles rail mode
     // Desktop (>1280px) doesn't toggle - always expanded

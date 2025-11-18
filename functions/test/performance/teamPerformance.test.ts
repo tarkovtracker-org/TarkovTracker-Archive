@@ -273,7 +273,6 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       const userIds: string[] = [];
 
       for (const size of teamSizes) {
-        const teamId = TestDataGenerator.generateTeamId();
         const ownerId = TestDataGenerator.generateUserId();
         const members = [ownerId];
 
@@ -457,7 +456,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         responseTimes.push(metrics.metrics.duration);
         operationCount++;
         // Small delay to simulate realistic usage
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 20);
+        });
       }
       // Calculate performance degradation
       const firstHalf = responseTimes.slice(0, Math.floor(responseTimes.length / 2));
@@ -555,7 +556,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
     });
     it('should recover from temporary overload conditions', async () => {
       // First, create a high load situation
-      const highLoadMetrics = await loadTester.runLoadTest(
+      await loadTester.runLoadTest(
         'highLoadTeamOperations',
         async () => {
           const userId = TestDataGenerator.generateUserId();
@@ -570,7 +571,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         }
       );
       // Allow system to recover
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
       // Test normal performance after recovery
       const recoveryMetrics = await loadTester.runLoadTest(
         'recoveryTeamOperations',

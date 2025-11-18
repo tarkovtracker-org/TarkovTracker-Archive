@@ -15,23 +15,17 @@
     </div>
   </v-sheet>
 </template>
-<script setup>
-  const props = defineProps({
-    icon: {
-      type: String,
-      default: 'mdi-check-all',
-      required: false,
-    },
-    iconBackground: {
-      type: String,
-      default: 'accent',
-      required: false,
-    },
-    iconColor: {
-      type: String,
-      default: 'secondary',
-      required: false,
-    },
+<script setup lang="ts">
+  interface Props {
+    icon?: string;
+    iconBackground?: string;
+    iconColor?: string;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    icon: 'mdi-check-all',
+    iconBackground: 'accent',
+    iconColor: 'secondary',
   });
 </script>
 <style lang="scss" scoped></style>

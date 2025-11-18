@@ -2,18 +2,6 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createTestSuite, firestore } from '../../helpers';
 import { TeamService } from '../../../src/services/TeamService';
 
-interface MockResponse {
-  status: (code: number) => MockResponse;
-  json: (data: any) => void;
-}
-
-const createResponseMock = (): MockResponse => ({
-  status: vi.fn().mockReturnThis(),
-  json: vi.fn(),
-});
-
-const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
-
 describe('Team Management (Simplified)', () => {
   const suite = createTestSuite('TeamManagementSimplified');
   let teamService: TeamService;
@@ -52,7 +40,7 @@ describe('Team Management (Simplified)', () => {
       const systemData = systemDoc.data();
       expect(systemData?.team).toBe(result.team);
 
-      const teamDoc = await db.collection('teams').doc(result.team).get();
+      const teamDoc = await db.collection('team').doc(result.team).get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.owner).toBe('owner-uid');
@@ -95,7 +83,7 @@ describe('Team Management (Simplified)', () => {
       const systemData = systemDoc.data();
       expect(systemData?.team).toBe('team-123');
 
-      const teamDoc = await db.collection('teams').doc('team-123').get();
+      const teamDoc = await db.collection('team').doc('team-123').get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.members).toContain('member-uid');
@@ -118,6 +106,10 @@ describe('Team Management (Simplified)', () => {
             createdAt: new Date(),
           },
         },
+        system: {
+          'owner-uid': { team: 'team-123' },
+          'member-uid': { team: 'team-123' },
+        },
       });
 
       // Test the service directly
@@ -132,7 +124,7 @@ describe('Team Management (Simplified)', () => {
       const systemDoc = await db.collection('system').doc('member-uid').get();
       expect(systemDoc.exists).toBe(false);
 
-      const teamDoc = await db.collection('teams').doc('team-123').get();
+      const teamDoc = await db.collection('team').doc('team-123').get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.members).not.toContain('member-uid');

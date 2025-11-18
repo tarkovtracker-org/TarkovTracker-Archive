@@ -1,0 +1,327 @@
+name: Enforced CI Pipeline
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+
+# Principle of least privilege: only grant necessary permissions
+permissions:
+  contents: read        # Read repository contents for checkout
+  actions: write        # Upload test artifacts and coverage reports
+  pull-requests: write  # Comment on PRs with results
+
+env:
+  NODE_VERSION: '22'
+  # Fail fast on any job failure
+  FAIL_FAST: true
+
+jobs:
+  # === PRE-REQUISITE CHECKS ===
+  lint-and-format:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run linting
+        run: npm run lint
+        
+      - name: Check formatting
+        run: npm run format:check
+        
+      - name: Block raw useProgressStore usage
+        run: |
+          ALLOWLIST='(stores/progress\.ts|composables/useProgressQueries\.ts|composables/livedata\.ts|types/.*)'
+          if grep -RIn --include='*.{ts,tsx,vue}' 'useProgressStore\(' frontend | grep -Ev "$ALLOWLIST"; then
+            echo 'Direct useProgressStore detected outside allowlist';
+            exit 1;
+          fi
+
+  # === SECURITY SCANS ===
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run comprehensive security scan
+        run: npm run security:scan
+          
+      - name: Check license compliance
+        run: |
+          npx license-checker --summary
+          if npx license-checker --summary | grep -E 'GPL-3.0|AGPL|LGPL'; then
+            echo "⚠️ Found copyleft licenses that require review"
+            npx license-checker --summary
+            exit 1
+          fi
+
+  # === FRONTEND TESTING ===
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-audit]
+    
+    strategy:
+      matrix:
+        type: [unit, coverage]
+      fail-fast: ${{ env.FAIL_FAST }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+        
+      - name: Run unit tests
+        if: matrix.type == 'unit'
+        working-directory: ./frontend
+        run: npm run test:run
+        
+      - name: Run tests with coverage
+        if: matrix.type == 'coverage'
+        working-directory: ./frontend
+        run: npm run test:coverage
+        
+      - name: Run type checking
+        working-directory: ./frontend
+        run: npm run type-check
+        
+      - name: Upload coverage reports
+        if: matrix.type == 'coverage'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
+          
+      - name: Enforce bundle size
+        working-directory: ./frontend
+        run: |
+          npm run build
+          SIZE=$(node -e "const fs=require('fs');const files=fs.readdirSync('dist/assets').filter(f=>f.startsWith('index-')&&f.endsWith('.js'));if(!files[0]){console.error('No index file found');process.exit(1);}console.log(fs.statSync('dist/assets/'+files[0]).size);")
+          if [ "$SIZE" -gt 512000 ]; then
+            echo "Bundle exceeds 500kb (actual: $SIZE bytes)";
+            exit 1;
+          fi
+
+  # === FUNCTIONS TESTING ===
+  functions-tests:
+    name: Functions Tests
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-audit]
+    
+    strategy:
+      matrix:
+        type: [unit, coverage]
+      fail-fast: ${{ env.FAIL_FAST }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+          
+      - name: Install functions dependencies
+        run: npm ci --workspace functions
+        
+      - name: Run unit tests
+        if: matrix.type == 'unit'
+        run: npm test --workspace functions
+        
+      - name: Run tests with coverage
+        if: matrix.type == 'coverage'
+        run: npm run test:coverage --workspace functions
+        
+      - name: Type checking
+        run: npm run type-check --workspace functions
+        
+      - name: Upload coverage reports
+        if: matrix.type == 'coverage'
+        uses: actions/upload-artifact@v4
+        with:
+          name: functions-coverage
+          path: functions/coverage/
+          retention-days: 30
+
+  # === INTEGRATION AND BUILD ===
+  build-and-integration:
+    name: Build & Integration
+    runs-on: ubuntu-latest
+    needs: [frontend-tests, functions-tests]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install all dependencies
+        run: npm ci
+        
+      - name: Build functions
+        run: npm run build:functions
+        
+      - name: Build frontend
+        run: npm run build:frontend
+        
+      - name: Check OpenAPI documentation sync
+        run: npm run docs:check
+        
+      - name: Generate full OpenAPI docs
+        run: npm run docs:generate
+        
+      - name: Upload OpenAPI spec
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: frontend/public/api/openapi.json
+          retention-days: 30
+
+  # === E2E TESTING (Limited to pushes) ===
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-and-integration
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+        
+      - name: Install Playwright Browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps
+        
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
+        
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: npm run test:e2e
+        env:
+          CI: true
+        
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+  # === RESULTS SUMMARY ===
+  results-summary:
+    name: Results Summary
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-audit, frontend-tests, functions-tests, build-and-integration, e2e-tests]
+    if: always()
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Create PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            
+            const results = jobs.jobs.map(job => ({
+              name: job.name,
+              conclusion: job.conclusion,
+              url: job.html_url
+            }));
+            
+            const statusEmoji = {
+              success: '✅',
+              failure: '❌',
+              cancelled: '⏹️',
+              skipped: '⏭️'
+            };
+            
+            const summary = results.map(r => 
+              `${statusEmoji[r.conclusion] || '❓'} **${r.name}**: ${r.conclusion?.toUpperCase() || 'UNKNOWN'}`
+            ).join('\n');
+            
+            const comment = `## 🚦 CI Pipeline Results\n\n${summary}\n\n[View full details](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+            
+      - name: Overall status check
+        run: |
+          # This job will fail if any required job failed
+          if [ "${{ needs.lint-and-format.result }}" != "success" ] || \
+             [ "${{ needs.security-audit.result }}" != "success" ] || \
+             [ "${{ needs.frontend-tests.result }}" != "success" ] || \
+             [ "${{ needs.functions-tests.result }}" != "success" ] || \
+             [ "${{ needs.build-and-integration.result }}" != "success" ]; then
+            echo "❌ CI Pipeline Failed"
+            exit 1
+          else
+            echo "✅ CI Pipeline Passed"
+          fi

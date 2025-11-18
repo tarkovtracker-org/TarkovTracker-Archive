@@ -1,10 +1,18 @@
-import { fireuser } from '@/plugins/firebase';
-import { defineStore, type StoreDefinition } from 'pinia';
-import { watch } from 'vue';
-import pinia from '@/plugins/pinia';
-import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
-import { logger } from '@/utils/logger';
-// Define the state structure
+/**
+ * LEGACY USER STORE - Backward Compatibility Layer
+ *
+ * This store provides backward compatibility during the refactoring transition.
+ * It maps old user store API calls to the new modular stores.
+ *
+ * TODO: Remove this store after updating all components to use the new stores directly.
+ */
+
+import { defineStore } from 'pinia';
+import { usePreferencesStore, type PreferencesStore } from './preferences';
+import { useUiSettingsStore, type UiSettingsStore } from './ui-settings';
+import { useTeamStore, type TeamStore } from './team';
+
+// Re-export the old interface for backward compatibility
 interface UserState {
   allTipsHidden: boolean;
   hideTips: Record<string, boolean>;
@@ -50,415 +58,320 @@ interface UserState {
     showTaskIds: boolean;
   };
 }
-// Export the default state with type annotation
-export const defaultState: UserState = {
-  allTipsHidden: false,
-  hideTips: {},
-  streamerMode: false,
-  teamHide: {},
-  taskTeamHideAll: false,
-  itemsTeamHideAll: false,
-  itemsTeamHideNonFIR: false,
-  itemsTeamHideHideout: false,
-  mapTeamHideAll: false,
-  taskPrimaryView: null,
-  taskMapView: null,
-  taskTraderView: null,
-  taskSecondaryView: null,
-  taskUserView: null,
-  neededTypeView: null,
-  itemsHideNonFIR: false,
-  hideGlobalTasks: false,
-  hideNonKappaTasks: false,
-  hideKappaRequiredTasks: false,
-  hideLightkeeperRequiredTasks: false,
-  hideEodOnlyTasks: false,
-  showOptionalTaskRequirementLabels: true,
-  showRequiredTaskRequirementLabels: true,
-  showExperienceRewards: true,
-  showNextTasks: false,
-  showTaskIds: false,
-  showPreviousTasks: false,
-  neededitemsStyle: null,
-  hideoutPrimaryView: null,
-  saving: {
-    streamerMode: false,
-    hideGlobalTasks: false,
-    hideNonKappaTasks: false,
-    hideKappaRequiredTasks: false,
-    hideLightkeeperRequiredTasks: false,
-    hideEodOnlyTasks: false,
-    itemsNeededHideNonFIR: false,
-    itemsTeamHideNonFIR: false,
-    showExperienceRewards: false,
-    showNextTasks: false,
-    showTaskIds: false,
-    showPreviousTasks: false,
-  },
-};
-// Per-toggle saving state (not persisted)
-const initialSavingState = {
-  streamerMode: false,
-  hideGlobalTasks: false,
-  hideNonKappaTasks: false,
-  hideKappaRequiredTasks: false,
-  hideLightkeeperRequiredTasks: false,
-  hideEodOnlyTasks: false,
-  itemsNeededHideNonFIR: false,
-  itemsTeamHideNonFIR: false,
-  showExperienceRewards: false,
-  showNextTasks: false,
-  showTaskIds: false,
-  showPreviousTasks: false,
-};
-// Define getter types
-type UserGetters = {
-  showTip: (state: UserState) => (tipKey: string) => boolean;
-  hiddenTipCount: (state: UserState) => number;
-  hideAllTips: (state: UserState) => boolean;
-  getStreamerMode: (state: UserState) => boolean;
-  teamIsHidden: (state: UserState) => (teamId: string) => boolean;
-  taskTeamAllHidden: (state: UserState) => boolean;
-  itemsTeamAllHidden: (state: UserState) => boolean;
-  itemsTeamNonFIRHidden: (state: UserState) => boolean;
-  itemsTeamHideoutHidden: (state: UserState) => boolean;
-  mapTeamAllHidden: (state: UserState) => boolean;
-  getTaskPrimaryView: (state: UserState) => string;
-  getTaskMapView: (state: UserState) => string;
-  getTaskTraderView: (state: UserState) => string;
-  getTaskSecondaryView: (state: UserState) => string;
-  getTaskUserView: (state: UserState) => string;
-  getNeededTypeView: (state: UserState) => string;
-  itemsNeededHideNonFIR: (state: UserState) => boolean;
-  getHideGlobalTasks: (state: UserState) => boolean;
-  getHideNonKappaTasks: (state: UserState) => boolean;
-  getHideKappaRequiredTasks: (state: UserState) => boolean;
-  getHideLightkeeperRequiredTasks: (state: UserState) => boolean;
-  getHideEodOnlyTasks: (state: UserState) => boolean;
-  getShowOptionalTaskRequirementLabels: (state: UserState) => boolean;
-  getShowRequiredTaskRequirementLabels: (state: UserState) => boolean;
-  getShowExperienceRewards: (state: UserState) => boolean;
-  getShowNextTasks: (state: UserState) => boolean;
-  getShowPreviousTasks: (state: UserState) => boolean;
-  getShowTaskIds: (state: UserState) => boolean;
-  getNeededItemsStyle: (state: UserState) => string;
-  getHideoutPrimaryView: (state: UserState) => string;
-};
-// Define action types
-type UserActions = {
-  hideTip(tipKey: string): void;
-  unhideTips(): void;
-  enableHideAllTips(): void;
-  setStreamerMode(mode: boolean): void;
-  toggleHidden(teamId: string): void;
-  setQuestTeamHideAll(hide: boolean): void;
-  setItemsTeamHideAll(hide: boolean): void;
-  setItemsTeamHideNonFIR(hide: boolean): void;
-  setItemsTeamHideHideout(hide: boolean): void;
-  setMapTeamHideAll(hide: boolean): void;
-  setTaskPrimaryView(view: string): void;
-  setTaskMapView(view: string): void;
-  setTaskTraderView(view: string): void;
-  setTaskSecondaryView(view: string): void;
-  setTaskUserView(view: string): void;
-  setNeededTypeView(view: string): void;
-  setItemsNeededHideNonFIR(hide: boolean): void;
-  setHideGlobalTasks(hide: boolean): void;
-  setHideNonKappaTasks(hide: boolean): void;
-  setHideKappaRequiredTasks(hide: boolean): void;
-  setHideLightkeeperRequiredTasks(hide: boolean): void;
-  setHideEodOnlyTasks(hide: boolean): void;
-  setShowOptionalTaskRequirementLabels(show: boolean): void;
-  setShowRequiredTaskRequirementLabels(show: boolean): void;
-  setShowExperienceRewards(show: boolean): void;
-  setShowNextTasks(show: boolean): void;
-  setShowPreviousTasks(show: boolean): void;
-  setShowTaskIds(show: boolean): void;
-  setNeededItemsStyle(style: string): void;
-  setHideoutPrimaryView(view: string): void;
-};
-// Define the store type including the fireswap property
-// Changed interface to type alias to resolve no-empty-object-type error
-type UserStoreDefinition = StoreDefinition<'swapUser', UserState, UserGetters, UserActions>;
-export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
+
+export const useUserStore = defineStore('swapUser', {
   state: (): UserState => {
-    const state = JSON.parse(JSON.stringify(defaultState));
-    // Always reset saving state on store creation
-    state.saving = { ...initialSavingState };
-    return state;
+    // Get the new stores
+    const preferencesStore = usePreferencesStore();
+    const uiSettingsStore = useUiSettingsStore();
+    const teamStore = useTeamStore();
+
+    // Combine states for backward compatibility
+    return {
+      // From preferences store
+      allTipsHidden: preferencesStore.allTipsHidden,
+      hideTips: preferencesStore.hideTips,
+      streamerMode: preferencesStore.streamerMode,
+      hideGlobalTasks: preferencesStore.hideGlobalTasks,
+      hideNonKappaTasks: preferencesStore.hideNonKappaTasks,
+      hideKappaRequiredTasks: preferencesStore.hideKappaRequiredTasks,
+      hideLightkeeperRequiredTasks: preferencesStore.hideLightkeeperRequiredTasks,
+      hideEodOnlyTasks: preferencesStore.hideEodOnlyTasks,
+
+      // From team store
+      teamHide: teamStore.teamHide,
+      taskTeamHideAll: teamStore.taskTeamHideAll,
+      itemsTeamHideAll: teamStore.itemsTeamHideAll,
+      itemsTeamHideNonFIR: teamStore.itemsTeamHideNonFIR,
+      itemsTeamHideHideout: teamStore.itemsTeamHideHideout,
+      mapTeamHideAll: teamStore.mapTeamHideAll,
+
+      // From UI settings store
+      taskPrimaryView: uiSettingsStore.taskPrimaryView,
+      taskMapView: uiSettingsStore.taskMapView,
+      taskTraderView: uiSettingsStore.taskTraderView,
+      taskSecondaryView: uiSettingsStore.taskSecondaryView,
+      taskUserView: uiSettingsStore.taskUserView,
+      neededTypeView: uiSettingsStore.neededTypeView,
+      itemsHideNonFIR: uiSettingsStore.itemsHideNonFIR,
+      neededitemsStyle: uiSettingsStore.neededitemsStyle,
+      hideoutPrimaryView: uiSettingsStore.hideoutPrimaryView,
+      showOptionalTaskRequirementLabels: uiSettingsStore.showOptionalTaskRequirementLabels,
+      showRequiredTaskRequirementLabels: uiSettingsStore.showRequiredTaskRequirementLabels,
+      showExperienceRewards: uiSettingsStore.showExperienceRewards,
+      showNextTasks: uiSettingsStore.showNextTasks,
+      showPreviousTasks: uiSettingsStore.showPreviousTasks,
+      showTaskIds: uiSettingsStore.showTaskIds,
+
+      // Combined saving state
+      saving: {
+        streamerMode: preferencesStore.saving?.streamerMode ?? false,
+        hideGlobalTasks: preferencesStore.saving?.hideGlobalTasks ?? false,
+        hideNonKappaTasks: preferencesStore.saving?.hideNonKappaTasks ?? false,
+        hideKappaRequiredTasks: preferencesStore.saving?.hideKappaRequiredTasks ?? false,
+        hideLightkeeperRequiredTasks:
+          preferencesStore.saving?.hideLightkeeperRequiredTasks ?? false,
+        hideEodOnlyTasks: preferencesStore.saving?.hideEodOnlyTasks ?? false,
+        itemsNeededHideNonFIR: uiSettingsStore.saving?.itemsNeededHideNonFIR ?? false,
+        showExperienceRewards: uiSettingsStore.saving?.showExperienceRewards ?? false,
+        showNextTasks: uiSettingsStore.saving?.showNextTasks ?? false,
+        showTaskIds: uiSettingsStore.saving?.showTaskIds ?? false,
+        showPreviousTasks: uiSettingsStore.saving?.showPreviousTasks ?? false,
+        itemsTeamHideNonFIR: false, // This wasn't in the new stores, default to false
+      },
+    };
   },
+
   getters: {
-    showTip: (state) => {
-      return (tipKey: string): boolean => !state.allTipsHidden && !state.hideTips?.[tipKey];
+    showTip: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.showTip;
     },
-    hiddenTipCount: (state) => {
-      // Ensure hideTips exists before getting keys
-      return state.hideTips ? Object.keys(state.hideTips).length : 0;
+    hiddenTipCount: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.hiddenTipCount;
     },
-    hideAllTips: (state) => {
-      return state.allTipsHidden ?? false;
+    hideAllTips: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.hideAllTips;
     },
-    getStreamerMode(state) {
-      return state.streamerMode ?? false;
+    getStreamerMode: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getStreamerMode;
     },
-    teamIsHidden: (state) => {
-      return (teamId: string): boolean =>
-        state.taskTeamHideAll || state.teamHide?.[teamId] || false;
+    teamIsHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.teamIsHidden;
     },
-    taskTeamAllHidden: (state) => {
-      return state.taskTeamHideAll ?? false;
+    taskTeamAllHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.taskTeamAllHidden;
     },
-    itemsTeamAllHidden: (state) => {
-      return state.itemsTeamHideAll ?? false;
+    itemsTeamAllHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.itemsTeamAllHidden;
     },
-    itemsTeamNonFIRHidden: (state) => {
-      return state.itemsTeamHideAll || state.itemsTeamHideNonFIR || false;
+    itemsTeamNonFIRHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.itemsTeamNonFIRHidden;
     },
-    itemsTeamHideoutHidden: (state) => {
-      return state.itemsTeamHideAll || state.itemsTeamHideHideout || false;
+    itemsTeamHideoutHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.itemsTeamHideoutHidden;
     },
-    mapTeamAllHidden: (state) => {
-      return state.mapTeamHideAll ?? false;
+    mapTeamAllHidden: () => {
+      const teamStore = useTeamStore();
+      return teamStore.mapTeamAllHidden;
     },
-    // Add default values for views using nullish coalescing
-    getTaskPrimaryView: (state) => {
-      return state.taskPrimaryView ?? 'all';
+    getTaskPrimaryView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getTaskPrimaryView;
     },
-    getTaskMapView: (state) => {
-      return state.taskMapView ?? 'all';
+    getTaskMapView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getTaskMapView;
     },
-    getTaskTraderView: (state) => {
-      return state.taskTraderView ?? 'all';
+    getTaskTraderView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getTaskTraderView;
     },
-    getTaskSecondaryView: (state) => {
-      return state.taskSecondaryView ?? 'available';
+    getTaskSecondaryView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getTaskSecondaryView;
     },
-    getTaskUserView: (state) => {
-      return state.taskUserView ?? 'all';
+    getTaskUserView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getTaskUserView;
     },
-    getNeededTypeView: (state) => {
-      return state.neededTypeView ?? 'all';
+    getNeededTypeView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getNeededTypeView;
     },
-    itemsNeededHideNonFIR: (state) => {
-      return state.itemsHideNonFIR ?? false;
+    itemsNeededHideNonFIR: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.itemsNeededHideNonFIR;
     },
-    getHideGlobalTasks: (state) => {
-      return state.hideGlobalTasks ?? false;
+    getHideGlobalTasks: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getHideGlobalTasks;
     },
-    getHideNonKappaTasks: (state) => {
-      return state.hideNonKappaTasks ?? false;
+    getHideNonKappaTasks: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getHideNonKappaTasks;
     },
-    getHideKappaRequiredTasks: (state) => {
-      return state.hideKappaRequiredTasks ?? false;
+    getHideKappaRequiredTasks: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getHideKappaRequiredTasks;
     },
-    getHideLightkeeperRequiredTasks: (state) => {
-      return state.hideLightkeeperRequiredTasks ?? false;
+    getHideLightkeeperRequiredTasks: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getHideLightkeeperRequiredTasks;
     },
-    getHideEodOnlyTasks: (state) => {
-      return state.hideEodOnlyTasks ?? false;
+    getHideEodOnlyTasks: () => {
+      const preferencesStore = usePreferencesStore();
+      return preferencesStore.getHideEodOnlyTasks;
     },
-    getShowOptionalTaskRequirementLabels: (state) => {
-      return state.showOptionalTaskRequirementLabels ?? true;
+    getShowOptionalTaskRequirementLabels: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowOptionalTaskRequirementLabels;
     },
-    getShowRequiredTaskRequirementLabels: (state) => {
-      return state.showRequiredTaskRequirementLabels ?? true;
+    getShowRequiredTaskRequirementLabels: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowRequiredTaskRequirementLabels;
     },
-    getShowExperienceRewards: (state) => {
-      return state.showExperienceRewards ?? true;
+    getShowExperienceRewards: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowExperienceRewards;
     },
-    getShowNextTasks: (state) => {
-      return state.showNextTasks ?? false;
+    getShowNextTasks: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowNextTasks;
     },
-    getShowPreviousTasks: (state) => {
-      return state.showPreviousTasks ?? false;
+    getShowPreviousTasks: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowPreviousTasks;
     },
-    getShowTaskIds: (state) => {
-      return state.showTaskIds ?? false;
+    getShowTaskIds: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getShowTaskIds;
     },
-    getNeededItemsStyle: (state) => {
-      return state.neededitemsStyle ?? 'mediumCard';
+    getNeededItemsStyle: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getNeededItemsStyle;
     },
-    getHideoutPrimaryView: (state) => {
-      return state.hideoutPrimaryView ?? 'available';
+    getHideoutPrimaryView: () => {
+      const uiSettingsStore = useUiSettingsStore();
+      return uiSettingsStore.getHideoutPrimaryView;
     },
   },
+
   actions: {
+    // Preferences actions
     hideTip(tipKey: string) {
-      if (!this.hideTips) {
-        this.hideTips = {};
-      }
-      this.hideTips[tipKey] = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.hideTip(tipKey);
     },
     unhideTips() {
-      this.hideTips = {};
-      this.allTipsHidden = false;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.unhideTips();
     },
     enableHideAllTips() {
-      this.allTipsHidden = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.enableHideAllTips();
     },
     setStreamerMode(mode: boolean) {
-      this.streamerMode = mode;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.streamerMode = true;
-    },
-    toggleHidden(teamId: string) {
-      if (!this.teamHide) {
-        this.teamHide = {};
-      }
-      this.teamHide[teamId] = !this.teamHide[teamId];
-    },
-    setQuestTeamHideAll(hide: boolean) {
-      this.taskTeamHideAll = hide;
-    },
-    setItemsTeamHideAll(hide: boolean) {
-      this.itemsTeamHideAll = hide;
-    },
-    setItemsTeamHideNonFIR(hide: boolean) {
-      this.itemsTeamHideNonFIR = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.itemsTeamHideNonFIR = true;
-    },
-    setItemsTeamHideHideout(hide: boolean) {
-      this.itemsTeamHideHideout = hide;
-    },
-    setMapTeamHideAll(hide: boolean) {
-      this.mapTeamHideAll = hide;
-    },
-    setTaskPrimaryView(view: string) {
-      this.taskPrimaryView = view;
-    },
-    setTaskMapView(view: string) {
-      this.taskMapView = view;
-    },
-    setTaskTraderView(view: string) {
-      this.taskTraderView = view;
-    },
-    setTaskSecondaryView(view: string) {
-      this.taskSecondaryView = view;
-    },
-    setTaskUserView(view: string) {
-      this.taskUserView = view;
-    },
-    setNeededTypeView(view: string) {
-      this.neededTypeView = view;
-    },
-    setItemsNeededHideNonFIR(hide: boolean) {
-      this.itemsHideNonFIR = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.itemsNeededHideNonFIR = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setStreamerMode(mode);
     },
     setHideGlobalTasks(hide: boolean) {
-      this.hideGlobalTasks = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.hideGlobalTasks = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setHideGlobalTasks(hide);
     },
     setHideNonKappaTasks(hide: boolean) {
-      this.hideNonKappaTasks = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.hideNonKappaTasks = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setHideNonKappaTasks(hide);
     },
     setHideKappaRequiredTasks(hide: boolean) {
-      this.hideKappaRequiredTasks = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.hideKappaRequiredTasks = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setHideKappaRequiredTasks(hide);
     },
     setHideLightkeeperRequiredTasks(hide: boolean) {
-      this.hideLightkeeperRequiredTasks = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.hideLightkeeperRequiredTasks = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setHideLightkeeperRequiredTasks(hide);
     },
     setHideEodOnlyTasks(hide: boolean) {
-      this.hideEodOnlyTasks = hide;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.hideEodOnlyTasks = true;
+      const preferencesStore = usePreferencesStore();
+      preferencesStore.setHideEodOnlyTasks(hide);
     },
-    setShowOptionalTaskRequirementLabels(show: boolean) {
-      this.showOptionalTaskRequirementLabels = show;
-      persistUserState(this.$state);
+
+    // Team actions
+    toggleHidden(teamId: string) {
+      const teamStore = useTeamStore();
+      teamStore.toggleHidden(teamId);
     },
-    setShowRequiredTaskRequirementLabels(show: boolean) {
-      this.showRequiredTaskRequirementLabels = show;
-      persistUserState(this.$state);
+    setQuestTeamHideAll(hide: boolean) {
+      const teamStore = useTeamStore();
+      teamStore.setQuestTeamHideAll(hide);
     },
-    setShowExperienceRewards(show: boolean) {
-      this.showExperienceRewards = show;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.showExperienceRewards = true;
+    setItemsTeamHideAll(hide: boolean) {
+      const teamStore = useTeamStore();
+      teamStore.setItemsTeamHideAll(hide);
     },
-    setShowNextTasks(show: boolean) {
-      this.showNextTasks = show;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.showNextTasks = true;
+    setItemsTeamHideNonFIR(hide: boolean) {
+      const teamStore = useTeamStore();
+      teamStore.setItemsTeamHideNonFIR(hide);
     },
-    setShowPreviousTasks(show: boolean) {
-      this.showPreviousTasks = show;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.showPreviousTasks = true;
+    setItemsTeamHideHideout(hide: boolean) {
+      const teamStore = useTeamStore();
+      teamStore.setItemsTeamHideHideout(hide);
     },
-    setShowTaskIds(show: boolean) {
-      this.showTaskIds = show;
-      persistUserState(this.$state);
-      this.saving = this.saving ?? { ...initialSavingState };
-      this.saving.showTaskIds = true;
+    setMapTeamHideAll(hide: boolean) {
+      const teamStore = useTeamStore();
+      teamStore.setMapTeamHideAll(hide);
+    },
+
+    // UI Settings actions
+    setTaskPrimaryView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setTaskPrimaryView(view);
+    },
+    setTaskMapView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setTaskMapView(view);
+    },
+    setTaskTraderView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setTaskTraderView(view);
+    },
+    setTaskSecondaryView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setTaskSecondaryView(view);
+    },
+    setTaskUserView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setTaskUserView(view);
+    },
+    setNeededTypeView(view: string) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setNeededTypeView(view);
+    },
+    setItemsNeededHideNonFIR(hide: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setItemsNeededHideNonFIR(hide);
     },
     setNeededItemsStyle(style: string) {
-      this.neededitemsStyle = style;
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setNeededItemsStyle(style);
     },
     setHideoutPrimaryView(view: string) {
-      this.hideoutPrimaryView = view;
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setHideoutPrimaryView(view);
+    },
+    setShowOptionalTaskRequirementLabels(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowOptionalTaskRequirementLabels(show);
+    },
+    setShowRequiredTaskRequirementLabels(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowRequiredTaskRequirementLabels(show);
+    },
+    setShowExperienceRewards(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowExperienceRewards(show);
+    },
+    setShowNextTasks(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowNextTasks(show);
+    },
+    setShowPreviousTasks(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowPreviousTasks(show);
+    },
+    setShowTaskIds(show: boolean) {
+      const uiSettingsStore = useUiSettingsStore();
+      uiSettingsStore.setShowTaskIds(show);
     },
   },
-  fireswap: [
-    {
-      path: '.',
-      document: 'user/{uid}',
-      debouncems: 10,
-      localKey: 'user',
-    },
-  ],
-}) as UserStoreDefinition;
+});
+
 export type UserStore = ReturnType<typeof useUserStore>;
-// Watch for fireuser state changing and bind/unbind
-watch(
-  () => fireuser.loggedIn,
-  (newValue: boolean) => {
-    try {
-      // Ensure pinia instance is available and correctly typed
-      const userStore = useUserStore(pinia);
-      const extendedStore = userStore as StoreWithFireswapExt<typeof userStore>;
-      // Check if firebindAll/fireunbindAll exist before calling
-      const canBind = typeof extendedStore.firebindAll === 'function';
-      const canUnbind = typeof extendedStore.fireunbindAll === 'function';
-      if (newValue) {
-        if (canBind) {
-          extendedStore.firebindAll!();
-        }
-      } else {
-        if (canUnbind) {
-          extendedStore.fireunbindAll!();
-        }
-      }
-    } catch (_error) {
-      // Handle cases where pinia or userStore might not be ready
-      logger.error('Error in userStore watch for fireuser.loggedIn:', _error);
-    }
-  },
-  { immediate: true }
-);
-// Helper to persist state without 'saving'
-function persistUserState(state: UserState) {
-  const persistedState = { ...state };
-  delete persistedState.saving;
-  localStorage.setItem('user', JSON.stringify(persistedState));
-}

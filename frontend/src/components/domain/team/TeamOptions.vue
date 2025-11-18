@@ -85,10 +85,10 @@
     </template>
   </fitted-card>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useUserStore } from '@/stores/user';
-  import FittedCard from '@/components/ui/FittedCard';
+  import FittedCard from '@/components/ui/FittedCard.vue';
   const userStore = useUserStore();
   const taskHideAll = computed({
     get: () => userStore.taskTeamAllHidden,

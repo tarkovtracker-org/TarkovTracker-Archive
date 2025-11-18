@@ -17,8 +17,8 @@ const createTaskLinkStub = (): Component => ({
   template: '<div class="task-link-stub">{{ task?.name ?? "missing-task" }}</div>',
 });
 const mountAlternativesList = (props: {
-  alternatives: Array<string | number | null | undefined>;
-  tasks: Array<{ id: string | number; name?: string }>;
+  alternatives: string[];
+  tasks: Record<string, { id: string; name?: string }>;
   xs?: boolean;
   label?: string;
 }) =>
@@ -34,7 +34,7 @@ describe('AlternativesList', () => {
   it('renders the default label when none is provided', () => {
     const wrapper = mountAlternativesList({
       alternatives: ['1'],
-      tasks: [{ id: '1', name: 'Task One' }],
+      tasks: { '1': { id: '1', name: 'Task One' } },
       xs: false,
     });
     expect(wrapper.text()).toContain('i18n:page.tasks.questcard.alternatives');
@@ -42,7 +42,7 @@ describe('AlternativesList', () => {
   it('renders the provided label when available', () => {
     const wrapper = mountAlternativesList({
       alternatives: ['1'],
-      tasks: [{ id: '1', name: 'Task One' }],
+      tasks: { '1': { id: '1', name: 'Task One' } },
       xs: false,
       label: 'Custom Label',
     });
@@ -50,8 +50,8 @@ describe('AlternativesList', () => {
   });
   it('matches task IDs regardless of string or number input', () => {
     const wrapper = mountAlternativesList({
-      alternatives: [42],
-      tasks: [{ id: '42', name: 'The Answer' }],
+      alternatives: ['42'],
+      tasks: { '42': { id: '42', name: 'The Answer' } },
       xs: false,
     });
     const renderedTaskNames = wrapper.findAll('.task-link-stub').map((node) => node.text());
@@ -60,7 +60,7 @@ describe('AlternativesList', () => {
   it('keeps placeholder entries when a matching task is missing', () => {
     const wrapper = mountAlternativesList({
       alternatives: ['1', 'missing'],
-      tasks: [{ id: '1', name: 'Task One' }],
+      tasks: { '1': { id: '1', name: 'Task One' } },
       xs: false,
     });
     const renderedTaskNames = wrapper.findAll('.task-link-stub').map((node) => node.text());

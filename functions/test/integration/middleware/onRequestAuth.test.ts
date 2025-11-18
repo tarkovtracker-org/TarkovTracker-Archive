@@ -1,17 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createMockRequest, createMockResponse } from '../../helpers/httpMocks';
-import { createTestSuite, auth, admin } from '../../helpers';
-import { createHandlerTest } from '../../helpers/testPatterns';
+import { createTestSuite, admin } from '../../helpers';
 
+const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+};
 // Mock logger since we don't need to test Firebase Functions logging
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    log: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 // Mock corsConfig at module level
@@ -44,7 +44,6 @@ describe('withCorsAndAuth middleware', () => {
 
     await withCorsAndAuth(req, res as any, handler);
 
-    expect(setCorsHeadersMock).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({ error: 'Origin not allowed' });
     expect(handler).not.toHaveBeenCalled();

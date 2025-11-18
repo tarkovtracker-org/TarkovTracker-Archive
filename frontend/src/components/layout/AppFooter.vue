@@ -137,15 +137,18 @@
     </v-container>
   </v-footer>
 </template>
-<script setup>
+<script setup lang="ts">
   import { onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
+
   const { t } = useI18n({ useScope: 'global' });
   const { openPreferences, choiceRecorded, initializeConsent } = usePrivacyConsent();
+
   const openPrivacyPreferences = () => {
     openPreferences();
   };
+
   onMounted(() => {
     initializeConsent();
   });

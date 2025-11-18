@@ -1,6 +1,6 @@
 <template>
   <div class="task-objectives">
-    <QuestKeys v-if="task?.neededKeys?.length" :needed-keys="task.neededKeys" />
+    <QuestKeys v-if="task?.neededKeys?.length" :needed-keys="task.neededKeys as any" />
     <QuestObjectives
       :objectives="relevantObjectives"
       :irrelevant-count="irrelevantObjectives.length"

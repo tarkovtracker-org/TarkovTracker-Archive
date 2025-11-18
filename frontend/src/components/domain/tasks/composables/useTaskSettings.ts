@@ -71,6 +71,11 @@ export interface UseTaskSettingsResult {
   showTaskIds: StoreToggle;
   showNextTasks: StoreToggle;
   showPreviousTasks: StoreToggle;
+  showCompleted: StoreToggle;
+  showAvailable: StoreToggle;
+  showLocked: StoreToggle;
+  factionFilter: StoreToggle;
+  taskRequirementFilters: StoreToggle;
   filterControls: ComputedRef<ToggleControl[]>;
   appearanceControls: ComputedRef<ToggleControl[]>;
 }
@@ -226,6 +231,28 @@ export const useTaskSettings = (
       tooltipKey: appearanceTooltips.previousTasks,
     },
   ]);
+  // Create placeholder toggles for status filters (not currently used in preferences store)
+  const showCompleted = createStoreToggle(
+    () => true,
+    () => {}
+  );
+  const showAvailable = createStoreToggle(
+    () => true,
+    () => {}
+  );
+  const showLocked = createStoreToggle(
+    () => false,
+    () => {}
+  );
+  const factionFilter = createStoreToggle(
+    () => true,
+    () => {}
+  );
+  const taskRequirementFilters = createStoreToggle(
+    () => true,
+    () => {}
+  );
+
   return {
     showGlobalTasks,
     hideGlobalTasks,
@@ -243,6 +270,11 @@ export const useTaskSettings = (
     showTaskIds,
     showNextTasks,
     showPreviousTasks,
+    showCompleted,
+    showAvailable,
+    showLocked,
+    factionFilter,
+    taskRequirementFilters,
     filterControls,
     appearanceControls,
   };

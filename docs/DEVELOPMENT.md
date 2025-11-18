@@ -153,6 +153,7 @@ npm run deps                    # Launch taze for interactive selection
 - Tackle in small batches (avoid mega-upgrades)
 - Test thoroughly with emulators
 - Update this document after each major change
+- Track known refactoring items in GitHub Issues
 
 ---
 
@@ -242,3 +243,4 @@ See [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) for ongoing refactoring
 - [SECURITY.md](./SECURITY.md) – Authentication, validation, CORS
 - [ARCHITECTURE.md](./ARCHITECTURE.md) – System design and caching
 - [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) – Refactoring backlog
+- [Frontend Structure Handbook](../frontend/src/STRUCTURE.md) – Comprehensive frontend directory organization and patterns

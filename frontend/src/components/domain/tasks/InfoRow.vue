@@ -10,10 +10,15 @@
     </div>
   </div>
 </template>
-<script setup>
-  defineProps({
-    icon: { type: String, default: '' },
-    inline: { type: Boolean, default: false },
+<script setup lang="ts">
+  interface Props {
+    icon?: string;
+    inline?: boolean;
+  }
+
+  withDefaults(defineProps<Props>(), {
+    icon: '',
+    inline: false,
   });
 </script>
 <style scoped>

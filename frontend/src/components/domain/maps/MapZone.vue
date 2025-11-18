@@ -8,40 +8,55 @@
   ></div>
   <div v-if="tooltipVisible" :style="tooltipStyle">
     <v-sheet class="ma-0 elevation-3 rounded px-1 pt-2" color="primary">
-      <task-link :task="relatedTask" show-wiki-link />
+      <task-link v-if="relatedTask" :task="relatedTask" show-wiki-link />
       <task-objective
         v-if="props.mark.id"
-        :objective="objectives.find((obj) => obj.id == props.mark.id)"
+        :objective="objectives.find((obj) => obj.id === props.mark.id)!"
       />
     </v-sheet>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed, defineAsyncComponent, ref } from 'vue';
+  import type { CSSProperties } from 'vue';
+  import type { TaskObjective, Task } from '@/types/models/tarkov';
   import { useTarkovData } from '@/composables/tarkovdata';
+  import { logger } from '@/utils/logger';
   const TaskObjective = defineAsyncComponent(
-    () => import('@/components/domain/tasks/TaskObjective')
+    () => import('@/components/domain/tasks/TaskObjective.vue')
   );
-  const TaskLink = defineAsyncComponent(() => import('@/components/domain/tasks/TaskLink'));
+  const TaskLink = defineAsyncComponent(() => import('@/components/domain/tasks/TaskLink.vue'));
   const { objectives, tasks } = useTarkovData();
-  const props = defineProps({
-    mark: {
-      type: Object,
-      required: true,
-    },
-    zoneLocation: {
-      type: Object,
-      required: true,
-    },
-    selectedFloor: {
-      type: String,
-      default: undefined,
-    },
-    map: {
-      type: Object,
-      required: true,
-    },
-  });
+  interface Mark {
+    id?: string;
+    users: string[];
+    floor?: string;
+  }
+
+  interface ZoneLocation {
+    outline: Array<{ x: number; z: number }>;
+  }
+
+  interface MapData {
+    svg?:
+      | string
+      | {
+          bounds: number[][];
+          coordinateRotation: number;
+          file?: string;
+          floors?: string[];
+          defaultFloor?: string;
+          transform?: number[];
+          heightRange?: number[];
+        };
+  }
+
+  const props = defineProps<{
+    mark: Mark;
+    zoneLocation: ZoneLocation;
+    selectedFloor?: string;
+    map: MapData;
+  }>();
   const forceTooltip = ref(false);
   const hoverTooltip = ref(false);
   const forceTooltipToggle = () => {
@@ -58,10 +73,10 @@
     return forceTooltip.value || hoverTooltip.value;
   });
   const relatedObjective = computed(() => {
-    return objectives.value.find((obj) => obj.id == props.mark.id);
+    return objectives.value.find((obj: TaskObjective) => obj.id === props.mark.id);
   });
   const relatedTask = computed(() => {
-    return tasks.value.find((task) => task.id == relatedObjective.value?.taskId);
+    return tasks.value.find((task: Task) => task.id === relatedObjective.value?.taskId);
   });
   const zoneColor = computed(() => {
     if (tooltipVisible.value) return 'text-green';
@@ -70,40 +85,76 @@
   const relativeLocation = computed(() => {
     // Determine the leftmost x position in the array of zone positions
     // Take the bounds of the map and figure out the initial relative position
-    const mapLeft = props.map.svg.bounds[0][0];
-    const mapTop = props.map.svg.bounds[0][1];
-    const mapWidth =
-      Math.max(props.map.svg.bounds[0][0], props.map.svg.bounds[1][0]) -
-      Math.min(props.map.svg.bounds[0][0], props.map.svg.bounds[1][0]);
-    const mapHeight =
-      Math.max(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]) -
-      Math.min(props.map.svg.bounds[0][1], props.map.svg.bounds[1][1]);
+    if (!props.map.svg || typeof props.map.svg === 'string') {
+      return {
+        leftPercent: 0,
+        topPercent: 0,
+        rightPercent: 0,
+        bottomPercent: 0,
+        internalPercents: [],
+      };
+    }
+    // Normalize bounds to ensure left < right and top < bottom
+    const x1 = props.map.svg.bounds[0][0];
+    const z1 = props.map.svg.bounds[0][1];
+    const x2 = props.map.svg.bounds[1][0];
+    const z2 = props.map.svg.bounds[1][1];
+
+    // Apply CRS-like transform to bounds if present
+    const transform = props.map.svg.transform as number[] | undefined;
+    const applyTransform = (x: number, z: number): { x: number; z: number } => {
+      if (!transform || transform.length < 4) return { x, z };
+      const [a, b, c, d] = transform;
+      return { x: a * x + b, z: c * z + d };
+    };
+    const p1 = applyTransform(x1, z1);
+    const p2 = applyTransform(x2, z2);
+    const tx1 = p1.x;
+    const tz1 = p1.z;
+    const tx2 = p2.x;
+    const tz2 = p2.z;
+    const mapWidth = tx2 - tx1; // directional
+    const mapHeight = tz2 - tz1; // directional
+
     // Apply coordinate rotation to the outline points
-    const coordinateRotation = props.map?.svg?.coordinateRotation || 0;
-    const outlinePercents = [];
+    const coordinateRotation = props.map.svg.coordinateRotation;
+
+    const outlinePercents: Array<{ leftPercent: number; topPercent: number }> = [];
+    // Center of (transformed) bounds for pivot rotation
+    const cx = (tx1 + tx2) / 2;
+    const cz = (tz1 + tz2) / 2;
     props.zoneLocation.outline.forEach((outline) => {
       // Get original coordinates
       const originalX = outline.x;
       const originalZ = outline.z;
-      // Apply coordinate rotation if specified
+
+      // Apply coordinate rotation if specified, adding 180° to fix mirrored placement
       let x = originalX;
       let z = originalZ;
-      if (coordinateRotation === 90) {
-        // Rotate 90 degrees: (x, z) -> (-z, x)
-        x = -originalZ;
-        z = originalX;
-      } else if (coordinateRotation === 180) {
-        // Rotate 180 degrees: (x, z) -> (-x, -z)
-        x = -originalX;
-        z = -originalZ;
-      } else if (coordinateRotation === 270) {
-        // Rotate 270 degrees: (x, z) -> (z, -x)
-        x = originalZ;
-        z = -originalX;
+      const adjustedRotation = ((coordinateRotation ?? 0) + 180) % 360;
+      if (adjustedRotation === 90) {
+        const dx = originalX - (x1 + x2) / 2;
+        const dz = originalZ - (z1 + z2) / 2;
+        x = (x1 + x2) / 2 - dz;
+        z = (z1 + z2) / 2 + dx;
+      } else if (adjustedRotation === 180) {
+        const dx = originalX - (x1 + x2) / 2;
+        const dz = originalZ - (z1 + z2) / 2;
+        x = (x1 + x2) / 2 - dx;
+        z = (z1 + z2) / 2 - dz;
+      } else if (adjustedRotation === 270) {
+        const dx = originalX - (x1 + x2) / 2;
+        const dz = originalZ - (z1 + z2) / 2;
+        x = (x1 + x2) / 2 + dz;
+        z = (z1 + z2) / 2 - dx;
       }
+
+      // Apply transform to the coordinates after rotation, to align with image assets
+      const t = applyTransform(x, z);
+
       // Calculate relative values using the coordinate system of the map
-      const relativeLeft = Math.abs(x - mapLeft);
-      const relativeTop = Math.abs(z - mapTop);
+      const relativeLeft = t.x - tx1;
+      const relativeTop = t.z - tz1;
       // Calculate relative values relative to the map container
       const relativeLeftPercent = (relativeLeft / mapWidth) * 100;
       const relativeTopPercent = (relativeTop / mapHeight) * 100;
@@ -126,7 +177,7 @@
       return current.topPercent > max ? current.topPercent : max;
     }, outlinePercents[0].topPercent);
     // Now, calculate the percentages internally to the div based on the bounds
-    const internalPercents = [];
+    const internalPercents: Array<{ leftPercent: number; topPercent: number }> = [];
     outlinePercents.forEach((outline) => {
       const internalLeftPercent =
         ((outline.leftPercent - leftPercent) / (rightPercent - leftPercent)) * 100;
@@ -145,14 +196,15 @@
       internalPercents,
     };
   });
-  const zoneStyle = computed(() => {
-    return {
-      position: 'absolute',
+
+  const zoneStyle = computed(
+    (): CSSProperties => ({
+      position: 'absolute' as const,
       top: relativeLocation.value.topPercent + '%',
       left: relativeLocation.value.leftPercent + '%',
       width: relativeLocation.value.rightPercent - relativeLocation.value.leftPercent + '%',
       height: relativeLocation.value.bottomPercent - relativeLocation.value.topPercent + '%',
-      'clip-path':
+      clipPath:
         'polygon(' +
         relativeLocation.value.internalPercents
           .map((point) => {
@@ -163,22 +215,22 @@
       background: tooltipVisible.value
         ? 'linear-gradient(90deg, rgba(155, 165, 0, 0.5) 0%, rgba(155, 165, 0, 0.5) 100%)'
         : 'linear-gradient(90deg, rgba(255, 165, 0, 0.2) 0%, rgba(255, 165, 0, 0.2) 100%)',
-      'border-style': 'dashed',
+      borderStyle: 'dashed' as const,
       // cursor: props.mark.floor === props.selectedFloor ? "pointer" : "inherit",
       // opacity: props.mark.floor === props.selectedFloor ? 1 : 0.2,
-      cursor: 'pointer',
+      cursor: 'pointer' as const,
       opacity: 1,
-    };
-  });
-  const tooltipStyle = computed(() => {
-    return {
-      position: 'absolute',
+    })
+  );
+  const tooltipStyle = computed(
+    (): CSSProperties => ({
+      position: 'absolute' as const,
       top: relativeLocation.value.topPercent + '%',
       left: relativeLocation.value.leftPercent + '%',
       transform: 'translate(-50%, -125%)',
       zIndex: 100,
-    };
-  });
+    })
+  );
 </script>
 <style lang="scss">
   .objective-gps-tooltip {

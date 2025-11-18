@@ -87,20 +87,67 @@ With `npm run dev:full` or `npm run dev:firebase`, Firebase emulators will also 
 
 ### Available scripts
 
-The root `package.json` exposes helpful scripts for daily development:
+The root `package.json` provides a comprehensive set of scripts for development, testing, building, deployment, and maintenance:
 
+#### Development Modes
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Starts frontend dev server only (port 3000). |
-| `npm run dev:full` | Starts frontend + Firebase backend emulators. |
-| `npm run dev:firebase` | Builds everything + starts all emulators including hosting. |
-| `npm run build` | Builds both frontend and functions. |
-| `npm run lint` | Runs the lint orchestrator (ESLint, TypeScript type-checks, markdownlint). |
-| `npm run format` | Formats the codebase using Prettier. |
-| `npm run docs` | Builds functions + generates API docs. |
-| `npm run test` | Runs all tests (frontend + functions). |
+| `npm run dev` | Frontend only (Vite dev server on port 3000) - UI work with mock auth |
+| `npm run dev:full` | Frontend + Auth/Firestore/Functions emulators - end-to-end features |
+| `npm run dev:firebase` | Full stack + hosting (port 5000) - production-like testing |
 
-See [scripts/SCRIPTS.md](scripts/SCRIPTS.md) for complete scripts reference.
+#### Building & Deployment
+| Command | Description |
+| --- | --- |
+| `npm run build` | Full build: functions → OpenAPI → frontend |
+| `npm run build:functions` | Functions only |
+| `npm run build:frontend` | Frontend only |
+| `npm run deploy:staging` | Deploy to 7-day preview channel |
+| `npm run deploy:prod` | Deploy to production |
+
+#### Testing
+| Command | Description |
+| --- | --- |
+| `npm test` | Run all tests (functions then frontend) |
+| `npm run test:functions` | Functions workspace tests only |
+| `npm run test:frontend` | Frontend workspace tests only |
+| `npm run test:coverage` | Coverage for both workspaces |
+| `npm run test:coverage:functions` | Functions coverage only |
+| `npm run test:coverage:frontend` | Frontend coverage only |
+
+#### Code Quality & Formatting
+| Command | Description |
+| --- | --- |
+| `npm run lint` | ESLint + TypeScript + markdownlint (orchestrated via scripts/lint-all.ts) |
+| `npm run format` | Prettier formatting |
+| `npm run format:check` | Check formatting without changes |
+| `npm run lint:md` | Markdown linting only |
+| `npm run lint:md:fix` | Fix markdown issues automatically |
+| `npm run lint:md:json` | Output markdown lint results as JSON |
+
+#### Documentation & API
+| Command | Description |
+| --- | --- |
+| `npm run docs` | Build functions + generate OpenAPI spec |
+| `npm run docs:generate` | Generate and copy OpenAPI to frontend/public/api/ |
+| `npm run docs:check` | Verify OpenAPI sync between functions and frontend |
+
+#### Utilities & Maintenance
+| Command | Description |
+| --- | --- |
+| `npm run emulators` | Build functions + start all emulators |
+| `npm run emulators:backend` | Auth/Firestore/Functions/PubSub only (no hosting) |
+| `npm run emulators:local` | Import/export local_data for deterministic testing |
+| `npm run clean` | Remove Firebase debug files |
+| `npm run deps` | Interactive dependency upgrades (taze) |
+| `npm run maps:sync` | Update map data from Tarkov.dev (rarely needed) |
+| `npm run security:scan` | Run security vulnerability scan |
+| `npm run test:functions:patterns` | Validate test patterns in functions |
+
+#### Health Check
+Run `./scripts/health-check.sh` for a comprehensive post-upgrade health check covering builds, tests, linting, and type checking.
+
+See [scripts/SCRIPTS.md](scripts/SCRIPTS.md) for detailed scripts reference and workflows.
 
 ## Project structure
 
@@ -121,12 +168,17 @@ TarkovTracker/
 
 ## Documentation
 
-- **User & feature guides** – Work-in-progress documentation lives in the [`docs/`](docs/) directory
-  (not tied to API docs hosting).
-- **API reference** – Generate locally via `npm run docs` which creates `functions/openapi/openapi.json`,
-  which is consumed by Scalar UI in the app.
-- **Development scripts** – Complete reference for all available npm scripts in [scripts/SCRIPTS.md](scripts/SCRIPTS.md).
-- **Changelog** – Review notable updates in [CHANGELOG.md](CHANGELOG.md).
+### Core Guides
+- **User & feature guides** – Comprehensive documentation lives in the [`docs/`](docs/) directory including development setup, workflows, and architecture
+- **API reference** – Generate locally via `npm run docs` which creates `functions/openapi/openapi.json`, consumed by Scalar UI in the app
+- **Development scripts** – Complete reference for all available npm scripts in [scripts/SCRIPTS.md](scripts/SCRIPTS.md)
+- **Changelog** – Review notable updates in [CHANGELOG.md](CHANGELOG.md)
+
+### Operational & Organizational Guides
+Essential guides for project maintenance and improvement:
+- **[docs/BACKEND_STRUCTURE.md](docs/BACKEND_STRUCTURE.md)** – Backend architecture, patterns, and technical debt targets
+- **[docs/CI_PIPELINE.md](docs/CI_PIPELINE.md)** – Comprehensive CI/CD pipeline with quality gates and enforcement
+- **[docs/OPENAPI_SYNC.md](docs/OPENAPI_SYNC.md)** – Automated API documentation synchronization workflow
 
 We welcome additional documentation improvements! Open an issue or pull request if you find gaps.
 

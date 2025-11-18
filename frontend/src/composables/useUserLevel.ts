@@ -1,16 +1,27 @@
 import { computed, ref, watch } from 'vue';
 import { useTarkovStore } from '@/stores/tarkov';
+import { usePlayerLevelData } from '@/composables/data/useMapData';
 import { fireuser } from '@/plugins/firebase';
+
+// Define factions as constants since they're not dynamic
+const FACTIONS = {
+  USEC: { id: 'USEC', name: 'USEC', color: '#4CAF50' },
+  BEAR: { id: 'BEAR', name: 'BEAR', color: '#F44336' },
+};
+
 export function useUserLevel() {
   const tarkovStore = useTarkovStore();
+  const { maxPlayerLevel } = usePlayerLevelData();
+
   // State for editing
   const isEditing = ref(false);
   const editValue = ref(0);
   const editMenuOpen = ref(false);
+
   // Computed properties
   const userLevel = computed(() => tarkovStore.playerLevel());
-  const factions = computed(() => tarkovStore.factions);
-  const maxLevel = computed(() => tarkovStore.maxLevel);
+  const factions = computed(() => FACTIONS);
+  const maxLevel = computed(() => maxPlayerLevel.value);
   const factionId = computed(() => tarkovStore.getPMCFaction());
   // Current faction and display
   const currentFaction = computed(() => {

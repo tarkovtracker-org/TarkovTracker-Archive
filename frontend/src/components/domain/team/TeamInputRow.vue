@@ -19,7 +19,7 @@
     </v-col>
   </v-row>
 </template>
-<script setup>
+<script setup lang="ts">
   defineProps({
     modelValue: { type: String, default: '' },
     label: { type: String, required: true },

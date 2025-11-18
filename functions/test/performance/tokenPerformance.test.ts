@@ -33,7 +33,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
   });
   describe('Token Creation Performance', () => {
     it('should create tokens efficiently under moderate load', async () => {
-      const userId = TestDataGenerator.generateUserId();
+      TestDataGenerator.generateUserId();
       const tokenCount = 50;
       const metrics = await loadTester.runLoadTest(
         'createToken',
@@ -64,12 +64,12 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       expect(memoryGrowth).toBeLessThan(50 * 1024 * 1024); // < 50MB growth
     });
     it('should handle high concurrency token creation', async () => {
-      const userId = TestDataGenerator.generateUserId();
+      TestDataGenerator.generateUserId();
       const concurrentUsers = 20;
       const operationsPerUser = 5;
       const metrics = await loadTester.runConcurrencyTest(
         'createToken',
-        async (userId) => {
+        async (_userId) => {
           const tokenData = TestDataGenerator.generateToken();
           return tokenService.createToken(tokenData, {
             note: `Concurrent test token ${Date.now()}`,
@@ -93,7 +93,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       expect(memoryGrowth).toBeLessThan(100 * 1024 * 1024); // < 100MB growth
     });
     it('should maintain performance with multiple tokens per user', async () => {
-      const userId = TestDataGenerator.generateUserId();
+      TestDataGenerator.generateUserId();
       const tokensPerUser = 10;
       // Seed user system document
       await suite.withDatabase({
@@ -188,7 +188,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
     beforeEach(async () => {
       // Seed tokens for revocation tests
       const tokens: Record<string, any> = {};
-      const userId = TestDataGenerator.generateUserId();
+      TestDataGenerator.generateUserId();
 
       for (let i = 0; i < 50; i++) {
         const token = TestDataGenerator.generateToken();
@@ -230,7 +230,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       expect(metrics.throughput).toBeGreaterThan(5); // > 5 revocations/sec
     });
     it('should handle batch token revocation efficiently', async () => {
-      const userId = TestDataGenerator.generateUserId();
+      TestDataGenerator.generateUserId();
       const tokens: Record<string, any> = {};
 
       // Create tokens for batch revocation
@@ -269,8 +269,6 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       const iterations = 5;
       const tokensPerIteration = 20;
       for (let iteration = 0; iteration < iterations; iteration++) {
-        const userId = TestDataGenerator.generateUserId(`iter${iteration}`);
-
         // Create tokens
         await loadTester.runLoadTest(
           'createToken',
@@ -303,7 +301,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
       let operationCount = 0;
       const responseTimes: number[] = [];
       while (Date.now() - startTime < duration) {
-        const userId = TestDataGenerator.generateUserId();
+        TestDataGenerator.generateUserId();
         const tokenData = TestDataGenerator.generateToken();
 
         const metrics = await monitor.measureOperation('sustainedTokenCreation', async () => {
@@ -316,7 +314,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         responseTimes.push(metrics.metrics.duration);
         operationCount++;
         // Small delay to simulate realistic usage
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise<void>((resolve) => {
+          setTimeout(resolve, 10);
+        });
       }
       // Calculate performance degradation
       const firstHalf = responseTimes.slice(0, Math.floor(responseTimes.length / 2));
@@ -358,10 +358,10 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
     });
     it('should recover from temporary overload conditions', async () => {
       // First, create a high load situation
-      const highLoadMetrics = await loadTester.runLoadTest(
+      const _highLoadMetrics = await loadTester.runLoadTest(
         'highLoadTokenCreation',
         async () => {
-          const userId = TestDataGenerator.generateUserId();
+          TestDataGenerator.generateUserId();
           const tokenData = TestDataGenerator.generateToken();
           return tokenService.createToken(tokenData, {
             note: 'High load test',
@@ -375,12 +375,13 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         }
       );
       // Allow system to recover
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1000);
+      });
       // Test normal performance after recovery
       const recoveryMetrics = await loadTester.runLoadTest(
         'recoveryTokenCreation',
         async () => {
-          const userId = TestDataGenerator.generateUserId();
           const tokenData = TestDataGenerator.generateToken();
           return tokenService.createToken(tokenData, {
             note: 'Recovery test',

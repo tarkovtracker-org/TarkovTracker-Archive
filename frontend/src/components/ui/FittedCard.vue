@@ -26,32 +26,25 @@
     </v-container>
   </v-sheet>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
-  const props = defineProps({
-    icon: {
-      type: String,
-      default: 'mdi-check-all',
-      required: false,
-    },
-    iconColor: {
-      type: String,
-      default: 'white',
-      required: false,
-    },
-    highlightColor: {
-      type: String,
-      default: 'accent',
-      required: false,
-    },
-    fillHeight: {
-      type: Boolean,
-      default: true,
-      required: false,
-    },
+
+  interface Props {
+    icon?: string;
+    iconColor?: string;
+    highlightColor?: string;
+    fillHeight?: boolean;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    icon: 'mdi-check-all',
+    iconColor: 'white',
+    highlightColor: 'accent',
+    fillHeight: true,
   });
+
   const highlightClasses = computed(() => {
-    const classes = {};
+    const classes: Record<string, boolean> = {};
     classes[`highlight-${props.highlightColor}`] = true;
     classes[`corner-highlight`] = true;
     classes[`elevation-3`] = true;

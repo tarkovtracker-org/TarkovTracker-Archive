@@ -18,6 +18,8 @@ export interface TarkovItem {
   iconLink?: string;
   image8xLink?: string;
   backgroundColor?: string;
+  foundInRaid?: boolean;
+  banned?: boolean;
   properties?: {
     defaultPreset?: TarkovItem;
     [key: string]: unknown;
@@ -104,6 +106,7 @@ export interface TaskObjective {
   value?: number;
   compareMethod?: string;
 }
+export type KeyMap = RequiredKey;
 export type Key = TarkovItem;
 export interface RequiredKey {
   keys: Key[];
@@ -321,4 +324,19 @@ export interface LiveDataComposable {
   useProgressStore: () => Store<string, UserState>;
   teammateStores: Ref<Record<string, Store<string, UserState>>>;
   tarkovStore: Store<string, UserState>;
+}
+
+// Team-related types
+export interface User {
+  id: string;
+  displayName?: string;
+  nickname?: string;
+  email?: string;
+}
+
+export interface TeamNeed {
+  user?: User;
+  count: number;
+  completed?: boolean;
+  foundInRaid?: boolean;
 }

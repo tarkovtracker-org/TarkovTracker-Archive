@@ -1,6 +1,6 @@
-import functions from 'firebase-functions';
 import type { Request, Response } from 'express';
 import type admin from 'firebase-admin'; // Although not directly used, keep for consistency or potential future use
+import { logger } from '../logger.js';
 // Define minimal interface for the token data attached by middleware
 // Duplicated from auth.ts/index.ts for simplicity, consider shared types
 interface ApiTokenData {
@@ -52,18 +52,18 @@ interface TokenInfoResponse {
  *       500:
  *         description: "Internal server error."
  */
-const getTokenInfo = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+const getTokenInfo = (req: AuthenticatedRequest, res: Response): void => {
   // req.apiToken is attached by verifyBearer middleware
   if (req.apiToken?.token) {
     // We already have the token data from the middleware, just format and return
     const tokenResponse: TokenInfoResponse = {
-      permissions: req.apiToken.permissions ?? [],
+      permissions: req.apiToken.permissions,
       token: req.apiToken.token, // Use the token string from middleware
     };
     res.status(200).json(tokenResponse);
   } else {
     // This case should technically be handled by verifyBearer, but added for safety
-    functions.logger.warn('getTokenInfo called without valid req.apiToken');
+    logger.warn('getTokenInfo called without valid req.apiToken');
     res.status(401).json({ error: 'Unauthorized' });
   }
 };

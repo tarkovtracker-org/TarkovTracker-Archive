@@ -1,22 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Request, Response, NextFunction } from 'express';
-import { logger } from 'firebase-functions/v2';
-import { ApiError, ApiResponse } from '../../../src/types/api';
-import {
-  errorHandler,
-  asyncHandler,
-  notFoundHandler,
-  createError,
-  errors,
-} from '../../../src/middleware/errorHandler';
+import { setLogger } from '../../../src/logger';
+import { ApiError } from '../../../src/types/api';
+
+let errorHandlerModule: typeof import('../../../src/middleware/errorHandler');
 import { createTestSuite } from '../../helpers';
 // Mock firebase-functions logger
+const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+};
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    error: vi.fn(),
-    warn: vi.fn(),
-  },
+  logger: mockLogger,
 }));
+setLogger(mockLogger);
 describe('middleware/errorHandler', () => {
   const suite = createTestSuite('middleware/errorHandler');
   let mockReq: any;
@@ -24,6 +24,8 @@ describe('middleware/errorHandler', () => {
   let mockNext: NextFunction;
   beforeEach(async () => {
     await suite.beforeEach();
+    setLogger(mockLogger);
+    errorHandlerModule = await import('../../../src/middleware/errorHandler');
 
     mockReq = {
       originalUrl: '/api/test',
@@ -45,13 +47,16 @@ describe('middleware/errorHandler', () => {
     };
     mockNext = vi.fn();
   });
-  afterEach(suite.afterEach);
+  afterEach(() => {
+    setLogger();
+    suite.afterEach();
+  });
 
   describe('errorHandler middleware', () => {
     it('should handle ApiError instances correctly', () => {
       const apiError = new ApiError(404, 'Resource not found', 'NOT_FOUND');
 
-      errorHandler(apiError, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(apiError, mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -63,21 +68,21 @@ describe('middleware/errorHandler', () => {
           }),
         })
       );
-      expect(logger.warn).toHaveBeenCalledWith('API Error (4xx):', expect.any(Object));
-      expect(logger.error).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledWith('API Error (4xx):', expect.any(Object));
+      expect(mockLogger.error).not.toHaveBeenCalled();
     });
     it('should handle ApiError instances with 5xx status codes as errors', () => {
       const apiError = new ApiError(500, 'Database connection failed', 'DB_ERROR');
 
-      errorHandler(apiError, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(apiError, mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(logger.error).toHaveBeenCalledWith('API Error (5xx):', expect.any(Object));
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalledWith('API Error (5xx):', expect.any(Object));
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
     it('should handle generic errors as internal server errors', () => {
       const genericError = new Error('Unexpected error occurred');
 
-      errorHandler(genericError, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(genericError, mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(500);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -89,7 +94,7 @@ describe('middleware/errorHandler', () => {
           }),
         })
       );
-      expect(logger.error).toHaveBeenCalledWith('Unhandled error in API:', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith('Unhandled error in API:', expect.any(Object));
     });
     it('should include debug information in development mode', () => {
       const originalEnv = process.env.NODE_ENV;
@@ -98,7 +103,7 @@ describe('middleware/errorHandler', () => {
       const error = new Error('Test error');
       error.stack = 'Error stack trace';
 
-      errorHandler(error, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           meta: expect.objectContaining({
@@ -122,7 +127,7 @@ describe('middleware/errorHandler', () => {
       const error = new Error('Test error');
       error.stack = 'Error stack trace';
 
-      errorHandler(error, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
       const response = mockRes.json.mock.calls[0][0];
       expect(response.meta).not.toHaveProperty('stack');
       expect(response.meta).not.toHaveProperty('context');
@@ -135,7 +140,7 @@ describe('middleware/errorHandler', () => {
 
       const error = new Error('Test error');
 
-      errorHandler(error, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           meta: expect.objectContaining({
@@ -149,7 +154,7 @@ describe('middleware/errorHandler', () => {
 
       const error = new Error('Test error');
 
-      errorHandler(error, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           meta: expect.objectContaining({
@@ -163,7 +168,7 @@ describe('middleware/errorHandler', () => {
 
       const error = new Error('Test error');
 
-      errorHandler(error, mockReq, mockRes, mockNext);
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
           meta: expect.objectContaining({
@@ -175,8 +180,8 @@ describe('middleware/errorHandler', () => {
     it('should format error context correctly for logging', () => {
       const error = new Error('Test error');
 
-      errorHandler(error, mockReq, mockRes, mockNext);
-      expect(logger.error).toHaveBeenCalledWith('Unhandled error in API:', {
+      errorHandlerModule.errorHandler(error, mockReq, mockRes, mockNext);
+      expect(mockLogger.error).toHaveBeenCalledWith('Unhandled error in API:', {
         error: 'Test error',
         stack: error.stack,
         url: '/api/test',
@@ -191,10 +196,10 @@ describe('middleware/errorHandler', () => {
   });
   describe('asyncHandler wrapper', () => {
     it('should wrap async functions and catch errors', async () => {
-      const asyncFn = async (req: Request, res: Response, next: NextFunction) => {
+      const asyncFn = async (_req: Request, _res: Response, _next: NextFunction) => {
         throw new Error('Async error');
       };
-      const wrappedFn = asyncHandler(asyncFn);
+      const wrappedFn = errorHandlerModule.asyncHandler(asyncFn);
       await wrappedFn(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -203,19 +208,19 @@ describe('middleware/errorHandler', () => {
       );
     });
     it('should pass through successful async functions', async () => {
-      const asyncFn = async (req: Request, res: Response, next: NextFunction) => {
+      const asyncFn = async (_req: Request, res: Response, _next: NextFunction) => {
         res.json({ success: true });
       };
-      const wrappedFn = asyncHandler(asyncFn);
+      const wrappedFn = errorHandlerModule.asyncHandler(asyncFn);
       await wrappedFn(mockReq, mockRes, mockNext);
       expect(mockRes.json).toHaveBeenCalledWith({ success: true });
       expect(mockNext).not.toHaveBeenCalled();
     });
     it('should handle synchronous errors in wrapped functions', async () => {
-      const syncFn = () => {
+      const syncFn = (_req: Request, _res: Response, _next: NextFunction) => {
         throw new Error('Sync error');
       };
-      const wrappedFn = asyncHandler(syncFn);
+      const wrappedFn = errorHandlerModule.asyncHandler(syncFn);
       await wrappedFn(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -226,7 +231,7 @@ describe('middleware/errorHandler', () => {
   });
   describe('notFoundHandler', () => {
     it('should return 404 for unmatched routes', () => {
-      notFoundHandler(mockReq, mockRes, mockNext);
+      errorHandlerModule.notFoundHandler(mockReq, mockRes, mockNext);
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -242,7 +247,7 @@ describe('middleware/errorHandler', () => {
   });
   describe('createError helper', () => {
     it('should create ApiError instances', () => {
-      const error = createError(400, 'Bad request', 'BAD_REQUEST');
+      const error = errorHandlerModule.createError(400, 'Bad request', 'BAD_REQUEST');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(400);
@@ -250,7 +255,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('BAD_REQUEST');
     });
     it('should create ApiError instances without code', () => {
-      const error = createError(500, 'Internal server error');
+      const error = errorHandlerModule.createError(500, 'Internal server error');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(500);
@@ -260,7 +265,7 @@ describe('middleware/errorHandler', () => {
   });
   describe('errors object', () => {
     it('should create bad request errors', () => {
-      const error = errors.badRequest('Invalid input');
+      const error = errorHandlerModule.errors.badRequest('Invalid input');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(400);
@@ -268,7 +273,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('BAD_REQUEST');
     });
     it('should create unauthorized errors', () => {
-      const error = errors.unauthorized('Token required');
+      const error = errorHandlerModule.errors.unauthorized('Token required');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(401);
@@ -276,7 +281,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('UNAUTHORIZED');
     });
     it('should create forbidden errors', () => {
-      const error = errors.forbidden('Access denied');
+      const error = errorHandlerModule.errors.forbidden('Access denied');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(403);
@@ -284,7 +289,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('FORBIDDEN');
     });
     it('should create not found errors', () => {
-      const error = errors.notFound('Resource missing');
+      const error = errorHandlerModule.errors.notFound('Resource missing');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(404);
@@ -292,7 +297,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('NOT_FOUND');
     });
     it('should create conflict errors', () => {
-      const error = errors.conflict('Resource already exists');
+      const error = errorHandlerModule.errors.conflict('Resource already exists');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(409);
@@ -300,7 +305,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('CONFLICT');
     });
     it('should create unprocessable entity errors', () => {
-      const error = errors.unprocessable('Invalid data format');
+      const error = errorHandlerModule.errors.unprocessable('Invalid data format');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(422);
@@ -308,7 +313,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('UNPROCESSABLE_ENTITY');
     });
     it('should create internal server errors', () => {
-      const error = errors.internal('Something went wrong');
+      const error = errorHandlerModule.errors.internal('Something went wrong');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(500);
@@ -316,7 +321,7 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('INTERNAL_ERROR');
     });
     it('should create service unavailable errors', () => {
-      const error = errors.serviceUnavailable('Service temporarily down');
+      const error = errorHandlerModule.errors.serviceUnavailable('Service temporarily down');
 
       expect(error).toBeInstanceOf(ApiError);
       expect(error.statusCode).toBe(503);
@@ -324,10 +329,10 @@ describe('middleware/errorHandler', () => {
       expect(error.code).toBe('SERVICE_UNAVAILABLE');
     });
     it('should use default messages when no custom message provided', () => {
-      const error1 = errors.badRequest();
-      const error2 = errors.unauthorized();
-      const error3 = errors.forbidden();
-      const error4 = errors.notFound();
+      const error1 = errorHandlerModule.errors.badRequest();
+      const error2 = errorHandlerModule.errors.unauthorized();
+      const error3 = errorHandlerModule.errors.forbidden();
+      const error4 = errorHandlerModule.errors.notFound();
 
       expect(error1.message).toBe('Bad request');
       expect(error2.message).toBe('Unauthorized');

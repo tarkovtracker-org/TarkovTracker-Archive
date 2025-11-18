@@ -11,15 +11,26 @@
     </template>
   </v-snackbar>
 </template>
-<script setup>
-  const props = defineProps({
-    modelValue: {
-      type: Object,
-      default: () => ({ show: false, message: '', color: 'accent' }),
-    },
+<script setup lang="ts">
+  interface SnackbarValue {
+    show: boolean;
+    message: string;
+    color: string;
+  }
+
+  interface Props {
+    modelValue?: SnackbarValue;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    modelValue: () => ({ show: false, message: '', color: 'accent' }),
   });
-  const emit = defineEmits(['update:modelValue']);
-  const updateShow = (show) => {
+
+  const emit = defineEmits<{
+    'update:modelValue': [value: SnackbarValue];
+  }>();
+
+  const updateShow = (show: boolean) => {
     emit('update:modelValue', { ...props.modelValue, show });
   };
 </script>

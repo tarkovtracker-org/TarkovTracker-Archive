@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction } from 'express';
 import { requirePermission } from '../../../src/middleware/permissions';
-import { ApiToken } from '../../../src/types/api';
 import { createTestSuite } from '../../helpers';
 describe('middleware/permissions', () => {
   const suite = createTestSuite('middleware/permissions');

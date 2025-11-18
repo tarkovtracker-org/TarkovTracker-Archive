@@ -27,7 +27,7 @@
   import { useTarkovStore } from '@/stores/tarkov';
   const tarkovStore = useTarkovStore();
   const displayName = computed({
-    get: () => tarkovStore.getDisplayName() || '',
+    get: () => tarkovStore.getDisplayName() ?? '',
     set: (newName) => {
       if (newName && newName.trim()) {
         tarkovStore.setDisplayName(newName.trim());

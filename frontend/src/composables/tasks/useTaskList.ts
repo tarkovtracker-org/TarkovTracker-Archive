@@ -121,7 +121,7 @@ export function useTaskList() {
       views.push({ title: t('page.tasks.userviews.all'), view: 'all' });
     }
     const displayName = tarkovStore.getDisplayName();
-    if (displayName == null) {
+    if (displayName === null) {
       views.push({
         title: t('page.tasks.userviews.yourself'),
         view: 'self',

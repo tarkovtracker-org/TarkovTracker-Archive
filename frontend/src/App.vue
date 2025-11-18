@@ -16,7 +16,7 @@
   const { locale } = useI18n({ useScope: 'global' });
   // Initialize composable
   useTarkovData();
-  onMounted(async () => {
+  onMounted(() => {
     // Access store only after component is mounted
     const appStore = useAppStore() as StoreWithFireswapExt<ReturnType<typeof useAppStore>>;
     if (appStore.localeOverride) {
@@ -27,7 +27,7 @@
       markDataMigrated();
       try {
         const store = useTarkovStore() as StoreWithFireswapExt<ReturnType<typeof useTarkovStore>>;
-        if (store && typeof store.firebindAll === 'function') {
+        if (typeof store.firebindAll === 'function') {
           store.firebindAll();
         }
       } catch (error) {

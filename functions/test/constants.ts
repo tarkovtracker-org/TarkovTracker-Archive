@@ -11,7 +11,9 @@ export const TEST_TIMEOUTS = {
 } as const;
 
 // Token format validation regex
-export const TOKEN_FORMAT = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
+// Matches base64url format: alphanumeric + underscore + hyphen
+// 48 bytes randomBytes -> 64 characters base64url
+export const TOKEN_FORMAT = /^[0-9A-Za-z_-]{64}$/;
 
 // Common test values
 export const TEST_VALUES = {

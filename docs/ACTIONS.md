@@ -157,12 +157,9 @@ Documentation changes should accompany:
 For current specific priorities, see:
 - **GitHub Issues:** Labeled with `priority: high` or `sprint: current`
 - **GitHub Projects:** Sprint board or backlog view
-- **TECHNICAL_DEBT.md:** Ongoing refactoring priorities
 
 ---
 
 ## Related Documentation
-
-- [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) – Known debt items
 - [WORKFLOWS.md](./WORKFLOWS.md) – Branch and deployment process
 - [DEVELOPMENT.md](./DEVELOPMENT.md) – Development setup and testing

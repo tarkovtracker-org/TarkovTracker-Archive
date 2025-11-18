@@ -99,7 +99,7 @@
   const levelInput = ref<HTMLInputElement | null>(null);
   function startEditingLevel() {
     startEditing();
-    nextTick(() => {
+    void nextTick(() => {
       if (levelInput.value) levelInput.value.focus();
     });
   }

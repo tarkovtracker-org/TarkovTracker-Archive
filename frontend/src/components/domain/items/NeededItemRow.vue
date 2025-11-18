@@ -40,17 +40,17 @@
               "
             >
               <span style="font-size: 1.1em" class="d-flex align-center">
-                {{ item.name }}
+                {{ item?.name }}
                 <v-icon v-if="props.need.foundInRaid" size="x-small" class="ml-1"
                   >mdi-checkbox-marked-circle-outline</v-icon
                 >
               </span>
               <span>
-                <template v-if="props.need.needType == 'taskObjective'">
-                  <TaskLink :task="relatedTask" />
+                <template v-if="props.need.needType === 'taskObjective'">
+                  <TaskLink v-if="relatedTask" :task="relatedTask!" />
                 </template>
-                <template v-else-if="props.need.needType == 'hideoutModule'">
-                  <StationLink :station="relatedStation" />
+                <template v-else-if="props.need.needType === 'hideoutModule'">
+                  <StationLink v-if="relatedStation" :station="relatedStation!" />
                 </template>
               </span>
             </span>
@@ -73,8 +73,9 @@
                       <!-- Item image -->
                       <div class="d-flex align-self-stretch item-panel">
                         <v-img
-                          :src="imageItem.image512pxLink"
-                          :lazy-src="imageItem.baseImageLink"
+                          v-if="imageItem"
+                          :src="imageItem?.image512pxLink"
+                          :lazy-src="imageItem?.baseImageLink"
                           :class="itemImageDialogClasses"
                         >
                           <template #placeholder>
@@ -89,7 +90,7 @@
                       </div>
                       <div class="d-flex align-self-center align-center mt-2 mx-2">
                         <div class="text-center px-2">
-                          {{ item.name }}
+                          {{ item?.name }}
                         </div>
                         <v-icon v-if="props.need.foundInRaid" size="x-small" class="ml-1"
                           >mdi-checkbox-marked-circle-outline</v-icon
@@ -97,8 +98,8 @@
                       </div>
                       <!-- Item need details -->
                       <div class="d-flex flex-column align-self-center mt-2 mx-2">
-                        <template v-if="props.need.needType == 'taskObjective'">
-                          <task-link :task="relatedTask" />
+                        <template v-if="props.need.needType === 'taskObjective'">
+                          <task-link v-if="relatedTask" :task="relatedTask!" />
                           <v-row
                             v-if="lockedBefore > 0"
                             no-gutters
@@ -116,7 +117,7 @@
                             </v-col>
                           </v-row>
                           <v-row
-                            v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel"
+                            v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel()"
                             no-gutters
                             class="mb-1 mt-1 d-flex justify-center"
                           >
@@ -132,14 +133,16 @@
                             </v-col>
                           </v-row>
                         </template>
-                        <template v-else-if="props.need.needType == 'hideoutModule'">
+                        <template v-else-if="props.need.needType === 'hideoutModule'">
                           <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
                             <v-col cols="auto" align="center">
-                              <station-link :station="relatedStation" class="justify-center" />
+                              <station-link
+                                v-if="relatedStation"
+                                :station="relatedStation!"
+                                class="justify-center"
+                              />
                             </v-col>
-                            <v-col cols="auto" class="ml-1">{{
-                              props.need.hideoutModule.level
-                            }}</v-col>
+                            <v-col cols="auto" class="ml-1">{{ levelRequired }}</v-col>
                           </v-row>
                           <v-row
                             v-if="lockedBefore > 0"
@@ -158,7 +161,7 @@
                             </v-col>
                           </v-row>
                           <v-row
-                            v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel"
+                            v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel()"
                             no-gutters
                             class="mb-1 mt-1 d-flex justify-center"
                           >
@@ -228,9 +231,9 @@
             </div>
             <div v-else class="d-flex flex-row">
               <div v-if="mdAndUp" class="d-flex align-self-center justify-space-between mr-2">
-                <template v-if="props.need.needType == 'taskObjective'">
+                <template v-if="props.need.needType === 'taskObjective'">
                   <div
-                    v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel"
+                    v-if="levelRequired > 0 && levelRequired > tarkovStore.playerLevel()"
                     class="d-flex align-center mb-1 mt-1 mr-2 d-flex justify-center"
                   >
                     <div>
@@ -261,13 +264,17 @@
                     </div>
                   </div>
                 </template>
-                <template v-else-if="props.need.needType == 'hideoutModule'">
+                <template v-else-if="props.need.needType === 'hideoutModule'">
                   <div class="d-flex align-center mr-2">
                     <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
                       <v-col cols="auto" align="center">
-                        <station-link :station="relatedStation" class="justify-center" />
+                        <station-link
+                          v-if="relatedStation"
+                          :station="relatedStation!"
+                          class="justify-center"
+                        />
                       </v-col>
-                      <v-col cols="auto" class="ml-1">{{ props.need.hideoutModule.level }}</v-col>
+                      <v-col cols="auto" class="ml-1">{{ levelRequired }}</v-col>
                     </v-row>
                   </div>
                   <div v-if="lockedBefore > 0" no-gutters class="mb-1 mt-1 d-flex justify-center">
@@ -340,20 +347,42 @@
     </v-sheet>
   </KeepAlive>
 </template>
-<script setup>
-  import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
+<script setup lang="ts">
+  import {
+    defineAsyncComponent,
+    computed,
+    inject,
+    ref,
+    onMounted,
+    onUnmounted,
+    type ComputedRef,
+  } from 'vue';
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
-  const TaskLink = defineAsyncComponent(() => import('@/components/domain/tasks/TaskLink'));
-  const StationLink = defineAsyncComponent(() => import('@/components/domain/hideout/StationLink'));
-  const props = defineProps({
-    need: {
-      type: Object,
-      required: true,
-    },
-  });
+  import type { Task, TarkovItem, HideoutStation } from '@/types/models/tarkov';
+  import type { Need } from '@/composables/neededItems/useNeededItemLogic';
+
+  interface NeededItemData {
+    selfCompletedNeed: ComputedRef<boolean>;
+    relatedTask: ComputedRef<Task | null>;
+    relatedStation: ComputedRef<HideoutStation | null>;
+    lockedBefore: ComputedRef<number>;
+    neededCount: ComputedRef<number>;
+    currentCount: ComputedRef<number>;
+    levelRequired: ComputedRef<number>;
+    item: ComputedRef<TarkovItem | null>;
+    teamNeeds: ComputedRef<Array<{ user: string; count: number }>>;
+    imageItem: ComputedRef<TarkovItem | null>;
+  }
+  const TaskLink = defineAsyncComponent(() => import('@/components/domain/tasks/TaskLink.vue'));
+  const StationLink = defineAsyncComponent(
+    () => import('@/components/domain/hideout/StationLink.vue')
+  );
+  const props = defineProps<{
+    need: Need;
+  }>();
   const { smAndDown, mdAndUp } = useDisplay();
   const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
@@ -370,11 +399,11 @@
     item,
     teamNeeds,
     imageItem,
-  } = inject('neededitem');
+  } = inject('neededitem', {} as NeededItemData);
   // Intersection observer for lazy loading
-  const cardRef = ref(null);
+  const cardRef = ref<{ $el: HTMLElement } | null>(null);
   const isVisible = ref(false);
-  let observer = null;
+  let observer: IntersectionObserver | null = null;
   onMounted(() => {
     if (cardRef.value?.$el) {
       observer = new IntersectionObserver(
@@ -397,7 +426,7 @@
   });
   const itemImageClasses = computed(() => {
     return {
-      [`item-bg-${item.value.backgroundColor}`]: true,
+      [`item-bg-${item.value?.backgroundColor}`]: true,
       rounded: true,
       'pa-1': true,
       'item-row-image': true,
@@ -405,7 +434,7 @@
   });
   const itemImageDialogClasses = computed(() => {
     return {
-      [`item-bg-${item.value.backgroundColor}`]: true,
+      [`item-bg-${item.value?.backgroundColor}`]: true,
       rounded: true,
       'pa-1': true,
     };

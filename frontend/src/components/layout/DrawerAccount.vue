@@ -49,10 +49,10 @@
       : fireuser.photoURL;
   });
   const userDisplayName = computed(() => {
-    return userStore.getStreamerMode ? 'User' : fireuser.displayName || 'User';
+    return userStore.getStreamerMode ? 'User' : (fireuser.displayName ?? 'User');
   });
   function logout() {
-    signOut(auth);
+    void signOut(auth);
   }
 </script>
 <style lang="scss" scoped>

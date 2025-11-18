@@ -32,7 +32,7 @@ export function initializeEmulator(): admin.app.App {
 // Initialize on module load with error handling
 try {
   initializeEmulator();
-} catch (err) {
+} catch (_err) {
   console.warn('Warning: Failed to initialize Firebase emulator on module load');
   // Continue anyway - tests using mocks or deferred initialization
 }
@@ -42,7 +42,7 @@ export function ensureInitialized(): admin.app.App {
   if (!admin.apps.length) {
     try {
       initializeEmulator();
-    } catch (err) {
+    } catch (_err) {
       console.warn('Warning: Failed to initialize Firebase emulator');
     }
   }
@@ -70,38 +70,59 @@ export function auth() {
 // ============================================================================
 
 /**
- * Clear all data from Firestore emulator
- * Uses HTTP DELETE to the emulator's clear endpoint
+ * Clear all data from Firestore emulator EXCEPT tarkovdata
+ *
+ * Preserves the tarkovdata/tarkovData collection which contains game reference data
+ * that should persist across tests. Discovers and deletes ALL other collections
+ * dynamically to ensure complete cleanup.
  */
 export async function resetDb(): Promise<void> {
   // Ensure Firebase is initialized with the correct environment
   ensureInitialized();
 
-  const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST ?? '127.0.0.1:5002';
-  const projectId = getFirebaseProjectId();
-  const url = `http://${emulatorHost}/emulator/v1/projects/${projectId}/databases/(default)/documents`;
+  const db = firestore();
+
+  // Collections that should be preserved (game reference data)
+  const PRESERVED_COLLECTIONS = new Set(['tarkovdata', 'tarkovData']);
 
   try {
-    // Use AbortController to timeout after 5 seconds to prevent hanging connections
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    // List all collections in the database
+    const collections = await db.listCollections();
 
-    try {
-      const response = await fetch(url, {
-        method: 'DELETE',
-        signal: controller.signal,
+    // Delete each collection that isn't preserved
+    const deletePromises = collections
+      .filter((col) => !PRESERVED_COLLECTIONS.has(col.id))
+      .map(async (collection) => {
+        try {
+          const snapshot = await collection.get();
+
+          // Use batched deletes for efficiency
+          const batches: FirebaseFirestore.WriteBatch[] = [db.batch()];
+          let batchIndex = 0;
+          let batchCount = 0;
+
+          for (const doc of snapshot.docs) {
+            batches[batchIndex].delete(doc.ref);
+            batchCount++;
+
+            // Firestore batch limit is 500 operations
+            if (batchCount >= 500) {
+              batchIndex++;
+              batches.push(db.batch());
+              batchCount = 0;
+            }
+          }
+
+          // Commit all batches
+          await Promise.all(batches.map((batch) => batch.commit()));
+        } catch (_err) {
+          // Silently continue if collection can't be deleted
+        }
       });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok && response.status !== 404) {
-        console.warn(`Warning: Failed to clear Firestore emulator: ${response.statusText}`);
-      }
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    await Promise.all(deletePromises);
   } catch (_err) {
-    // Silently fail if emulator is not running or times out
+    // Silently fail if emulator is not running or listCollections fails
     // (tests might be using mocks or emulator might be started elsewhere)
   }
 

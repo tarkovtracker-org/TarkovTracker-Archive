@@ -7,7 +7,7 @@
 
 import { expect } from 'vitest';
 
-export interface PerformanceBaseline {
+export interface PerformanceBaselineData {
   testName: string;
   averageTime: number;
   maxTime: number;
@@ -27,7 +27,7 @@ export interface PerformanceThresholds {
 }
 
 export class PerformanceBaseline {
-  private static baselines = new Map<string, PerformanceBaseline>();
+  private static baselines = new Map<string, PerformanceBaselineData>();
   private static readonly BASELINE_FILE = 'performance-baselines.json';
 
   /**
@@ -65,7 +65,7 @@ export class PerformanceBaseline {
       times.push(endTime - startTime);
     }
 
-    const baseline: PerformanceBaseline = {
+    const baseline: PerformanceBaselineData = {
       testName,
       averageTime: times.reduce((a, b) => a + b, 0) / times.length,
       maxTime: Math.max(...times),
@@ -92,7 +92,7 @@ export class PerformanceBaseline {
   ): Promise<{
     hasRegression: boolean;
     currentTime: number;
-    baseline: PerformanceBaseline | undefined;
+    baseline: PerformanceBaselineData | undefined;
     percentageIncrease: number;
   }> {
     const sampleSize = options.sampleSize || 5;
@@ -132,7 +132,7 @@ export class PerformanceBaseline {
     operation: () => Promise<any>,
     options: {
       maxTime?: number;
-      baseline?: PerformanceBaseline;
+      baseline?: PerformanceBaselineData;
       threshold?: number;
     } = {}
   ): Promise<void> {
@@ -284,7 +284,7 @@ export class LoadTester {
 
     try {
       await Promise.all(promises);
-    } catch (error) {
+    } catch (_error) {
       // Some operations failed, which is expected under load
     }
 
@@ -314,7 +314,9 @@ export class LoadTester {
         lastError = error as Error;
         if (i < retries - 1) {
           // Brief delay before retry
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await new Promise<void>((resolve) => {
+            setTimeout(() => resolve(), 100);
+          });
         }
       }
     }

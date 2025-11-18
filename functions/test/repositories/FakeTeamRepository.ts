@@ -55,10 +55,10 @@ class FakeTeamTransactionContext implements ITeamTransactionContext {
       const merged: SystemDocument = { ...existing };
       Object.entries(data).forEach(([key, value]) => {
         if (value === null) {
-          // @ts-ignore - Allow null to clear fields
+          // @ts-expect-error - Allow null to clear fields
           merged[key as keyof SystemDocument] = null;
         } else if (value !== undefined) {
-          // @ts-ignore - Type assertion for partial update
+          // @ts-expect-error - Type assertion for partial update
           merged[key as keyof SystemDocument] = value;
         }
       });
@@ -146,14 +146,9 @@ export class FakeTeamRepository implements ITeamRepository {
     // Create transaction with snapshot of current state
     const tx = new FakeTeamTransactionContext(this.systemDocs, this.teamDocs);
 
-    try {
-      const result = await callback(tx);
-      tx.commit(); // Commit writes on success
-      return result;
-    } catch (error) {
-      // Transaction failed - don't commit writes (rollback)
-      throw error;
-    }
+    const result = await callback(tx);
+    tx.commit(); // Commit writes on success
+    return result;
   }
 
   async getSystemDocument(userId: string): Promise<SystemDocument | null> {

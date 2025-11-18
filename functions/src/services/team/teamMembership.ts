@@ -8,9 +8,9 @@
  * - Membership validation
  */
 
-import { logger } from 'firebase-functions/v2';
-import { errors } from '../../middleware/errorHandler';
-import type { ITeamRepository } from '../../repositories/ITeamRepository';
+import { logger } from '../../logger.js';
+import { errors } from '../../middleware/errorHandler.js';
+import type { ITeamRepository } from '../../repositories/ITeamRepository.js';
 
 export interface JoinTeamData {
   id: string;
@@ -74,8 +74,8 @@ export async function joinTeam(
       }
 
       // Check if team is full
-      const currentMembers = teamData.members?.length || 0;
-      if (currentMembers >= (teamData.maximumMembers || 10)) {
+      const currentMembers = teamData.members?.length ?? 0;
+      if (currentMembers >= (teamData.maximumMembers ?? 10)) {
         throw errors.forbidden('Team is full');
       }
 
@@ -133,7 +133,7 @@ export async function leaveTeam(
     await repository.runTransaction(async (tx) => {
       // Get user's system document
       const systemData = await tx.getSystemDoc(userId);
-      originalTeamId = systemData?.team || null;
+      originalTeamId = systemData?.team ?? null;
 
       if (!originalTeamId) {
         throw errors.badRequest('User is not in a team');
@@ -144,7 +144,7 @@ export async function leaveTeam(
 
       if (teamData?.owner === userId) {
         // If user is owner, disband team and remove all members
-        if (teamData.members) {
+        if (teamData.members && teamData.members.length > 0) {
           teamData.members.forEach((memberId: string) => {
             tx.setSystemDoc(memberId, {
               team: null,
@@ -159,11 +159,8 @@ export async function leaveTeam(
           members: repository.arrayRemove(userId),
         });
 
-        // Update user's system document
-        tx.setSystemDoc(userId, {
-          team: null,
-          lastLeftTeam: repository.serverTimestamp(),
-        });
+        // Delete user's system document when leaving team
+        tx.deleteSystemDoc(userId);
       }
     });
 

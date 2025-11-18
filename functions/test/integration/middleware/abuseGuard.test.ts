@@ -4,8 +4,11 @@ import { createTestSuite } from '../../helpers';
 
 // Mock logger from firebase-functions since we don't need to test it
 const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
   warn: vi.fn(),
   error: vi.fn(),
+  debug: vi.fn(),
 };
 vi.mock('firebase-functions/v2', () => ({
   logger: mockLogger,

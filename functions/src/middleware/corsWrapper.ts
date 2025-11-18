@@ -10,15 +10,15 @@
  */
 
 import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
-import { setCorsHeaders } from '../config/corsConfig';
-import { logger } from 'firebase-functions/v2';
+import { setCorsHeaders } from '../config/corsConfig.js';
+import { logger } from '../logger.js';
 
 /**
  * Express middleware that handles CORS for all requests
  *
  * Usage in Express app:
  * ```typescript
- * import { corsMiddleware } from './middleware/corsWrapper';
+ * import { corsMiddleware } from './middleware/corsWrapper.js';
  * app.use(corsMiddleware);
  * ```
  *
@@ -64,7 +64,7 @@ export function corsMiddleware(
  * Usage with Firebase Functions v2:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withCorsHandling } from './middleware/corsWrapper';
+ * import { withCorsHandling } from './middleware/corsWrapper.js';
  *
  * const myHandler = async (req, res) => {
  *   res.json({ message: 'Hello' });
@@ -107,14 +107,8 @@ export function withCorsHandling(
       return;
     }
 
-    // Call the wrapped handler
-    try {
-      await handler(req, res);
-    } catch (error) {
-      // Let error handling middleware deal with errors
-      // Don't swallow them here
-      throw error;
-    }
+    // Call the wrapped handler - let error handling middleware deal with errors
+    await handler(req, res);
   };
 }
 
@@ -124,7 +118,7 @@ export function withCorsHandling(
  * Usage with Firebase Functions v2 for authenticated endpoints:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withCorsAndAuthentication } from './middleware/corsWrapper';
+ * import { withCorsAndAuthentication } from './middleware/corsWrapper.js';
  *
  * const myHandler = async (req, res, uid) => {
  *   res.json({ userId: uid, message: 'Hello' });

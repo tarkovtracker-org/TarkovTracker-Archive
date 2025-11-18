@@ -391,4 +391,4 @@ export type {
   ProgressDocument,
   TeamDocument,
   SystemDocument,
-} from './api';
+} from './api.js';

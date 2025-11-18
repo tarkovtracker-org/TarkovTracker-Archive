@@ -2,7 +2,7 @@ import { computed, effectScope, onMounted, ref, watch, type ComputedRef, type Re
 import { executeGraphQL, queryToString } from '@/utils/graphqlClient';
 import { fetchTarkovDevMaps } from '@/utils/mapTransformUtils';
 import languageQuery from '@/utils/languagequery';
-import tarkovDataQuery from '@/utils/tarkovdataquery';
+import { tarkovDataQuery } from '@/utils/tarkovdataquery';
 import tarkovHideoutQuery from '@/utils/tarkovhideoutquery';
 import { logger } from '@/utils/logger';
 import { LRUCache } from '@/utils/lruCache';

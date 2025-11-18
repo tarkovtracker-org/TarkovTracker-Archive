@@ -12,30 +12,7 @@
     <link rel="dns-prefetch" href="https://raw.githubusercontent.com" />
     <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin />
 
-    <!-- Preload critical dashboard background (LCP image) -->
-    <link
-      rel="preload"
-      as="image"
-      href="/img/background/sunset.avif"
-      type="image/avif"
-      fetchpriority="high"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/img/background/sunset.webp"
-      type="image/webp"
-      fetchpriority="high"
-    />
-
-    <!-- Preload critical drawer background -->
-    <link
-      rel="preload"
-      as="image"
-      href="/img/background/sidebar-background.avif"
-      type="image/avif"
-      fetchpriority="high"
-    />
+    <!-- Preload critical drawer background (always visible) -->
     <link
       rel="preload"
       as="image"
@@ -44,7 +21,7 @@
       fetchpriority="high"
     />
 
-    <!-- Preload primary navigation logo (above-fold) -->
+    <!-- Preload primary navigation logo (above-fold, OptimizedImage will use avif/webp/png) -->
     <link
       rel="preload"
       as="image"
@@ -52,29 +29,17 @@
       type="image/avif"
       fetchpriority="high"
     />
+
+    <!-- Prefetch route-dependent backgrounds (not always on initial load) -->
     <link
-      rel="preload"
+      rel="prefetch"
       as="image"
-      href="/img/logos/tarkovtrackerlogo-light.webp"
+      href="/img/background/sunset.webp"
       type="image/webp"
-      fetchpriority="high"
     />
 
-    <!-- Preload critical fonts for faster rendering -->
-    <link
-      rel="preload"
-      href="/assets/fonts/materialdesignicons-webfont.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="/assets/fonts/share-tech-mono-latin-400-normal.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+    <!-- Note: Fonts are loaded via Vite-bundled CSS (@fontsource, @mdi) with font-display: swap
+         Preloading here would use incorrect paths and cause unused resource warnings -->
   </head>
   <body>
     <div id="app"></div>

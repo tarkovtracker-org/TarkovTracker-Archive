@@ -4,26 +4,21 @@ import { createTestSuite, firestore } from '../../helpers';
 import { TeamService } from '../../../src/services/TeamService';
 
 // Mock Firebase Functions (not Firebase Admin)
+const mockLogger = {
+  log: vi.fn(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+};
 vi.mock('firebase-functions', () => ({
   default: {
-    logger: {
-      log: vi.fn(),
-      info: vi.fn(),
-      error: vi.fn(),
-      warn: vi.fn(),
-      debug: vi.fn(),
-    },
+    logger: mockLogger,
   },
 }));
 
 vi.mock('firebase-functions/v2', () => ({
-  logger: {
-    log: vi.fn(),
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-  },
+  logger: mockLogger,
 }));
 
 vi.mock('firebase-functions/v2/https', () => ({
@@ -70,12 +65,14 @@ const createResponseMock = (): MockResponse => {
   };
 };
 
-const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
+const flushPromises = () =>
+  new Promise<void>((resolve) => {
+    setImmediate(() => resolve());
+  });
 
 // Import the team functions with dynamic imports to handle ESM
-let createTeamLogic: any;
-let joinTeamLogic: any;
-let leaveTeamLogic: any;
+let createTeamLogic: (req: unknown, res: unknown) => Promise<void>;
+let joinTeamLogic: (req: unknown, res: unknown) => Promise<void>;
 
 describe('Team Management', () => {
   const suite = createTestSuite('TeamManagement');
@@ -125,7 +122,7 @@ describe('Team Management', () => {
       const systemData = systemDoc.data();
       expect(systemData?.team).toBe(result.team);
 
-      const teamDoc = await db.collection('teams').doc(result.team).get();
+      const teamDoc = await db.collection('team').doc(result.team).get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.owner).toBe('owner-uid');
@@ -230,7 +227,7 @@ describe('Team Management', () => {
       const systemData = systemDoc.data();
       expect(systemData?.team).toBe(teamId);
 
-      const teamDoc = await db.collection('teams').doc(teamId).get();
+      const teamDoc = await db.collection('team').doc(teamId).get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.members).toContain('member-uid');
@@ -286,6 +283,10 @@ describe('Team Management', () => {
             createdAt: new Date(),
           },
         },
+        system: {
+          'owner-uid': { team: teamId },
+          'member-uid': { team: teamId },
+        },
       });
 
       // Test the service directly
@@ -300,7 +301,7 @@ describe('Team Management', () => {
       const systemDoc = await db.collection('system').doc('member-uid').get();
       expect(systemDoc.exists).toBe(false);
 
-      const teamDoc = await db.collection('teams').doc(teamId).get();
+      const teamDoc = await db.collection('team').doc(teamId).get();
       expect(teamDoc.exists).toBe(true);
       const teamData = teamDoc.data();
       expect(teamData?.members).not.toContain('member-uid');

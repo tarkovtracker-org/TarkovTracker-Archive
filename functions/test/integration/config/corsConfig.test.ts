@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import functions from 'firebase-functions';
-import type { CorsOptions } from 'cors';
+import type { CorsOptions as _CorsOptions } from 'cors';
 import {
   validateOrigin,
   getAllowedOrigins,
@@ -12,8 +12,11 @@ import { createTestSuite } from '../../helpers';
 // Mock firebase-functions
 vi.mock('firebase-functions', () => {
   const mockLogger = {
+    log: vi.fn(),
+    info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
+    debug: vi.fn(),
   };
 
   return {

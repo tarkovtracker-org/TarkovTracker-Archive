@@ -10,13 +10,21 @@
     {{ text }}
   </v-btn>
 </template>
-<script setup>
-  defineProps({
-    xs: { type: Boolean, required: true },
-    color: { type: String, default: 'primary' },
-    icon: { type: String, required: true },
-    text: { type: String, required: true },
-    size: { type: String, default: 'x-large' },
+<script setup lang="ts">
+  interface Props {
+    xs: boolean;
+    icon: string;
+    text: string;
+    color?: string;
+    size?: string;
+  }
+
+  withDefaults(defineProps<Props>(), {
+    color: 'primary',
+    size: 'x-large',
   });
-  defineEmits(['click']);
+
+  defineEmits<{
+    click: [];
+  }>();
 </script>

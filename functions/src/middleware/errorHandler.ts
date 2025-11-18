@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { logger } from 'firebase-functions/v2';
-import type { ApiResponse } from '../types/api';
-import { ApiError } from '../types/api';
+import { logger } from '../logger.js';
+import type { ApiResponse } from '../types/api.js';
+import { ApiError } from '../types/api.js';
 // Enhanced request interface for error context
 interface ErrorRequest extends Request {
   apiToken?: {
@@ -23,13 +23,16 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
+  // Security: Sanitize error message to prevent info leakage
+  const sanitizedError = error.message.replace(/\b\d{4}-\d{4}-\d{4}-\d{4}-\b/gi, '[REDACTED]');
+
   // Build error context for logging
   const errorContext = {
-    error: error.message,
+    error: sanitizedError,
     stack: error.stack,
     url: req.originalUrl,
     method: req.method,
-    userId: req.apiToken?.owner || req.user?.id,
+    userId: req.apiToken?.owner ?? req.user?.id,
     permissions: req.apiToken?.permissions,
     headers: req.headers,
     body: req.body,
@@ -39,9 +42,9 @@ export const errorHandler = (
   let errorMessage = 'Internal server error';
   let errorCode = 'INTERNAL_ERROR';
   if (error instanceof ApiError) {
-    statusCode = error.statusCode;
+    ({ statusCode } = error);
     errorMessage = error.message;
-    errorCode = (error as ApiError & { code?: string }).code || 'API_ERROR';
+    errorCode = (error as ApiError & { code?: string }).code ?? 'API_ERROR';
     // Log API errors as warnings unless they're 5xx
     if (statusCode >= 500) {
       logger.error('API Error (5xx):', errorContext);
@@ -76,16 +79,21 @@ export const asyncHandler = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    return Promise.resolve(fn(req, res, next)).catch(next);
+    try {
+      return Promise.resolve(fn(req, res, next)).catch(next);
+    } catch (error: unknown) {
+      next(error as Error);
+    }
   };
 };
 /**
  * 404 handler for unmatched routes
  */
 export const notFoundHandler = (req: Request, res: Response): void => {
+  // Security: Don't reveal exact routes that might not exist
   const response: ApiResponse = {
     success: false,
-    error: `Route ${req.method} ${req.originalUrl} not found`,
+    error: 'Route not found',
     meta: {
       code: 'NOT_FOUND',
       timestamp: new Date().toISOString(),
@@ -112,4 +120,6 @@ export const errors = {
     createError(500, message, 'INTERNAL_ERROR'),
   serviceUnavailable: (message: string = 'Service unavailable') =>
     createError(503, message, 'SERVICE_UNAVAILABLE'),
+  // Legacy typo support
+  confict: (message: string = 'Conflict') => createError(409, message, 'CONFLICT'),
 };

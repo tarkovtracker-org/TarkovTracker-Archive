@@ -68,8 +68,9 @@
             <p class="text-body-2 mb-4">
               {{ $t('page.settings.cards.progress.description') }}
             </p>
-            <v-alert v-if="!fireuser.loggedIn" type="warning" variant="tonal" class="mb-4" dense>
-              {{ $t('page.settings.cards.progress.login_required') }}
+            <v-alert v-if="!fireuser.loggedIn" type="info" variant="tonal" class="mb-4" dense>
+              <strong>Local Mode:</strong> These buttons will reset your local browser data only.
+              Sign in to sync your progress across devices.
             </v-alert>
             <v-row dense>
               <v-col cols="12" md="6">
@@ -77,7 +78,7 @@
                   block
                   color="warning"
                   prepend-icon="mdi-sword-cross"
-                  :disabled="!fireuser.loggedIn || resetting"
+                  :disabled="resetting"
                   @click="openResetDialog('pvp')"
                 >
                   {{ $t('page.settings.cards.progress.reset_pvp') }}
@@ -88,7 +89,7 @@
                   block
                   color="info"
                   prepend-icon="mdi-account-group"
-                  :disabled="!fireuser.loggedIn || resetting"
+                  :disabled="resetting"
                   @click="openResetDialog('pve')"
                 >
                   {{ $t('page.settings.cards.progress.reset_pve') }}
@@ -114,11 +115,15 @@
             <p class="text-body-2 mb-4">
               {{ $t('page.settings.cards.account_reset.description') }}
             </p>
+            <v-alert v-if="!fireuser.loggedIn" type="info" variant="tonal" class="mb-4" dense>
+              <strong>Local Mode:</strong> This will clear all local browser data and cache for this
+              site. Sign in to manage your online account.
+            </v-alert>
             <v-btn
               block
               color="error"
               prepend-icon="mdi-alert-circle"
-              :disabled="!fireuser.loggedIn || fullResetting"
+              :disabled="fullResetting"
               @click="fullResetDialog = true"
             >
               {{ $t('page.settings.cards.account_reset.button') }}
@@ -136,10 +141,18 @@
       <v-card :title="$t('page.settings.dialogs.reset_mode.title', { mode: resetModeLabel })">
         <v-card-text>
           <p class="mb-4">
-            {{ $t('page.settings.dialogs.reset_mode.description', { mode: resetModeLabel }) }}
+            {{
+              fireuser.loggedIn
+                ? $t('page.settings.dialogs.reset_mode.description', { mode: resetModeLabel })
+                : `This will reset your local ${resetModeLabel} data only. Your browser data will be cleared.`
+            }}
           </p>
           <v-alert type="warning" variant="tonal" class="mb-4" dense>
-            {{ $t('page.settings.dialogs.reset_mode.warning') }}
+            {{
+              fireuser.loggedIn
+                ? $t('page.settings.dialogs.reset_mode.warning')
+                : 'This action cannot be undone. All local progress for this game mode will be lost.'
+            }}
           </v-alert>
         </v-card-text>
         <v-card-actions class="justify-end">
@@ -156,10 +169,18 @@
       <v-card :title="$t('page.settings.dialogs.full_reset.title')">
         <v-card-text>
           <v-alert type="error" variant="tonal" class="mb-4" dense>
-            {{ $t('page.settings.dialogs.full_reset.warning') }}
+            {{
+              fireuser.loggedIn
+                ? $t('page.settings.dialogs.full_reset.warning')
+                : 'This will permanently delete all local browser data and cache for this site!'
+            }}
           </v-alert>
           <p class="mb-4">
-            {{ $t('page.settings.dialogs.full_reset.description') }}
+            {{
+              fireuser.loggedIn
+                ? $t('page.settings.dialogs.full_reset.description')
+                : 'This will clear all local storage, session storage, and cache for TarkovTracker. You will lose all local progress and settings. This action cannot be undone.'
+            }}
           </p>
         </v-card-text>
         <v-card-actions class="justify-end">

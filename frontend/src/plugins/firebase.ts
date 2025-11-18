@@ -198,6 +198,7 @@ export {
   functions,
   storage,
   fireuser,
+  getAuth,
   GoogleAuthProvider,
   GithubAuthProvider,
   httpsCallable,

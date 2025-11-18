@@ -90,9 +90,9 @@
       window.open(props.wikiLink, '_blank');
     }
   };
-  const copyItemName = () => {
+  const copyItemName = async () => {
     if (props.itemName) {
-      navigator.clipboard.writeText(props.itemName);
+      await navigator.clipboard.writeText(props.itemName);
     }
   };
 </script>

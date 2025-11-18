@@ -2,7 +2,8 @@
   "rules": {
     "users": {
       "$uid": {
-        ".read": "$uid === auth.uid"
+        ".read": "$uid === auth.uid && auth.uid !== null",
+        ".write": "$uid === auth.uid && auth.uid !== null && newData.child('lastUpdated').val() === now"
       }
     }
   }

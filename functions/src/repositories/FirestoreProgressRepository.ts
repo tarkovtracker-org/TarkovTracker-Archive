@@ -12,8 +12,8 @@ import type {
   FieldValue,
 } from 'firebase-admin/firestore';
 import { FieldValue as FieldValueClass } from 'firebase-admin/firestore';
-import type { IProgressRepository, IProgressTransactionContext } from './IProgressRepository';
-import type { ProgressDocument } from '../types/api';
+import type { IProgressRepository, IProgressTransactionContext } from './IProgressRepository.js';
+import type { ProgressDocument } from '../types/api.js';
 
 /**
  * Firestore transaction context implementation

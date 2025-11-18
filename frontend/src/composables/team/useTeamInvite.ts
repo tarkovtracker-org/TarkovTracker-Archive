@@ -37,7 +37,7 @@ export function useTeamInvite() {
    * Check if user is already in the invited team
    */
   const inInviteTeam = computed(() => {
-    return systemStore?.userTeam != null && systemStore.userTeam == route?.query?.team;
+    return systemStore?.userTeam !== null && systemStore.userTeam === route?.query?.team;
   });
 
   /**
@@ -61,7 +61,7 @@ export function useTeamInvite() {
       }
 
       // If user is already in a team, leave it first
-      if (systemStore.userTeam != null) {
+      if (systemStore.userTeam !== null) {
         try {
           const leaveResponse = await leaveTeamCallable({});
           const leaveResultData = leaveResponse.data;

@@ -84,27 +84,36 @@
     <v-skeleton-loader type="paragraph"></v-skeleton-loader>
   </v-sheet>
 </template>
-<script setup>
+<script setup lang="ts">
   import { firestore, functions } from '@/plugins/firebase';
   import { doc, getDoc } from '@/plugins/firebase';
   import { httpsCallable } from '@/plugins/firebase';
   import { computed, ref, watch } from 'vue';
+  import type { Timestamp } from 'firebase/firestore';
   import QRCode from 'qrcode';
   import { useUserStore } from '@/stores/user';
   import { useI18n } from 'vue-i18n';
   import { logger } from '@/utils/logger';
+
+  interface TokenData {
+    note?: string;
+    permissions?: string[];
+    gameMode?: string;
+    createdAt?: Timestamp;
+    error?: string;
+  }
+
+  interface Props {
+    token: string;
+  }
+
   // Get locale for use in calculating relative time
   const { locale } = useI18n({ useScope: 'global' });
   // Define the props for the component
-  const props = defineProps({
-    token: {
-      type: String,
-      required: true,
-    },
-  });
+  const props = defineProps<Props>();
   const userStore = useUserStore();
   // Ref to store tokenData when retrieved from Firestore
-  const tokenDataRef = ref(null);
+  const tokenDataRef = ref<TokenData | null>(null);
   const tokenDoc = doc(firestore, 'token', props.token);
   // Retrieve the data from the document then store it in tokenDataRef
   getDoc(tokenDoc)
@@ -122,8 +131,9 @@
     });
   // Computed property to retrieve the timestamp of the token creation
   const tokenCreated = computed(() => {
-    if (!tokenDataRef.value?.createdAt) return Date.now();
-    return tokenDataRef.value.createdAt.toDate() || Date.now();
+    const data = tokenDataRef.value;
+    if (!data?.createdAt) return Date.now();
+    return data.createdAt.toDate();
   });
   // Computed property to display the permissions of the token
   const tokenPermissions = computed(() => {
@@ -135,7 +145,7 @@
   // Get game mode from database or default to PvP for legacy tokens
   const tokenGameMode = computed(() => {
     // Use stored gameMode field or default to 'pvp' for backward compatibility
-    return tokenDataRef.value?.gameMode || 'pvp';
+    return tokenDataRef.value?.gameMode ?? 'pvp';
   });
   // Game mode display properties
   const gameModeDisplay = computed(() => {
@@ -182,7 +192,7 @@
     const relativeTimeFormat = new Intl.RelativeTimeFormat(locale.value, {
       numeric: 'auto',
     });
-    const days = Math.floor((Date.now() - tokenCreated.value) / 86400000);
+    const days = Math.floor((Date.now() - Number(tokenCreated.value)) / 86400000);
     const formattedDays = relativeTimeFormat.format(-days, 'day');
     return formattedDays;
   });
@@ -211,10 +221,10 @@
     deleting.value = true;
     try {
       const result = await revokeTokenFn({ token: props.token });
-      if (result.data.error) {
-        logger.error('Token revocation failed:', result.data.error);
+      if ((result.data as any).error) {
+        logger.error('Token revocation failed:', (result.data as any).error);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Failed to revoke token', error);
     } finally {
       deleting.value = false;
@@ -241,7 +251,7 @@
         if (currentToken === props.token) {
           qrDataUrl.value = dataUrl;
         }
-      } catch (error) {
+      } catch (error: unknown) {
         // Only apply the error if the token hasn't changed
         if (currentToken === props.token) {
           qrError.value = true;
@@ -257,7 +267,7 @@
   const toggleQR = () => {
     showQR.value = !showQR.value;
     if (showQR.value) {
-      generateQR();
+      void generateQR();
     }
   };
   const toggleTokenVisibility = () => {
@@ -272,7 +282,7 @@
       qrError.value = false;
       loading.value = false;
       if (shouldRegenerate) {
-        generateQR();
+        void generateQR();
       }
     }
   );

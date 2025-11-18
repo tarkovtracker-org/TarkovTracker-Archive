@@ -1,10 +1,10 @@
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import type { Firestore, DocumentReference } from 'firebase-admin/firestore';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 import { randomBytes } from 'crypto';
-import type { ApiToken } from '../types/api';
-import { errors } from '../middleware/errorHandler';
-import { createLazyFirestore } from '../utils/factory';
+import type { ApiToken } from '../types/api.js';
+import { errors } from '../middleware/errorHandler.js';
+import { createLazyFirestore } from '../utils/factory.js';
 interface TokenDocument {
   owner: string;
   note: string;

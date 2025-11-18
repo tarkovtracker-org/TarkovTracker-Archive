@@ -81,7 +81,7 @@
       return;
     }
     observer.disconnect();
-    nextTick(() => {
+    void nextTick(() => {
       if (!observer) {
         return;
       }

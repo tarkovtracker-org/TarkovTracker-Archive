@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { getFirebaseProjectId } from '../config/project';
+import { getFirebaseProjectId } from '../config/project.js';
 
 /**
  * Returns a memoized initializer for synchronous singletons.
@@ -105,6 +105,7 @@ export const createLazyFirestore = () => {
 export const createLazyAuth = () => {
   return createLazy(() => {
     if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (typeof (admin.auth as any)._isMockFunction !== 'undefined') {
         return admin.auth();
       }

@@ -13,10 +13,10 @@
  */
 
 import type { Request as ExpressRequest, Response as ExpressResponse, NextFunction } from 'express';
-import { logger } from 'firebase-functions/v2';
-import type { ApiToken } from '../types/api';
-import { TokenService } from '../services/TokenService';
-import { asyncHandler } from './errorHandler';
+import { logger } from '../logger.js';
+import type { ApiToken } from '../types/api.js';
+import { TokenService } from '../services/TokenService.js';
+import { asyncHandler } from './errorHandler.js';
 
 /**
  * Extended request interface with authentication data
@@ -45,7 +45,7 @@ export interface AuthenticatedExpressRequest extends ExpressRequest {
  *
  * Usage in Express app:
  * ```typescript
- * import { verifyBearerToken } from './middleware/httpAuthWrapper';
+ * import { verifyBearerToken } from './middleware/httpAuthWrapper.js';
  * app.use('/api', verifyBearerToken);
  * ```
  *
@@ -98,7 +98,7 @@ export const verifyBearerToken = asyncHandler(
  * Usage with Firebase Functions v2:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withBearerAuth } from './middleware/httpAuthWrapper';
+ * import { withBearerAuth } from './middleware/httpAuthWrapper.js';
  *
  * const myHandler = async (req, res, token) => {
  *   // token.owner contains the authenticated user ID
@@ -162,7 +162,7 @@ export function withBearerAuth(
  * Usage with Firebase Functions v2:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withCorsAndBearerAuth } from './middleware/httpAuthWrapper';
+ * import { withCorsAndBearerAuth } from './middleware/httpAuthWrapper.js';
  *
  * const myHandler = async (req, res, token) => {
  *   res.json({ userId: token.owner, message: 'Hello' });
@@ -189,7 +189,7 @@ export function withCorsAndBearerAuth(
 ): (req: ExpressRequest, res: ExpressResponse) => Promise<void> {
   // Import CORS wrapper dynamically to avoid circular dependencies
   return async (req: ExpressRequest, res: ExpressResponse): Promise<void> => {
-    const { withCorsHandling } = await import('./corsWrapper');
+    const { withCorsHandling } = await import('./corsWrapper.js');
 
     // Wrap with CORS first, then auth
     const corsHandler = withCorsHandling(async (req: ExpressRequest, res: ExpressResponse) => {
@@ -206,7 +206,7 @@ export function withCorsAndBearerAuth(
  *
  * Usage in Express app:
  * ```typescript
- * import { requirePermission } from './middleware/httpAuthWrapper';
+ * import { requirePermission } from './middleware/httpAuthWrapper.js';
  *
  * app.get('/api/progress',
  *   verifyBearerToken,           // First authenticate
@@ -269,7 +269,7 @@ export const requirePermission =
  * Usage:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withBearerAuthAndPermission } from './middleware/httpAuthWrapper';
+ * import { withBearerAuthAndPermission } from './middleware/httpAuthWrapper.js';
  *
  * const myHandler = async (req, res, token) => {
  *   // token has been verified and has 'GP' permission
@@ -316,7 +316,7 @@ export function withBearerAuthAndPermission(
  * Usage:
  * ```typescript
  * import { onRequest } from 'firebase-functions/v2/https';
- * import { withCorsAndBearerAuthAndPermission } from './middleware/httpAuthWrapper';
+ * import { withCorsAndBearerAuthAndPermission } from './middleware/httpAuthWrapper.js';
  *
  * const myHandler = async (req, res, token) => {
  *   res.json({ data: 'protected data' });

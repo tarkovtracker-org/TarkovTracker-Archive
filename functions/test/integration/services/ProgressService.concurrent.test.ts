@@ -42,14 +42,24 @@ vi.mock('../../../src/progress/progressUtils', async () => {
 
 describe('ProgressService concurrency and transactions', () => {
   const suite = createTestSuite('ProgressService.concurrent');
-  const service = new ProgressService();
+
   const trackRunTransactions = () => {
     const spy = vi.spyOn(admin.firestore(), 'runTransaction');
     suite.addCleanup(() => spy.mockRestore());
     return spy;
   };
 
+  // Clear lazy cache before each test to ensure fresh Firestore instance
+  const clearLazyCache = () => {
+    // Reset service instances by creating new service
+    vi.clearAllMocks();
+  };
+
+  // Create service after defining tracking function so we can spy before instantiation
+  const service = new ProgressService();
+
   beforeEach(async () => {
+    clearLazyCache();
     await suite.beforeEach();
     ServiceTestHelpers.setupServiceTest({
       tarkovdata: MOCK_GAME_DATA,
@@ -72,6 +82,11 @@ describe('ProgressService concurrency and transactions', () => {
    * 1. Concurrent Task Update Scenarios
    */
   it('applies consistent state under concurrent single-task updates to the same task', async () => {
+    // Create fresh service instance and spy on its db method
+    const freshService = new ProgressService();
+    const _dbSpy = vi.spyOn(freshService as never, 'db', 'get').mockReturnValue(admin.firestore());
+    const runTransactionSpy = vi.spyOn(admin.firestore(), 'runTransaction');
+
     const userId = 'user-concurrent-1';
     const taskId = 'task-alpha';
     await suite.withDatabase({
@@ -82,18 +97,20 @@ describe('ProgressService concurrency and transactions', () => {
         },
       },
     });
-    const runTransactionSpy = trackRunTransactions();
 
     // Execute concurrent updates to the same task in same mode
     await Promise.all([
-      service.updateSingleTask(userId, taskId, 'completed', 'pvp'),
-      service.updateSingleTask(userId, taskId, 'completed', 'pvp'),
-      service.updateSingleTask(userId, taskId, 'completed', 'pvp'),
-      service.updateSingleTask(userId, taskId, 'completed', 'pvp'),
-      service.updateSingleTask(userId, taskId, 'completed', 'pvp'),
+      freshService.updateSingleTask(userId, taskId, 'completed', 'pvp'),
+      freshService.updateSingleTask(userId, taskId, 'completed', 'pvp'),
+      freshService.updateSingleTask(userId, taskId, 'completed', 'pvp'),
+      freshService.updateSingleTask(userId, taskId, 'completed', 'pvp'),
+      freshService.updateSingleTask(userId, taskId, 'completed', 'pvp'),
     ]);
 
     expect(runTransactionSpy).toHaveBeenCalledTimes(5);
+
+    // Debug: check what spy was called with
+    console.log('Spy calls:', runTransactionSpy.mock.calls);
 
     const { updateTaskState } = await import('../../../src/progress/progressUtils');
     // Dependency update invoked for each operation

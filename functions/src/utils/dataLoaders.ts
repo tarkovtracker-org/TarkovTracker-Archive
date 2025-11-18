@@ -1,6 +1,6 @@
-import functions from 'firebase-functions';
+import { logger } from '../logger.js';
 import type { Firestore, DocumentReference, DocumentSnapshot } from 'firebase-admin/firestore';
-import { createLazyFirestore } from './factory';
+import { createLazyFirestore } from './factory.js';
 
 // Define interfaces for Firestore document data structures
 interface TaskData {
@@ -49,7 +49,7 @@ async function loadAndCache<T>(
       if (snapshot.exists) {
         result = snapshot.data() ?? null;
       } else {
-        functions.logger.error(`Error getting ${errorLabel}: Document does not exist`);
+        logger.error(`Error getting ${errorLabel}: Document does not exist`);
         result = null;
       }
 
@@ -57,7 +57,7 @@ async function loadAndCache<T>(
       cache.set(cacheKey, { data: result });
       return result;
     } catch (error) {
-      functions.logger.error(`Firestore error getting ${errorLabel}:`, { error });
+      logger.error(`Firestore error getting ${errorLabel}:`, { error });
       const result = null;
       // Update cache with null on error
       cache.set(cacheKey, { data: result });

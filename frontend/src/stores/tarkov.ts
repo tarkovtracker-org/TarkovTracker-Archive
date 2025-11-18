@@ -116,10 +116,55 @@ export const useTarkovStore = defineStore('swapTarkov', {
       }
     },
     async resetOnlineProfile() {
+      // Handle logged-out users differently - clear all local storage and cache
       if (!fireuser.uid) {
-        logger.error('User not logged in. Cannot reset online profile.');
+        logger.info('Resetting all local data (logged out)');
+        try {
+          const freshDefaultState = JSON.parse(JSON.stringify(defaultState)) as UserState;
+
+          // Clear all localStorage completely (no preservation for full reset)
+          localStorage.clear();
+
+          // Clear sessionStorage as well
+          sessionStorage.clear();
+
+          // Attempt to clear cache if available
+          if ('caches' in window) {
+            try {
+              const cacheNames = await caches.keys();
+              await Promise.all(cacheNames.map((name) => caches.delete(name)));
+              logger.info('Cache cleared successfully');
+            } catch (cacheError) {
+              logger.warn('Failed to clear cache:', cacheError);
+            }
+          }
+
+          // Save fresh default state to localStorage
+          saveToLocalStorage(
+            'progress',
+            freshDefaultState,
+            'Error saving default state to localStorage after reset:'
+          );
+
+          // Update store state
+          this.$patch(freshDefaultState);
+
+          logger.info('All local data reset successfully');
+          notify({
+            message: 'All local data cleared successfully',
+            type: 'success',
+          });
+        } catch (error) {
+          logger.error('Error resetting local data:', error);
+          notify({
+            message: 'Failed to reset local data — please try again',
+            type: 'error',
+          });
+        }
         return;
       }
+
+      // Handle logged-in users - reset online profile
       const extendedStore = this as unknown as StoreWithFireswapExt<
         ReturnType<typeof useTarkovStore>
       >;
@@ -278,12 +323,50 @@ export const useTarkovStore = defineStore('swapTarkov', {
       await this.resetGameModeData(currentMode);
     },
     async resetGameModeData(mode: GameMode) {
-      if (!fireuser.uid) {
-        logger.error('User not logged in. Cannot reset game mode data.');
-        return;
-      }
       try {
         const freshProgressData = JSON.parse(JSON.stringify(defaultState[mode]));
+
+        // Handle logged-out users differently - only clear local storage
+        if (!fireuser.uid) {
+          logger.info(`Resetting ${mode.toUpperCase()} local data (logged out)`);
+
+          // Create the new complete state with the reset game mode
+          const otherMode = mode === 'pvp' ? 'pve' : 'pvp';
+          const newCompleteState = {
+            currentGameMode: this.currentGameMode,
+            gameEdition: this.gameEdition,
+            [mode]: freshProgressData,
+            [otherMode]: JSON.parse(JSON.stringify(this[otherMode])), // Preserve other mode
+          };
+
+          // Preserve user settings before clearing localStorage
+          const preservedData = preserveLocalStorageKeys(PRESERVED_STORAGE_KEYS);
+
+          // Clear all localStorage to ensure no stale data remains
+          localStorage.clear();
+
+          // Restore preserved user settings
+          restoreLocalStorageKeys(preservedData);
+
+          // Save the new complete state directly to localStorage
+          saveToLocalStorage(
+            'progress',
+            newCompleteState,
+            'Error saving state to localStorage after reset:'
+          );
+
+          // Use $patch to update state while preserving reactivity
+          this.$patch(newCompleteState as UserState);
+
+          logger.info(`${mode.toUpperCase()} local data reset successfully`);
+          notify({
+            message: `${mode.toUpperCase()} data reset successfully`,
+            type: 'success',
+          });
+          return;
+        }
+
+        // Handle logged-in users - reset Firestore data
         const updateData = { [mode]: freshProgressData };
         // Only write to Firestore if dev auth is not enabled
         if (!isDevAuthEnabled()) {
@@ -332,6 +415,10 @@ export const useTarkovStore = defineStore('swapTarkov', {
           // Use $patch to update state while preserving reactivity
           this.$patch(newCompleteState as UserState);
           logger.info(`${mode.toUpperCase()} game mode data reset successfully`);
+          notify({
+            message: `${mode.toUpperCase()} data reset successfully`,
+            type: 'success',
+          });
         } finally {
           if (lockAcquired) {
             // Ensure Vue has processed the state change before releasing the lock
@@ -340,6 +427,10 @@ export const useTarkovStore = defineStore('swapTarkov', {
         }
       } catch (error) {
         logger.error(`Error resetting ${mode} game mode data:`, error);
+        notify({
+          message: `Failed to reset ${mode.toUpperCase()} data — please try again`,
+          type: 'error',
+        });
       }
     },
   },

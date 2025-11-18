@@ -131,7 +131,9 @@ async function startEmulators(): Promise<void> {
       if (firestoreReady && authReady) {
         ready = true;
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        await new Promise((resolve) => {
+          setTimeout(resolve, 500);
+        });
         attempts++;
       }
     }

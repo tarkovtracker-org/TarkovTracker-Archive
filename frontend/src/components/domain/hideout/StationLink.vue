@@ -8,7 +8,7 @@
     </div>
   </router-link>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   // Define the props for the component
   const props = defineProps({

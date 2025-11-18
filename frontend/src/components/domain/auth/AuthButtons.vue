@@ -94,16 +94,17 @@
     </v-container>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, onMounted, nextTick } from 'vue';
   import { useRouter } from 'vue-router';
+  import { type User } from 'firebase/auth';
   import {
     GoogleAuthProvider,
     GithubAuthProvider,
     signInWithPopup,
     auth,
   } from '@/plugins/firebase';
-  import { fireuser } from '@/plugins/firebase.ts';
+  import { fireuser } from '@/plugins/firebase';
   import DataMigrationService from '@/utils/migration/DataMigrationService';
   import { logger } from '@/utils/logger';
   const hasLocalData = ref(false);
@@ -112,13 +113,15 @@
     google: false,
     github: false,
   });
-  const userId = ref(null);
+  const userId = ref<string | null>(null);
   // Prevent automatic navigation after login - we'll handle it manually
   onMounted(async () => {
     try {
       // Wait for Vue to finish initial rendering and give Pinia time to initialize
       await nextTick();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 100);
+      });
       // Check for local data
       hasLocalData.value = await DataMigrationService.hasLocalData();
       // If a user is already logged in, set userId
@@ -130,14 +133,14 @@
       logger.error('Error in onMounted:', error);
     }
   });
-  const handleAuthSuccess = async (user) => {
+  const handleAuthSuccess = (user: User) => {
     userId.value = user.uid;
     try {
       // If pinia-fireswap handles auto-migration,
       // no explicit check or dialog trigger is needed here.
       // The store should sync automatically when the user is authenticated and store binds.
       // Navigate to dashboard after successful login
-      router.push('/');
+      void router.push('/');
     } catch (error) {
       logger.error('Error in handleAuthSuccess:', error);
       // Handle error (e.g., show a notification to the user)
@@ -148,7 +151,7 @@
       loading.value.google = true;
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await handleAuthSuccess(result.user);
+      void handleAuthSuccess(result.user);
     } catch (error) {
       logger.error('Google sign in error:', error);
       loading.value.google = false;
@@ -159,7 +162,7 @@
       loading.value.github = true;
       const provider = new GithubAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await handleAuthSuccess(result.user);
+      void handleAuthSuccess(result.user);
     } catch (error) {
       logger.error('GitHub sign in error:', error);
       loading.value.github = false;

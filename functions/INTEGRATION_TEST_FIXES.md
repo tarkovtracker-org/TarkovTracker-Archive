@@ -278,6 +278,6 @@ The remaining test failures are unrelated to cache or data loader issues and sho
   - `test/helpers/tarkovFixtures.ts` exposes `getTarkovSeedData()` and `createProgressDoc()` so suites can seed the emulator without duplicating structure.
 - All integration/performance suites that rely on team progress now call `getTarkovSeedData()` in every `suite.withDatabase(...)` invocation.  
   - Reminder: `withDatabase` **resets** the emulator each call. If you call it mid-test, include `...getTarkovSeedData()` or you will delete the Tarkov data documents.
-- Added a manual snapshot helper: `npm run fixtures:fetch:tarkovdata` (uses `scripts/fetch-tarkovdata-snapshot.mjs`).
+- Added a manual snapshot helper: `npm run fixtures:fetch:tarkovdata` (uses `scripts/fetch-tarkovdata-snapshot.ts`).
   - This hits https://api.tarkov.dev/graphql and writes raw JSON snapshots to `test/fixtures/tarkovdata/generated/`.
   - Intended for manual refreshes / offline dev only; tests still use the curated fixture modules.

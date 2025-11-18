@@ -96,7 +96,7 @@ export function useTeamManagement() {
       }
       await waitForStoreUpdate(
         () => systemStore.$state.team,
-        (teamId) => teamId != null
+        (teamId) => teamId !== null
       );
       await waitForStoreUpdate(
         () => teamStore.$state,
@@ -152,7 +152,7 @@ export function useTeamManagement() {
    * Computed: Check if current user is team owner
    */
   const isTeamOwner = computed(
-    () => teamStore.$state.owner === fireuser.uid && systemStore.$state?.team != null
+    () => teamStore.$state.owner === fireuser.uid && systemStore.$state?.team !== null
   );
 
   /**

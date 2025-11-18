@@ -56,7 +56,7 @@
       </v-card>
       <ImportConfirmDialog
         v-model:show="migration.confirmDialog.value"
-        :data="migration.importedData.value"
+        :data="migration.importedData.value || undefined"
         :completed-tasks="migration.countCompletedTasks.value"
         :failed-tasks="migration.countFailedTasks.value"
         :task-objectives="migration.countTaskObjectives.value"
@@ -132,10 +132,11 @@
     </template>
   </fitted-card>
 </template>
-<script setup>
+<script setup lang="ts">
   import { useDataMigration } from '@/composables/useDataMigration';
   import FittedCard from '@/components/ui/FittedCard.vue';
   import MigrationSteps from './MigrationSteps.vue';
   import ImportConfirmDialog from './ImportConfirmDialog.vue';
+
   const migration = useDataMigration();
 </script>

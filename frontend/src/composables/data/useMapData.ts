@@ -66,7 +66,8 @@ export function useMapData() {
         }
         return map;
       }
-      if (!staticData.svg && !missingSvgWarnings.has(mapKey)) {
+      // Only warn if SVG is missing AND there's no unavailableMessage (intentionally unavailable maps shouldn't warn)
+      if (!staticData.svg && !staticData.unavailableMessage && !missingSvgWarnings.has(mapKey)) {
         missingSvgWarnings.add(mapKey);
         logger.warn(`Static SVG data not found for map: ${map.name} (lookup key: ${mapKey})`);
       }

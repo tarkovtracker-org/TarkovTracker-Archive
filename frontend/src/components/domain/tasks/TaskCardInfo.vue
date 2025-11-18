@@ -87,10 +87,10 @@
   const showPreviousTasksComputed = computed(() => props.showPreviousTasks === true);
   const nextTasks = computed(() => {
     if (!showNextTasksComputed.value) return [];
-    const successors = props.task.children || [];
+    const successors = props.task.children ?? [];
     if (!Array.isArray(successors) || !successors.length) return [];
     return successors
-      .map((id) => (tasks.value || []).find((taskItem) => taskItem.id === id))
+      .map((id) => (tasks.value ?? []).find((taskItem) => taskItem.id === id))
       .filter((taskItem): taskItem is Task => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,
@@ -100,24 +100,24 @@
   });
   const previousTasks = computed(() => {
     if (!showPreviousTasksComputed.value) return [];
-    const requirements = props.task.taskRequirements || [];
+    const requirements = props.task.taskRequirements ?? [];
     const relevantRequirementIds = requirements
       .filter((requirement) => {
         const reqTaskId = requirement?.task?.id;
         if (!reqTaskId) return false;
-        const statuses = requirement.status || [];
+        const statuses = requirement.status ?? [];
         if (!statuses.length) return true;
         return statuses.some((status) => {
           const normalized = status?.toLowerCase();
           if (!normalized) return false;
           if (normalized.includes('accept')) return false;
-          return normalized.includes('complete') || normalized.includes('finish');
+          return normalized.includes('complete') ?? normalized.includes('finish');
         });
       })
       .map((requirement) => requirement.task.id);
     if (!relevantRequirementIds.length) return [];
     return relevantRequirementIds
-      .map((id) => (tasks.value || []).find((taskItem) => taskItem.id === id))
+      .map((id) => (tasks.value ?? []).find((taskItem) => taskItem.id === id))
       .filter((taskItem): taskItem is Task => Boolean(taskItem?.name))
       .map((taskItem) => ({
         id: taskItem.id,

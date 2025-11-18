@@ -6,7 +6,7 @@
           <div class="text-h4">
             {{ getDisplayName(props.teammember) }}
           </div>
-          <div v-if="props.teammember == fireuser.uid" class="text-left">
+          <div v-if="props.teammember === fireuser.uid" class="text-left">
             <b>
               {{ $t('page.team.card.manageteam.membercard.this_is_you') }}
             </b>
@@ -52,16 +52,16 @@
         </v-col>
         <v-col cols="auto">
           <v-btn
-            :disabled="props.teammember == fireuser.uid || userStore.taskTeamAllHidden"
+            :disabled="props.teammember === fireuser.uid || userStore.taskTeamAllHidden"
             variant="outlined"
             :icon="
-              props.teammember != fireuser.uid && userStore.teamIsHidden(props.teammember)
+              props.teammember !== fireuser.uid && userStore.teamIsHidden(props.teammember)
                 ? 'mdi-eye-off'
                 : 'mdi-eye'
             "
             class="mx-1"
             :color="
-              props.teammember != fireuser.uid && userStore.teamIsHidden(props.teammember)
+              props.teammember !== fireuser.uid && userStore.teamIsHidden(props.teammember)
                 ? 'red'
                 : 'green'
             "
@@ -70,7 +70,7 @@
           ></v-btn>
           <!-- Button to delete the token -->
           <v-btn
-            v-if="props.teammember != fireuser.uid && isTeamOwnerView"
+            v-if="props.teammember !== fireuser.uid && isTeamOwnerView"
             variant="outlined"
             icon="mdi-account-minus"
             class="mx-1"
@@ -93,8 +93,8 @@
     </template>
   </v-snackbar>
 </template>
-<script setup>
-  import { fireuser } from '@/plugins/firebase';
+<script setup lang="ts">
+  import { fireuser, getAuth } from '@/plugins/firebase';
   import { computed, ref } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useUserStore } from '@/stores/user';
@@ -113,7 +113,7 @@
     },
   });
   const teamStoreId = computed(() => {
-    if (props.teammember == fireuser.uid) {
+    if (props.teammember === fireuser.uid) {
       return 'self';
     } else {
       return props.teammember;
@@ -134,13 +134,13 @@
     return entry?.levelBadgeImageLink ?? '';
   });
   const kickingTeammate = ref(false);
-  const kickTeammateResult = ref(null);
+  const kickTeammateResult = ref<string | null>(null);
   const kickTeammateSnackbar = ref(false);
   const kickTeammate = async () => {
     if (!props.teammember) return;
     kickingTeammate.value = true;
     try {
-      const idToken = await fireuser.value.getIdToken();
+      const idToken = await getAuth().currentUser!.getIdToken();
       const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
       const response = await fetch(
         `https://us-central1-${projectId}.cloudfunctions.net/kickTeamMember`,
@@ -168,8 +168,9 @@
       kickTeammateResult.value = t('page.team.card.manageteam.membercard.kick_success');
       kickTeammateSnackbar.value = true;
     } catch (error) {
-      const backendMsg = error?.message || error?.data?.message || error?.toString();
-      kickTeammateResult.value = backendMsg || t('page.team.card.manageteam.membercard.kick_error');
+      const backendMsg =
+        (error as any)?.message ?? (error as any)?.data?.message ?? error?.toString();
+      kickTeammateResult.value = backendMsg ?? t('page.team.card.manageteam.membercard.kick_error');
       logger.error('[TeammemberCard.vue] Error kicking teammate:', error);
       kickTeammateSnackbar.value = true;
     }

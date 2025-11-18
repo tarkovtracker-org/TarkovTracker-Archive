@@ -7,7 +7,7 @@
  * - Easier mocking and testing of edge cases
  */
 
-import type { ProgressDocument } from '../types/api';
+import type { ProgressDocument } from '../types/api.js';
 import type { FieldValue } from 'firebase-admin/firestore';
 
 /**

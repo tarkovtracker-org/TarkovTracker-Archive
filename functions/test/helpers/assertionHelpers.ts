@@ -93,20 +93,20 @@ export const expectApiError = (
  *
  * Validates:
  * - Token is defined
- * - Token matches format: XXXX-XXXX-XXXX-XXXX
- * - Token length is exactly 19 characters
+ * - Token matches base64url format (alphanumeric + underscore + hyphen)
+ * - Token length is exactly 64 characters (48 bytes randomBytes)
  *
  * @param token - Token string to validate
  *
  * @example
  * ```typescript
- * expectValidToken('ABCD-1234-WXYZ-5678');
+ * expectValidToken('fmoAGsWKcdxGfxs8sG4Fx_2qENu_IaTAvNF4PawUMvLfJSFHRwHu_cOgdCcmaJBy');
  * ```
  */
 export const expectValidToken = (token: string) => {
   expect(token).toBeDefined();
   expect(token).toMatch(TOKEN_FORMAT);
-  expect(token.length).toBe(19); // XXXX-XXXX-XXXX-XXXX
+  expect(token.length).toBe(64); // 48 bytes randomBytes -> 64 chars base64url
 };
 
 /**
@@ -117,25 +117,31 @@ export const expectValidToken = (token: string) => {
  * - Has owner field
  * - Has permissions array
  * - Has token field
- * - Token field is valid format
+ *
+ * Note: Does NOT validate token string format - use expectValidToken separately
+ * for that. This allows testing with mock token IDs in tests.
  *
  * @param tokenData - Token data object
+ * @param validateFormat - Optional: validate token string format (default: false)
  *
  * @example
  * ```typescript
  * expectTokenStructure({
  *   owner: 'user-1',
  *   permissions: ['GP', 'WP'],
- *   token: 'ABCD-1234-WXYZ-5678'
+ *   token: 'test-token-123'
  * });
  * ```
  */
-export const expectTokenStructure = (tokenData: any) => {
+export const expectTokenStructure = (tokenData: any, validateFormat: boolean = false) => {
   expect(tokenData).toBeDefined();
   expect(tokenData.owner).toBeDefined();
   expect(tokenData.permissions).toBeInstanceOf(Array);
   expect(tokenData.token).toBeDefined();
-  expectValidToken(tokenData.token);
+
+  if (validateFormat) {
+    expectValidToken(tokenData.token);
+  }
 };
 
 /**

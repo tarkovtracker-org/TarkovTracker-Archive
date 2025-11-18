@@ -22,22 +22,25 @@
     </div>
   </v-list-item>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import OptimizedImage from '@/components/ui/OptimizedImage.vue';
+
   const { t } = useI18n({ useScope: 'global' });
-  const props = defineProps({
-    isCollapsed: {
-      type: Boolean,
-      required: true,
-    },
-  });
+
+  interface Props {
+    isCollapsed: boolean;
+  }
+
+  const props = defineProps<Props>();
+
   const logo = computed(() => {
     return props.isCollapsed
       ? '/img/logos/tarkovtrackerlogo-mini.png'
       : '/img/logos/tarkovtrackerlogo-light.png';
   });
+
   const logoSize = computed(() => (props.isCollapsed ? 48 : 140));
 </script>
 <style lang="scss" scoped>

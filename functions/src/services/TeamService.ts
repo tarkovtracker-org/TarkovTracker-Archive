@@ -20,27 +20,27 @@
  */
 
 import type { Firestore } from 'firebase-admin/firestore';
-import { createLazyFirestore } from '../utils/factory';
-import type { ITeamRepository } from '../repositories/ITeamRepository';
-import { FirestoreTeamRepository } from '../repositories/FirestoreTeamRepository';
+import { createLazyFirestore } from '../utils/factory.js';
+import type { ITeamRepository } from '../repositories/ITeamRepository.js';
+import { FirestoreTeamRepository } from '../repositories/FirestoreTeamRepository.js';
 
 // Import focused modules
 import {
   createTeam as createTeamImpl,
   type CreateTeamData,
   type CreateTeamResult,
-} from './team/teamCore';
+} from './team/teamCore.js';
 import {
   joinTeam as joinTeamImpl,
   leaveTeam as leaveTeamImpl,
   type JoinTeamData,
   type JoinTeamResult,
   type LeaveTeamResult,
-} from './team/teamMembership';
+} from './team/teamMembership.js';
 import {
   getTeamProgress as getTeamProgressImpl,
   type TeamProgressResult,
-} from './team/teamProgress';
+} from './team/teamProgress.js';
 
 // Re-export types for public API
 export type { CreateTeamData, JoinTeamData };
@@ -62,7 +62,7 @@ export class TeamService {
   constructor(repository?: ITeamRepository) {
     this.getDb = createLazyFirestore();
     // Use provided repository or create default Firestore implementation
-    this.repository = repository || new FirestoreTeamRepository(this.getDb());
+    this.repository = repository ?? new FirestoreTeamRepository(this.getDb());
   }
 
   /**

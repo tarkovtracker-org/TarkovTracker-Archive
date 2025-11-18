@@ -38,31 +38,48 @@
  * ============================================================================
  */
 
-import { afterEach } from 'vitest';
-import { resetDb } from './helpers/emulatorSetup';
+import { beforeAll, afterEach } from 'vitest';
+import { resetDb, seedDb } from './helpers/emulatorSetup';
+import { getTarkovSeedData } from './helpers/tarkovFixtures';
+
+/**
+ * Global setup hook - Seeds game reference data once before all tests
+ *
+ * Seeds the tarkovdata collection with game reference data (tasks, hideout, etc.)
+ * that should persist across all tests. This data is preserved by resetDb()
+ * which selectively deletes test collections while keeping tarkovdata intact.
+ */
+beforeAll(async () => {
+  // Seed tarkovdata once - resetDb() will preserve this across tests
+  const tarkovData = getTarkovSeedData();
+  await seedDb(tarkovData);
+});
 
 /**
  * Global cleanup hook - THE canonical Firestore cleanup mechanism
  *
- * Runs after EVERY test to clear all Firestore emulator data.
- * This guarantees the next test starts with a completely clean database.
+ * Runs after EVERY test to clear all Firestore emulator data EXCEPT tarkovdata.
+ * This guarantees the next test starts with a clean database but preserves
+ * game reference data seeded in beforeAll.
  *
  * Implementation details:
- * - Uses the Firebase emulator's REST API to clear all documents
+ * - Selectively deletes test collections (users, tokens, progress, etc.)
+ * - Preserves tarkovdata/tarkovData collections (game reference data)
  * - Also clears data loader caches to prevent stale snapshot reuse
  * - Runs even if a test fails or throws an exception
  * - Executes after test-specific afterEach hooks (if any)
  *
  * Performance note:
- * - Clearing the emulator is fast (~10-50ms per test)
+ * - Selective deletion is fast (~10-50ms per test)
  * - This overhead is worth it for guaranteed test isolation
  * - Prevents hard-to-debug failures from test interdependencies
  *
  * Expected test lifecycle:
- * 1. beforeEach: Firestore is clean (from previous test's afterEach)
- * 2. Test setup: Seed data using seedDb() or suite.withDatabase()
- * 3. Test execution: Operate on clean, known state
- * 4. afterEach: This hook clears everything for the next test
+ * 1. beforeAll: Seed tarkovdata once for all tests
+ * 2. beforeEach: Firestore is clean (from previous test's afterEach)
+ * 3. Test setup: Seed test data using seedDb() or suite.withDatabase()
+ * 4. Test execution: Operate on clean, known state
+ * 5. afterEach: This hook clears test data but preserves tarkovdata
  */
 afterEach(async () => {
   await resetDb();

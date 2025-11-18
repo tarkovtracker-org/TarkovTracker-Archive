@@ -16,13 +16,14 @@
     </div>
     <!-- Station Info for Hideout -->
     <div v-if="needType === 'hideoutModule'" class="d-flex align-center mr-2">
-      <station-link :station="relatedStation" />
+      <station-link v-if="relatedStation" :station="relatedStation" />
       <span class="ml-1">{{ hideoutLevel }}</span>
     </div>
   </div>
 </template>
 <script setup lang="ts">
   import { computed, defineAsyncComponent } from 'vue';
+  import type { HideoutStation } from '@/types/models/tarkov';
   const StationLink = defineAsyncComponent(
     () => import('@/components/domain/hideout/StationLink.vue')
   );
@@ -31,7 +32,7 @@
     levelRequired: number;
     lockedBefore: number;
     playerLevel: number;
-    relatedStation?: { id: string; name: string; [key: string]: unknown };
+    relatedStation?: HideoutStation | null;
     hideoutLevel?: number;
   }>();
   const showLevelRequirement = computed(

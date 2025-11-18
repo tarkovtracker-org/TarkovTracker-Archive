@@ -120,7 +120,7 @@
       return tarkovStore.getCurrentGameMode();
     },
     set(newMode) {
-      tarkovStore.switchGameMode(newMode);
+      void tarkovStore.switchGameMode(newMode);
     },
   });
   // PMC Faction options
@@ -151,7 +151,7 @@
   const currentLocale = computed({
     get() {
       return (
-        localeItems.value.filter((localeItem) => localeItem.value == locale.value)[0] ||
+        localeItems.value.filter((localeItem) => localeItem.value === locale.value)[0] ||
         localeItems.value[0]
       );
     },
@@ -164,7 +164,7 @@
   });
   const goToSettings = () => {
     emit('close');
-    router.push({ name: 'settings' });
+    void router.push({ name: 'settings' });
   };
 </script>
 <style lang="scss" scoped>

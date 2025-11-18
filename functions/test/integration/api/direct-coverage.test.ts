@@ -4,12 +4,18 @@ interface MockResponse {
   status: Mock<(code: number) => MockResponse>;
   json: Mock<(data: any) => MockResponse>;
   send: Mock<(data: any) => MockResponse>;
+  set: Mock<(field: string, value: string | readonly string[]) => MockResponse>;
+  header: Mock<(field: string, value: string) => MockResponse>;
+  setHeader: Mock<(field: string, value: string) => MockResponse>;
 }
 const makeResponse = (): MockResponse => {
   const res = {} as MockResponse;
   res.status = vi.fn().mockReturnValue(res);
   res.json = vi.fn().mockReturnValue(res);
   res.send = vi.fn().mockReturnValue(res);
+  res.set = vi.fn().mockReturnValue(res);
+  res.header = vi.fn().mockReturnValue(res);
+  res.setHeader = vi.fn().mockReturnValue(res);
   return res;
 };
 describe('Direct HTTP handlers', () => {

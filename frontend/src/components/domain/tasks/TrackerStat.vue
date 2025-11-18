@@ -23,13 +23,13 @@
     </div>
   </v-sheet>
 </template>
-<script setup>
-  const props = defineProps({
-    icon: {
-      type: String,
-      default: 'mdi-check-all',
-      required: false,
-    },
+<script setup lang="ts">
+  interface Props {
+    icon?: string;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    icon: 'mdi-check-all',
   });
 </script>
 <style lang="scss" scoped>

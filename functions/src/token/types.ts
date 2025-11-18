@@ -1,5 +1,5 @@
 import type { firestore } from 'firebase-admin';
-import type { TokenGameMode } from '../types/api';
+import type { TokenGameMode } from '../types/api.js';
 export interface RevokeTokenData {
   token: string;
 }

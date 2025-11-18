@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import { createHash } from 'node:crypto';
 interface AuthenticatedRequest extends Request {
   apiToken?: {
@@ -160,7 +160,7 @@ function shouldGuard(req: Request): boolean {
         : typeof req.url === 'string'
           ? req.url
           : '';
-  const routePath = `${req.baseUrl ?? ''}${relativePath}`;
+  const routePath = `${req.baseUrl}${relativePath}`;
   return PATH_PREFIXES.some((prefix) => routePath.startsWith(prefix));
 }
 function resolveCacheKey(req: AuthenticatedRequest): string | undefined {
@@ -171,7 +171,7 @@ function resolveCacheKey(req: AuthenticatedRequest): string | undefined {
   const forwardedFor = req.headers['x-forwarded-for'];
   const ip =
     typeof forwardedFor === 'string'
-      ? forwardedFor.split(',')[0]?.trim()
+      ? forwardedFor.split(',')[0].trim()
       : Array.isArray(forwardedFor)
         ? forwardedFor[0]
         : req.ip;
@@ -195,7 +195,7 @@ async function recordEvent(
     logger.warn('Abuse guard event', {
       type,
       method: req.method,
-      path: `${req.baseUrl ?? ''}${req.path ?? ''}`,
+      path: `${req.baseUrl}${req.path}`,
       cacheKey,
       tokenOwner: req.apiToken?.owner,
       meta: data,
@@ -209,7 +209,7 @@ async function recordEvent(
       .add({
         type,
         method: req.method,
-        path: `${req.baseUrl ?? ''}${req.path ?? ''}`,
+        path: `${req.baseUrl}${req.path}`,
         cacheKey,
         tokenOwner: req.apiToken?.owner ?? null,
         meta: data ?? null,

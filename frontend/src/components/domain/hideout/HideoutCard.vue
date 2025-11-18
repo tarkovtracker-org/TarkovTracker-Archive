@@ -22,12 +22,16 @@
       </span>
     </div>
     <div v-if="currentLevel" class="text-center text-caption mt-4 mb-2 mx-2">
-      {{ getStashAdjustedDescription(currentLevel.description) }}
+      {{ getStashAdjustedDescription(currentLevel.description || '') }}
     </div>
     <div v-else-if="nextLevel" class="text-center text-caption mt-4 mb-2 mx-2">
-      {{ getStashAdjustedDescription(nextLevel.description) }}
+      {{ getStashAdjustedDescription(nextLevel.description || '') }}
     </div>
-    <v-sheet v-if="props.station.id == STASH_STATION_ID" class="text-center pa-2" color="secondary">
+    <v-sheet
+      v-if="props.station.id === STASH_STATION_ID"
+      class="text-center pa-2"
+      color="secondary"
+    >
       <div>
         {{ $t('page.hideout.stationcard.gameeditiondescription') }}
       </div>
@@ -46,8 +50,8 @@
             <tarkov-item
               :item-id="requirement.item.id"
               :item-name="requirement.item.name"
-              :dev-link="requirement.item.link"
-              :wiki-link="requirement.item.wikiLink"
+              :dev-link="requirement.item.link || null"
+              :wiki-link="requirement.item.wikiLink || null"
               :count="requirement.count"
               class="mr-2 d-inline-block"
             />
@@ -83,7 +87,7 @@
               {{ requirement.value }}
             </template>
             <template #tradername>
-              {{ requirement.trader.name }}
+              {{ requirement.trader?.name }}
             </template>
           </i18n-t>
         </div>
@@ -184,115 +188,85 @@
     </v-snackbar>
   </v-sheet>
 </template>
-<script setup>
-  import { computed, defineAsyncComponent, ref } from 'vue';
-  import { STASH_STATION_ID, CULTIST_CIRCLE_STATION_ID } from '@/stores/progress';
-  import { UNHEARD_EDITIONS } from '@/config/gameConstants';
-  import { useProgressQueries } from '@/composables/useProgressQueries';
-  import { useTarkovStore } from '@/stores/tarkov';
+<script setup lang="ts">
+  import { defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { STASH_STATION_ID } from '@/stores/progress';
+  import { UNHEARD_EDITIONS } from '@/config/gameConstants';
+  import { useTarkovStore } from '@/stores/tarkov';
+  import { useStationLevels } from '@/composables/hideout/useStationLevels';
+  import { useTraderRequirements } from '@/composables/hideout/useTraderRequirements';
+  import { useStationActions } from '@/composables/hideout/useStationActions';
+
+  interface Station {
+    id: string;
+    name: string;
+    levels: Array<{
+      id: string;
+      level: number;
+      description?: string;
+      itemRequirements?: Array<{
+        id: string;
+        item: {
+          id: string;
+          name: string;
+          link?: string;
+          wikiLink?: string;
+        };
+        count: number;
+      }>;
+      stationLevelRequirements?: Array<{
+        level: number;
+        station: {
+          name: string;
+        };
+      }>;
+      skillRequirements?: Array<{
+        level: number;
+        name: string;
+      }>;
+      traderRequirements?: Array<{
+        trader?: {
+          id?: string;
+          name?: string;
+        };
+        value?: string | number;
+      }>;
+    }>;
+  }
+
   const TarkovItem = defineAsyncComponent(() => import('@/components/domain/items/TarkovItem.vue'));
-  const props = defineProps({
-    station: {
-      type: Object,
-      required: true,
-    },
-  });
-  const { getHideoutLevelFor, gameEditionData } = useProgressQueries();
-  const tarkovStore = useTarkovStore();
+
+  const props = defineProps<{
+    station: Station;
+  }>();
+
   const { t } = useI18n({ useScope: 'global' });
-  const currentStationLevel = computed(() => getHideoutLevelFor(props.station.id, 'self') || 0);
-  const highlightClasses = computed(() => {
-    const classes = {};
-    if (currentStationLevel.value > 0) {
-      classes['highlight-secondary'] = true;
-    } else {
-      classes['highlight-green'] = true;
-    }
-    return classes;
-  });
-  const isTraderRequirementMet = (requirement) => {
-    const traderId = requirement?.trader?.id;
-    if (!traderId) return true;
-    const rawReq = Number(requirement?.value);
-    const requiredLevel = Number.isFinite(rawReq)
-      ? Math.max(0, Math.min(10, Math.floor(rawReq)))
-      : 0;
-    const rawCur = Number(tarkovStore.getTraderLoyaltyLevel(traderId));
-    const currentLevel = Number.isFinite(rawCur)
-      ? Math.max(0, Math.min(10, Math.floor(rawCur)))
-      : 0;
-    return currentLevel >= requiredLevel;
-  };
-  const hasUnmetTraderRequirement = computed(() => {
-    if (!nextLevel.value?.traderRequirements?.length) return false;
-    return nextLevel.value.traderRequirements.some((req) => !isTraderRequirementMet(req));
-  });
-  const upgradeDisabled = computed(() => {
-    return nextLevel.value === null || hasUnmetTraderRequirement.value;
-  });
-  const downgradeDisabled = computed(() => {
-    if (props.station.id === STASH_STATION_ID) {
-      const currentStash = currentStationLevel.value ?? 0;
-      const rawEdition = tarkovStore.getGameEdition();
-      const editionId = Number(rawEdition);
-      const editionData = gameEditionData.value?.find((e) => {
-        const version = Number(e.version);
-        return Number.isFinite(version) && Number.isFinite(editionId) && version === editionId;
-      });
-      const defaultStash = editionData?.defaultStashLevel ?? 0;
-      return currentStash <= defaultStash;
-    }
-    if (props.station.id === CULTIST_CIRCLE_STATION_ID) {
-      const rawEdition = tarkovStore.getGameEdition();
-      const editionId = Number(rawEdition);
-      // If Unheard Edition or Unheard+EOD Edition, disable downgrade
-      return UNHEARD_EDITIONS.has(editionId);
-    }
-    return false;
-  });
-  const moduleStatusUpdated = ref(false);
-  const moduleStatus = ref('');
-  const upgradeStation = () => {
-    // Store next level to a variable because it can change mid-function
-    const upgradeLevel = nextLevel.value;
-    tarkovStore.setHideoutModuleComplete(upgradeLevel.id);
-    // For each objective, mark it as complete
-    upgradeLevel.itemRequirements.forEach((o) => {
-      tarkovStore.setHideoutPartComplete(o.id);
-    });
-    moduleStatus.value = t('page.hideout.stationcard.statusupgraded', {
-      name: props.station.name,
-      level: upgradeLevel.level,
-    });
-    moduleStatusUpdated.value = true;
-  };
-  const downgradeStation = () => {
-    // Store current level to a variable because it can change mid-function
-    const downgradeLevel = currentLevel.value;
-    tarkovStore.setHideoutModuleUncomplete(downgradeLevel.id);
-    // For each objective, mark it as incomplete
-    downgradeLevel.itemRequirements.forEach((o) => {
-      tarkovStore.setHideoutPartUncomplete(o.id);
-    });
-    moduleStatus.value = t('page.hideout.stationcard.statusdowngraded', {
-      name: props.station.name,
-      level: downgradeLevel.level,
-    });
-    moduleStatusUpdated.value = true;
-  };
-  const nextLevel = computed(() => {
-    return (
-      props.station.levels.find((level) => level.level === currentStationLevel.value + 1) || null
-    );
-  });
-  const currentLevel = computed(() => {
-    return props.station.levels.find((level) => level.level === currentStationLevel.value) || null;
-  });
-  const stationAvatar = computed(() => {
-    return `/img/hideout/${props.station.id}.avif`;
-  });
-  const getStashAdjustedDescription = (description) => {
+  const tarkovStore = useTarkovStore();
+
+  // Use extracted composables
+  const { currentStationLevel, nextLevel, currentLevel, stationAvatar, highlightClasses } =
+    useStationLevels(props.station);
+
+  const { hasUnmetTraderRequirement, isTraderRequirementMet } = useTraderRequirements(
+    nextLevel.value
+  );
+
+  const {
+    moduleStatusUpdated,
+    moduleStatus,
+    upgradeDisabled,
+    downgradeDisabled,
+    upgradeStation,
+    downgradeStation,
+  } = useStationActions(
+    props.station,
+    currentStationLevel.value,
+    nextLevel.value,
+    currentLevel.value,
+    hasUnmetTraderRequirement.value
+  );
+  const getStashAdjustedDescription = (description: string): string => {
     // Only modify description for stash station
     if (props.station.id !== STASH_STATION_ID) {
       return description;

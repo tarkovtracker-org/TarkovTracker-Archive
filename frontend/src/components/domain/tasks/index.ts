@@ -1,0 +1,24 @@
+// Tasks Domain Components Barrel Export
+export { default as ActionButton } from './ActionButton.vue';
+export { default as AlternativesList } from './AlternativesList.vue';
+export { default as InfoRow } from './InfoRow.vue';
+export { default as QuestKeys } from './QuestKeys.vue';
+export { default as QuestObjectives } from './QuestObjectives.vue';
+export { default as TaskActions } from './TaskActions.vue';
+export { default as TaskCard } from './TaskCard.vue';
+export { default as TaskCardInfo } from './TaskCardInfo.vue';
+export { default as TaskCardList } from './TaskCardList.vue';
+export { default as TaskCardObjectives } from './TaskCardObjectives.vue';
+export { default as TaskEmptyState } from './TaskEmptyState.vue';
+export { default as TaskFilterDialog } from './TaskFilterDialog.vue';
+export { default as TaskInfo } from './TaskInfo.vue';
+export { default as TaskLink } from './TaskLink.vue';
+export { default as TaskLoadingState } from './TaskLoadingState.vue';
+export { default as TaskMapDisplay } from './TaskMapDisplay.vue';
+export { default as TaskMapPanel } from './TaskMapPanel.vue';
+export { default as TaskMapTabs } from './TaskMapTabs.vue';
+export { default as TaskObjective } from './TaskObjective.vue';
+export { default as TaskObjectiveKillTracker } from './TaskObjectiveKillTracker.vue';
+export { default as TaskObjectiveTeamNeeds } from './TaskObjectiveTeamNeeds.vue';
+export { default as TaskViewSelector } from './TaskViewSelector.vue';
+export { default as TrackerStat } from './TrackerStat.vue';

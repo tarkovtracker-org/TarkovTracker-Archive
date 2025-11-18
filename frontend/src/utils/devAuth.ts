@@ -9,7 +9,7 @@
 export function isDevAuthEnabled(raw: unknown = undefined): boolean {
   // Always read from environment to avoid caching issues in tests
   if (raw === undefined) {
-    raw = (import.meta as any)?.env?.VITE_DEV_AUTH;
+    raw = (import.meta as { env?: Record<string, unknown> })?.env?.VITE_DEV_AUTH;
   }
 
   // Handle null/undefined explicitly

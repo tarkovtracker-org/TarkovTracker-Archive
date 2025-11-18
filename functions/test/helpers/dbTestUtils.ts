@@ -27,7 +27,7 @@
  */
 
 import { vi } from 'vitest';
-import { seedDb, resetDb } from './emulatorSetup';
+import { seedDb } from './emulatorSetup';
 import type { Mock } from 'vitest';
 
 /**
@@ -40,10 +40,18 @@ export class TestSuiteContext {
 
   /**
    * Setup database with initial data
-   * Resets database first to ensure clean state
+   *
+   * NOTE: Does NOT call resetDb() - the global afterEach hook in test/setup.ts
+   * already cleared the database after the previous test. Calling resetDb() here
+   * creates race conditions where DELETE requests overlap with seed operations,
+   * causing tests to fail with null/empty data.
+   *
+   * Database cleanup is handled exclusively by the global afterEach hook to:
+   * - Prevent redundant HTTP DELETE requests to the emulator
+   * - Eliminate race conditions from overlapping clear/seed operations
+   * - Improve test performance (one DELETE per test instead of two)
    */
   async setupDatabase(data: Record<string, Record<string, any>>): Promise<void> {
-    await resetDb();
     await seedDb(data);
   }
 
@@ -76,9 +84,15 @@ export class TestSuiteContext {
   }
 
   /**
-   * Create isolated test data that gets cleaned up
-   * Database is cleared by global afterEach hook, not by this method
-   * This method just seeds the data for the test
+   * Seed test data into Firestore
+   *
+   * Assumes database is already clean from the global afterEach hook.
+   * This method ONLY seeds data - it does NOT clear the database first.
+   *
+   * Cleanup is handled automatically by the global afterEach hook in test/setup.ts,
+   * which clears all Firestore data after every test completes.
+   *
+   * @param data - Database collections and documents to seed
    */
   async withDatabase(data: Record<string, Record<string, any>>): Promise<void> {
     await this.setupDatabase(data);
@@ -192,10 +206,14 @@ export const createTestSuite = (suiteName: string) => {
     },
 
     /**
-     * Setup database for a test
-     * Automatically registers cleanup
+     * Seed database for a test
      *
-     * @param data - Database state to seed
+     * Seeds data into Firestore without clearing first. The global afterEach hook
+     * in test/setup.ts already cleared the database after the previous test.
+     *
+     * Cleanup is automatic - the global afterEach hook clears all data after this test.
+     *
+     * @param data - Database collections and documents to seed
      */
     withDatabase: (data: Record<string, Record<string, any>>) => {
       return context.withDatabase(data);
@@ -235,25 +253,24 @@ export const createTestSuite = (suiteName: string) => {
 };
 
 /**
- * Quick database setup for simple tests
+ * Quick database seeding for simple tests
  * Use when you don't need full test suite infrastructure
  *
- * WARNING: This does NOT register automatic cleanup.
- * Only use in tests with manual cleanup or where isolation isn't critical.
+ * NOTE: This ONLY seeds data - it does NOT clear the database first.
+ * The global afterEach hook in test/setup.ts handles cleanup automatically.
  *
  * @param data - Database state to seed
  *
  * @example
  * ```typescript
- * it('simple test', () => {
- *   quickSetup({ users: { 'user-1': { uid: 'user-1' } } });
- *   // Test code
+ * it('simple test', async () => {
+ *   await quickSetup({ users: { 'user-1': { uid: 'user-1' } } });
+ *   // Test code - cleanup is automatic via global afterEach
  * });
  * ```
  */
-export const quickSetup = (data: Record<string, Record<string, any>>) => {
-  resetDb();
-  seedDb(data);
+export const quickSetup = async (data: Record<string, Record<string, any>>) => {
+  await seedDb(data);
 };
 
 /**
@@ -294,6 +311,9 @@ export const createTestSuiteWithHooks = (
 /**
  * Helper to run a test with automatic cleanup
  * Useful for one-off tests that need isolation
+ *
+ * NOTE: Database cleanup is handled by the global afterEach hook.
+ * This function only handles test-specific cleanup (mocks, callbacks).
  *
  * @param testFn - Test function to run
  * @param data - Optional database state to seed

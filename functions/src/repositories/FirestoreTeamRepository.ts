@@ -12,8 +12,12 @@ import type {
   Timestamp,
 } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { ITeamRepository, ITeamTransactionContext, UserDocumentData } from './ITeamRepository';
-import type { TeamDocument, SystemDocument, ProgressDocument } from '../types/api';
+import type {
+  ITeamRepository,
+  ITeamTransactionContext,
+  UserDocumentData,
+} from './ITeamRepository.js';
+import type { TeamDocument, SystemDocument, ProgressDocument } from '../types/api.js';
 
 /**
  * Firestore transaction context implementation
@@ -39,6 +43,11 @@ class FirestoreTeamTransactionContext implements ITeamTransactionContext {
   setSystemDoc(userId: string, data: Partial<SystemDocument>): void {
     const ref = this.db.collection('system').doc(userId);
     this.transaction.set(ref, data, { merge: true });
+  }
+
+  deleteSystemDoc(userId: string): void {
+    const ref = this.db.collection('system').doc(userId);
+    this.transaction.delete(ref);
   }
 
   setTeamDoc(teamId: string, data: TeamDocument): void {

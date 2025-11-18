@@ -67,7 +67,9 @@
               </div>
               <div class="d-flex align-center">
                 <v-icon size="16" class="mr-2">mdi-calendar</v-icon>
-                <span class="text-body-2">Member since {{ formatDate(fireuser.createdAt) }}</span>
+                <span class="text-body-2"
+                  >Member since {{ formatDate(fireuser.createdAt ?? undefined) }}</span
+                >
               </div>
             </v-card-text>
           </v-card>
@@ -166,7 +168,7 @@
     </v-dialog>
   </teleport>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, computed } from 'vue';
   // Disable automatic attribute inheritance since we handle it manually
   defineOptions({
@@ -231,11 +233,12 @@
     return 'No email available';
   });
   // Methods
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Unknown';
     return new Date(dateString).toLocaleDateString();
   };
   const copyAccountId = async () => {
+    if (!fireuser.uid) return;
     try {
       await navigator.clipboard.writeText(fireuser.uid);
       accountIdCopied.value = true;
@@ -247,7 +250,7 @@
       // Fallback for older browsers
       try {
         const textArea = document.createElement('textarea');
-        textArea.value = fireuser.uid;
+        textArea.value = fireuser.uid || '';
         document.body.appendChild(textArea);
         textArea.select();
         document.execCommand('copy');
@@ -283,16 +286,17 @@
       // Success - show success dialog first, then sign out in the redirect function
       showConfirmationDialog.value = false;
       showSuccessDialog.value = true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Account deletion error:', error);
-      if (error.code === 'functions/unauthenticated') {
+      const firebaseError = error as { code?: string; message?: string };
+      if (firebaseError.code === 'functions/unauthenticated') {
         deleteError.value = 'Authentication required. Please refresh the page and try again.';
-      } else if (error.code === 'functions/invalid-argument') {
+      } else if (firebaseError.code === 'functions/invalid-argument') {
         deleteError.value = 'Invalid confirmation text. Please type exactly: DELETE MY ACCOUNT';
-      } else if (error.code === 'functions/permission-denied') {
+      } else if (firebaseError.code === 'functions/permission-denied') {
         deleteError.value = 'Permission denied. Please refresh the page and try again.';
       } else {
-        deleteError.value = error.message || 'Failed to delete account. Please try again.';
+        deleteError.value = firebaseError.message ?? 'Failed to delete account. Please try again.';
       }
     } finally {
       isDeleting.value = false;

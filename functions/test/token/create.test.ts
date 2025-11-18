@@ -31,7 +31,7 @@ function validateTokenRequest(request: MockCallableRequest): void {
   }
   // Check required fields
   if (
-    request.data.note == null ||
+    request.data.note === null ||
     !request.data.permissions ||
     !(request.data.permissions.length > 0)
   ) {

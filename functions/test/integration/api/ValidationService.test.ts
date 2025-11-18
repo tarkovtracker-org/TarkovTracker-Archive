@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { ValidationService } from '../../../src/services/ValidationService';
-import { errors } from '../../../src/middleware/errorHandler';
+import { errors as _errors } from '../../../src/middleware/errorHandler';
 import type { ApiToken } from '../../../src/types/api';
 import { createTestSuite } from '../../helpers';
 describe('ValidationService', () => {

@@ -24,16 +24,21 @@ export function setupVitestEnvironment(): void {
   });
 
   if (!global.window) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).window = global;
   }
 
   if (!global.document) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global as any).document = {
       createElement: () => ({}),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(window as any).localStorage) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).localStorage = {
       getItem: vi.fn(),
       setItem: vi.fn(),
@@ -42,7 +47,9 @@ export function setupVitestEnvironment(): void {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!(window as any).sessionStorage) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).sessionStorage = {
       getItem: vi.fn(),
       setItem: vi.fn(),
@@ -109,13 +116,13 @@ export function setupVitestEnvironment(): void {
       increment: vi.fn((value) => ({ __increment: value })),
       arrayUnion: vi.fn((item) => ({ __arrayUnion: item })),
       arrayRemove: vi.fn((item) => ({ __arrayRemove: item })),
-      deleteField: vi.fn(() => ({} as any)),
+      deleteField: vi.fn(() => ({ __deleteField: true })),
     };
   });
 
   vi.mock('firebase/storage', () => ({
     getStorage: vi.fn(() => ({ app: { name: 'mock-app' } })),
-    ref: vi.fn((..._args: any[]) => ({ fullPath: 'mock/path' })),
+    ref: vi.fn((..._args: unknown[]) => ({ fullPath: 'mock/path' })),
     getDownloadURL: vi.fn(async () => ''),
     uploadBytes: vi.fn(async () => ({ ref: { fullPath: 'mock/path' }, metadata: {} })),
     deleteObject: vi.fn(async () => undefined),
@@ -130,8 +137,6 @@ export function setupVitestEnvironment(): void {
     httpsCallable: vi.fn(() => vi.fn(async () => ({ data: {} }))),
     connectFunctionsEmulator: vi.fn(() => undefined),
   }));
-
-  
 
   const vuetify = createVuetify({
     components,

@@ -52,12 +52,12 @@
   </fitted-card>
   <notification-snackbar v-model="teamManagement.notification.value" />
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useLiveData } from '@/composables/livedata';
   import { useTeamManagement } from '@/composables/team/useTeamManagement';
   import { useTeamUrl } from '@/composables/team/useTeamUrl';
-  import FittedCard from '@/components/ui/FittedCard';
+  import FittedCard from '@/components/ui/FittedCard.vue';
   import TeamInputRow from './TeamInputRow.vue';
   import NotificationSnackbar from '@/components/ui/NotificationSnackbar.vue';
 

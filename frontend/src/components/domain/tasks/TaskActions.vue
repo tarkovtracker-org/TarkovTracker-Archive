@@ -57,23 +57,41 @@
     </template>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import ActionButton from '@/components/domain/tasks/ActionButton.vue';
   import AlternativesList from '@/components/domain/tasks/AlternativesList.vue';
-  const props = defineProps({
-    task: { type: Object, required: true },
-    tasks: { type: Object, required: true },
-    xs: { type: Boolean, required: true },
-    isComplete: { type: Boolean, required: true },
-    isLocked: { type: Boolean, required: true },
-    isOurFaction: { type: Boolean, required: true },
-    showExperience: { type: Boolean, default: true },
-    experience: { type: Number, default: 0 },
+
+  interface Task {
+    id: string;
+    alternatives?: string[];
+  }
+
+  interface Props {
+    task: Task;
+    tasks: Record<string, Task>;
+    xs: boolean;
+    isComplete: boolean;
+    isLocked: boolean;
+    isOurFaction: boolean;
+    showExperience?: boolean;
+    experience?: number;
+  }
+
+  const props = withDefaults(defineProps<Props>(), {
+    showExperience: true,
+    experience: 0,
   });
-  defineEmits(['complete', 'uncomplete', 'unlock']);
+
+  defineEmits<{
+    complete: [];
+    uncomplete: [];
+    unlock: [];
+  }>();
+
   const { t } = useI18n({ useScope: 'global' });
+
   const experienceDisplay = computed(() => {
     if (!props.showExperience) return '';
     const xp = Number(props.experience || 0);

@@ -1,8 +1,12 @@
 // UI Components Barrel Export
-export { default as IconCard } from './IconCard.vue';
-export { default as FittedCard } from './FittedCard.vue';
-export { default as TrackerTip } from './TrackerTip.vue';
-export { default as OptimizedImage } from './OptimizedImage.vue';
-export { default as GameModeSelector } from './GameModeSelector.vue';
-export { default as RefreshButton } from './RefreshButton.vue';
-export { default as NotificationSnackbar } from './NotificationSnackbar.vue';
+// Pure, reusable UI components without business logic
+
+// Export all UI components dynamically for better maintainability
+const uiComponents = import.meta.glob('./*.vue');
+
+export const ZoomControls = uiComponents['./ZoomControls.vue'];
+export const ZoomIndicator = uiComponents['./ZoomIndicator.vue'];
+export const FloorControls = uiComponents['./FloorControls.vue'];
+export const MapPlaceholder = uiComponents['./MapPlaceholder.vue'];
+export const MapErrorAlert = uiComponents['./MapErrorAlert.vue'];
+export const MapScrollHint = uiComponents['./MapScrollHint.vue'];

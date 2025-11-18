@@ -47,13 +47,13 @@
       return store.getCurrentGameMode();
     },
     set(newMode: GameMode) {
-      store.switchGameMode(newMode);
+      void store.switchGameMode(newMode);
     },
   });
   const currentModeIcon = computed(() => {
     const currentMode = store.getCurrentGameMode();
     return (
-      gameModeOptions.find((option) => option.value === currentMode)?.icon || 'mdi-sword-cross'
+      gameModeOptions.find((option) => option.value === currentMode)?.icon ?? 'mdi-sword-cross'
     );
   });
 </script>

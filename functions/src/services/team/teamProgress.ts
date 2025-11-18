@@ -7,12 +7,12 @@
  * - Handling visibility settings (hidden teammates)
  */
 
-import { logger } from 'firebase-functions/v2';
-import { errors } from '../../middleware/errorHandler';
-import { formatProgress } from '../../progress/progressUtils';
-import { getTaskData, getHideoutData } from '../../utils/dataLoaders';
-import type { ITeamRepository } from '../../repositories/ITeamRepository';
-import type { FormattedProgress } from '../../types/api';
+import { logger } from '../../logger.js';
+import { errors } from '../../middleware/errorHandler.js';
+import { formatProgress } from '../../progress/progressUtils.js';
+import { getTaskData, getHideoutData } from '../../utils/dataLoaders.js';
+import type { ITeamRepository } from '../../repositories/ITeamRepository.js';
+import type { FormattedProgress } from '../../types/api.js';
 
 export interface TeamProgressResult {
   data: FormattedProgress[];
@@ -57,14 +57,14 @@ export async function getTeamProgress(
     }
 
     const teamId = systemData?.team;
-    const hiddenTeammatesMap = userData?.teamHide || {};
+    const hiddenTeammatesMap = userData?.teamHide ?? {};
     let memberIds = [userId]; // Start with self
 
     // Get team members if in a team
     if (teamId) {
       const teamData = await repository.getTeamDocument(teamId);
-      if (teamData) {
-        memberIds = [...new Set([...(teamData.members || []), userId])];
+      if (teamData && teamData.members) {
+        memberIds = [...new Set([...teamData.members, userId])];
       }
     }
 

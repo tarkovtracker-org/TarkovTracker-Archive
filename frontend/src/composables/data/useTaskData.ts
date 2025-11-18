@@ -1,5 +1,7 @@
-import { ref, computed, watch, onBeforeUnmount } from 'vue';
-import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
+import { ref, computed, watch, onBeforeUnmount, type ComputedRef } from 'vue';
+import { useCollection, useDocument } from 'vuefire';
+import { collection, doc, query, where } from 'firebase/firestore';
+import { firestore } from '@/plugins/firebase';
 import {
   isIdleCallbackSupported,
   safeRequestIdleCallback,
@@ -7,6 +9,7 @@ import {
 } from '@/utils/idleCallback';
 import { useTarkovStore } from '@/stores/tarkov';
 import { DISABLED_TASK_IDS, EOD_ONLY_TASK_IDS } from '@/config/gameConstants';
+import { isDevAuthEnabled } from '@/utils/devAuth';
 import {
   createGraph,
   getPredecessors,
@@ -29,22 +32,122 @@ import type {
 } from '@/types/models/tarkov';
 import type Graph from 'graphology';
 import { logger } from '@/utils/logger';
+import { debounce } from '@/utils/debounce';
+import { useTarkovDataQuery } from '@/composables/api/useTarkovApi';
 // Timeout for idle callback processing
 const IDLE_CALLBACK_TIMEOUT_MS = 2000;
 const TASK_IDLE_DEFER_THRESHOLD = 400;
 /**
  * Composable for managing task data, relationships, and derived information
+ * Migrated from GraphQL to Firestore for improved performance
  */
-export function useTaskData() {
+export function useTaskData(gameMode?: ComputedRef<string>) {
   const store = useTarkovStore();
+
+  // Get current gamemode from store if not provided
+  const currentGameMode =
+    gameMode ||
+    computed(() => {
+      const mode = store.getCurrentGameMode();
+      return mode === 'pve' ? 'pve' : 'regular';
+    });
+  // Map UI gamemode to the value stored on shards (pvp → regular)
+  const shardGameMode = computed(() => (currentGameMode.value === 'pvp' ? 'regular' : currentGameMode.value || 'regular'));
   let cancelDeferredProcessing: (() => void) | null = null;
   let isMounted = true;
-  // Get current gamemode from store and convert to the format expected by API
-  const currentGameMode = computed(() => {
-    const mode = store.getCurrentGameMode();
-    return mode === 'pve' ? 'pve' : 'regular'; // API expects 'regular' for PvP, 'pve' for PvE
+
+  // Skip Firestore when dev auth is enabled (emulators not running)
+  const skipFirestore = isDevAuthEnabled();
+  if (skipFirestore) {
+    logger.info('[useTaskData] Dev auth enabled - skipping Firestore task data (tasks will be empty)');
+  }
+
+  // Get tasks from Firestore (only when not in dev auth mode)
+  const tasksQuery = computed(() =>
+    skipFirestore
+      ? null
+      : query(
+          collection(firestore, 'tarkovData', 'tasks', 'shards'),
+          where('gameMode', '==', shardGameMode.value)
+        )
+  );
+  const taskDataRef = skipFirestore
+    ? { data: ref([]), error: ref(null), pending: ref(false), promise: ref(Promise.resolve([])) }
+    : useCollection(tasksQuery, {
+        ssrKey: 'tarkov-task-shards',
+      });
+  const taskShards = taskDataRef.data;
+  // Fallback to the non-sharded document written by the scheduled importer
+  const tasksDocRef = skipFirestore ? null : doc(firestore, 'tarkovData', 'tasks');
+  const tasksDoc = skipFirestore
+    ? { data: ref(null), error: ref(null) }
+    : useDocument(tasksDocRef!, { ssrKey: 'tarkov-task-doc' });
+  // Only use GraphQL when we truly have no cached task data yet
+  const useGqlFallback = computed(() => {
+    const shardHasData =
+      Array.isArray(taskShards.value) &&
+      taskShards.value.some((s) => Array.isArray(s?.data) && s.data.length > 0);
+    const docHasData =
+      Array.isArray((tasksDoc.data?.value as { data?: Task[] } | null)?.data) &&
+      ((tasksDoc.data?.value as { data?: Task[] } | null)?.data?.length || 0) > 0;
+    return !shardHasData && !docHasData;
   });
-  const { result: queryResult, error, loading } = useTarkovDataQuery(currentGameMode);
+
+  // GraphQL fallback (only when both shards AND doc are empty)
+  const { result: gqlResult, loading: gqlLoading, error: gqlError } = useTarkovDataQuery(
+    shardGameMode as ComputedRef<string>
+  );
+  const errorState = ref<Error | null>(null);
+  watch(
+    [taskShards, tasksDoc.data, gqlResult, taskDataRef.error, tasksDoc.error ?? ref(null), gqlError],
+([shardDocs, shardDocData, gqlRes, shardErr, docErrRef, gqlErr]) => {
+      const shardHasData =
+        Array.isArray(shardDocs) &&
+        shardDocs.some((shard) => Array.isArray(shard?.data) && shard.data.length > 0);
+      const docHasData =
+        shardDocData &&
+        Array.isArray(shardDocData.data) &&
+        shardDocData.data.length > 0;
+      const gqlHasData = Boolean(gqlRes?.tasks?.length);
+      const hasAnyData = shardHasData || docHasData || gqlHasData;
+      const hasShardError = shardErr != null;
+      const hasDocError = docErrRef != null;
+      const hasGqlError = gqlErr != null;
+      const hasAnyError = hasShardError || hasDocError || hasGqlError;
+      if (hasAnyError && !hasAnyData) {
+        errorState.value =
+          shardErr ||
+          docErrRef?.value ||
+          gqlErr ||
+          new Error('Failed to load Tarkov tasks from all sources');
+      } else {
+        errorState.value = null;
+      }
+    },
+    { immediate: true }
+  );
+  const error = computed(() => errorState.value);
+  const loading = computed(
+    () => (taskDataRef.pending?.value ?? false) || (useGqlFallback.value && gqlLoading.value)
+  );
+
+  // Process Firestore data into the expected format
+  const queryResult = computed(() => {
+    if (taskShards.value && taskShards.value.length > 0) {
+      // Aggregate tasks from all shards
+      const allTasks = taskShards.value.flatMap((shard) => shard.data || []);
+      if (allTasks.length) {
+        return { tasks: allTasks };
+      }
+    }
+    // Fallback: GraphQL live data
+    if (useGqlFallback.value && gqlResult.value?.tasks?.length) {
+      return { tasks: gqlResult.value.tasks as Task[] };
+    }
+    // Fallback: scheduled importer stores tasks as a single document at tarkovData/tasks
+    const docTasks = (tasksDoc.data?.value as { data?: Task[] } | null)?.data;
+    return { tasks: Array.isArray(docTasks) ? docTasks : [] };
+  });
   // Reactive state
   const tasks = ref<Task[]>([]);
   const taskGraph = ref(createGraph());
@@ -370,10 +473,12 @@ export function useTaskData() {
       safeCancelIdleCallback(handle);
     };
   };
+  const debouncedScheduleTaskProcessing = debounce(scheduleTaskProcessing, 150);
+
   watch(
     queryResult,
     (newResult) => {
-      scheduleTaskProcessing(newResult?.tasks ?? []);
+      debouncedScheduleTaskProcessing(newResult?.tasks ?? []);
     },
     { immediate: true, flush: 'post' }
   );
@@ -383,6 +488,7 @@ export function useTaskData() {
       cancelDeferredProcessing();
       cancelDeferredProcessing = null;
     }
+    debouncedScheduleTaskProcessing?.cancel?.();
   });
   /**
    * Get task by ID

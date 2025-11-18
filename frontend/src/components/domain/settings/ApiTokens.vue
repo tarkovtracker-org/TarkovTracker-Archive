@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <template v-if="userTokenCount == 0">
+    <template v-if="userTokenCount === 0">
       <v-card variant="outlined" class="pa-6 text-center ma-2">
         <v-icon size="64" color="primary" class="mb-4">mdi-key-outline</v-icon>
         <h3 class="text-h6 mb-2">{{ $t('page.api.tokens.no_tokens_title') }}</h3>
@@ -123,7 +123,7 @@
             <v-row>
               <v-col
                 v-for="(permission, permissionKey) in availablePermissions"
-                :key="permission"
+                :key="permissionKey"
                 cols="12"
                 md="6"
               >
@@ -142,7 +142,7 @@
                       <div class="font-weight-medium text-white">{{ permission.title }}</div>
                       <div class="text-caption text-white">
                         {{
-                          permission.description || 'Access to ' + permission.title.toLowerCase()
+                          permission.description ?? 'Access to ' + permission.title.toLowerCase()
                         }}
                       </div>
                     </div>
@@ -164,7 +164,7 @@
                 variant="outlined"
                 class="selected-permission-chip"
               >
-                {{ availablePermissions[perm]?.title || perm }}
+                {{ availablePermissions[perm]?.title ?? perm }}
               </v-chip>
             </div>
           </div>
@@ -223,8 +223,9 @@
     </template>
   </v-snackbar>
 </template>
-<script setup>
+<script setup lang="ts">
   import { ref, computed } from 'vue';
+  import type { VForm } from 'vuetify/components';
   import { useI18n } from 'vue-i18n';
   import { functions } from '@/plugins/firebase';
   import { httpsCallable } from '@/plugins/firebase';
@@ -233,23 +234,24 @@
   import TokenCard from '@/components/domain/settings/TokenCard.vue';
   import { auth } from '@/plugins/firebase';
   import { logger } from '@/utils/logger';
+
   const { t } = useI18n({ useScope: 'global' });
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
   // Use computed properties with direct state access (temporary workaround for getter issue)
   const userTokens = computed(() => {
-    return systemStore.$state.tokens || [];
+    return systemStore.$state.tokens ?? [];
   });
   const userTokenCount = computed(() => {
-    return systemStore.$state.tokens?.length || 0;
+    return systemStore.$state.tokens?.length ?? 0;
   });
   // New token form
   const selectOneError = ref(false);
-  const newTokenForm = ref(null);
+  const newTokenForm = ref<VForm | null>(null);
   const validNewToken = ref(false);
   const tokenName = ref('');
   const tokenNameError = ref('');
-  const selectedPermissions = ref([]);
+  const selectedPermissions = ref<string[]>([]);
   const selectedGameMode = ref('pvp'); // Default to PvP for backward compatibility
   const selectedPermissionsCount = computed(() => selectedPermissions.value.length);
   const canCreateToken = computed(() => {
@@ -261,12 +263,12 @@
     );
   });
   const tokenNameRules = ref([
-    (v) => !!v || t('page.api.tokens.form.validation.required'),
-    (v) => v.length <= 20 || t('page.api.tokens.form.validation.max_length'),
+    (v: string) => !!v || t('page.api.tokens.form.validation.required'),
+    (v: string) => v.length <= 20 || t('page.api.tokens.form.validation.max_length'),
   ]);
   const creatingToken = ref(false);
-  const tokenResult = ref(null);
-  const tokenResultSubtext = ref(null);
+  const tokenResult = ref<string | null>(null);
+  const tokenResultSubtext = ref<string | null>(null);
   const newTokenSnackbar = ref(false);
   const showNewTokenForm = ref(false);
   const snackbarColor = ref('success');
@@ -280,7 +282,14 @@
     selectOneError.value = false;
     tokenNameError.value = '';
   };
-  const createTokenWithHttp = async (tokenData) => {
+
+  interface TokenData {
+    note: string;
+    permissions: string[];
+    gameMode: string;
+  }
+
+  const createTokenWithHttp = async (tokenData: TokenData) => {
     const user = auth.currentUser;
     if (!user) {
       throw new Error('User not authenticated');
@@ -298,15 +307,16 @@
       }
     );
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'HTTP request failed');
+      const errorData = (await response.json()) as { error?: string };
+      throw new Error(errorData.error ?? 'HTTP request failed');
     }
-    return response.json();
+    return response.json() as Promise<{ token: string }>;
   };
+
   const createToken = async () => {
-    const { valid } = await newTokenForm.value.validate();
+    const { valid } = await newTokenForm.value!.validate();
     if (!valid) {
-      if (selectedPermissionsCount.value == 0) {
+      if (selectedPermissionsCount.value === 0) {
         selectOneError.value = true;
         return;
       } else {
@@ -314,7 +324,7 @@
       }
       return;
     }
-    if (selectedPermissionsCount.value == 0) {
+    if (selectedPermissionsCount.value === 0) {
       selectOneError.value = true;
       return;
     } else {
@@ -327,7 +337,7 @@
       gameMode: selectedGameMode.value,
     };
     try {
-      let result;
+      let result: unknown;
       try {
         // Try the callable function first
         const createTokenFn = httpsCallable(functions, 'createToken');
@@ -338,9 +348,11 @@
         // If callable fails (likely due to CORS), use HTTP endpoint
         result = await createTokenWithHttp(tokenData);
       }
-      if (!result?.token) {
+
+      const resultData = result as { token?: string };
+      if (!resultData.token) {
         logger.error('Token not found in response. Expected: result.token');
-        logger.error('Available response data:', Object.keys(result || {}));
+        logger.error('Available response data:', Object.keys(result ?? {}));
         throw new Error('Token creation failed: No token returned from server');
       }
       cancelTokenCreation();
@@ -349,7 +361,7 @@
       tokenResult.value = t('page.api.tokens.success.title');
       tokenResultSubtext.value = t('page.api.tokens.success.message');
       newTokenSnackbar.value = true;
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error creating token:', error);
       snackbarColor.value = 'error';
       snackbarIcon.value = 'mdi-alert-circle';

@@ -7,4 +7,4 @@
  * Re-exports permission utilities from the centralized httpAuthWrapper module.
  */
 
-export { requirePermission, type AuthenticatedRequest } from './httpAuthWrapper';
+export { requirePermission, type AuthenticatedRequest } from './httpAuthWrapper.js';

@@ -13,7 +13,7 @@ export default class UIDGenerator {
   // Constants for backward compatibility
   static readonly BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
   constructor(length: number, base?: string) {
-    this.length = length || 128;
+    this.length = length ?? 128;
     this.base = base;
 
     // Detect test environment by checking common test indicators
@@ -21,14 +21,14 @@ export default class UIDGenerator {
 
     // Initialize seed if in test environment
     if (this.isTestEnvironment) {
-      this.seed = this.getSeedFromEnvironment() || Date.now();
+      this.seed = this.getSeedFromEnvironment() ?? Date.now();
     }
   }
   /**
    * Generate a unique identifier
-   * @returns Promise<string> - The generated UID
+   * @returns string - The generated UID
    */
-  async generate(): Promise<string> {
+  generate(): string {
     if (this.isTestEnvironment && this.seed !== undefined) {
       return this.generateDeterministic();
     }
@@ -43,6 +43,7 @@ export default class UIDGenerator {
     return (
       process.env.NODE_ENV === 'test' ||
       process.env.VITEST === 'true' ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (typeof global !== 'undefined' && (global as any).__VITEST__) ||
       // Check if we're being mocked (common in test setup)
       (typeof require !== 'undefined' && require.main?.filename?.includes('vitest'))
@@ -52,7 +53,7 @@ export default class UIDGenerator {
    * Get seed from environment variables for test consistency
    */
   private getSeedFromEnvironment(): number | undefined {
-    const envSeed = process.env.UID_GENERATOR_SEED || process.env.TEST_SEED;
+    const envSeed = process.env.UID_GENERATOR_SEED ?? process.env.TEST_SEED;
     return envSeed ? parseInt(envSeed, 10) : undefined;
   }
   /**
@@ -67,7 +68,7 @@ export default class UIDGenerator {
     const hash = this.hashCode(seed.toString());
 
     let result = '';
-    const chars = this.base || UIDGenerator.BASE62;
+    const chars = this.base ?? UIDGenerator.BASE62;
 
     for (let i = 0; i < this.length; i++) {
       result += chars[Math.abs(hash + i) % chars.length];
@@ -79,7 +80,7 @@ export default class UIDGenerator {
    * Generate cryptographically secure tokens for production
    */
   private generateSecure(): string {
-    const chars = this.base || UIDGenerator.BASE62;
+    const chars = this.base ?? UIDGenerator.BASE62;
     let result = '';
     const array = new Uint8Array(this.length);
 

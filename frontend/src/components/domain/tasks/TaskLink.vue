@@ -35,7 +35,7 @@
     </span>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useTarkovData } from '@/composables/tarkovdata';
@@ -55,7 +55,7 @@
   const { t } = useI18n({ useScope: 'global' });
   // Check if there are two faction tasks for this task
   const task = computed(() => props.task);
-  const isFactionTask = computed(() => task.value?.factionName != 'Any');
+  const isFactionTask = computed(() => task.value?.factionName !== 'Any');
   const factionImage = computed(() => `/img/factions/${task.value?.factionName}.webp`);
   const traderAvatar = computed(() => task.value?.trader?.imageLink);
   const hasWikiLink = computed(() => {

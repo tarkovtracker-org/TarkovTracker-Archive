@@ -1,12 +1,12 @@
 // Shared utility functions
 import type { CallableRequest } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import type admin from 'firebase-admin';
 import type { DocumentReference, WriteBatch } from 'firebase-admin/firestore';
 import { FieldValue } from 'firebase-admin/firestore';
-import UIDGenerator from '../token/UIDGenerator';
-import { createLazyFirestore } from './factory';
+import UIDGenerator from '../token/UIDGenerator.js';
+import { createLazyFirestore } from './factory.js';
 // Shared UID generators
 export const PASSWORD_UID_GEN: InstanceType<typeof UIDGenerator> = new UIDGenerator(
   48,

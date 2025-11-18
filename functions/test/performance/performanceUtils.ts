@@ -53,7 +53,7 @@ export class PerformanceMonitor {
    */
   startOperation(operationName: string, metadata?: Record<string, any>): () => PerformanceMetrics {
     const startTime = performance.now();
-    const startMemory = process.memoryUsage();
+    const _startMemory = process.memoryUsage();
     return (): PerformanceMetrics => {
       const endTime = performance.now();
       const endMemory = process.memoryUsage();
@@ -214,7 +214,9 @@ export class LoadTester {
       const batch = Array.from({ length: batchOperations }, async (_, index) => {
         // Add delay for ramp-up
         if (delayBetweenBatches > 0 && i > 0) {
-          await new Promise((resolve) => setTimeout(resolve, i * delayBetweenBatches));
+          await new Promise((resolve) => {
+            setTimeout(resolve, i * delayBetweenBatches);
+          });
         }
         try {
           const result = await this.monitor.measureOperation(operationName, operation, {
@@ -325,14 +327,18 @@ export class LoadTester {
         while (performance.now() < endTime && operationCount < operationsPerUser) {
           await executeOperation();
           // Small delay to prevent overwhelming the system
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 10));
+          await new Promise((resolve) => {
+            setTimeout(resolve, Math.random() * 10);
+          });
         }
       } else {
         // Run fixed number of operations
         for (let i = 0; i < operationsPerUser; i++) {
           await executeOperation();
           // Small delay to simulate realistic usage
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 5));
+          await new Promise((resolve) => {
+            setTimeout(resolve, Math.random() * 5);
+          });
         }
       }
       // Take memory snapshot after user completes

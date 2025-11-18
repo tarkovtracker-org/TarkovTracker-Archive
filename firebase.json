@@ -9,7 +9,19 @@
   "functions": {
     "runtime": "nodejs22",
     "source": "functions",
-    "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log", "src/"],
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "src/",
+      "test/",
+      "coverage/",
+      "*.test.ts",
+      "*.spec.ts",
+      "vitest.config.*",
+      "tsconfig.json"
+    ],
     "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
   },
   "hosting": {

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ValidationService } from '../../../src/services/ValidationService';
-import { createTestSuite } from '../../helpers';
 
 // Mock dependencies
 vi.mock('../../../src/utils/dataLoaders', () => ({

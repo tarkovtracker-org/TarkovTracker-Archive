@@ -7,11 +7,11 @@
  * - Core team lifecycle operations
  */
 
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../../logger.js';
 import { Timestamp } from 'firebase-admin/firestore';
-import UIDGenerator from '../../token/UIDGenerator';
-import { errors } from '../../middleware/errorHandler';
-import type { ITeamRepository } from '../../repositories/ITeamRepository';
+import UIDGenerator from '../../token/UIDGenerator.js';
+import { errors } from '../../middleware/errorHandler.js';
+import type { ITeamRepository } from '../../repositories/ITeamRepository.js';
 
 export interface CreateTeamData {
   password?: string;
@@ -70,14 +70,14 @@ export async function createTeam(
 
       // Generate team ID and password
       const uidgen = new UIDGenerator(32);
-      createdTeamId = await uidgen.generate();
-      finalPassword = data.password || (await generateSecurePassword());
+      createdTeamId = uidgen.generate();
+      finalPassword = data.password ?? generateSecurePassword();
 
       // Create team document
       tx.setTeamDoc(createdTeamId, {
         owner: userId,
         password: finalPassword,
-        maximumMembers: data.maximumMembers || 10,
+        maximumMembers: data.maximumMembers ?? 10,
         members: [userId],
         createdAt: repository.serverTimestamp(),
       });
@@ -89,7 +89,7 @@ export async function createTeam(
     logger.log('Team created successfully', {
       owner: userId,
       team: createdTeamId,
-      maximumMembers: data.maximumMembers || 10,
+      maximumMembers: data.maximumMembers ?? 10,
     });
 
     return { team: createdTeamId, password: finalPassword };
@@ -115,10 +115,10 @@ export async function createTeam(
  *
  * @returns Secure random password string
  */
-export async function generateSecurePassword(): Promise<string> {
+export function generateSecurePassword(): string {
   try {
     const passGen = new UIDGenerator(48, UIDGenerator.BASE62);
-    const generated = await passGen.generate();
+    const generated = passGen.generate();
     if (generated && generated.length >= 4) {
       return generated;
     }

@@ -93,5 +93,20 @@ service cloud.firestore {
       );
       allow delete: if request.auth != null && isTeamOwner();
     }
+
+    // Reference data (tasks, hideout, items) - read-only for all users
+    match /tarkovData/{docId} {
+      allow read: if true;
+      match /shards/{shardId} {
+        allow read: if true;
+      }
+    }
+    // Backward-compat alias sometimes used by tooling
+    match /tarkovdata/{docId} {
+      allow read: if true;
+      match /shards/{shardId} {
+        allow read: if true;
+      }
+    }
   }
 }

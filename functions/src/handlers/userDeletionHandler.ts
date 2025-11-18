@@ -1,11 +1,11 @@
-import { logger } from 'firebase-functions/v2';
+import { logger } from '../logger.js';
 import admin from 'firebase-admin';
 import type { Firestore, DocumentReference } from 'firebase-admin/firestore';
 import type { Request, Response } from 'express';
-import type { ApiResponse } from '../types/api';
-import { ApiError } from '../types/api';
-import { errors } from '../middleware/errorHandler';
-import { createLazy, createLazyFirestore } from '../utils/factory';
+import type { ApiResponse } from '../types/api.js';
+import { ApiError } from '../types/api.js';
+import { errors } from '../middleware/errorHandler.js';
+import { createLazy, createLazyFirestore } from '../utils/factory.js';
 interface UserDeletionRequest {
   confirmationText: string;
   reAuthToken?: string;

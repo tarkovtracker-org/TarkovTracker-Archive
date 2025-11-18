@@ -14,17 +14,18 @@ import admin from 'firebase-admin';
 import { onRequest } from 'firebase-functions/v2/https';
 import type { Express } from 'express';
 // Import legacy functions for backward compatibility
-import { createToken } from './token/create';
-import { revokeToken } from './token/revoke';
-import { createApp } from './app/app';
-import { scheduledFunctions } from './scheduled/index';
-import { withCorsHandling } from './middleware/corsWrapper';
+import { createToken } from './token/create.js';
+import { revokeToken } from './token/revoke.js';
+import { createApp } from './app/app.js';
+import { scheduledFunctions } from './scheduled/index.js';
+import { withCorsHandling } from './middleware/corsWrapper.js';
 // Firebase Admin initialization
 try {
   admin.initializeApp();
-} catch (error: any) {
+} catch (error: unknown) {
   // Ignore "app already exists" errors - Firebase is already initialized
-  if (!error?.message?.includes('already exists')) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  if (!errorMessage.includes('already exists')) {
     throw error;
   }
 }
@@ -48,14 +49,14 @@ export const { updateTarkovData, expireInactiveTokens } = scheduledFunctions;
 // These services are exported for use by external integrations and test suites.
 // Internal code should import directly from './services/{ServiceName}.ts'
 // to avoid unnecessary abstraction and make import paths explicit.
-export { ProgressService } from './services/ProgressService';
-export { ValidationService } from './services/ValidationService';
+export { ProgressService } from './services/ProgressService.js';
+export { ValidationService } from './services/ValidationService.js';
 // Lazily construct and cache the Express app used by the `api` HTTP function
 let cachedApp: Express | undefined;
 async function getApiApp(): Promise<Express> {
   if (cachedApp) return cachedApp;
   cachedApp = await createApp();
-  return cachedApp;
+  return cachedApp!;
 }
 export const rawApp = getApiApp;
 
@@ -77,8 +78,11 @@ export const api: ReturnType<typeof onRequest> = onRequest(
     minInstances: 0,
     maxInstances: 3,
   },
+  // Type coercion at Firebase Functions/Express boundary (Express v4 vs v5 types)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   withCorsHandling(async (req: any, res: any) => {
     const app = await getApiApp();
     return app(req, res);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any
 );

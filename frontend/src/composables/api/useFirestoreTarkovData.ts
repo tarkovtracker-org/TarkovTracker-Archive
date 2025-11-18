@@ -24,7 +24,7 @@ function processShardData(shardDocs: unknown) {
     tarkovItemsCache.value = aggregatedItems;
     logger.info(`Loaded ${aggregatedItems.length} Tarkov items from Firestore shard cache`);
   } else {
-    logger.warn('Tarkov items document exists but has no items field');
+    logger.debug('Tarkov items shards cache empty or missing data field');
     tarkovItemsCache.value = [];
   }
 }

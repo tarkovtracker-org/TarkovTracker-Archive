@@ -1,35 +1,6 @@
 <template>
   <v-container class="mt-2 d-flex flex-column" style="min-height: calc(100vh - 250px)">
     <v-alert
-      v-model="showAnnouncementAlert"
-      density="compact"
-      color="green-darken-3"
-      title="API Update Complete"
-      class="mb-3 announcement-alert"
-      style="flex: 0 0 auto"
-      closable
-    >
-      <div class="text-body-2">
-        <div class="mb-1">
-          <strong>API has been reworked and should now function properly</strong> with full support
-          for PvP and PvE game modes!
-        </div>
-        <div>
-          Please report any issues in our
-          <a href="https://discord.gg/M8nBgA2sT6" target="_blank" class="text-green-lighten-2"
-            >Discord</a
-          >
-          or on
-          <a
-            href="https://github.com/tarkovtracker-org/TarkovTracker/issues"
-            target="_blank"
-            class="text-green-lighten-2"
-            >GitHub</a
-          >.
-        </div>
-      </div>
-    </v-alert>
-    <v-alert
       v-model="showProjectStatusAlert"
       density="compact"
       color="green-darken-4"
@@ -157,7 +128,7 @@
   import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useUserStore } from '@/stores/user';
-  import { computed, onMounted, ref } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import TrackerStat from '@/components/domain/tasks/TrackerStat.vue';
   const { t } = useI18n({ useScope: 'global' });
@@ -183,14 +154,8 @@
   const { tasksCompletions, objectiveCompletions } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   const userStore = useUserStore();
-  const showAnnouncementAlert = computed({
-    get: () => userStore.showTip('dashboard-announcement'),
-    set: (value) => {
-      if (!value) {
-        userStore.hideTip('dashboard-announcement');
-      }
-    },
-  });
+
+
   const showProjectStatusAlert = computed({
     get: () => userStore.showTip('dashboard-project-status'),
     set: (value) => {
@@ -200,8 +165,7 @@
     },
   });
   const neededItemTaskObjectives = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !objectives?.value) {
+    if (!objectives?.value) {
       return [];
     }
     // Filter objectives to include only those that involve items relevant for counting
@@ -217,45 +181,35 @@
     return objectives.value.filter((obj) => obj && itemObjectiveTypes.includes(obj.type));
   });
   const totalTasks = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !tasks.value) {
+    if (!tasks.value) {
       return 0;
     }
-    let relevantTasks = tasks.value.filter(
+
+    const relevantTasks = tasks.value.filter(
       (task) =>
-        // Ensure task exists and has factionName before filtering
         task && (task.factionName === 'Any' || task.factionName === tarkovStore.getPMCFaction())
-    ).length;
+    );
+
     // Find all tasks with alternatives and subtract n-1 from the total
-    // Ensure tasks.value exists before filtering
-    let tasksWithAlternatives = tasks.value
-      ? tasks.value.filter(
-          // Ensure task exists and has alternatives before checking length
-          (task) => task?.alternatives && task.alternatives.length > 0
-        )
-      : []; // Default to empty array if tasks.value is null
-    // Ensure tasksWithAlternatives is valid before iterating
-    if (tasksWithAlternatives && tasksWithAlternatives.length > 0) {
-      tasksWithAlternatives.forEach((task) => {
-        // Ensure task and alternatives exist
-        if (task?.alternatives) {
-          relevantTasks -= task.alternatives.length - 1;
-          // Ensure alternatives exist before iterating
-          if (task.alternatives.length > 0) {
-            task.alternatives.forEach((alternative) => {
-              tasksWithAlternatives = tasksWithAlternatives.filter(
-                (t) => t && t.id != alternative // Ensure iterated task 't' exists
-              );
-            });
-          }
+    // This accounts for the fact that alternatives are mutually exclusive
+    const alternativeTaskIds = new Set();
+    let alternativeCount = 0;
+
+    relevantTasks.forEach((task) => {
+      if (task.alternatives && task.alternatives.length > 0) {
+        // Only count this task's alternatives if we haven't already counted it as an alternative
+        if (!alternativeTaskIds.has(task.id)) {
+          alternativeCount += task.alternatives.length;
+          // Mark all alternatives so we don't double-count
+          task.alternatives.forEach((altId) => alternativeTaskIds.add(altId));
         }
-      });
-    }
-    return relevantTasks;
+      }
+    });
+
+    return relevantTasks.length - alternativeCount;
   });
   const totalObjectives = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !tasks.value) {
+    if (!tasks.value) {
       return 0;
     }
     let total = 0;
@@ -274,8 +228,7 @@
     return total;
   });
   const completedObjectives = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !objectives?.value || !tarkovStore) {
+    if (!objectives?.value || !tarkovStore) {
       return 0;
     }
     return objectives.value.filter(
@@ -285,8 +238,7 @@
     ).length;
   });
   const completedTasks = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !tasksCompletions.value) {
+    if (!tasksCompletions.value) {
       return 0;
     }
     return Object.values(tasksCompletions.value).filter(
@@ -294,9 +246,7 @@
     ).length;
   });
   const completedTaskItems = computed(() => {
-    // Defer computation until after initial render
     if (
-      !statsReady.value ||
       !neededItemTaskObjectives.value ||
       !tasks.value ||
       !tasksCompletions.value ||
@@ -355,8 +305,7 @@
     return total;
   });
   const totalTaskItems = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !objectives?.value || !tasks.value || !tarkovStore) {
+    if (!objectives?.value || !tasks.value || !tarkovStore) {
       return 0;
     }
     let total = 0;
@@ -398,8 +347,7 @@
     return total;
   });
   const totalKappaTasks = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !tasks.value) {
+    if (!tasks.value) {
       return 0;
     }
     return tasks.value.filter(
@@ -409,8 +357,7 @@
     ).length;
   });
   const completedKappaTasks = computed(() => {
-    // Defer computation until after initial render
-    if (!statsReady.value || !tasks.value || !tasksCompletions.value) {
+    if (!tasks.value || !tasksCompletions.value) {
       return 0;
     }
     return tasks.value.filter(
@@ -468,7 +415,6 @@
       margin: 0 auto;
     }
   }
-  .announcement-alert,
   .project-status-alert {
     :deep(.v-alert__content) {
       padding: 8px 0;
@@ -480,7 +426,6 @@
   }
   // Make it even more compact on mobile
   @media (max-width: 600px) {
-    .announcement-alert,
     .project-status-alert {
       :deep(.v-alert__content) {
         padding: 6px 0;

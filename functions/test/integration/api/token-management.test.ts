@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createTestSuite, firestore } from '../../helpers';
+import { createTestSuite, firestore, admin } from '../../helpers';
 import { _createTokenLogic } from '../../../src/token/create';
 import { revokeTokenHandler } from '../../../src/token/revoke';
 import tokenHandler from '../../../src/token/tokenHandler';
@@ -9,6 +9,9 @@ const makeRes = () => {
   const res: any = {};
   res.status = vi.fn().mockReturnValue(res);
   res.json = vi.fn().mockReturnValue(res);
+  res.set = vi.fn().mockReturnValue(res);
+  res.header = vi.fn().mockReturnValue(res);
+  res.setHeader = vi.fn().mockReturnValue(res);
   return res;
 };
 
@@ -143,6 +146,21 @@ describe('Token Management', () => {
   });
 
   describe('Token Revocation (revokeToken)', () => {
+    let originalVerifyIdToken: any;
+
+    beforeEach(() => {
+      // Mock Firebase Auth token verification to return userA
+      originalVerifyIdToken = admin.auth().verifyIdToken;
+      (admin.auth() as any).verifyIdToken = vi.fn().mockResolvedValue({ uid: 'userA' });
+    });
+
+    afterEach(() => {
+      // Restore original verifyIdToken
+      if (originalVerifyIdToken) {
+        (admin.auth() as any).verifyIdToken = originalVerifyIdToken;
+      }
+    });
+
     const mockRequest = (overrides = {}) => {
       const { headers, ...rest } = overrides as { headers?: Record<string, string> };
       return {
@@ -162,7 +180,8 @@ describe('Token Management', () => {
     };
 
     const mockResponse = () => {
-      return makeRes();
+      const res = makeRes();
+      return res;
     };
 
     it('should handle missing token in request body', async () => {

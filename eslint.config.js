@@ -5,7 +5,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginVue from 'eslint-plugin-vue';
 import eslintConfigPrettier from 'eslint-config-prettier';
-import progressRules from './eslint.progress-rules.cjs';
+import progressRules from './eslint.progress-rules.js';
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 export default [
   // Global ignores
@@ -22,7 +22,7 @@ export default [
       'frontend/public/**',
       'frontend/playwright-report/**',
       'docs/openapi.*',
-      'eslint.progress-rules.cjs',
+      'eslint.progress-rules.js',
       // Exclude these directories from ESLint processing
       '.factory/**',
       '.github/**',
@@ -90,9 +90,9 @@ export default [
       'prefer-destructuring': ['warn', { object: true, array: false }],
     },
   },
-  // Frontend TypeScript source files with typed linting
+  // Frontend TypeScript source files - only essential files with projectService
   {
-    files: ['frontend/src/**/*.ts'],
+    files: ['frontend/src/{stores,composables,services}/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 'latest',
@@ -109,6 +109,26 @@ export default [
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn', // TODO: Fix and change to 'error'
+      'no-unused-vars': 'off',
+      'no-debugger': 'off',
+      'max-len': ['warn', { code: 100 }],
+    },
+  },
+  // Other frontend TypeScript files without projectService for speed
+  {
+    files: ['frontend/src/{types,utils,plugins,router}/**/*.ts', 'frontend/**/*.config.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.es2022,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
       'no-unused-vars': 'off',
       'no-debugger': 'off',
       'max-len': ['warn', { code: 100 }],
@@ -188,13 +208,13 @@ export default [
       'prefer-destructuring': ['warn', { object: true, array: false }],
     },
   },
-  // Functions test files - TypeScript
+  // Functions test files - TypeScript (no projectService for speed)
   {
     files: ['functions/test/**/*.ts'],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        projectService: true,
+        // projectService: true, // Disabled for test files to improve performance
         tsconfigRootDir: __dirname,
       },
     },
@@ -206,15 +226,15 @@ export default [
         varsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_'
       }],
-      // Critical TypeScript rules for bug prevention
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/return-await': 'error',
-      '@typescript-eslint/require-await': 'error',
-      '@typescript-eslint/no-unnecessary-condition': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+      // Removed type-aware rules for test files to improve performance
+      // '@typescript-eslint/no-floating-promises': 'error',
+      // '@typescript-eslint/await-thenable': 'error',
+      // '@typescript-eslint/no-misused-promises': 'error',
+      // '@typescript-eslint/return-await': 'error',
+      // '@typescript-eslint/require-await': 'error',
+      // '@typescript-eslint/no-unnecessary-condition': 'error',
+      // '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      // '@typescript-eslint/prefer-optional-chain': 'error',
       // General best practices (less strict for tests)
       'prefer-const': 'warn',
       'no-var': 'error',
@@ -269,7 +289,7 @@ export default [
   },
   // Node.js scripts configuration (CommonJS)
   {
-    files: ['scripts/**/*.js'],
+    files: ['scripts/**/*.js', 'functions/test/scripts/**/*.cjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
@@ -281,6 +301,8 @@ export default [
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       'no-console': 'off',
+      'no-undef': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
     },
   },
   // Node.js scripts configuration (ES Modules)

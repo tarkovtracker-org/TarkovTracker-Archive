@@ -5,9 +5,9 @@
  * so traditional CSRF risks don't apply. Origin validation blocks dangerous
  * patterns while allowing legitimate third-party integrations.
  */
-import { logger } from 'firebase-functions';
 import type { Request as FunctionsRequest } from 'firebase-functions/v2/https';
 import type { CorsOptions } from 'cors';
+import { logger } from '../logger.js';
 /**
  * Static allowlist of headers for CORS preflight responses.
  * Security: Never reflect client-sent headers dynamically.
@@ -27,8 +27,11 @@ const ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
 interface CorsRequest {
   headers: FunctionsRequest['headers'];
 }
+type CorsHeaderValue = string | readonly string[];
 interface CorsResponse {
-  set(field: string, value: string | readonly string[]): unknown;
+  set?: (field: string, value: CorsHeaderValue) => unknown;
+  header?: (field: string, value: string) => unknown;
+  setHeader?: (field: string, value: string) => unknown;
 }
 export interface OriginValidationOptions {
   trustNoOrigin?: boolean;
@@ -137,6 +140,24 @@ export function getExpressCorsOptions(): CorsOptions {
     allowedHeaders: ALLOW_HEADERS,
   };
 }
+const normalizeHeaderValue = (value: CorsHeaderValue): CorsHeaderValue =>
+  Array.isArray(value) ? value.join(', ') : value;
+
+const applyHeaderValue = (res: CorsResponse, field: string, value: CorsHeaderValue): void => {
+  if (typeof res.set === 'function') {
+    res.set(field, value as string);
+    return;
+  }
+  const normalizedValue = normalizeHeaderValue(value);
+  if (typeof res.header === 'function') {
+    res.header(field, normalizedValue as string);
+    return;
+  }
+  if (typeof res.setHeader === 'function') {
+    res.setHeader(field, normalizedValue as string);
+  }
+};
+
 export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
   const { origin } = req.headers;
   const validatedOrigin = validateOrigin(origin, {
@@ -145,12 +166,16 @@ export function setCorsHeaders(req: CorsRequest, res: CorsResponse): boolean {
   });
   if (validatedOrigin === false) return false;
   if (validatedOrigin === '*') {
-    res.set('Access-Control-Allow-Origin', '*');
+    applyHeaderValue(res, 'Access-Control-Allow-Origin', '*');
   } else if (typeof validatedOrigin === 'string') {
-    res.set('Access-Control-Allow-Origin', validatedOrigin);
-    res.set('Vary', 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers');
+    applyHeaderValue(res, 'Access-Control-Allow-Origin', validatedOrigin);
+    applyHeaderValue(
+      res,
+      'Vary',
+      'Origin, Access-Control-Request-Method, Access-Control-Request-Headers'
+    );
   }
-  res.set('Access-Control-Allow-Methods', ALLOW_METHODS.join(', '));
-  res.set('Access-Control-Allow-Headers', ALLOW_HEADERS.join(', '));
+  applyHeaderValue(res, 'Access-Control-Allow-Methods', ALLOW_METHODS.join(', '));
+  applyHeaderValue(res, 'Access-Control-Allow-Headers', ALLOW_HEADERS.join(', '));
   return true;
 }

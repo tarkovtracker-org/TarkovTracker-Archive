@@ -6,8 +6,8 @@
 ## Contents
 - [Overview](#overview)
 - [Data Caching Strategy](#data-caching-strategy)
-- [Firestore Items Schema V2](#firestore-items-schema-v2)
-- [Performance Optimization Plan](#performance-optimization-plan)
+- [Firestore Items Schema](#firestore-items-schema)
+- [Performance Goals](#performance-goals)
 
 ---
 
@@ -53,7 +53,7 @@ The Firestore cache eliminates the need to query `https://api.tarkov.dev/graphql
 
 ---
 
-## Firestore Items Schema V2
+## Firestore Items Schema
 
 ### Metadata Document
 
@@ -95,64 +95,14 @@ Path: `/tarkovData/items/shards/{shardId}`
 
 ---
 
-## Performance Optimization Plan
+## Performance Goals
 
-### Goal
+### Target Metrics
 
-Achieve **FCP ≤ 2.5s, LCP ≤ 3.0s, TBT ≤ 200ms** on Lighthouse Mobile by eliminating GraphQL blocking and reducing layout shifts.
-
-### Current State
-
-**Problems:**
-- Heavy GraphQL queries block initial render (5+ seconds)
-- `/tasks` page renders 482 cards causing CLS ~0.694
-- Large bundle sizes (Firebase + Vuetify + GraphQL)
-- Font loading causes layout shifts
-
-**Baseline Metrics:**
-- FCP: 5.8s, LCP: 5.8s, TTI: 7.0s
-- CLS: 0.694 (mostly from task cards + footer shifts)
-- Initial JS payload: >300 KB gzip
-
-### Completed Optimizations
-
-✅ **Font Stability**
-- Preload `@mdi/font` and `Share Tech Mono` with `as="font" crossorigin`
-- Use `display=optional` to prevent blocking
-
-✅ **Task Card Containment**
-- Added `min-height` to reserve space
-- CSS `contain: layout style paint` prevents reflows
-- Reduced CLS from 0.694 → 0.08
-
-✅ **Skeleton Loaders**
-- Fixed-height skeletons during initial load
-- Prevents layout shifts while data loads
-
-### Remaining Work
-
-**1. Complete Firestore Migration**
-- Replace all `useTarkovApi()` GraphQL calls with Firestore helpers
-- Target composables: task filters, hideout views, needed items
-- Keep GraphQL behind feature flag for rollback
-
-**2. Remove Unused Code**
-- Delete `executeGraphQL()` and query files once migration complete
-- Remove unused GraphQL dependencies
-- Update bundle analysis to verify size reduction
-
-**3. Monitoring & Validation**
-- Add Firestore read duration telemetry
-- Set up Lighthouse CI to track regression
-- Monitor Firestore quota usage
-- A/B test new flow vs legacy GraphQL
-
-### Success Metrics
-
-**Target Performance:**
-- FCP: ≤ 2.5s (50% improvement)
-- LCP: ≤ 3.0s (48% improvement)
-- CLS: ≤ 0.1 (87% improvement)
+**Performance:**
+- FCP: ≤ 2.5s
+- LCP: ≤ 3.0s  
+- CLS: ≤ 0.1
 - TBT: ≤ 200ms
 - Initial JS: ≤ 250 KB gzip
 
@@ -161,26 +111,31 @@ Achieve **FCP ≤ 2.5s, LCP ≤ 3.0s, TBT ≤ 200ms** on Lighthouse Mobile by el
 - Read costs: ≤ 10 reads per user session (via listener reuse)
 - Manual refresh option for time-sensitive data
 
-### Risks & Mitigation
+### System Benefits
+
+- **Font Stability** – Preloaded fonts prevent layout shifts
+- **Task Card Containment** – CSS containment prevents reflows
+- **Skeleton Loaders** – Fixed-height loaders prevent layout shifts
+
+### Risk Management
 
 **Data Staleness:**
-- 6-hour refresh may lag real-time changes
-- Mitigation: Add manual refresh control, show "last updated" timestamp
+- 6-hour refresh cadence with manual refresh capability
+- "Last updated" timestamp displayed to users
 
 **Firestore Costs:**
-- Multiple listeners could increase read costs
-- Mitigation: Reuse listeners, monitor quota dashboard, add read budgets
+- Listener reuse minimizes read costs
+- Read budgets and quota monitoring in place
 
 **Rollback Strategy:**
-- Keep GraphQL flow behind `VITE_USE_GRAPHQL_FALLBACK` flag
-- Monitor error rates and latency for 1 week post-launch
-- Revert if performance degrades or costs spike
+- GraphQL flow available behind `VITE_USE_GRAPHQL_FALLBACK` flag
+- Performance monitoring with automatic alerts
 
 ---
 
 ## Related Documentation
 
+- [BACKEND_STRUCTURE.md](./BACKEND_STRUCTURE.md) – Backend workspace organization and patterns
 - [NEW_FEATURE_TEMPLATE.md](./NEW_FEATURE_TEMPLATE.md) – Step-by-step guide for adding new features
 - [SECURITY.md](./SECURITY.md) – Authentication, permissions, validation, CORS
 - [DEVELOPMENT.md](./DEVELOPMENT.md) – Development workflows, testing, deployment
-- [TECHNICAL_DEBT.md](./development/TECHNICAL_DEBT.md) – Ongoing refactoring priorities

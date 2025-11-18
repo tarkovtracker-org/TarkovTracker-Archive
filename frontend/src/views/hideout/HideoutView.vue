@@ -45,7 +45,7 @@
           <hideout-card :station="hStation" class="ma-2" />
         </v-col>
       </v-row>
-      <v-row v-if="!hideoutLoading && !isStoreLoading && visibleStations.length == 0">
+      <v-row v-if="!hideoutLoading && !isStoreLoading && visibleStations.length === 0">
         <v-col cols="12">
           <v-alert icon="mdi-clipboard-search"> {{ $t('page.hideout.nostationsfound') }}</v-alert>
         </v-col>

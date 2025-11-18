@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import admin from 'firebase-admin';
-import { logger } from 'firebase-functions/v2';
-import { errors } from './errorHandler';
-import { ApiError } from '../types/api';
+import { logger } from '../logger.js';
+import { errors } from './errorHandler.js';
+import { ApiError } from '../types/api.js';
 interface ReAuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -46,7 +46,7 @@ export const requireRecentAuth = async (
     // Attach user info to request
     req.user = {
       id: decodedToken.uid,
-      username: decodedToken.email || decodedToken.name,
+      username: decodedToken.email ?? decodedToken.name,
       recentlyAuthenticated: true,
     };
     logger.info('Recent authentication verified', {
@@ -104,7 +104,7 @@ export const requireValidAuthToken = async (
     const decodedToken = await admin.auth().verifyIdToken(idToken, true);
     req.user = {
       id: decodedToken.uid,
-      username: decodedToken.email || decodedToken.name,
+      username: decodedToken.email ?? decodedToken.name,
       recentlyAuthenticated: false,
     };
     next();

@@ -64,7 +64,7 @@ describe('verifyBearer middleware', () => {
     it('validates Bearer token and populates req.user with next() call', async () => {
       // Create a real token in emulator for testing
       const db = firestore();
-      const tokenDoc = await db
+      await db
         .collection('token')
         .doc('valid-bearer-token-123')
         .set({

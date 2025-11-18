@@ -8,13 +8,13 @@ import type {
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { logger } from 'firebase-functions/v2';
-import { verifyBearerToken } from '../middleware/httpAuthWrapper';
-import { requirePermission } from '../middleware/httpAuthWrapper';
-import { abuseGuard } from '../middleware/abuseGuard';
-import { requireRecentAuth } from '../middleware/reauth';
-import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler';
-import { corsMiddleware } from '../middleware/corsWrapper';
+import { logger } from '../logger.js';
+import { verifyBearerToken } from '../middleware/httpAuthWrapper.js';
+import { requirePermission } from '../middleware/httpAuthWrapper.js';
+import { abuseGuard } from '../middleware/abuseGuard.js';
+import { requireRecentAuth } from '../middleware/reauth.js';
+import { errorHandler, notFoundHandler, asyncHandler } from '../middleware/errorHandler.js';
+import { corsMiddleware } from '../middleware/corsWrapper.js';
 import {
   getPlayerProgress,
   setPlayerLevel,
@@ -27,12 +27,12 @@ import {
   leaveTeam,
   getTokenInfo,
   deleteUserAccountHandler,
-} from '../handlers';
-import { API_FEATURES } from '../config/features';
+} from '../handlers/index.js';
+import { API_FEATURES } from '../config/features.js';
 // Read package version at module load
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const packageJsonPath = join(__dirname, '../../package.json');
+const packageJsonPath = join(__dirname, '../../../package.json');
 let APP_VERSION = '0.0.0';
 try {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));

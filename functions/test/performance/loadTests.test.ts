@@ -199,7 +199,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         responseTimes.push(metrics.metrics.duration);
         operationCount++;
         // Small delay to simulate realistic usage patterns
-        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => {
+          setTimeout(resolve, Math.random() * 50);
+        });
       }
       // Calculate performance metrics
       const avgResponseTime =
@@ -252,7 +254,6 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
     it('should handle flash crowd scenario', async () => {
       // Simulate sudden spike in traffic (flash crowd)
       const flashCrowdSize = 100;
-      const rapidOperations = 2;
       const metrics = await loadTester.runLoadTest(
         'flashCrowd',
         async () => {
@@ -310,7 +311,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
               responseTime: Date.now() - operationStart,
               success: true,
             });
-          } catch (error) {
+          } catch (_error) {
             operationMetrics.push({
               timestamp: Date.now(),
               responseTime: Date.now() - operationStart,
@@ -318,7 +319,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
             });
           }
           // Small delay between operations
-          await new Promise((resolve) => setTimeout(resolve, Math.random() * 100));
+          await new Promise((resolve) => {
+            setTimeout(resolve, Math.random() * 100);
+          });
         }
       });
       await Promise.all(userPromises);
@@ -427,7 +430,7 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
   describe('Recovery and Resilience Tests', () => {
     it('should recover from temporary overload', async () => {
       // Phase 1: Create overload condition
-      const overloadMetrics = await loadTester.runLoadTest(
+      const _overloadMetrics = await loadTester.runLoadTest(
         'overloadPhase',
         async () => {
           const userId = TestDataGenerator.generateUserId();
@@ -452,7 +455,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         }
       );
       // Phase 2: Allow recovery period
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 2000);
+      });
       // Phase 3: Test recovery performance
       const recoveryMetrics = await loadTester.runLoadTest(
         'recoveryPhase',
@@ -507,7 +512,9 @@ const RUN_PERFORMANCE_TESTS = process.env.ENABLE_PERFORMANCE_TESTS === 'true';
         });
         // Small delay between phases
         if (i < phases.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => {
+            setTimeout(resolve, 1000);
+          });
         }
       }
       // Performance should degrade gracefully

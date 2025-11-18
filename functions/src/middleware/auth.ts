@@ -16,7 +16,7 @@ export {
   withBearerAuthAndPermission,
   withCorsAndBearerAuthAndPermission,
   type AuthenticatedRequest,
-} from './httpAuthWrapper';
+} from './httpAuthWrapper.js';
 
 // Re-export AuthenticatedRequest as AuthenticatedFunctionsRequest for backward compatibility
-export type { AuthenticatedRequest as AuthenticatedFunctionsRequest } from './httpAuthWrapper';
+export type { AuthenticatedRequest as AuthenticatedFunctionsRequest } from './httpAuthWrapper.js';

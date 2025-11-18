@@ -174,6 +174,9 @@ describe('deleteUserAccountHandler', () => {
     return {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      header: vi.fn().mockReturnThis(),
+      setHeader: vi.fn().mockReturnThis(),
     };
   };
 
