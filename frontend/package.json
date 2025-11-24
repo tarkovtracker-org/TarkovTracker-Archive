@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@intlify/unplugin-vue-i18n": "^6.0.8",
-    "@playwright/test": "^1.54.1",
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.6.4",
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^8.1.0",
