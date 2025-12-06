@@ -12,7 +12,7 @@ import type {
   StaticMapData,
 } from '@/types/tarkov';
 import mapsData from './maps.json';
-// Provide Apollo client
+import { logger } from '@/utils/logger';
 provideApolloClient(apolloClient);
 // Singleton state for caching
 const isInitialized = ref(false);
@@ -20,9 +20,6 @@ const availableLanguages = ref<string[] | null>(null);
 const staticMapData = ref<StaticMapData | null>(null);
 // Map data - now served locally
 let mapPromise: Promise<StaticMapData> | null = null;
-/**
- * Loads static map data from local source
- */
 async function loadStaticMaps(): Promise<StaticMapData> {
   if (!mapPromise) {
     mapPromise = Promise.resolve(mapsData as StaticMapData);
@@ -34,7 +31,6 @@ async function loadStaticMaps(): Promise<StaticMapData> {
  * Composable for managing Tarkov API queries and language detection
  */
 export function useTarkovApi() {
-  // Use safe locale helper to avoid i18n context issues
   const locale = useSafeLocale();
   const languageCode = computed(() =>
     extractLanguageCode(locale.value, availableLanguages.value || ['en'])
@@ -64,7 +60,7 @@ export function useTarkovApi() {
       ) ?? ['en'];
     });
     onLanguageError((error) => {
-      console.error('Language query failed:', error);
+      logger.error('Language query failed:', error);
       availableLanguages.value = ['en'];
     });
   }

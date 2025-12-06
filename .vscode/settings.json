@@ -1,0 +1,5 @@
+{
+  "cSpell.words": ["crosshairs", "nums", "teammember"],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "markdown.validate.enabled": true
+}

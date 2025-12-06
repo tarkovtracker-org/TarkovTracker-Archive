@@ -1,10 +1,11 @@
 import type Graph from 'graphology';
-import type { ApolloError } from '@apollo/client/core';
+import type { ApolloError } from '@apollo/client';
 import type { Store, StateTree } from 'pinia';
 import type { Ref, ComputedRef } from 'vue';
 import type { _GettersTree } from 'pinia';
 import type { UserState } from '@/shared_state';
 import type { Unsubscribe, DocumentReference, DocumentData } from 'firebase/firestore';
+import type { MapLocation, MapZone } from './maps';
 
 // Core Tarkov Data Types
 export interface TarkovItem {
@@ -42,7 +43,7 @@ export interface SkillRequirement {
 }
 
 export interface TraderRequirement {
-  id: string;
+  id?: string;
   trader: { id: string; name: string };
   value: number;
 }
@@ -92,7 +93,10 @@ export interface TaskObjective {
   description?: string;
   location?: { id: string; name?: string };
   maps?: { id: string; name?: string }[];
-  item?: TarkovItem;
+  possibleLocations?: MapLocation[];
+  zones?: MapZone[];
+  item?: TarkovItem; // Legacy field - use items instead
+  items?: TarkovItem[]; // New field replacing item
   markerItem?: TarkovItem;
   count?: number;
   type?: string;
@@ -101,6 +105,18 @@ export interface TaskObjective {
   y?: number;
   optional?: boolean;
   taskId?: string;
+  requiredKeys?: TarkovItem | TarkovItem[]; // New field replacing Task.neededKeys
+  trader?: { id: string; name?: string };
+  level?: number;
+  value?: number;
+  compareMethod?: string;
+}
+
+export type Key = TarkovItem;
+
+export interface RequiredKey {
+  keys: Key[];
+  map: { id: string; name?: string } | null;
 }
 
 export interface TaskRequirement {
@@ -118,23 +134,42 @@ export interface Task {
   id: string;
   tarkovDataId?: number;
   name?: string;
+  normalizedName?: string; // New field
+  eodOnly?: boolean;
   kappaRequired?: boolean;
+  lightkeeperRequired?: boolean;
   experience?: number;
+  taskImageLink?: string; // New field
+  wikiLink?: string;
+  availableDelaySecondsMin?: number; // New field
+  availableDelaySecondsMax?: number; // New field
+  restartable?: boolean; // New field
+  descriptionMessageId?: string; // New field
+  startMessageId?: string; // New field
+  successMessageId?: string; // New field
+  failMessageId?: string; // New field
   map?: { id: string; name?: string };
   locations?: string[];
-  trader?: { id: string; name?: string; imageLink?: string };
+  trader?: { id: string; name?: string; imageLink?: string; normalizedName?: string };
   objectives?: TaskObjective[];
   taskRequirements?: TaskRequirement[];
+  traderRequirements?: TraderRequirement[];
   minPlayerLevel?: number;
   failedRequirements?: TaskRequirement[];
   traderLevelRequirements?: TaskTraderLevelRequirement[];
   factionName?: string;
   finishRewards?: FinishReward[];
+  startRewards?: FinishReward[]; // New field
+  failConditions?: TaskObjective[]; // New field
+  failureOutcome?: object; // New field
+  neededKeys?: RequiredKey[]; // Legacy field - computed from objectives.requiredKeys
   traderIcon?: string;
   predecessors?: string[];
   successors?: string[];
   parents?: string[];
   children?: string[];
+  alternatives?: string[];
+  neededBy?: string[];
 }
 
 export interface TarkovMap {
@@ -157,6 +192,16 @@ export interface Trader {
   name: string;
   normalizedName?: string;
   imageLink?: string;
+  levels?: {
+    id?: string;
+    level?: number;
+    requiredPlayerLevel?: number;
+    requiredReputation?: number;
+    requiredCommerce?: number;
+    insuranceRate?: number;
+    payRate?: number;
+    repairCostMultiplier?: number;
+  }[];
 }
 
 export interface PlayerLevel {
@@ -184,7 +229,7 @@ export interface TarkovHideoutQueryResult {
 // Needed Items Types
 export interface NeededItemBase {
   id: string;
-  item: TarkovItem;
+  item?: TarkovItem;
   count: number;
   foundInRaid?: boolean;
 }
@@ -194,6 +239,7 @@ export interface NeededItemTaskObjective extends NeededItemBase {
   taskId: string;
   type?: string;
   markerItem?: TarkovItem;
+  alternativeItems?: TarkovItem[];
 }
 
 export interface NeededItemHideoutModule extends NeededItemBase {
@@ -296,6 +342,7 @@ export interface TarkovDataComposable {
   mapTasks: Ref<{ [mapId: string]: string[] }>;
   objectives: ComputedRef<TaskObjective[]>;
   maps: ComputedRef<TarkovMap[]>;
+  rawMaps: ComputedRef<TarkovMap[]>;
   traders: ComputedRef<Trader[]>;
   neededItemTaskObjectives: Ref<NeededItemTaskObjective[]>;
   neededItemHideoutModules: Ref<NeededItemHideoutModule[]>;

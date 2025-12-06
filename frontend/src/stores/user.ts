@@ -3,6 +3,7 @@ import { defineStore, type StoreDefinition } from 'pinia';
 import { watch } from 'vue';
 import pinia from '@/plugins/pinia';
 import type { StoreWithFireswapExt } from '@/plugins/pinia-firestore';
+import { logger } from '@/utils/logger';
 // Define the state structure
 interface UserState {
   allTipsHidden: boolean;
@@ -23,13 +24,29 @@ interface UserState {
   itemsHideNonFIR: boolean;
   hideGlobalTasks: boolean;
   hideNonKappaTasks: boolean;
+  hideKappaRequiredTasks: boolean;
+  hideLightkeeperRequiredTasks: boolean;
+  hideEodOnlyTasks: boolean;
+  showOptionalTaskRequirementLabels: boolean;
+  showRequiredTaskRequirementLabels: boolean;
+  showExperienceRewards: boolean;
+  showNextTasks: boolean;
+  showPreviousTasks: boolean;
+  showTaskIds: boolean;
   neededitemsStyle: string | null;
   hideoutPrimaryView?: string | null;
   saving?: {
     streamerMode: boolean;
     hideGlobalTasks: boolean;
     hideNonKappaTasks: boolean;
+    hideKappaRequiredTasks: boolean;
+    hideLightkeeperRequiredTasks: boolean;
+    hideEodOnlyTasks: boolean;
     itemsNeededHideNonFIR: boolean;
+    showExperienceRewards: boolean;
+    showNextTasks: boolean;
+    showPreviousTasks: boolean;
+    showTaskIds: boolean;
   };
 }
 // Export the default state with type annotation
@@ -52,13 +69,29 @@ export const defaultState: UserState = {
   itemsHideNonFIR: false,
   hideGlobalTasks: false,
   hideNonKappaTasks: false,
+  hideKappaRequiredTasks: false,
+  hideLightkeeperRequiredTasks: false,
+  hideEodOnlyTasks: false,
+  showOptionalTaskRequirementLabels: true,
+  showRequiredTaskRequirementLabels: true,
+  showExperienceRewards: true,
+  showNextTasks: false,
+  showTaskIds: false,
+  showPreviousTasks: false,
   neededitemsStyle: null,
   hideoutPrimaryView: null,
   saving: {
     streamerMode: false,
     hideGlobalTasks: false,
     hideNonKappaTasks: false,
+    hideKappaRequiredTasks: false,
+    hideLightkeeperRequiredTasks: false,
+    hideEodOnlyTasks: false,
     itemsNeededHideNonFIR: false,
+    showExperienceRewards: false,
+    showNextTasks: false,
+    showTaskIds: false,
+    showPreviousTasks: false,
   },
 };
 // Per-toggle saving state (not persisted)
@@ -66,7 +99,14 @@ const initialSavingState = {
   streamerMode: false,
   hideGlobalTasks: false,
   hideNonKappaTasks: false,
+  hideKappaRequiredTasks: false,
+  hideLightkeeperRequiredTasks: false,
+  hideEodOnlyTasks: false,
   itemsNeededHideNonFIR: false,
+  showExperienceRewards: false,
+  showNextTasks: false,
+  showTaskIds: false,
+  showPreviousTasks: false,
 };
 // Define getter types
 type UserGetters = {
@@ -89,6 +129,15 @@ type UserGetters = {
   itemsNeededHideNonFIR: (state: UserState) => boolean;
   getHideGlobalTasks: (state: UserState) => boolean;
   getHideNonKappaTasks: (state: UserState) => boolean;
+  getHideKappaRequiredTasks: (state: UserState) => boolean;
+  getHideLightkeeperRequiredTasks: (state: UserState) => boolean;
+  getHideEodOnlyTasks: (state: UserState) => boolean;
+  getShowOptionalTaskRequirementLabels: (state: UserState) => boolean;
+  getShowRequiredTaskRequirementLabels: (state: UserState) => boolean;
+  getShowExperienceRewards: (state: UserState) => boolean;
+  getShowNextTasks: (state: UserState) => boolean;
+  getShowPreviousTasks: (state: UserState) => boolean;
+  getShowTaskIds: (state: UserState) => boolean;
   getNeededItemsStyle: (state: UserState) => string;
   getHideoutPrimaryView: (state: UserState) => string;
 };
@@ -113,6 +162,15 @@ type UserActions = {
   setItemsNeededHideNonFIR(hide: boolean): void;
   setHideGlobalTasks(hide: boolean): void;
   setHideNonKappaTasks(hide: boolean): void;
+  setHideKappaRequiredTasks(hide: boolean): void;
+  setHideLightkeeperRequiredTasks(hide: boolean): void;
+  setHideEodOnlyTasks(hide: boolean): void;
+  setShowOptionalTaskRequirementLabels(show: boolean): void;
+  setShowRequiredTaskRequirementLabels(show: boolean): void;
+  setShowExperienceRewards(show: boolean): void;
+  setShowNextTasks(show: boolean): void;
+  setShowPreviousTasks(show: boolean): void;
+  setShowTaskIds(show: boolean): void;
   setNeededItemsStyle(style: string): void;
   setHideoutPrimaryView(view: string): void;
 };
@@ -187,6 +245,33 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
     getHideNonKappaTasks: (state) => {
       return state.hideNonKappaTasks ?? false;
+    },
+    getHideKappaRequiredTasks: (state) => {
+      return state.hideKappaRequiredTasks ?? false;
+    },
+    getHideLightkeeperRequiredTasks: (state) => {
+      return state.hideLightkeeperRequiredTasks ?? false;
+    },
+    getHideEodOnlyTasks: (state) => {
+      return state.hideEodOnlyTasks ?? false;
+    },
+    getShowOptionalTaskRequirementLabels: (state) => {
+      return state.showOptionalTaskRequirementLabels ?? true;
+    },
+    getShowRequiredTaskRequirementLabels: (state) => {
+      return state.showRequiredTaskRequirementLabels ?? true;
+    },
+    getShowExperienceRewards: (state) => {
+      return state.showExperienceRewards ?? true;
+    },
+    getShowNextTasks: (state) => {
+      return state.showNextTasks ?? false;
+    },
+    getShowPreviousTasks: (state) => {
+      return state.showPreviousTasks ?? false;
+    },
+    getShowTaskIds: (state) => {
+      return state.showTaskIds ?? false;
     },
     getNeededItemsStyle: (state) => {
       return state.neededitemsStyle ?? 'mediumCard';
@@ -272,6 +357,56 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
       this.saving = this.saving ?? { ...initialSavingState };
       this.saving.hideNonKappaTasks = true;
     },
+    setHideKappaRequiredTasks(hide: boolean) {
+      this.hideKappaRequiredTasks = hide;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.hideKappaRequiredTasks = true;
+    },
+    setHideLightkeeperRequiredTasks(hide: boolean) {
+      this.hideLightkeeperRequiredTasks = hide;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.hideLightkeeperRequiredTasks = true;
+    },
+    setHideEodOnlyTasks(hide: boolean) {
+      this.hideEodOnlyTasks = hide;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.hideEodOnlyTasks = true;
+    },
+    setShowOptionalTaskRequirementLabels(show: boolean) {
+      this.showOptionalTaskRequirementLabels = show;
+      persistUserState(this.$state);
+    },
+    setShowRequiredTaskRequirementLabels(show: boolean) {
+      this.showRequiredTaskRequirementLabels = show;
+      persistUserState(this.$state);
+    },
+    setShowExperienceRewards(show: boolean) {
+      this.showExperienceRewards = show;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.showExperienceRewards = true;
+    },
+    setShowNextTasks(show: boolean) {
+      this.showNextTasks = show;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.showNextTasks = true;
+    },
+    setShowPreviousTasks(show: boolean) {
+      this.showPreviousTasks = show;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.showPreviousTasks = true;
+    },
+    setShowTaskIds(show: boolean) {
+      this.showTaskIds = show;
+      persistUserState(this.$state);
+      this.saving = this.saving ?? { ...initialSavingState };
+      this.saving.showTaskIds = true;
+    },
     setNeededItemsStyle(style: string) {
       this.neededitemsStyle = style;
     },
@@ -288,6 +423,8 @@ export const useUserStore: UserStoreDefinition = defineStore('swapUser', {
     },
   ],
 }) as UserStoreDefinition;
+
+export type UserStore = ReturnType<typeof useUserStore>;
 // Watch for fireuser state changing and bind/unbind
 watch(
   () => fireuser.loggedIn,
@@ -310,7 +447,7 @@ watch(
       }
     } catch (_error) {
       // Handle cases where pinia or userStore might not be ready
-      console.error('Error in userStore watch for fireuser.loggedIn:', _error);
+      logger.error('Error in userStore watch for fireuser.loggedIn:', _error);
     }
   },
   { immediate: true }

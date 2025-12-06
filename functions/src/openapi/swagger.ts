@@ -18,6 +18,24 @@ function findProjectRoot(startDir: string, markerFile: string): string | null {
     currentDir = parentDir;
   }
 }
+const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
+if (!projectRoot) {
+  const searchedDirs = [__dirname];
+  let currentDir = __dirname;
+  while (true) {
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) break;
+    searchedDirs.push(parentDir);
+    currentDir = parentDir;
+  }
+  throw new Error(
+    `Failed to find project root: 'LICENSE.md' not found in any parent directory.\n` +
+    `Searched directories (from ${__dirname} upwards):\n` +
+    searchedDirs.map(dir => `  - ${dir}`).join('\n') + '\n' +
+    `Ensure LICENSE.md exists at the project root.`
+  );
+}
+const sourceGlob = path.join(projectRoot, 'functions', 'src', '**', '*.ts');
 const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.0',
@@ -37,11 +55,11 @@ const swaggerOptions: swaggerJsdoc.Options = {
     servers: [
       {
         url: 'https://tarkovtracker.org/api/v2',
-        description: 'TarkovTracker API v2 PROD endpoint',
+        description: 'TarkovTracker API v2 production endpoint',
       },
       {
-        url: 'https://tarkov-tracker-dev.web.app/api/v2',
-        description: 'TarkovTracker API v2 DEV endpoint',
+        url: 'https://staging--tarkovtracker-org.web.app/api/v2',
+        description: 'TarkovTracker API v2 staging preview channel',
       },
     ],
     tags: [
@@ -69,16 +87,8 @@ const swaggerOptions: swaggerJsdoc.Options = {
       },
     ],
   },
-  apis: ['lib/**/*.js'],
+  apis: [sourceGlob],
 };
-// Find the project root
-const projectRoot = findProjectRoot(__dirname, 'LICENSE.md');
-if (!projectRoot) {
-  console.error(
-    "Failed to find project root. Make sure 'LICENSE.md' exists at the root of your project."
-  );
-  process.exit(1);
-}
 const openapiSpecification = swaggerJsdoc(swaggerOptions);
 // Define the output paths relative to the dynamically found project root
 const outputPath = path.join(projectRoot, 'docs/openapi.json');

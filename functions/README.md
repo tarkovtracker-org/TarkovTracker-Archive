@@ -1,6 +1,6 @@
 # TarkovTracker Backend Functions
 
-A Firebase Cloud Functions backend providing secure API access for the TarkovTracker application. Built with Express.js, TypeScript, and Firestore with comprehensive API documentation via OpenAPI/Swagger.
+A Firebase Cloud Functions backend providing secure API access for the TarkovTracker application. Built with Express.js, TypeScript, and Firestore with comprehensive API documentation via OpenAPI/Scalar.
 
 ## 🏗️ Architecture Overview
 
@@ -25,7 +25,7 @@ src/
 ├── utils/            # Utilities and helpers
 │   └── dataLoaders.ts       # Cached Firestore data loading
 ├── openapi/          # API documentation generation
-│   ├── swagger.ts           # OpenAPI spec generation
+│   ├── openapi.ts           # OpenAPI spec generation
 │   └── components.ts        # OpenAPI schema definitions
 ├── auth/             # Legacy authentication (backward compatibility)
 ├── progress/         # Legacy progress handlers (backward compatibility)  
@@ -64,15 +64,15 @@ src/
 
    ```bash
    npm run build        # Compile TypeScript
-   npm run lint         # Code linting
+   npm run lint         # Lint orchestrator (ESLint, TS checks, markdown)
    npm run test         # Run test suite
    ```
 
 ### Production Deployment
 
 ```bash
-npm run deploy:prod   # Deploy to production
-npm run deploy:dev    # Deploy to development
+npm run deploy:prod     # Deploy to production
+npm run deploy:staging  # Deploy to staging preview channel
 ```
 
 ## 📡 API Endpoints
@@ -152,7 +152,7 @@ await this.db.runTransaction(async (transaction) => {
 ### Generating Documentation
 
 ```bash
-npm run swagger   # Generate OpenAPI spec
+npm run openapi   # Generate OpenAPI spec
 npm run docs      # Build functions + generate docs
 npm run docs:serve # Generate docs + serve instructions
 ```
@@ -161,12 +161,11 @@ npm run docs:serve # Generate docs + serve instructions
 
 **Generated Files:**
 
-- `/docs/openapi.json` - OpenAPI 3.0 specification
-- `/docs/openapi.js` - Browser-ready JavaScript export
+- `/functions/openapi/openapi.json` - OpenAPI 3.0 specification (consumed by Scalar UI)
 
 **Documentation Features:**
 
-- **Interactive API Explorer**: Full Swagger UI integration
+- **Interactive API Explorer**: Full Scalar UI integration
 - **Schema Validation**: Request/response type checking
 - **Authentication Examples**: Bearer token usage patterns
 - **Error Response Codes**: Comprehensive HTTP status documentation
@@ -174,7 +173,7 @@ npm run docs:serve # Generate docs + serve instructions
 ### OpenAPI Configuration
 
 ```typescript
-// swagger.ts configuration
+// openapi.ts configuration
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
@@ -185,7 +184,7 @@ const swaggerOptions = {
     },
     servers: [
       { url: 'https://tarkovtracker.org/api/v2', description: 'Production' },
-      { url: 'https://tarkov-tracker-dev.web.app/api/v2', description: 'Development' }
+      { url: 'https://staging--tarkovtracker-org.web.app/api/v2', description: 'Staging preview channel' }
     ]
   },
   apis: ['lib/**/*.js'] // Generated JS files with JSDoc comments
@@ -371,8 +370,8 @@ export const PRODUCTION_CONFIG: DeploymentConfig = {
 # Production deployment
 npm run deploy:prod
 
-# Development deployment  
-npm run deploy:dev
+# Staging preview deployment
+npm run deploy:staging
 
 # Functions only
 firebase deploy --only functions
@@ -531,7 +530,7 @@ interface ApiResponse<T = unknown> {
 - **Firebase Emulator Suite**: Local development environment
 - **TypeScript**: Static type checking and IntelliSense
 - **ESLint + Prettier**: Code quality and formatting
-- **Swagger UI**: Interactive API documentation
+- **Scalar UI**: Interactive API documentation
 
 ---
 

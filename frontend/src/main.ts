@@ -8,8 +8,11 @@ import pinia from './plugins/pinia';
 import apolloClient from './plugins/apollo';
 import { VueFire } from 'vuefire';
 import { app as fireapp } from './plugins/firebase';
+import { initDevAuth } from './plugins/dev-auth';
 import { markInitialized } from './plugins/store-initializer';
 import { markI18nReady } from '@/composables/utils/i18nHelpers';
+import { usePrivacyConsent } from '@/composables/usePrivacyConsent';
+import { logger } from '@/utils/logger';
 // Base app component
 import App from './App.vue';
 
@@ -23,13 +26,21 @@ declare global {
 // Add a global flag to track data migration status - will help with persistence
 window.__TARKOV_DATA_MIGRATED = false;
 
+// Initialize dev auth if enabled (must be called before Firebase auth initialization)
+initDevAuth();
+
 // Create app instance
 const app = createApp(App);
+
+const { initializeConsent: initializePrivacyConsent } = usePrivacyConsent();
+if (typeof window !== 'undefined') {
+  initializePrivacyConsent();
+}
 // Global error handler for debugging
 app.config.errorHandler = (err: unknown, vm: ComponentPublicInstance | null, info: string) => {
-  console.error('Vue Error:', err);
-  console.error('Component:', vm);
-  console.error('Info:', info);
+  logger.error('Vue Error:', err);
+  logger.error('Component:', vm);
+  logger.error('Info:', info);
 };
 
 // Configure app with plugins in the correct order

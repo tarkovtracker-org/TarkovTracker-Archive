@@ -7,18 +7,19 @@ interface MockCallableRequest {
   data: {
     note?: string;
     permissions?: string[];
-    gameMode?: any;
+    gameMode?: unknown;
   };
 }
 
 // Simple validation function to test the gameMode validation logic
-function validateGameMode(gameMode: any): void {
+function validateGameMode(gameMode: unknown): void {
   if (gameMode === undefined || gameMode === null) {
     return; // Allow undefined/null (will default to 'pvp')
   }
 
-  const validGameModes = ['pvp', 'pve', 'dual'];
-  if (!validGameModes.includes(gameMode)) {
+  const validGameModes = ['pvp', 'pve', 'dual'] as const;
+  const validGameModeSet = new Set(validGameModes);
+  if (typeof gameMode !== 'string' || !validGameModeSet.has(gameMode)) {
     throw new HttpsError(
       'invalid-argument',
       `Invalid gameMode: must be one of ${validGameModes.join(', ')}.`
@@ -63,7 +64,7 @@ describe('Token Creation - gameMode Validation', () => {
 
       for (const gameMode of invalidGameModes) {
         expect(() => validateGameMode(gameMode)).toThrow(HttpsError);
-        
+
         try {
           validateGameMode(gameMode);
         } catch (error) {
@@ -105,7 +106,7 @@ describe('Token Creation - gameMode Validation', () => {
       };
 
       expect(() => validateTokenRequest(invalidRequest)).toThrow(HttpsError);
-      
+
       try {
         validateTokenRequest(invalidRequest);
       } catch (error) {
@@ -123,7 +124,7 @@ describe('Token Creation - gameMode Validation', () => {
       };
 
       expect(() => validateTokenRequest(invalidRequest)).toThrow(HttpsError);
-      
+
       try {
         validateTokenRequest(invalidRequest);
       } catch (error) {
@@ -144,7 +145,7 @@ describe('Token Creation - gameMode Validation', () => {
       };
 
       expect(() => validateTokenRequest(invalidRequest)).toThrow(HttpsError);
-      
+
       try {
         validateTokenRequest(invalidRequest);
       } catch (error) {

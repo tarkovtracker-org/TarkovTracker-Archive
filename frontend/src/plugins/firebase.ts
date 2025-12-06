@@ -1,6 +1,6 @@
 import { reactive } from 'vue';
 import { initializeApp, type FirebaseOptions } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, setAnalyticsCollectionEnabled, type Analytics } from 'firebase/analytics';
 import {
   getAuth,
   onAuthStateChanged,
@@ -22,6 +22,7 @@ import {
 } from 'firebase/firestore';
 import { getFunctions, connectFunctionsEmulator, httpsCallable } from 'firebase/functions';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { logger } from '@/utils/logger';
 // Define a comprehensive type for our reactive user state
 type FireUser = {
   uid: string | null;
@@ -34,39 +35,57 @@ type FireUser = {
   lastLoginAt: string | null;
   createdAt: string | null;
 };
-// Use demo project for local development
-const isLocalDevelopment =
-  import.meta.env.DEV &&
-  (!import.meta.env.VITE_FIREBASE_PROJECT_ID ||
-    import.meta.env.VITE_FIREBASE_PROJECT_ID === 'demo-project');
+type RequiredFirebaseEnvVar =
+  | 'VITE_FIREBASE_API_KEY'
+  | 'VITE_FIREBASE_AUTH_DOMAIN'
+  | 'VITE_FIREBASE_PROJECT_ID'
+  | 'VITE_FIREBASE_STORAGE_BUCKET'
+  | 'VITE_FIREBASE_MESSAGING_SENDER_ID'
+  | 'VITE_FIREBASE_APP_ID';
+type OptionalFirebaseEnvVar = 'VITE_FIREBASE_DATABASE_URL' | 'VITE_FIREBASE_MEASUREMENT_ID';
 
-// Demo project configuration for local development
-const demoConfig: FirebaseOptions = {
-  apiKey: 'demo-key',
-  authDomain: 'demo-project.firebaseapp.com',
-  databaseURL: 'https://demo-project-default-rtdb.firebaseio.com',
-  projectId: 'demo-project',
-  storageBucket: 'demo-project.appspot.com',
-  messagingSenderId: '123456789',
-  appId: '1:123456789:web:demo-app-id',
-  measurementId: 'G-DEMO123', // Google Analytics
+const resolveFirebaseEnv = (key: RequiredFirebaseEnvVar) => {
+  const value = import.meta.env[key];
+  if (!value) {
+    throw new Error(`Missing environment variable: ${key}. Check your Firebase configuration.`);
+  }
+  return value;
 };
-// Firebase configuration
-const firebaseConfig: FirebaseOptions = isLocalDevelopment
-  ? demoConfig
-  : {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-      databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-      appId: import.meta.env.VITE_FIREBASE_APP_ID,
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-    };
+
+const getOptionalFirebaseEnv = (key: OptionalFirebaseEnvVar) => {
+  const value = import.meta.env[key];
+  return value ?? undefined;
+};
+
+// Firebase configuration sourced directly from environment
+const firebaseConfig: FirebaseOptions = {
+  apiKey: resolveFirebaseEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: resolveFirebaseEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  databaseURL: getOptionalFirebaseEnv('VITE_FIREBASE_DATABASE_URL'),
+  projectId: resolveFirebaseEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: resolveFirebaseEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: resolveFirebaseEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: resolveFirebaseEnv('VITE_FIREBASE_APP_ID'),
+  measurementId: getOptionalFirebaseEnv('VITE_FIREBASE_MEASUREMENT_ID'),
+};
+const measurementId = firebaseConfig.measurementId;
+
+type WindowWithGaDisable = Window &
+  typeof globalThis & {
+    [key: `ga-disable-${string}`]: boolean;
+  };
+
+const setGaTrackingEnabled = (enabled: boolean) => {
+  if (!measurementId || typeof window === 'undefined') {
+    return;
+  }
+  (window as WindowWithGaDisable)[`ga-disable-${measurementId}`] = !enabled;
+};
+
+setGaTrackingEnabled(false);
+
 // Initialize Firebase services
 const app = initializeApp(firebaseConfig);
-const analytics = import.meta.env.PROD ? getAnalytics(app) : undefined;
 const auth = getAuth(app);
 const firestore = getFirestore(app);
 const functions = getFunctions(app, 'us-central1');
@@ -110,20 +129,63 @@ onAuthStateChanged(auth, (user: User | null) => {
     });
   }
 });
-// Connect to emulators in development
-if (isLocalDevelopment || ['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+// Connect to emulators when running on localhost
+if (['localhost', '127.0.0.1'].includes(window.location.hostname)) {
   try {
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     connectFirestoreEmulator(firestore, 'localhost', 5002);
     connectFunctionsEmulator(functions, 'localhost', 5001);
     connectStorageEmulator(storage, 'localhost', 9199);
   } catch (error) {
-    console.error('Error connecting to Firebase emulators:', error);
+    logger.error('Error connecting to Firebase emulators:', error);
   }
 }
+let analyticsInstance: Analytics | undefined;
+
+const ensureAnalytics = () => {
+  if (!import.meta.env.PROD) {
+    return undefined;
+  }
+  if (!analyticsInstance) {
+    try {
+      analyticsInstance = getAnalytics(app);
+    } catch (error) {
+      logger.error('Failed to initialize Firebase Analytics:', error);
+      analyticsInstance = undefined;
+    }
+  }
+  return analyticsInstance;
+};
+
+const enableAnalyticsCollection = async () => {
+  if (!import.meta.env.PROD) {
+    return undefined;
+  }
+  setGaTrackingEnabled(true);
+  const instance = ensureAnalytics();
+  if (instance) {
+    try {
+      setAnalyticsCollectionEnabled(instance, true);
+    } catch (error) {
+      logger.error('Unable to enable Firebase Analytics collection:', error);
+    }
+  }
+  return instance;
+};
+
+const disableAnalyticsCollection = () => {
+  setGaTrackingEnabled(false);
+  if (analyticsInstance) {
+    try {
+      setAnalyticsCollectionEnabled(analyticsInstance, false);
+    } catch (error) {
+      logger.error('Unable to disable Firebase Analytics collection:', error);
+    }
+  }
+};
+
 export {
   app,
-  analytics,
   auth,
   firestore,
   functions,
@@ -139,4 +201,6 @@ export {
   setDoc,
   collection,
   onSnapshot,
+  enableAnalyticsCollection,
+  disableAnalyticsCollection,
 };

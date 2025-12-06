@@ -24,17 +24,19 @@ export class TokenService {
    * Gets token information and increments call counter
    */
   async getTokenInfo(tokenString: string): Promise<ApiToken> {
-    const tokenRef = this.db.collection('token').doc(tokenString) as DocumentReference<TokenDocument>;
-    
+    const tokenRef = this.db
+      .collection('token')
+      .doc(tokenString) as DocumentReference<TokenDocument>;
+
     try {
       const tokenDoc = await tokenRef.get();
-      
+
       if (!tokenDoc.exists) {
         throw errors.unauthorized('Invalid or expired token');
       }
 
       const tokenData = tokenDoc.data();
-      
+
       if (!tokenData) {
         logger.error('Token document exists but data is undefined', { token: tokenString });
         throw errors.internal('Invalid token data');
@@ -43,9 +45,9 @@ export class TokenService {
       // Increment call counter asynchronously (don't wait)
       this.incrementTokenCalls(tokenRef, tokenString);
 
-      logger.log('Token accessed successfully', { 
+      logger.log('Token accessed successfully', {
         owner: tokenData.owner,
-        permissions: tokenData.permissions 
+        permissions: tokenData.permissions,
       });
 
       return {
@@ -87,13 +89,15 @@ export class TokenService {
    * Creates a new API token
    */
   async createToken(
-    owner: string, 
-    note: string, 
+    owner: string,
+    note: string,
     permissions: string[],
     gameMode: string = 'pvp'
   ): Promise<{ token: string; created: boolean }> {
     const tokenString = this.generateSecureToken();
-    const tokenRef = this.db.collection('token').doc(tokenString) as DocumentReference<TokenDocument>;
+    const tokenRef = this.db
+      .collection('token')
+      .doc(tokenString) as DocumentReference<TokenDocument>;
     const systemRef = this.db.collection('system').doc(owner);
 
     try {
@@ -110,11 +114,15 @@ export class TokenService {
       await this.db.runTransaction(async (transaction) => {
         // Create the token document
         transaction.set(tokenRef, tokenData);
-        
+
         // Add token ID to user's system document tokens array (merge: true creates document if needed)
-        transaction.set(systemRef, {
-          tokens: admin.firestore.FieldValue.arrayUnion(tokenString)
-        }, { merge: true });
+        transaction.set(
+          systemRef,
+          {
+            tokens: admin.firestore.FieldValue.arrayUnion(tokenString),
+          },
+          { merge: true }
+        );
       });
 
       logger.log('API token created successfully', {
@@ -140,11 +148,13 @@ export class TokenService {
    * Revokes an API token
    */
   async revokeToken(tokenString: string, userId: string): Promise<{ revoked: boolean }> {
-    const tokenRef = this.db.collection('token').doc(tokenString) as DocumentReference<TokenDocument>;
+    const tokenRef = this.db
+      .collection('token')
+      .doc(tokenString) as DocumentReference<TokenDocument>;
 
     try {
       const tokenDoc = await tokenRef.get();
-      
+
       if (!tokenDoc.exists) {
         throw errors.notFound('Token not found');
       }
@@ -182,12 +192,9 @@ export class TokenService {
    */
   async listUserTokens(userId: string): Promise<Omit<ApiToken, 'token'>[]> {
     try {
-      const tokensSnapshot = await this.db
-        .collection('token')
-        .where('owner', '==', userId)
-        .get();
+      const tokensSnapshot = await this.db.collection('token').where('owner', '==', userId).get();
 
-      const tokens = tokensSnapshot.docs.map(doc => {
+      const tokens = tokensSnapshot.docs.map((doc) => {
         const data = doc.data() as TokenDocument;
         return {
           owner: data.owner,
@@ -214,12 +221,12 @@ export class TokenService {
    */
   validatePermissions(permissions: string[]): void {
     const validPermissions = ['GP', 'TP', 'WP']; // Get Progress, Team Progress, Write Progress
-    
+
     if (!Array.isArray(permissions) || permissions.length === 0) {
       throw errors.badRequest('At least one permission is required');
     }
 
-    const invalidPermissions = permissions.filter(p => !validPermissions.includes(p));
+    const invalidPermissions = permissions.filter((p) => !validPermissions.includes(p));
     if (invalidPermissions.length > 0) {
       throw errors.badRequest(`Invalid permissions: ${invalidPermissions.join(', ')}`);
     }
@@ -233,7 +240,7 @@ export class TokenService {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     const array = new Uint8Array(64);
-    
+
     // Use crypto.getRandomValues for secure randomness
     if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
       crypto.getRandomValues(array);
@@ -250,23 +257,24 @@ export class TokenService {
     for (let i = 0; i < array.length; i++) {
       result += chars[array[i] % chars.length];
     }
-    
+
     return result;
   }
 
   /**
    * Increments token call counter (async, don't wait)
    */
-  private incrementTokenCalls(tokenRef: DocumentReference<TokenDocument>, tokenString: string): void {
+  private incrementTokenCalls(
+    tokenRef: DocumentReference<TokenDocument>,
+    tokenString: string
+  ): void {
     const callIncrement = admin.firestore.FieldValue.increment(1);
-    
-    tokenRef
-      .update({ calls: callIncrement })
-      .catch((error) => {
-        logger.error('Failed to increment token calls', {
-          error: error instanceof Error ? error.message : String(error),
-          token: tokenString.substring(0, 8) + '...', // Partial token for security
-        });
+
+    tokenRef.update({ calls: callIncrement }).catch((error) => {
+      logger.error('Failed to increment token calls', {
+        error: error instanceof Error ? error.message : String(error),
+        token: tokenString.substring(0, 8) + '...', // Partial token for security
       });
+    });
   }
 }

@@ -19,14 +19,16 @@
 
 <script setup lang="ts">
   import { ref, defineAsyncComponent, computed } from 'vue';
+  import type { TarkovMap as TarkovMapData } from '@/types/tarkov';
+  import type { ObjectiveMarker } from '@/types/maps';
   import { useTarkovTime } from '@/composables/useTarkovTime';
 
   const TarkovMap = defineAsyncComponent(() => import('@/features/maps/TarkovMap.vue'));
 
   interface Props {
     show: boolean;
-    selectedMap?: any;
-    visibleMarkers: any[];
+    selectedMap?: TarkovMapData | null;
+    visibleMarkers: ObjectiveMarker[];
     activeMapView: string;
   }
 

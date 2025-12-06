@@ -2,31 +2,94 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch via NPM",
-      "type": "node",
-      "request": "launch",
-      "cwd": "${workspaceRoot}/tarkov-tracker",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch Functions Emulator",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "serve:local"],
-      "cwd": "${workspaceRoot}/functions",
-      "console": "integratedTerminal"
-    },
-    {
+      "name": "Debug Frontend (Chrome) - npm run dev",
       "type": "chrome",
       "request": "launch",
-      "name": "Launch Frontend (Chrome)",
-      "url": "http://localhost:5173",
+      "url": "http://localhost:3000",
       "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMaps": true,
       "sourceMapPathOverrides": {
-        "webpack:///./src/*": "${webRoot}/*"
+        "/@fs/*": "/*",
+        "/src/*": "${webRoot}/*"
+      },
+      "preLaunchTask": "npm: dev",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Frontend (Edge) - npm run dev",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/@fs/*": "/*",
+        "/src/*": "${webRoot}/*"
+      },
+      "preLaunchTask": "npm: dev",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      // Launch Chrome or Edge manually with --remote-debugging-port=9222 (e.g. chrome --remote-debugging-port=9222) before attaching.
+      "name": "Attach to Frontend (Chrome/Edge)",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "/@fs/*": "/*",
+        "/src/*": "${webRoot}/*"
       }
+    },
+    {
+      "name": "Debug Production Build (Chrome) - npm run dev:firebase",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5000",
+      "webRoot": "${workspaceFolder}/frontend/dist",
+      "sourceMaps": true,
+      "preLaunchTask": "npm: dev:firebase",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Attach to Cloud Functions",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "restart": true,
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/functions/lib/**/*.js"],
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Cloud Functions (Inspect Mode)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "emulators:backend"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": true,
+      "timeout": 60000,
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/functions/lib/**/*.js"],
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "FIREBASE_EMULATOR_DEBUG": "true"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack (Frontend + Functions)",
+      "configurations": ["Debug Frontend (Chrome) - npm run dev", "Attach to Cloud Functions"],
+      "presentation": {
+        "hidden": false,
+        "group": "Full Stack",
+        "order": 1
+      },
+      "stopAll": true
     }
   ]
 }

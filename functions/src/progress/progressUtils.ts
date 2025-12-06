@@ -183,18 +183,46 @@ const invalidateTaskRecursive = (
   return { tasksProgress, objectiveProgress };
 };
 // --- Helper function to initialize base progress properties
+const getGameEditionFromData = (rawProgressData: unknown): number | undefined => {
+  if (!rawProgressData || typeof rawProgressData !== 'object') {
+    return undefined;
+  }
+
+  const candidate = (rawProgressData as { gameEdition?: unknown }).gameEdition;
+
+  if (typeof candidate === 'number' && Number.isFinite(candidate)) {
+    return candidate;
+  }
+
+  if (typeof candidate === 'string') {
+    const parsed = Number(candidate);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+};
+
 const _initializeBaseProgress = (
   progressData: UserProgressData | undefined | null,
-  userId: string
+  userId: string,
+  fullProgressData?: unknown
 ): Omit<
   FormattedProgress,
   'tasksProgress' | 'taskObjectivesProgress' | 'hideoutModulesProgress' | 'hideoutPartsProgress'
 > => {
+  const rootGameEdition = getGameEditionFromData(fullProgressData);
+  const normalizedGameEdition =
+    typeof progressData?.gameEdition === 'number' && Number.isFinite(progressData.gameEdition)
+      ? progressData.gameEdition
+      : (rootGameEdition ?? 1);
+
   return {
     displayName: progressData?.displayName ?? userId.substring(0, 6),
     userId: userId,
     playerLevel: progressData?.level ?? 1,
-    gameEdition: progressData?.gameEdition ?? 1,
+    gameEdition: normalizedGameEdition,
     pmcFaction: progressData?.pmcFaction ?? 'USEC',
   };
 };
@@ -370,7 +398,7 @@ const formatProgress = (
 ): FormattedProgress => {
   // Extract gamemode-specific data
   const gameModeData = extractGameModeData(progressData, gameMode);
-  const baseProgress = _initializeBaseProgress(gameModeData, userId);
+  const baseProgress = _initializeBaseProgress(gameModeData, userId, progressData);
   const progress: FormattedProgress = {
     ...baseProgress,
     tasksProgress: formatObjective(gameModeData?.taskCompletions, false, true),
@@ -533,7 +561,11 @@ const checkAllRequirementsMet = async (
       }
       // For other task requirements, check if they're satisfied based on current progress (legacy format)
       const otherTaskData = taskCompletions[reqTaskId];
-      if (requirementStatus.includes('complete') && otherTaskData?.complete && !otherTaskData?.failed) {
+      if (
+        requirementStatus.includes('complete') &&
+        otherTaskData?.complete &&
+        !otherTaskData?.failed
+      ) {
         return true; // Requirement needs completion and task is complete
       }
       if (

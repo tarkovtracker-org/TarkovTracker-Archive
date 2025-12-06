@@ -133,7 +133,7 @@
                           </v-row>
                         </template>
                         <template v-else-if="props.need.needType == 'hideoutModule'">
-                          <v-row dense no-gutters class="mb-1 mt-1 d-flex justify-center">
+                          <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
                             <v-col cols="auto" align="center">
                               <station-link :station="relatedStation" class="justify-center" />
                             </v-col>
@@ -212,7 +212,7 @@
                                 <v-icon size="x-small" class="mr-1"
                                   >mdi-account-child-circle</v-icon
                                 >
-                                {{ progressStore.getDisplayName(userNeed.user) }}
+                                {{ getDisplayName(userNeed.user) }}
                                 {{ userNeed.count.toLocaleString() }}/{{
                                   neededCount.toLocaleString()
                                 }}
@@ -263,7 +263,7 @@
                 </template>
                 <template v-else-if="props.need.needType == 'hideoutModule'">
                   <div class="d-flex align-center mr-2">
-                    <v-row dense no-gutters class="mb-1 mt-1 d-flex justify-center">
+                    <v-row no-gutters class="mb-1 mt-1 d-flex justify-center">
                       <v-col cols="auto" align="center">
                         <station-link :station="relatedStation" class="justify-center" />
                       </v-col>
@@ -326,7 +326,7 @@
                         style="white-space: pre-line"
                       >
                         <v-icon size="x-small" class="mr-1">mdi-account-child-circle</v-icon>
-                        {{ progressStore.getDisplayName(userNeed.user) }}
+                        {{ getDisplayName(userNeed.user) }}
                         {{ userNeed.count.toLocaleString() }}/{{ neededCount.toLocaleString() }}
                       </div>
                     </template>
@@ -342,7 +342,7 @@
 </template>
 <script setup>
   import { defineAsyncComponent, computed, inject, ref, onMounted, onUnmounted } from 'vue';
-  import { useProgressStore } from '@/stores/progress';
+  import { useProgressQueries } from '@/composables/useProgressQueries';
   import { useTarkovData } from '@/composables/tarkovdata';
   import { useTarkovStore } from '@/stores/tarkov';
   import { useDisplay } from 'vuetify';
@@ -355,7 +355,7 @@
     },
   });
   const { smAndDown, mdAndUp } = useDisplay();
-  const progressStore = useProgressStore();
+  const { getDisplayName } = useProgressQueries();
   const tarkovStore = useTarkovStore();
   useTarkovData();
   const smallDialog = ref(false);

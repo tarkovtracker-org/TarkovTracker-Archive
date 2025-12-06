@@ -1,3 +1,5 @@
+import { logger } from '@/utils/logger';
+
 /**
  * Simplified store initialization and data migration utilities
  */
@@ -31,7 +33,7 @@ export function markDataMigrated(): void {
     try {
       sessionStorage.setItem('tarkovDataMigrated', 'true');
     } catch (e) {
-      console.warn('Could not save migration flag to sessionStorage', e);
+      logger.warn('Could not save migration flag to sessionStorage', e);
     }
   }
 }

@@ -1,12 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { mount } from '@vue/test-utils';
 import AuthButtons from '../AuthButtons.vue';
+import { testI18n } from '@/test/testI18n';
 
 // Mock Firebase
+const firebaseMock = vi.hoisted(() => ({
+  signInWithPopup: vi.fn(),
+}));
 vi.mock('@/plugins/firebase', () => ({
   GoogleAuthProvider: vi.fn(),
   GithubAuthProvider: vi.fn(),
-  signInWithPopup: vi.fn(),
+  signInWithPopup: firebaseMock.signInWithPopup,
   auth: {},
   fireuser: { uid: null },
 }));
@@ -27,12 +31,44 @@ vi.mock('@/utils/DataMigrationService', () => ({
 }));
 
 describe('AuthButtons', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  beforeAll(() => {
+    testI18n.global.mergeLocaleMessage('en', {
+      auth: {
+        consent: {
+          full: 'By continuing you agree to the TarkovTracker {terms} and {privacy}.',
+          terms: 'Terms of Service',
+          privacy: 'Privacy Policy',
+        },
+      },
+    });
   });
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+    firebaseMock.signInWithPopup.mockResolvedValue({ user: { uid: 'uid-123' } });
+  });
+
+  const mountWithStubs = () => {
+    return mount(AuthButtons, {
+      global: {
+        stubs: {
+          'router-link': {
+            name: 'RouterLinkStub',
+            props: {
+              to: {
+                type: [String, Object],
+                default: '/',
+              },
+            },
+            template: `<a :href="typeof to === 'string' ? to : to?.path || '/'"><slot /></a>`,
+          },
+        },
+      },
+    });
+  };
+
   it('renders auth buttons correctly', () => {
-    const wrapper = mount(AuthButtons);
+    const wrapper = mountWithStubs();
 
     expect(wrapper.find('.auth-card').exists()).toBe(true);
     expect(wrapper.find('.google-btn').exists()).toBe(true);
@@ -43,7 +79,7 @@ describe('AuthButtons', () => {
   });
 
   it('handles Google button click', async () => {
-    const wrapper = mount(AuthButtons);
+    const wrapper = mountWithStubs();
     const googleBtn = wrapper.find('.google-btn');
 
     expect(googleBtn.exists()).toBe(true);
@@ -54,7 +90,7 @@ describe('AuthButtons', () => {
   });
 
   it('handles GitHub button click', async () => {
-    const wrapper = mount(AuthButtons);
+    const wrapper = mountWithStubs();
     const githubBtn = wrapper.find('.github-btn');
 
     expect(githubBtn.exists()).toBe(true);
@@ -65,7 +101,7 @@ describe('AuthButtons', () => {
   });
 
   it('renders privacy and terms links', () => {
-    const wrapper = mount(AuthButtons);
+    const wrapper = mountWithStubs();
 
     const privacyLink = wrapper.find('[href="/privacy"]');
     const termsLink = wrapper.find('[href="/terms"]');
@@ -77,7 +113,7 @@ describe('AuthButtons', () => {
   });
 
   it('has correct button styling classes', () => {
-    const wrapper = mount(AuthButtons);
+    const wrapper = mountWithStubs();
 
     const googleBtn = wrapper.find('.google-btn');
     const githubBtn = wrapper.find('.github-btn');

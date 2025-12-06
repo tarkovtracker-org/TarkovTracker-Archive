@@ -13,8 +13,10 @@
     "start": "npm run shell",
     "deploy": "npm run build && firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint .",
+    "type-check": "tsc --noEmit",
     "swagger": "npm run build && node lib/openapi/swagger.js"
   },
   "type": "module",
@@ -23,19 +25,19 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "firebase-admin": "^13.4.0",
-    "firebase-functions": "^6.4.0",
-    "graphql-request": "^7.2.0",
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.6.0",
+    "graphql-request": "^7.3.1",
     "uid-generator": "^2.0.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
-    "@types/node": "^22.16.5",
+    "@types/express": "^5.0.4",
+    "@types/node": "^24.9.1",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/uid-generator": "^2.0.6",
-    "eslint": "^9.32.0",
+    "eslint": "^9.38.0",
     "swagger-jsdoc": "^6.2.8",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.3"
   }
 }

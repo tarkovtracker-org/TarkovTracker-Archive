@@ -13,7 +13,7 @@
   import { defineAsyncComponent } from 'vue';
   import { useI18n } from 'vue-i18n';
 
-  const TaskLink = defineAsyncComponent(() => import('./TaskLink'));
+  const TaskLink = defineAsyncComponent(() => import('@/features/tasks/TaskLink.vue'));
 
   defineProps({
     alternatives: { type: Array, required: true },

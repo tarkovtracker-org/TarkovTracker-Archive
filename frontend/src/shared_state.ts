@@ -26,6 +26,11 @@ interface HideoutModule {
   timestamp?: number;
 }
 
+interface TraderProgress {
+  loyaltyLevel: number;
+  standing: number;
+}
+
 export interface UserProgressData {
   level: number;
   pmcFaction: 'USEC' | 'BEAR';
@@ -34,6 +39,7 @@ export interface UserProgressData {
   taskCompletions: { [taskId: string]: TaskCompletion };
   hideoutParts: { [objectiveId: string]: HideoutPart };
   hideoutModules: { [hideoutId: string]: HideoutModule };
+  traderStandings: { [traderId: string]: TraderProgress };
 }
 
 export interface UserState {
@@ -51,6 +57,7 @@ const defaultProgressData: UserProgressData = {
   taskCompletions: {},
   hideoutParts: {},
   hideoutModules: {},
+  traderStandings: {},
 };
 
 export const defaultState: UserState = {
@@ -107,6 +114,7 @@ export function migrateToGameModeStructure(legacyData: unknown): UserState {
       taskObjectives: (data.taskObjectives as UserProgressData['taskObjectives']) || {},
       hideoutParts: (data.hideoutParts as UserProgressData['hideoutParts']) || {},
       hideoutModules: (data.hideoutModules as UserProgressData['hideoutModules']) || {},
+      traderStandings: (data.traderStandings as UserProgressData['traderStandings']) || {},
     };
 
     return {
@@ -127,6 +135,7 @@ export function migrateToGameModeStructure(legacyData: unknown): UserState {
     taskObjectives: (data.taskObjectives as UserProgressData['taskObjectives']) || {},
     hideoutParts: (data.hideoutParts as UserProgressData['hideoutParts']) || {},
     hideoutModules: (data.hideoutModules as UserProgressData['hideoutModules']) || {},
+    traderStandings: (data.traderStandings as UserProgressData['traderStandings']) || {},
   };
 
   return {
@@ -159,6 +168,7 @@ const getCurrentData = (state: UserState): UserProgressData => {
       taskObjectives: {},
       hideoutParts: {},
       hideoutModules: {},
+      traderStandings: {},
     };
   }
   return state[state.currentGameMode];
@@ -184,6 +194,16 @@ export const getters = {
 
   getHideoutPartCount: (state: UserState) => (objectiveId: string) =>
     getCurrentData(state)?.hideoutParts?.[objectiveId]?.count ?? 0,
+
+  getTraderLoyaltyLevel: (state: UserState) => (traderId: string) => {
+    const record = getCurrentData(state)?.traderStandings?.[traderId];
+    return record?.loyaltyLevel ?? 0;
+  },
+
+  getTraderStanding: (state: UserState) => (traderId: string) => {
+    const record = getCurrentData(state)?.traderStandings?.[traderId];
+    return record?.standing ?? 0;
+  },
 
   isTaskComplete: (state: UserState) => (taskId: string) =>
     getCurrentData(state)?.taskCompletions?.[taskId]?.complete ?? false,
@@ -336,6 +356,35 @@ export const actions = {
     } else {
       actions.setHideoutModuleComplete.call(this, hideoutId);
     }
+  },
+
+  setTraderLoyaltyLevel(this: UserState, traderId: string, level: number) {
+    const currentData = getCurrentData(this);
+    if (!currentData.traderStandings) {
+      currentData.traderStandings = {};
+    }
+    const normalizedLevel = Math.max(0, Math.min(10, Math.round(level ?? 0)));
+    const existing = currentData.traderStandings[traderId] || { loyaltyLevel: 0, standing: 0 };
+    currentData.traderStandings[traderId] = {
+      loyaltyLevel: normalizedLevel,
+      standing: existing.standing ?? 0,
+    };
+  },
+
+  setTraderStanding(this: UserState, traderId: string, standing: number) {
+    const currentData = getCurrentData(this);
+    if (!currentData.traderStandings) {
+      currentData.traderStandings = {};
+    }
+    const numericStanding = Number(standing);
+    const normalizedStanding = Number.isFinite(numericStanding)
+      ? Math.max(-10, Math.min(10, numericStanding))
+      : 0;
+    const existing = currentData.traderStandings[traderId] || { loyaltyLevel: 0, standing: 0 };
+    currentData.traderStandings[traderId] = {
+      loyaltyLevel: existing.loyaltyLevel ?? 0,
+      standing: normalizedStanding,
+    };
   },
 } as const;
 

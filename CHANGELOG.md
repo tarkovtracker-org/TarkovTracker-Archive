@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Task Master AI project management integration
+- Map transformation utilities for Tarkov data processing
+- Fireswap plugin integration for enhanced Firebase functionality
+- Documentation restructure into organized hierarchy
 - Claude GitHub Actions workflows for automated code review and PR assistance
 - Ko-Fi support integration in redesigned footer
 - Support for Unheard+EOD Edition (6) game content
@@ -29,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Refactoring**: Enhanced Pinia stores with Fireswap plugin support
+- **Architecture**: Updated composables and services for improved data handling
+- **Components**: Refactored TarkovMap.vue for improved readability and performance
+- **Testing**: Updated Firestore Tarkov data tests
+- **Configuration**: Updated feature flags configuration
+- **Frontend**: Enhanced frontend plugins and components functionality
 - **Major Refactoring**: Reorganized components into logical subdirectories
 - **Architecture**: Implemented composables architecture for improved code organization
 - **Performance**: Removed v-lazy components to improve rendering performance
@@ -76,7 +84,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical Improvements
 
-- **Code Quality**: Extensive refactoring for improved readability and maintainability across 100+ files
+- **Code Quality**: Extensive refactoring for improved readability and maintainability
+  across 100+ files
 - **TypeScript**: Enhanced TypeScript definitions and configurations
 - **Vue 3**: Improved Vue 3 patterns and modern JavaScript usage
 - **State Management**: Better Pinia store organization and usage
@@ -90,8 +99,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Previous Versions
 
-This changelog documents changes from the fork point. For earlier history, see the original [TarkovTracker repository](https://github.com/TarkovTracker/TarkovTracker).
+This changelog documents changes from the fork point.
+For earlier history, see the original [TarkovTracker.io repository](https://github.com/TarkovTracker/TarkovTracker).
 
 ---
 
-*Note: This fork contains significant architectural improvements and feature additions while maintaining compatibility with the original TarkovTracker functionality.*
+- This fork contains significant architectural improvements and feature additions while maintaining compatibility with the original TarkovTracker functionality.

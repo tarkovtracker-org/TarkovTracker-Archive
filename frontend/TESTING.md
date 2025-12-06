@@ -19,6 +19,9 @@ npm run test:all
 # Run unit tests
 npm run test
 
+# Run unit tests in watch mode
+npm run test:watch
+
 # Run E2E tests
 npm run test:e2e
 
@@ -39,7 +42,7 @@ npm run test:e2e:ui      # E2E tests UI
 
 Place test files alongside components:
 
-```
+```bash
 src/
 ├── features/
 │   └── auth/
@@ -76,7 +79,7 @@ Common mocks are pre-configured in `src/test/setup.ts`:
 
 ## End-to-End Testing with Playwright
 
-### Configuration
+### Configurations
 
 - **Config File**: `playwright.config.ts`
 - **Test Directory**: `e2e/`
@@ -84,7 +87,7 @@ Common mocks are pre-configured in `src/test/setup.ts`:
 
 ### Test Structure
 
-```
+```bash
 e2e/
 ├── auth.spec.ts       # Authentication flows
 ├── dashboard.spec.ts  # Main navigation
@@ -131,8 +134,11 @@ await page.route('**/*firebase*', (route) => {
 ### Development
 
 ```bash
-# Run unit tests in watch mode
+# Run unit tests once
 npm run test
+
+# Run unit tests in watch mode
+npm run test:watch
 
 # Run unit tests with UI
 npm run test:ui
@@ -221,6 +227,7 @@ The `.github/workflows/frontend-tests.yml` file defines three jobs:
 - Use descriptive test names
 - Test edge cases and error states
 - Keep tests focused and fast
+- Prefer `globalThis` for globals; mock `window`/`document` only when the code under test reads them.
 
 ### E2E Tests
 

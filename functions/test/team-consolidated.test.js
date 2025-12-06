@@ -1,10 +1,66 @@
 // Consolidated team-related tests
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createFirebaseAdminMock, createFirebaseFunctionsMock } from './mocks';
+import { createFirebaseFunctionsMock } from './mocks';
 
 // Set up mocks before imports
-const { adminMock, firestoreMock } = createFirebaseAdminMock();
 const functionsMock = createFirebaseFunctionsMock();
+
+const transactionMock = {
+  get: vi.fn(),
+  set: vi.fn(),
+  update: vi.fn(),
+  delete: vi.fn(),
+};
+
+const createDocRef = (collectionName, id) => ({
+  collectionName,
+  id,
+  path: `${collectionName}/${id}`,
+  collection: vi.fn((child) => createCollectionRef(`${collectionName}/${id}/${child}`)),
+});
+
+const createCollectionRef = (collectionName) => ({
+  doc: vi.fn((id) => createDocRef(collectionName, id)),
+});
+
+const firestoreMock = {
+  collection: vi.fn((name) => createCollectionRef(name)),
+  runTransaction: vi.fn(async (callback) => callback(transactionMock)),
+};
+
+const FieldValueMock = {
+  serverTimestamp: vi.fn().mockReturnValue('serverTimestamp'),
+  arrayUnion: vi.fn((item) => `arrayUnion(${item})`),
+  arrayRemove: vi.fn((item) => `arrayRemove(${item})`),
+  delete: vi.fn().mockReturnValue('delete()'),
+  increment: vi.fn((value) => `increment(${value})`),
+};
+
+const TimestampMock = {
+  now: vi.fn(() => ({
+    toMillis: () => Date.now(),
+    valueOf: () => Date.now(),
+  })),
+  fromMillis: vi.fn((ms) => ({
+    toMillis: () => ms,
+    valueOf: () => ms,
+  })),
+};
+
+const adminMock = {
+  initializeApp: vi.fn(),
+  firestore: vi.fn(() => firestoreMock),
+  auth: vi.fn().mockReturnValue({
+    verifyIdToken: vi.fn().mockResolvedValue({ uid: 'test-user' }),
+    createCustomToken: vi.fn().mockResolvedValue('test-custom-token'),
+  }),
+};
+
+adminMock.firestore.FieldValue = FieldValueMock;
+adminMock.firestore.Timestamp = TimestampMock;
+
+const TEAM_ID = 'mock-team-id';
+const GENERATED_PASSWORD = 'mock-generated-password';
 
 // Mock Firebase modules
 vi.mock('firebase-admin', () => ({
@@ -13,6 +69,32 @@ vi.mock('firebase-admin', () => ({
 
 vi.mock('firebase-functions', () => ({
   default: functionsMock,
+}));
+vi.mock('firebase-functions/v2', () => ({
+  logger: functionsMock.logger,
+}));
+vi.mock('firebase-functions/v2/https', () => ({
+  HttpsError: functionsMock.https.HttpsError,
+  onCall: functionsMock.https.onCall,
+  onRequest: functionsMock.https.onRequest,
+}));
+vi.mock('firebase-functions/v2/scheduler', () => ({
+  onSchedule: functionsMock.schedule,
+}));
+vi.mock('firebase-admin/firestore', () => ({
+  FieldValue: FieldValueMock,
+}));
+
+vi.mock('uid-generator', () => ({
+  default: class MockUidGenerator {
+    static BASE62 = 'BASE62';
+    constructor(length) {
+      this.length = length;
+    }
+    async generate() {
+      return this.length === 32 ? TEAM_ID : GENERATED_PASSWORD;
+    }
+  },
 }));
 
 // Import the team functions with dynamic imports to handle ESM
@@ -31,21 +113,45 @@ describe('Team Management', () => {
     auth: { uid: 'member-uid' },
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+  const buildCallableRequest = (uid, data) => ({
+    data,
+    auth: { uid },
+  });
 
-    // Reset Firestore mock behavior
-    firestoreMock.get.mockReset();
-    firestoreMock.get.mockResolvedValue({
-      exists: false,
-      data: () => ({}),
-    });
+  beforeEach(() => {
+    functionsMock.logger.log.mockClear();
+    functionsMock.logger.info.mockClear();
+    functionsMock.logger.error.mockClear();
+    functionsMock.logger.warn.mockClear();
+    functionsMock.logger.debug.mockClear();
+
+    firestoreMock.collection.mockClear();
+    firestoreMock.runTransaction.mockClear();
+
+    transactionMock.get.mockReset();
+    transactionMock.set.mockReset();
+    transactionMock.update.mockReset();
+    transactionMock.delete.mockReset();
+
+    adminMock.firestore.mockReturnValue(firestoreMock);
+
+    firestoreMock.runTransaction.mockImplementation(async (callback) => callback(transactionMock));
+
+    transactionMock.get.mockImplementation(() =>
+      Promise.resolve({
+        exists: false,
+        data: () => ({}),
+      })
+    );
+    transactionMock.set.mockResolvedValue({});
+    transactionMock.update.mockResolvedValue({});
+    transactionMock.delete.mockResolvedValue({});
   });
 
   // Dynamic imports for the actual function logic
   it('should import team functions', async () => {
     try {
-      const module = await import('../index');
+      const module = await import('../lib/index.js');
 
       // Extract the internal logic functions
       createTeamLogic = module._createTeamLogic;
@@ -72,32 +178,35 @@ describe('Team Management', () => {
         return expect(true).toBe(true);
       }
 
-      const teamData = {
-        name: 'Test Team',
-        password: 'password123',
-      };
-
-      // User has no team
-      firestoreMock.get.mockResolvedValueOnce({
+      transactionMock.get.mockResolvedValueOnce({
         exists: true,
         data: () => ({ team: null }),
       });
 
-      // Team doesn't exist yet
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: false,
+      const request = buildCallableRequest('owner-uid', {
+        password: 'password123',
+        maximumMembers: 5,
       });
 
-      const result = await createTeamLogic(teamData, mockContextOwner);
+      let result;
+      try {
+        result = await createTeamLogic(request);
+      } catch (error) {
+        const loggerCall = functionsMock.logger.error.mock.calls[0];
+        const loggedError = loggerCall?.[1]?.error;
+        if (loggedError instanceof Error) {
+          throw loggedError;
+        }
+        throw error;
+      }
 
-      expect(result).toHaveProperty('success', true);
-      expect(result).toHaveProperty('teamId', 'owner-uid');
-
-      // Check that appropriate Firestore calls were made
+      expect(result).toEqual({
+        team: TEAM_ID,
+        password: 'password123',
+      });
+      expect(transactionMock.set).toHaveBeenCalled();
       expect(firestoreMock.collection).toHaveBeenCalledWith('system');
       expect(firestoreMock.collection).toHaveBeenCalledWith('team');
-      expect(firestoreMock.set).toHaveBeenCalled();
-      expect(firestoreMock.update).toHaveBeenCalled();
     });
   });
 
@@ -109,36 +218,32 @@ describe('Team Management', () => {
         return expect(true).toBe(true);
       }
 
-      const joinData = {
-        teamId: 'test-team',
+      transactionMock.get
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({ team: null }),
+        })
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({
+            owner: 'owner-uid',
+            password: 'password123',
+            members: ['owner-uid'],
+            maximumMembers: 10,
+          }),
+        });
+
+      const request = buildCallableRequest('member-uid', {
+        id: 'test-team',
         password: 'password123',
-      };
-
-      // User has no team
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: null }),
       });
 
-      // Team exists
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({
-          owner: 'owner-uid',
-          password: 'password123',
-          members: ['owner-uid'],
-        }),
-      });
+      const result = await joinTeamLogic(request);
 
-      const result = await joinTeamLogic(joinData, mockContextMember);
-
-      expect(result).toHaveProperty('success', true);
-      expect(result).toHaveProperty('teamId', 'test-team');
-
-      // Check that appropriate Firestore calls were made
+      expect(result).toEqual({ joined: true });
+      expect(transactionMock.set).toHaveBeenCalled();
       expect(firestoreMock.collection).toHaveBeenCalledWith('system');
       expect(firestoreMock.collection).toHaveBeenCalledWith('team');
-      expect(firestoreMock.update).toHaveBeenCalled();
     });
   });
 
@@ -150,31 +255,27 @@ describe('Team Management', () => {
         return expect(true).toBe(true);
       }
 
-      const teamId = 'test-team';
+      transactionMock.get
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({ team: 'test-team' }),
+        })
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({
+            owner: 'owner-uid',
+            members: ['owner-uid', 'member-uid'],
+          }),
+        });
 
-      // User is in a team
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: teamId }),
-      });
+      const request = buildCallableRequest('member-uid', undefined);
 
-      // Team exists
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({
-          owner: 'owner-uid',
-          members: ['owner-uid', 'member-uid'],
-        }),
-      });
+      const result = await leaveTeamLogic(request);
 
-      const result = await leaveTeamLogic({}, mockContextMember);
-
-      expect(result).toHaveProperty('success', true);
-
-      // Check that appropriate Firestore calls were made
+      expect(result).toEqual({ left: true });
+      expect(transactionMock.set).toHaveBeenCalled();
       expect(firestoreMock.collection).toHaveBeenCalledWith('system');
       expect(firestoreMock.collection).toHaveBeenCalledWith('team');
-      expect(firestoreMock.update).toHaveBeenCalled();
     });
 
     it('should delete the team when the owner leaves', async () => {
@@ -183,38 +284,28 @@ describe('Team Management', () => {
         return expect(true).toBe(true);
       }
 
-      const teamId = 'owner-uid';
+      transactionMock.get
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({ team: TEAM_ID }),
+        })
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({
+            owner: 'owner-uid',
+            members: ['owner-uid', 'member-uid'],
+          }),
+        });
 
-      // Owner is in a team
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: teamId }),
-      });
+      const request = buildCallableRequest('owner-uid', undefined);
 
-      // Team exists and owner is the owner
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({
-          owner: 'owner-uid',
-          members: ['owner-uid', 'member-uid'],
-        }),
-      });
+      const result = await leaveTeamLogic(request);
 
-      // Member's system doc
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: teamId }),
-      });
-
-      const result = await leaveTeamLogic({}, mockContextOwner);
-
-      expect(result).toHaveProperty('success', true);
-
-      // Check that appropriate Firestore calls were made
+      expect(result).toEqual({ left: true });
+      expect(transactionMock.delete).toHaveBeenCalled();
+      expect(transactionMock.set).toHaveBeenCalled();
       expect(firestoreMock.collection).toHaveBeenCalledWith('system');
       expect(firestoreMock.collection).toHaveBeenCalledWith('team');
-      expect(firestoreMock.update).toHaveBeenCalled();
-      expect(firestoreMock.delete).toHaveBeenCalled();
     });
   });
 
@@ -226,39 +317,27 @@ describe('Team Management', () => {
         return expect(true).toBe(true);
       }
 
-      const kickData = {
-        userId: 'member-uid',
-      };
+      transactionMock.get
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({ team: TEAM_ID }),
+        })
+        .mockResolvedValueOnce({
+          exists: true,
+          data: () => ({
+            owner: 'owner-uid',
+            members: ['owner-uid', 'member-uid'],
+          }),
+        });
 
-      // Owner's system doc
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: 'owner-uid' }),
-      });
+      const request = buildCallableRequest('owner-uid', { kicked: 'member-uid' });
 
-      // Team doc
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({
-          owner: 'owner-uid',
-          members: ['owner-uid', 'member-uid'],
-        }),
-      });
+      const result = await kickTeamMemberLogic(request);
 
-      // Member's system doc
-      firestoreMock.get.mockResolvedValueOnce({
-        exists: true,
-        data: () => ({ team: 'owner-uid' }),
-      });
-
-      const result = await kickTeamMemberLogic(kickData, mockContextOwner);
-
-      expect(result).toHaveProperty('success', true);
-
-      // Check that appropriate Firestore calls were made
+      expect(result).toEqual({ kicked: true });
+      expect(transactionMock.set).toHaveBeenCalled();
       expect(firestoreMock.collection).toHaveBeenCalledWith('system');
       expect(firestoreMock.collection).toHaveBeenCalledWith('team');
-      expect(firestoreMock.update).toHaveBeenCalled();
     });
   });
 });

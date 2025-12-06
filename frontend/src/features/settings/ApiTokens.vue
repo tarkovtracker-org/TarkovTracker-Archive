@@ -18,15 +18,7 @@
       </v-card>
     </template>
     <v-row no-gutters>
-      <v-col
-        v-for="token in userTokens"
-        :key="token"
-        cols="12"
-        sm="12"
-        md="6"
-        lg="6"
-        xl="6"
-      >
+      <v-col v-for="token in userTokens" :key="token" cols="12" sm="12" md="6" lg="6" xl="6">
         <TokenCard :token="token" class="ma-2" />
       </v-col>
     </v-row>
@@ -66,12 +58,9 @@
           <div class="text-caption text-medium-emphasis mb-3">
             {{ $t('page.api.tokens.form.gamemode_description') }}
           </div>
-          
+
           <v-radio-group v-model="selectedGameMode" density="compact" class="mb-4" column>
-            <v-radio
-              value="pvp"
-              color="white"
-            >
+            <v-radio value="pvp" color="white">
               <template #label>
                 <div>
                   <div class="font-weight-medium d-flex align-center">
@@ -84,10 +73,7 @@
                 </div>
               </template>
             </v-radio>
-            <v-radio
-              value="pve"
-              color="white"
-            >
+            <v-radio value="pve" color="white">
               <template #label>
                 <div>
                   <div class="font-weight-medium d-flex align-center">
@@ -100,10 +86,7 @@
                 </div>
               </template>
             </v-radio>
-            <v-radio
-              value="dual"
-              color="white"
-            >
+            <v-radio value="dual" color="white">
               <template #label>
                 <div>
                   <div class="font-weight-medium d-flex align-center">
@@ -258,6 +241,7 @@
   import availablePermissions from '@/utils/api_permissions';
   import TokenCard from '@/features/settings/TokenCard.vue';
   import { auth } from '@/plugins/firebase';
+  import { logger } from '@/utils/logger';
   const { t } = useI18n({ useScope: 'global' });
   const { useSystemStore } = useLiveData();
   const { systemStore } = useSystemStore();
@@ -365,17 +349,17 @@
         const callableResult = await createTokenFn(tokenData);
         result = callableResult.data;
       } catch (callableError) {
-        console.warn('Callable function failed, trying HTTP endpoint:', callableError);
+        logger.warn('Callable function failed, trying HTTP endpoint:', callableError);
         // If callable fails (likely due to CORS), use HTTP endpoint
         result = await createTokenWithHttp(tokenData);
       }
 
       if (!result || !result.token) {
-        console.error('Token not found in response. Expected: result.token');
-        console.error('Available response data:', Object.keys(result || {}));
+        logger.error('Token not found in response. Expected: result.token');
+        logger.error('Available response data:', Object.keys(result || {}));
         throw new Error('Token creation failed: No token returned from server');
       }
-      
+
       cancelTokenCreation();
       snackbarColor.value = 'success';
       snackbarIcon.value = 'mdi-check-circle';
@@ -383,7 +367,7 @@
       tokenResultSubtext.value = t('page.api.tokens.success.message');
       newTokenSnackbar.value = true;
     } catch (error) {
-      console.error('Error creating token:', error);
+      logger.error('Error creating token:', error);
       snackbarColor.value = 'error';
       snackbarIcon.value = 'mdi-alert-circle';
       tokenResult.value = t('page.api.tokens.error.title');

@@ -1,16 +1,8 @@
 import admin from 'firebase-admin';
 import { logger } from 'firebase-functions/v2';
-import { 
-  Firestore, 
-  DocumentReference, 
-  FieldValue 
-} from 'firebase-admin/firestore';
+import { Firestore, DocumentReference, FieldValue } from 'firebase-admin/firestore';
 import UIDGenerator from 'uid-generator';
-import { 
-  TeamDocument, 
-  SystemDocument, 
-  FormattedProgress
-} from '../types/api.js';
+import { TeamDocument, SystemDocument, FormattedProgress } from '../types/api.js';
 import { errors } from '../middleware/errorHandler.js';
 import { formatProgress } from '../progress/progressUtils.js';
 import { getTaskData, getHideoutData } from '../utils/dataLoaders.js';
@@ -39,13 +31,18 @@ export class TeamService {
   /**
    * Creates a new team with proper transaction safety
    */
-  async createTeam(userId: string, data: CreateTeamData): Promise<{ team: string; password: string }> {
+  async createTeam(
+    userId: string,
+    data: CreateTeamData
+  ): Promise<{ team: string; password: string }> {
     try {
       let createdTeamId = '';
       let finalPassword = '';
 
       await this.db.runTransaction(async (transaction) => {
-        const systemRef = this.db.collection('system').doc(userId) as DocumentReference<SystemDocument>;
+        const systemRef = this.db
+          .collection('system')
+          .doc(userId) as DocumentReference<SystemDocument>;
         const systemDoc = await transaction.get(systemRef);
         const systemData = systemDoc.data();
 
@@ -57,19 +54,25 @@ export class TeamService {
         // Check cooldown period
         if (systemData?.lastLeftTeam) {
           const now = admin.firestore.Timestamp.now();
-          const fiveMinutesAgo = admin.firestore.Timestamp.fromMillis(now.toMillis() - 5 * 60 * 1000);
-          
+          const fiveMinutesAgo = admin.firestore.Timestamp.fromMillis(
+            now.toMillis() - 5 * 60 * 1000
+          );
+
           if (systemData.lastLeftTeam > fiveMinutesAgo) {
-            throw errors.forbidden('You must wait 5 minutes after leaving a team to create a new one');
+            throw errors.forbidden(
+              'You must wait 5 minutes after leaving a team to create a new one'
+            );
           }
         }
 
         // Generate team ID and password
         const uidgen = new UIDGenerator(32);
         createdTeamId = await uidgen.generate();
-        finalPassword = data.password || await this.generateSecurePassword();
+        finalPassword = data.password || (await this.generateSecurePassword());
 
-        const teamRef = this.db.collection('team').doc(createdTeamId) as DocumentReference<TeamDocument>;
+        const teamRef = this.db
+          .collection('team')
+          .doc(createdTeamId) as DocumentReference<TeamDocument>;
 
         // Create team document
         transaction.set(teamRef, {
@@ -95,7 +98,7 @@ export class TeamService {
       if (error instanceof Error && error.name === 'ApiError') {
         throw error;
       }
-      
+
       logger.error('Error creating team:', {
         error: error instanceof Error ? error.message : String(error),
         owner: userId,
@@ -114,7 +117,9 @@ export class TeamService {
 
     try {
       await this.db.runTransaction(async (transaction) => {
-        const systemRef = this.db.collection('system').doc(userId) as DocumentReference<SystemDocument>;
+        const systemRef = this.db
+          .collection('system')
+          .doc(userId) as DocumentReference<SystemDocument>;
         const systemDoc = await transaction.get(systemRef);
         const systemData = systemDoc.data();
 
@@ -145,7 +150,7 @@ export class TeamService {
 
         // Add user to team
         transaction.update(teamRef, {
-          members: FieldValue.arrayUnion(userId)
+          members: FieldValue.arrayUnion(userId),
         });
 
         // Update user's system document
@@ -180,7 +185,9 @@ export class TeamService {
       let originalTeamId: string | null = null;
 
       await this.db.runTransaction(async (transaction) => {
-        const systemRef = this.db.collection('system').doc(userId) as DocumentReference<SystemDocument>;
+        const systemRef = this.db
+          .collection('system')
+          .doc(userId) as DocumentReference<SystemDocument>;
         const systemDoc = await transaction.get(systemRef);
         const systemData = systemDoc.data();
 
@@ -190,7 +197,9 @@ export class TeamService {
           throw errors.badRequest('User is not in a team');
         }
 
-        const teamRef = this.db.collection('team').doc(originalTeamId) as DocumentReference<TeamDocument>;
+        const teamRef = this.db
+          .collection('team')
+          .doc(originalTeamId) as DocumentReference<TeamDocument>;
         const teamDoc = await transaction.get(teamRef);
         const teamData = teamDoc.data();
 
@@ -199,24 +208,32 @@ export class TeamService {
           if (teamData.members) {
             teamData.members.forEach((memberId: string) => {
               const memberSystemRef = this.db.collection('system').doc(memberId);
-              transaction.set(memberSystemRef, {
-                team: null,
-                lastLeftTeam: FieldValue.serverTimestamp(),
-              }, { merge: true });
+              transaction.set(
+                memberSystemRef,
+                {
+                  team: null,
+                  lastLeftTeam: FieldValue.serverTimestamp(),
+                },
+                { merge: true }
+              );
             });
           }
           transaction.delete(teamRef);
         } else {
           // Remove user from team members
           transaction.update(teamRef, {
-            members: FieldValue.arrayRemove(userId)
+            members: FieldValue.arrayRemove(userId),
           });
-          
+
           // Update user's system document
-          transaction.set(systemRef, {
-            team: null,
-            lastLeftTeam: FieldValue.serverTimestamp(),
-          }, { merge: true });
+          transaction.set(
+            systemRef,
+            {
+              team: null,
+              lastLeftTeam: FieldValue.serverTimestamp(),
+            },
+            { merge: true }
+          );
         }
       });
 
@@ -242,7 +259,10 @@ export class TeamService {
   /**
    * Get team progress for all members
    */
-  async getTeamProgress(userId: string, gameMode: string = 'pvp'): Promise<{
+  async getTeamProgress(
+    userId: string,
+    gameMode: string = 'pvp'
+  ): Promise<{
     data: FormattedProgress[];
     meta: { self: string; hiddenTeammates: string[] };
   }> {
@@ -252,7 +272,7 @@ export class TeamService {
         (this.db.collection('system').doc(userId) as DocumentReference<SystemDocument>).get(),
         (this.db.collection('user').doc(userId) as DocumentReference<UserDocData>).get(),
         getHideoutData(),
-        getTaskData()
+        getTaskData(),
       ]);
 
       if (!hideoutData || !taskData) {
@@ -270,7 +290,7 @@ export class TeamService {
       if (teamId) {
         const teamRef = this.db.collection('team').doc(teamId) as DocumentReference<TeamDocument>;
         const teamDoc = await teamRef.get();
-        
+
         if (teamDoc.exists) {
           const teamData = teamDoc.data()!;
           memberIds = [...new Set([...(teamData.members || []), userId])];
@@ -278,7 +298,7 @@ export class TeamService {
       }
 
       // Fetch progress for all members
-      const progressPromises = memberIds.map(memberId =>
+      const progressPromises = memberIds.map((memberId) =>
         this.db.collection('progress').doc(memberId).get()
       );
 
@@ -297,9 +317,7 @@ export class TeamService {
         .filter((progress): progress is FormattedProgress => progress !== null);
 
       // Determine hidden teammates
-      const hiddenTeammates = memberIds.filter(
-        id => id !== userId && hiddenTeammatesMap[id]
-      );
+      const hiddenTeammates = memberIds.filter((id) => id !== userId && hiddenTeammatesMap[id]);
 
       return {
         data: teamProgress,
@@ -328,11 +346,11 @@ export class TeamService {
     try {
       const passGen = new UIDGenerator(48, UIDGenerator.BASE62);
       const generated = await passGen.generate();
-      
+
       if (generated && generated.length >= 4) {
         return generated;
       }
-      
+
       logger.warn('Generated password was invalid, using fallback');
       return 'DEBUG_PASS_123';
     } catch (error) {
