@@ -14,7 +14,7 @@
         </div>
         <div>
           Please report any issues in our
-          <a href="https://discord.gg/zeAP4Ng" target="_blank" class="text-green-lighten-2">Discord</a> or on
+          <a href="https://discord.gg/PpdDwd2M6V" target="_blank" class="text-green-lighten-2">Discord</a> or on
           <a href="https://github.com/tarkovtracker-org/TarkovTracker/issues" target="_blank" class="text-green-lighten-2">GitHub</a>.
         </div>
       </div>

@@ -9,7 +9,7 @@ The guidelines below explain how to participate effectively and respectfully. If
 ## Before you start
 - **Familiarize yourself with the project** – Read the [README](README.md) and explore the application so you understand what exists today.
 - **Search first** – Look for existing issues, pull requests, or discussions that relate to your idea. Commenting on an active thread helps consolidate effort.
-- **Talk to us** – For substantial changes (e.g., major refactors, architectural changes), start a [GitHub Discussion](https://github.com/TarkovTracker/tarkovtracker/discussions), chat in the [TarkovTracker Discord](https://discord.gg/zeAP4Ng), or open an issue to align with the maintainers before investing significant time.
+- **Talk to us** – For substantial changes (e.g., major refactors, architectural changes), start a [GitHub Discussion](https://github.com/TarkovTracker/tarkovtracker-org/discussions), chat in the [TarkovTracker Discord](https://discord.gg/PpdDwd2M6V), or open an issue to align with the maintainers before investing significant time.
 - **Be kind** – Participation in this community is covered by our [Code of Conduct](CODE_OF_CONDUCT.md). If you observe unacceptable behavior, email [report@tarkovtracker.org](mailto:report@tarkovtracker.org).
 
 ## Ways to contribute
@@ -67,7 +67,7 @@ Maintainers will review submissions for correctness, accessibility, performance,
 - When adding diagrams or screenshots, include accessible text alternatives.
 
 ## Getting help
-- Ask implementation questions in [Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) under the `Q&A` category or in the development channels on the [TarkovTracker Discord](https://discord.gg/zeAP4Ng).
+- Ask implementation questions in [Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) under the `Q&A` category or in the development channels on the [TarkovTracker Discord](https://discord.gg/PpdDwd2M6V).
 - For sensitive or security-related topics, email [support@tarkovtracker.org](mailto:support@tarkovtracker.org) or [security@tarkovtracker.org](mailto:security@tarkovtracker.org).
 - Join playtesting or community events announced via Discussions to collaborate synchronously.
 
