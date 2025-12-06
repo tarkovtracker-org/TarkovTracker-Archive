@@ -101,8 +101,8 @@ We welcome additional documentation improvements! Open an issue or pull request 
 - Secrets, service accounts, and production data are **not** included in this repository. Please coordinate with maintainers before attempting production deployments.
 
 ## Community & support
-- **Questions & ideas** – Use [GitHub Discussions](https://github.com/TarkovTracker/tarkovtracker/discussions) or open an issue.
-- **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/zeAP4Ng) to coordinate raids, ask questions in real time, or hang out with fellow Tarkov fans.
+- **Questions & ideas** – Use [GitHub Discussions](https://github.com/TarkovTracker-org/tarkovtracker/discussions) or open an issue.
+- **Live chat & squads** – Join the [TarkovTracker Discord](https://discord.gg/PpdDwd2M6V) to coordinate raids, ask questions in real time, or hang out with fellow Tarkov fans.
 - **Bug reports** – File an issue with clear reproduction steps and screenshots/logs when possible.
 - **Security concerns** – Follow our [security policy](SECURITY.md) for responsible disclosure.
 - **Need to talk to a human?** – Reach out via [support@tarkovtracker.org](mailto:support@tarkovtracker.org).
