@@ -62,6 +62,15 @@ npm run dev
 ```
 The application will start a Vite development server (default `http://localhost:5173`) alongside local Firebase emulators.
 
+## Install on Linux (PWA)
+TarkovTracker now exposes a full Progressive Web App manifest and service worker, so you can install it like a native Linux application with offline caching and automatic updates.
+
+- **Chromium / Chrome / Edge / Brave** – Visit <https://tarkovtracker.org>, click the `Install TarkovTracker` icon in the address bar (or the `⋮` menu → `Install TarkovTracker`), then confirm. The app will appear in your launcher/menu and open in its own window.
+- **Firefox (v128+ / beta / nightly)** – Open `Settings → More tools → Install Site as App`. Firefox will ask for a name and create a desktop entry that uses the same icon and theme color.
+- **GNOME Web (Epiphany)** – Use the `Install Site as Web App` option to create a standalone window. GNOME automatically stores the shortcut under `~/.local/share/applications`.
+
+Once installed, TarkovTracker launches from your desktop environment like any other Linux app, works offline for cached data, and upgrades itself whenever you reopen it with an internet connection.
+
 ### Available scripts
 The root `package.json` exposes helpful scripts for daily development:
 

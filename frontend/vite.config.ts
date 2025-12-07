@@ -1,9 +1,11 @@
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueI18n from '@intlify/unplugin-vue-i18n/vite';
 import vuetify from 'vite-plugin-vuetify';
+import { VitePWA } from 'vite-plugin-pwa';
 import { execSync } from 'child_process';
 
 // Get the directory name in an ESM context
@@ -23,6 +25,9 @@ const getCommitHash = () => {
 const getBuildTime = () => {
   return new Date().toISOString();
 };
+
+const manifestPath = path.resolve(__dirname, './public/manifest.webmanifest');
+const pwaManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
 
 export default defineConfig({
   resolve: {
@@ -69,6 +74,24 @@ export default defineConfig({
       include: path.resolve(__dirname, './src/locales/**'),
     }),
     vuetify({ autoImport: true }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: [
+        'favicon.ico',
+        'tarkovtracker-icon-192.png',
+        'tarkovtracker-icon-512.png',
+        'img/logos/tarkovtrackerlogo-light.png',
+      ],
+      manifest: pwaManifest,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+        skipWaiting: true,
+        clientsClaim: true,
+      },
+      devOptions: {
+        enabled: true,
+      },
+    }),
   ],
   server: {
     port: 3000,

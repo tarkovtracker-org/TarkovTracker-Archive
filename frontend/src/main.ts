@@ -10,6 +10,7 @@ import { VueFire } from 'vuefire';
 import { app as fireapp } from './plugins/firebase';
 import { markInitialized } from './plugins/store-initializer';
 import { markI18nReady } from '@/composables/utils/i18nHelpers';
+import { registerSW } from 'virtual:pwa-register';
 // Base app component
 import App from './App.vue';
 
@@ -51,3 +52,14 @@ app
 
 // Mark the store system as initialized
 markInitialized();
+
+// Register the service worker for PWA/offline support
+registerSW({
+  immediate: true,
+  onOfflineReady() {
+    console.info('TarkovTracker is ready to work offline.');
+  },
+  onNeedRefresh() {
+    console.info('A new version of TarkovTracker is available. It will install on next reload.');
+  },
+});

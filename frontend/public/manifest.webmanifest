@@ -1,0 +1,26 @@
+{
+  "name": "TarkovTracker",
+  "short_name": "TarkovTracker",
+  "description": "Track your Escape From Tarkov progression, gear and hideout status anywhere.",
+  "theme_color": "#111827",
+  "background_color": "#030712",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/tarkovtracker-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/tarkovtracker-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
