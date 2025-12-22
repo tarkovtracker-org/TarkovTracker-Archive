@@ -18,7 +18,7 @@
             <div class="mb-1">
               <i18n-t keypath="footer.call_to_action.discord_phrase" scope="global">
                 <template #discord>
-                  <a href="https://discord.gg/zeAP4Ng" target="_blank" class="footer-link">
+                  <a href="https://discord.gg/M8nBgA2sT6" target="_blank" class="footer-link">
                     <div class="d-inline-flex align-center">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"

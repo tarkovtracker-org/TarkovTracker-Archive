@@ -1,61 +1,5 @@
 <template>
   <v-container class="mt-2 d-flex flex-column" style="min-height: calc(100vh - 250px)">
-    <v-alert
-      density="compact"
-      color="green-darken-3"
-      title="API Update Complete"
-      class="mb-3 api-update-alert"
-      style="flex: 0 0 auto"
-      closable
-    >
-      <div class="text-body-2">
-        <div class="mb-1">
-          <strong>API has been reworked and should now function properly</strong> with full support for PvP and PvE game modes!
-        </div>
-        <div>
-          Please report any issues in our
-          <a href="https://discord.gg/zeAP4Ng" target="_blank" class="text-green-lighten-2">Discord</a> or on
-          <a href="https://github.com/tarkovtracker-org/TarkovTracker/issues" target="_blank" class="text-green-lighten-2">GitHub</a>.
-        </div>
-      </div>
-    </v-alert>
-    <v-alert
-      density="compact"
-      color="green-darken-4"
-      title="Project Status"
-      class="mb-3 project-status-alert"
-      style="flex: 0 0 auto"
-      closable
-    >
-      <div class="text-body-2">
-        <div class="mb-1">
-          Community-maintained fork of TarkovTracker.io with automatic data updates from
-          <a href="http://tarkov.dev/" target="_blank" class="text-green-lighten-2">tarkov.dev</a>
-        </div>
-        <div class="d-flex flex-wrap gap-1 align-center" style="font-size: 0.875rem">
-          <div class="d-flex align-center">
-            <v-icon icon="mdi-source-branch" size="x-small" class="mr-1"></v-icon>
-            <a :href="commitUrl" target="_blank" class="text-green-lighten-2">
-              {{ commitId.slice(0, 7) }}
-            </a>
-          </div>
-          <div class="d-flex align-center ml-3">
-            <v-icon icon="mdi-clock-outline" size="x-small" class="mr-1"></v-icon>
-            <span class="text-caption">{{ lastUpdated }}</span>
-          </div>
-          <div class="d-flex align-center ml-3">
-            <v-icon icon="mdi-github" size="x-small" class="mr-1"></v-icon>
-            <a
-              href="https://github.com/tarkovtracker-org/TarkovTracker"
-              target="_blank"
-              class="text-green-lighten-2"
-            >
-              Contribute
-            </a>
-          </div>
-        </div>
-      </div>
-    </v-alert>
     <v-row justify="center" class="stats-row">
       <v-col cols="12" sm="6" md="6" lg="3" xl="3" class="stats-col">
         <tracker-stat icon="mdi-progress-check">
@@ -350,22 +294,6 @@
         progressStore.tasksCompletions[task.id].self === true
     ).length;
   });
-
-  const commitId = computed(() => {
-    return import.meta.env.VITE_COMMIT_HASH || 'unknown';
-  });
-
-  const commitUrl = computed(() => {
-    return `https://github.com/tarkovtracker-org/TarkovTracker/commit/${commitId.value}`;
-  });
-
-  const lastUpdated = computed(() => {
-    const buildTime = import.meta.env.VITE_BUILD_TIME;
-    if (!buildTime) return 'Unknown';
-
-    const date = new Date(buildTime);
-    return date.toLocaleString();
-  });
 </script>
 <style lang="scss" scoped>
   .stats-row {
@@ -405,36 +333,6 @@
     .stats-row {
       max-width: 1200px;
       margin: 0 auto;
-    }
-  }
-
-  .announcement-alert,
-  .project-status-alert {
-    :deep(.v-alert__content) {
-      padding: 8px 0;
-    }
-
-    :deep(.v-alert-title) {
-      font-size: 1rem;
-      margin-bottom: 4px;
-    }
-  }
-
-  // Make it even more compact on mobile
-  @media (max-width: 600px) {
-    .announcement-alert,
-    .project-status-alert {
-      :deep(.v-alert__content) {
-        padding: 6px 0;
-      }
-
-      .text-body-2 {
-        font-size: 0.8rem;
-      }
-
-      .d-flex {
-        font-size: 0.75rem !important;
-      }
     }
   }
 </style>
