@@ -1,56 +1,69 @@
 import Graph from 'graphology';
 
 /**
- * Recursively gets all predecessors (ancestors) of a node in the graph
+ * Creates a cached graph traversal function.
+ * Handles memoization and cycle detection automatically.
  */
-export function getPredecessors(graph: Graph, nodeId: string, visited: string[] = []): string[] {
-  let predecessors: string[] = [];
+function createCachedTraversal(
+  getNeighbors: (graph: Graph, nodeId: string) => string[],
+  label: string
+) {
+  const cache = new WeakMap<Graph, Map<string, string[]>>();
 
-  try {
-    predecessors = graph.inNeighbors(nodeId);
-    visited.push(nodeId);
-  } catch (error) {
-    console.error(`Error getting predecessors for node ${nodeId}:`, error);
-    return [];
-  }
+  function traverse(graph: Graph, nodeId: string, visited?: Set<string>): string[] {
+    const isTopLevel = !visited;
 
-  if (predecessors.length > 0) {
-    for (const predecessor of predecessors) {
-      if (visited.includes(predecessor)) {
-        continue;
+    // Check cache for top-level calls
+    if (isTopLevel) {
+      let graphCache = cache.get(graph);
+      if (!graphCache) {
+        graphCache = new Map();
+        cache.set(graph, graphCache);
       }
-      predecessors = predecessors.concat(getPredecessors(graph, predecessor, [...visited]));
+      const cached = graphCache.get(nodeId);
+      if (cached) return cached;
     }
+
+    visited = visited ?? new Set();
+    if (visited.has(nodeId)) return [];
+    visited.add(nodeId);
+
+    let neighbors: string[];
+    try {
+      neighbors = getNeighbors(graph, nodeId);
+    } catch (error) {
+      console.error(`Error getting ${label} for node ${nodeId}:`, error);
+      return [];
+    }
+
+    const allNodes = new Set<string>(neighbors);
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        for (const node of traverse(graph, neighbor, visited)) {
+          allNodes.add(node);
+        }
+      }
+    }
+
+    const result = Array.from(allNodes);
+    if (isTopLevel) cache.get(graph)?.set(nodeId, result);
+    return result;
   }
 
-  return [...new Set(predecessors)];
+  return traverse;
 }
 
-/**
- * Recursively gets all successors (descendants) of a node in the graph
- */
-export function getSuccessors(graph: Graph, nodeId: string, visited: string[] = []): string[] {
-  let successors: string[] = [];
+/** Gets all predecessors (ancestors) of a node */
+export const getPredecessors = createCachedTraversal(
+  (graph, nodeId) => graph.inNeighbors(nodeId),
+  'predecessors'
+);
 
-  try {
-    successors = graph.outNeighbors(nodeId);
-    visited.push(nodeId);
-  } catch (error) {
-    console.error(`Error getting successors for node ${nodeId}:`, error);
-    return [];
-  }
-
-  if (successors.length > 0) {
-    for (const successor of successors) {
-      if (visited.includes(successor)) {
-        continue;
-      }
-      successors = successors.concat(getSuccessors(graph, successor, [...visited]));
-    }
-  }
-
-  return [...new Set(successors)];
-}
+/** Gets all successors (descendants) of a node */
+export const getSuccessors = createCachedTraversal(
+  (graph, nodeId) => graph.outNeighbors(nodeId),
+  'successors'
+);
 
 /**
  * Gets immediate parent nodes (direct predecessors)
