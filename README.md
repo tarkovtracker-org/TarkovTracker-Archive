@@ -1,4 +1,4 @@
-## Repository Archived
+# Repository Archived
 
 This repository is **archived** and is no longer actively maintained.  
 It is kept available for reference purposes only.
