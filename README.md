@@ -1,3 +1,11 @@
+# Repository Archived
+
+This repository is **archived** and is no longer actively maintained.  
+It is kept available for reference purposes only.
+
+Development has moved to a **new repository**, which contains the latest updates and ongoing work.  
+Please use the new repository instead: [TarkovTracker](https://github.com/TarkovTracker-org/TarkovTracker)
+
 # TarkovTracker
 
 A community-maintained web application for planning and tracking your Escape From Tarkov progression. TarkovTracker keeps tabs on tasks, hideout upgrades, and required items so you can focus on raids while sharing progress with your squad.
