@@ -1,3 +1,5 @@
+# This is an old and archived version of TarkovTracker. 
+# The latest version is the new version: [TarkovTrackerNuxt](https://github.com/TarkovTracker-org/TarkovTrackerNuxt).
 # TarkovTracker
 
 A community-maintained web application for planning and tracking your Escape From Tarkov progression. TarkovTracker keeps tabs on tasks, hideout upgrades, and required items so you can focus on raids while sharing progress with your squad.
